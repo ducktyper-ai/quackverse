@@ -1,4 +1,4 @@
-# QuackCore
+# 🦆 QuackCore
 
 ## Python Infrastructure for Media Production Automation
 
