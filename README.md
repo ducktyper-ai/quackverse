@@ -72,24 +72,42 @@ def generate_thumbnails(video_path, output_dir, count=3):
 ## 📦 Project Structure
 
 ```
-src/quackcore/
-├── __init__.py
-├── paths/
-│   ├── __init__.py
-│   ├── resolvers.py
-│   ├── constants.py
-│   └── utils.py
-├── config/
-│   ├── __init__.py
-│   ├── manager.py
-│   └── models.py
-├── commands/
-│   ├── __init__.py
-│   └── registry.py
-└── plugins/
-    ├── __init__.py
-    ├── discovery.py
-    └── protocol.py
+├── LICENSE
+├── Makefile
+├── README.md
+├── pyproject.toml
+└── src
+    └── quackcore
+        ├── __init__.py
+        ├── config
+        │   ├── __init__.py
+        │   ├── loader.py
+        │   ├── models.py
+        │   ├── plugin.py
+        │   └── utils.py
+        ├── errors
+        │   ├── __init__.py
+        │   ├── base.py
+        │   └── handlers.py
+        ├── fs
+        │   ├── __init__.py
+        │   ├── operations.py
+        │   ├── plugin.py
+        │   ├── results.py
+        │   ├── service.py
+        │   └── utils.py
+        ├── paths
+        │   ├── __init__.py
+        │   ├── context.py
+        │   ├── plugin.py
+        │   ├── resolver.py
+        │   └── utils.py
+        └── plugins
+            ├── __init__.py
+            ├── discovery.py
+            ├── protocols.py
+            └── registry.py
+
 ```
 
 ## 💻 Requirements
