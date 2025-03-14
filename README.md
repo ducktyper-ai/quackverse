@@ -13,6 +13,7 @@ QuackCore is a foundational library that provides shared infrastructure for the 
 - **Command Registry**: Central registry for commands from all Quack modules
 - **Utilities**: Common utilities for file operations, logging, error handling, and more
 - **Testing Framework**: Shared testing infrastructure for all Quack modules
+- **Integrations**: Integrate with the ecosystem such as Google Drive, Google Mail and Notion for upload and download
 
 ## 🧩 Core Modules
 
