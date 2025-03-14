@@ -6,12 +6,14 @@ This module defines the Protocol interfaces for plugins in the QuackCore system,
 providing a common interface for all plugins to implement.
 """
 
-from typing import Any, Callable, Protocol, TypeVar
+from collections.abc import Callable
+from typing import Any, Protocol, TypeVar, runtime_checkable
 
 T = TypeVar("T")  # Generic return type
 
 
-class QuackPlugin(Protocol):
+@runtime_checkable
+class QuackPluginProtocol(Protocol):
     """Base protocol for all QuackCore plugins."""
 
     @property
@@ -25,10 +27,10 @@ class QuackPlugin(Protocol):
         ...
 
 
-class PluginRegistry(Protocol):
+class PluginRegistryProtocol(Protocol):
     """Protocol for a plugin registry."""
 
-    def register(self, plugin: QuackPlugin) -> None:
+    def register(self, plugin: QuackPluginProtocol) -> None:
         """
         Register a plugin with the registry.
 
@@ -37,7 +39,7 @@ class PluginRegistry(Protocol):
         """
         ...
 
-    def get_plugin(self, name: str) -> QuackPlugin | None:
+    def get_plugin(self, name: str) -> QuackPluginProtocol | None:
         """
         Get a plugin by name.
 
@@ -71,10 +73,12 @@ class PluginRegistry(Protocol):
         ...
 
 
-class PluginLoader(Protocol):
+class PluginLoaderProtocol(Protocol):
     """Protocol for a plugin loader."""
 
-    def load_entry_points(self, group: str = "quackcore.plugins") -> list[QuackPlugin]:
+    def load_entry_points(
+        self, group: str = "quackcore.plugins"
+    ) -> list[QuackPluginProtocol]:
         """
         Load plugins from entry points.
 
@@ -86,7 +90,7 @@ class PluginLoader(Protocol):
         """
         ...
 
-    def load_plugin(self, module_path: str) -> QuackPlugin:
+    def load_plugin(self, module_path: str) -> QuackPluginProtocol:
         """
         Load a plugin from a module path.
 
@@ -98,7 +102,7 @@ class PluginLoader(Protocol):
         """
         ...
 
-    def load_plugins(self, modules: list[str]) -> list[QuackPlugin]:
+    def load_plugins(self, modules: list[str]) -> list[QuackPluginProtocol]:
         """
         Load multiple plugins from module paths.
 
@@ -111,7 +115,8 @@ class PluginLoader(Protocol):
         ...
 
 
-class CommandPlugin(QuackPlugin, Protocol):
+@runtime_checkable
+class CommandPluginProtocol(QuackPluginProtocol, Protocol):
     """Protocol for plugins that provide commands."""
 
     def list_commands(self) -> list[str]:
@@ -135,7 +140,7 @@ class CommandPlugin(QuackPlugin, Protocol):
         """
         ...
 
-    def execute_command(self, name: str, *args: Any, **kwargs: Any) -> Any:
+    def execute_command(self, name: str, *args: object, **kwargs: object) -> T:
         """
         Execute a command.
 
@@ -150,7 +155,8 @@ class CommandPlugin(QuackPlugin, Protocol):
         ...
 
 
-class WorkflowPlugin(QuackPlugin, Protocol):
+@runtime_checkable
+class WorkflowPluginProtocol(QuackPluginProtocol, Protocol):
     """Protocol for plugins that provide workflows."""
 
     def list_workflows(self) -> list[str]:
@@ -174,7 +180,7 @@ class WorkflowPlugin(QuackPlugin, Protocol):
         """
         ...
 
-    def execute_workflow(self, name: str, *args: Any, **kwargs: Any) -> Any:
+    def execute_workflow(self, name: str, *args: object, **kwargs: object) -> T:
         """
         Execute a workflow.
 
@@ -189,7 +195,8 @@ class WorkflowPlugin(QuackPlugin, Protocol):
         ...
 
 
-class ExtensionPlugin(QuackPlugin, Protocol):
+@runtime_checkable
+class ExtensionPluginProtocol(QuackPluginProtocol, Protocol):
     """Protocol for plugins that extend functionality of other plugins."""
 
     def get_target_plugin(self) -> str:
@@ -211,7 +218,8 @@ class ExtensionPlugin(QuackPlugin, Protocol):
         ...
 
 
-class ProviderPlugin(QuackPlugin, Protocol):
+@runtime_checkable
+class ProviderPluginProtocol(QuackPluginProtocol, Protocol):
     """Protocol for plugins that provide services."""
 
     def get_services(self) -> dict[str, Any]:
@@ -223,7 +231,7 @@ class ProviderPlugin(QuackPlugin, Protocol):
         """
         ...
 
-    def get_service(self, name: str) -> Any | None:
+    def get_service(self, name: str) -> T | None:
         """
         Get a service by name.
 
@@ -236,7 +244,7 @@ class ProviderPlugin(QuackPlugin, Protocol):
         ...
 
 
-class ConfigurablePlugin(QuackPlugin, Protocol):
+class ConfigurablePluginProtocol(QuackPluginProtocol, Protocol):
     """Protocol for plugins that can be configured."""
 
     def configure(self, config: dict[str, Any]) -> None:

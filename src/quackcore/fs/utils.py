@@ -355,7 +355,7 @@ def get_file_type(path: str | Path) -> str:
     if path_obj.is_symlink():
         return "symlink"
     try:
-        with open(path_obj, "rb") as f:
+        with open(path_obj, errors="ignore") as f:
             chunk = f.read(1024)
             # If for some reason we get a str, encode it to bytes.
             if isinstance(chunk, str):
@@ -406,7 +406,8 @@ def find_files_by_content(
         if not path.is_file():
             continue
         try:
-            with open(path, "r", errors="ignore") as file_obj:
+            # Remove explicit "r" mode as it is the default for text files.
+            with open(path, errors="ignore") as file_obj:
                 content = file_obj.read()
                 if pattern.search(content):
                     matching_files.append(path)
@@ -564,8 +565,10 @@ def atomic_write(path: str | Path, content: str | bytes) -> Path:
         if temp_file and temp_file.exists():
             try:
                 temp_file.unlink()
-            except:
-                pass
+            except Exception as unlink_error:
+                logger.debug(
+                    f"Failed to unlink temporary file {temp_file}: {unlink_error}"
+                )
         raise QuackIOError(
             f"Failed to write file {path}: {str(e)}", str(path), original_error=e
         ) from e

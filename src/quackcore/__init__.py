@@ -16,7 +16,7 @@ from quackcore.config.models import QuackConfig
 from quackcore.errors import QuackError, wrap_io_errors
 from quackcore.fs import service as fs
 from quackcore.paths import resolver as paths
-from quackcore.plugins import QuackPlugin, loader, registry
+from quackcore.plugins import QuackPluginProtocol, loader, registry
 
 __all__ = [
     # Version
@@ -32,7 +32,7 @@ __all__ = [
     # Plugins
     "registry",
     "loader",
-    "QuackPlugin",
+    "QuackPluginProtocol",
     # Errors
     "QuackError",
     "wrap_io_errors",

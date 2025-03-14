@@ -8,14 +8,14 @@ modules to be dynamically loaded and registered at runtime.
 
 from quackcore.plugins.discovery import PluginLoader, loader
 from quackcore.plugins.protocols import (
-    CommandPlugin,
-    ConfigurablePlugin,
-    ExtensionPlugin,
-    PluginLoader,
-    PluginRegistry,
-    ProviderPlugin,
-    QuackPlugin,
-    WorkflowPlugin,
+    CommandPluginProtocol,
+    ConfigurablePluginProtocol,
+    ExtensionPluginProtocol,
+    PluginLoaderProtocol,
+    PluginRegistryProtocol,
+    ProviderPluginProtocol,
+    QuackPluginProtocol,
+    WorkflowPluginProtocol,
 )
 from quackcore.plugins.registry import PluginRegistry, registry
 
@@ -26,16 +26,18 @@ for plugin in core_plugins:
     registry.register(plugin)
 
 __all__ = [
-    # Classes
     "PluginRegistry",
     "PluginLoader",
+    # Classes
+    "PluginRegistryProtocol",
+    "PluginLoaderProtocol",
     # Protocol interfaces
-    "QuackPlugin",
-    "CommandPlugin",
-    "WorkflowPlugin",
-    "ExtensionPlugin",
-    "ProviderPlugin",
-    "ConfigurablePlugin",
+    "QuackPluginProtocol",
+    "CommandPluginProtocol",
+    "WorkflowPluginProtocol",
+    "ExtensionPluginProtocol",
+    "ProviderPluginProtocol",
+    "ConfigurablePluginProtocol",
     # Global instances
     "registry",
     "loader",

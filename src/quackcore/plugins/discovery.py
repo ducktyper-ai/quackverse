@@ -13,7 +13,7 @@ from importlib.metadata import entry_points
 from typing import TypeVar
 
 from quackcore.errors import QuackPluginError
-from quackcore.plugins.protocols import QuackPlugin
+from quackcore.plugins.protocols import QuackPluginProtocol
 
 T = TypeVar("T")  # Generic return type
 
@@ -31,7 +31,9 @@ class PluginLoader:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(log_level)
 
-    def load_entry_points(self, group: str = "quackcore.plugins") -> list[QuackPlugin]:
+    def load_entry_points(
+        self, group: str = "quackcore.plugins"
+    ) -> list[QuackPluginProtocol]:
         """
         Load plugins from entry points.
 
@@ -70,7 +72,7 @@ class PluginLoader:
 
         return plugins
 
-    def load_plugin(self, module_path: str) -> QuackPlugin:
+    def load_plugin(self, module_path: str) -> QuackPluginProtocol:
         """
         Load a plugin from a module path.
 
@@ -91,12 +93,15 @@ class PluginLoader:
 
             # Look for a create_plugin function
             if hasattr(module, "create_plugin"):
-                factory = getattr(module, "create_plugin")
+                factory = (
+                    module.create_plugin
+                )  # Direct attribute access per B009 guidance
                 if callable(factory):
                     plugin = factory()
                     if not hasattr(plugin, "name"):
                         raise QuackPluginError(
-                            f"Plugin from module {module_path} does not have a name attribute",
+                            f"Plugin from module {module_path} "
+                            f"does not have a name attribute",
                             plugin_path=module_path,
                         )
                     self.logger.info(
@@ -135,7 +140,7 @@ class PluginLoader:
                 original_error=e,
             ) from e
 
-    def load_plugins(self, modules: list[str]) -> list[QuackPlugin]:
+    def load_plugins(self, modules: list[str]) -> list[QuackPluginProtocol]:
         """
         Load multiple plugins from module paths.
 
@@ -160,7 +165,7 @@ class PluginLoader:
         self,
         entry_point_group: str = "quackcore.plugins",
         additional_modules: list[str] | None = None,
-    ) -> list[QuackPlugin]:
+    ) -> list[QuackPluginProtocol]:
         """
         Discover plugins from entry points and additional modules.
 
