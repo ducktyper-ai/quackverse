@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from quackcore.errors import QuackError, QuackFileNotFoundError
-from quackcore.errors.handlers import ErrorHandler, handle_errors, global_error_handler
+from quackcore.errors.handlers import ErrorHandler, global_error_handler, handle_errors
 
 
 class TestErrorHandler:
@@ -97,7 +97,7 @@ class TestErrorHandler:
         error = QuackError("Test error")
 
         with pytest.raises(SystemExit) as excinfo:
-            with patch.object(sys, 'exit') as mock_exit:
+            with patch.object(sys, "exit") as mock_exit:
                 mock_exit.side_effect = SystemExit(1)
                 handler.handle_error(error, exit_code=1)
 
@@ -134,8 +134,11 @@ class TestHandleErrorsDecorator:
         """Test handling a specific error type."""
         mock_console = MagicMock()
 
-        with patch("quackcore.errors.handlers.ErrorHandler",
-                   return_value=MagicMock(console=mock_console)):
+        with patch(
+            "quackcore.errors.handlers.ErrorHandler",
+            return_value=MagicMock(console=mock_console),
+        ):
+
             @handle_errors(error_types=ValueError)
             def function_with_value_error() -> None:
                 raise ValueError("Test value error")
@@ -148,8 +151,11 @@ class TestHandleErrorsDecorator:
         """Test handling multiple error types."""
         mock_console = MagicMock()
 
-        with patch("quackcore.errors.handlers.ErrorHandler",
-                   return_value=MagicMock(console=mock_console)):
+        with patch(
+            "quackcore.errors.handlers.ErrorHandler",
+            return_value=MagicMock(console=mock_console),
+        ):
+
             @handle_errors(error_types=(ValueError, TypeError))
             def function_with_errors() -> None:
                 raise TypeError("Test type error")
@@ -163,6 +169,7 @@ class TestHandleErrorsDecorator:
         mock_handler = MagicMock()
 
         with patch("quackcore.errors.handlers.ErrorHandler", return_value=mock_handler):
+
             @handle_errors(title="Custom Error Title")
             def function_with_error() -> None:
                 raise Exception("Test error")
@@ -179,6 +186,7 @@ class TestHandleErrorsDecorator:
         mock_handler = MagicMock()
 
         with patch("quackcore.errors.handlers.ErrorHandler", return_value=mock_handler):
+
             @handle_errors(exit_code=2)
             def function_with_error() -> None:
                 raise Exception("Test error")

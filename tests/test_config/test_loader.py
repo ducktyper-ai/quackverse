@@ -36,7 +36,7 @@ class TestConfigLoader:
         config_data = {
             "general": {"project_name": "TestProject", "debug": True},
             "paths": {"base_dir": "/test/path"},
-            "logging": {"level": "DEBUG"}
+            "logging": {"level": "DEBUG"},
         }
         config_file = temp_dir / "config.yaml"
         with open(config_file, "w") as f:
@@ -83,7 +83,7 @@ class TestConfigLoader:
         assert merged == {
             "a": {"x": {"i": 1, "j": 5, "k": 6}, "y": 3, "z": 7},
             "b": 4,
-            "c": 8
+            "c": 8,
         }
 
         # Test when override is not a dictionary
@@ -128,13 +128,16 @@ class TestConfigLoader:
     def test_get_env_config(self) -> None:
         """Test getting configuration from environment variables."""
         # Set up test environment variables
-        with patch.dict(os.environ, {
-            "QUACK_GENERAL__PROJECT_NAME": "EnvProject",
-            "QUACK_LOGGING__LEVEL": "DEBUG",
-            "QUACK_PATHS__BASE_DIR": "/env/path",
-            "QUACK_DEBUG": "true",  # Invalid format (no section)
-            "OTHER_VAR": "ignored"  # Non-QUACK variable
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                "QUACK_GENERAL__PROJECT_NAME": "EnvProject",
+                "QUACK_LOGGING__LEVEL": "DEBUG",
+                "QUACK_PATHS__BASE_DIR": "/env/path",
+                "QUACK_DEBUG": "true",  # Invalid format (no section)
+                "OTHER_VAR": "ignored",  # Non-QUACK variable
+            },
+        ):
             config = _get_env_config()
 
             assert "general" in config
@@ -168,8 +171,9 @@ class TestConfigLoader:
 
             # Patch the default locations to include our temp path
             patched_locations = [str(config_path)] + DEFAULT_CONFIG_LOCATIONS
-            with patch("quackcore.config.loader.DEFAULT_CONFIG_LOCATIONS",
-                       patched_locations):
+            with patch(
+                "quackcore.config.loader.DEFAULT_CONFIG_LOCATIONS", patched_locations
+            ):
                 found = find_config_file()
                 assert found == config_path
 
@@ -185,15 +189,19 @@ class TestConfigLoader:
             config_path.touch()
 
             # Patch project root detection
-            with patch("quackcore.config.loader.resolver.find_project_root",
-                       return_value=tmp_path):
+            with patch(
+                "quackcore.config.loader.resolver.find_project_root",
+                return_value=tmp_path,
+            ):
                 found = find_config_file()
                 assert found == config_path
 
         # Test when no config file can be found
         with patch("os.path.exists", return_value=False):
-            with patch("quackcore.config.loader.resolver.find_project_root",
-                       side_effect=Exception):
+            with patch(
+                "quackcore.config.loader.resolver.find_project_root",
+                side_effect=Exception,
+            ):
                 found = find_config_file()
                 assert found is None
 
@@ -208,7 +216,7 @@ class TestConfigLoader:
             config_data = {
                 "general": {"project_name": "TestProject", "debug": True},
                 "paths": {"base_dir": "/test/path"},
-                "logging": {"level": "DEBUG"}
+                "logging": {"level": "DEBUG"},
             }
             with open(config_path, "w") as f:
                 yaml.dump(config_data, f)
@@ -229,16 +237,19 @@ class TestConfigLoader:
             # Create a base config file
             base_config = {
                 "general": {"project_name": "BaseProject", "debug": False},
-                "logging": {"level": "INFO"}
+                "logging": {"level": "INFO"},
             }
             with open(config_path, "w") as f:
                 yaml.dump(base_config, f)
 
             # Set environment variables for override
-            with patch.dict(os.environ, {
-                "QUACK_GENERAL__PROJECT_NAME": "EnvProject",
-                "QUACK_LOGGING__LEVEL": "DEBUG"
-            }):
+            with patch.dict(
+                os.environ,
+                {
+                    "QUACK_GENERAL__PROJECT_NAME": "EnvProject",
+                    "QUACK_LOGGING__LEVEL": "DEBUG",
+                },
+            ):
                 # Load with merge_env=True
                 config = load_config(config_path, merge_env=True)
                 assert config.general.project_name == "EnvProject"  # From env
@@ -256,17 +267,16 @@ class TestConfigLoader:
             config_path = tmp_path / "partial_config.yaml"
 
             # Create a partial config file
-            partial_config = {
-                "general": {"project_name": "PartialProject"}
-            }
+            partial_config = {"general": {"project_name": "PartialProject"}}
             with open(config_path, "w") as f:
                 yaml.dump(partial_config, f)
 
             # Load with merge_defaults=True
             config = load_config(config_path, merge_defaults=True)
             assert config.general.project_name == "PartialProject"  # From file
-            assert config.logging.level == DEFAULT_CONFIG_VALUES["logging"][
-                "level"]  # From defaults
+            assert (
+                config.logging.level == DEFAULT_CONFIG_VALUES["logging"]["level"]
+            )  # From defaults
 
             # Load with merge_defaults=False
             config = load_config(config_path, merge_defaults=False)
@@ -286,7 +296,8 @@ class TestConfigLoader:
             # Mock the load_yaml_config function
             with patch("quackcore.config.loader.load_yaml_config") as mock_load:
                 mock_load.return_value = {
-                    "general": {"project_name": "DiscoveredProject"}}
+                    "general": {"project_name": "DiscoveredProject"}
+                }
 
                 # Load without explicit path
                 config = load_config()
@@ -301,14 +312,16 @@ class TestConfigLoader:
         override = {
             "general": {"debug": True},
             "logging": {"level": "DEBUG", "file": "/test/log.txt"},
-            "custom": {"key": "value"}
+            "custom": {"key": "value"},
         }
 
         # Merge configs
         merged = merge_configs(sample_config, override)
 
         # Verify merged values
-        assert merged.general.project_name == sample_config.general.project_name  # Unchanged
+        assert (
+            merged.general.project_name == sample_config.general.project_name
+        )  # Unchanged
         assert merged.general.debug is True  # Overridden
         assert merged.logging.level == "DEBUG"  # Overridden
         assert str(merged.logging.file) == "/test/log.txt"  # Overridden

@@ -11,12 +11,18 @@ from unittest.mock import patch
 
 import pytest
 import yaml
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
-from quackcore.fs.service import FileSystemService
-from quackcore.fs.results import DataResult, DirectoryInfoResult, FileInfoResult, \
-    FindResult, OperationResult
 from quackcore.errors import QuackFileExistsError, QuackFileNotFoundError
+from quackcore.fs.results import (
+    DataResult,
+    DirectoryInfoResult,
+    FileInfoResult,
+    FindResult,
+    OperationResult,
+)
+from quackcore.fs.service import FileSystemService
 
 
 class TestFileSystemService:
@@ -223,7 +229,9 @@ class TestFileSystemService:
 
         # Test getting info for a non-existent file
         result = service.get_file_info(temp_dir / "nonexistent.txt")
-        assert result.success is True  # Note: This is true because the operation succeeded
+        assert (
+            result.success is True
+        )  # Note: This is true because the operation succeeded
         assert result.exists is False
 
     def test_list_directory(self, temp_dir: Path) -> None:
@@ -279,8 +287,9 @@ class TestFileSystemService:
         # Test finding with pattern
         result = service.find_files(temp_dir, "*.txt")
         assert result.success is True
-        assert len(
-            result.files) == 3  # Includes subdir/subfile.txt due to recursive=True
+        assert (
+            len(result.files) == 3
+        )  # Includes subdir/subfile.txt due to recursive=True
         assert temp_dir / "file1.txt" in result.files
         assert temp_dir / "file2.txt" in result.files
         assert subdir / "subfile.txt" in result.files
@@ -451,8 +460,9 @@ class TestFileSystemService:
         file2 = temp_dir / "same2.txt"
         file2.touch()
         file1_link = temp_dir / "same1_link.txt"
-        os.symlink(file1,
-                   file1_link) if platform.system() != "Windows" else file1_link.touch()
+        os.symlink(
+            file1, file1_link
+        ) if platform.system() != "Windows" else file1_link.touch()
 
         assert service.is_same_file(file1, file1)
         assert not service.is_same_file(file1, file2)

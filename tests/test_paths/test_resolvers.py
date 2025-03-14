@@ -37,15 +37,13 @@ class TestPathResolver:
 
         # Test with custom marker files
         root = resolver.find_project_root(
-            mock_project_structure,
-            marker_files=["pyproject.toml"]
+            mock_project_structure, marker_files=["pyproject.toml"]
         )
         assert root == mock_project_structure
 
         # Test with custom marker directories
         root = resolver.find_project_root(
-            mock_project_structure,
-            marker_dirs=["src", "tests"]
+            mock_project_structure, marker_dirs=["src", "tests"]
         )
         assert root == mock_project_structure
 
@@ -109,14 +107,16 @@ class TestPathResolver:
         assert resolved == abs_path
 
         # Test resolving without explicit project root (should find it)
-        with patch.object(resolver, "find_project_root",
-                          return_value=mock_project_structure):
+        with patch.object(
+            resolver, "find_project_root", return_value=mock_project_structure
+        ):
             resolved = resolver.resolve_project_path("src/file.txt")
             assert resolved == mock_project_structure / "src" / "file.txt"
 
         # Test resolving when project root cannot be found
-        with patch.object(resolver, "find_project_root",
-                          side_effect=QuackFileNotFoundError("")):
+        with patch.object(
+            resolver, "find_project_root", side_effect=QuackFileNotFoundError("")
+        ):
             # Should use current directory as fallback
             with patch("pathlib.Path.cwd", return_value=Path("/current/dir")):
                 resolved = resolver.resolve_project_path("file.txt")

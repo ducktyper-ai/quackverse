@@ -16,9 +16,7 @@ class TestProjectDirectory:
     def test_basic_directory(self) -> None:
         """Test creating a basic directory model."""
         dir_model = ProjectDirectory(
-            name="src",
-            path=Path("/project/src"),
-            is_source=True
+            name="src", path=Path("/project/src"), is_source=True
         )
 
         assert dir_model.name == "src"
@@ -47,7 +45,7 @@ class TestProjectDirectory:
             is_config=False,
             is_test=False,
             is_asset=False,
-            is_temp=False
+            is_temp=False,
         )
 
         assert dir_model.name == "data"
@@ -62,10 +60,7 @@ class TestProjectContext:
 
     def test_basic_context(self) -> None:
         """Test creating a basic project context."""
-        context = ProjectContext(
-            root_dir=Path("/project"),
-            name="test-project"
-        )
+        context = ProjectContext(root_dir=Path("/project"), name="test-project")
 
         assert context.root_dir == Path("/project")
         assert context.name == "test-project"
@@ -78,37 +73,27 @@ class TestProjectContext:
 
     def test_get_directories(self) -> None:
         """Test getting directories from the context."""
-        context = ProjectContext(
-            root_dir=Path("/project")
-        )
+        context = ProjectContext(root_dir=Path("/project"))
 
         # Add directories
         src_dir = ProjectDirectory(
-            name="src",
-            path=Path("/project/src"),
-            is_source=True
+            name="src", path=Path("/project/src"), is_source=True
         )
         output_dir = ProjectDirectory(
-            name="output",
-            path=Path("/project/output"),
-            is_output=True
+            name="output", path=Path("/project/output"), is_output=True
         )
         data_dir = ProjectDirectory(
-            name="data",
-            path=Path("/project/data"),
-            is_data=True
+            name="data", path=Path("/project/data"), is_data=True
         )
         config_dir = ProjectDirectory(
-            name="config",
-            path=Path("/project/config"),
-            is_config=True
+            name="config", path=Path("/project/config"), is_config=True
         )
 
         context.directories = {
             "src": src_dir,
             "output": output_dir,
             "data": data_dir,
-            "config": config_dir
+            "config": config_dir,
         }
 
         # Test getting directories by type
@@ -124,16 +109,10 @@ class TestProjectContext:
 
     def test_add_directory(self) -> None:
         """Test adding a directory to the context."""
-        context = ProjectContext(
-            root_dir=Path("/project")
-        )
+        context = ProjectContext(root_dir=Path("/project"))
 
         # Add directory using the add_directory method
-        context.add_directory(
-            name="src",
-            path=Path("/project/src"),
-            is_source=True
-        )
+        context.add_directory(name="src", path=Path("/project/src"), is_source=True)
 
         # Verify the directory was added
         assert "src" in context.directories
@@ -143,9 +122,7 @@ class TestProjectContext:
 
         # Test adding with relative path calculation
         context.add_directory(
-            name="output",
-            path=Path("/project/output"),
-            is_output=True
+            name="output", path=Path("/project/output"), is_output=True
         )
         assert context.directories["output"].rel_path == Path("output")
 
@@ -166,7 +143,7 @@ class TestContentContext:
             root_dir=Path("/project"),
             content_type="tutorial",
             content_name="example",
-            content_dir=Path("/project/src/tutorials/example")
+            content_dir=Path("/project/src/tutorials/example"),
         )
 
         assert context.root_dir == Path("/project")
@@ -177,50 +154,33 @@ class TestContentContext:
 
     def test_content_directories(self) -> None:
         """Test content context with directories."""
-        context = ContentContext(
-            root_dir=Path("/project")
-        )
+        context = ContentContext(root_dir=Path("/project"))
 
         # Add directories
         context.add_directory(
-            name="assets",
-            path=Path("/project/assets"),
-            is_asset=True
+            name="assets", path=Path("/project/assets"), is_asset=True
         )
-        context.add_directory(
-            name="temp",
-            path=Path("/project/temp"),
-            is_temp=True
-        )
+        context.add_directory(name="temp", path=Path("/project/temp"), is_temp=True)
 
         # Test getting content-specific directories
         assert context.get_assets_dir() == Path("/project/assets")
         assert context.get_temp_dir() == Path("/project/temp")
 
         # Test with missing directories
-        context = ContentContext(
-            root_dir=Path("/project")
-        )
+        context = ContentContext(root_dir=Path("/project"))
         assert context.get_assets_dir() is None
         assert context.get_temp_dir() is None
 
     def test_inherit_from_project_context(self) -> None:
         """Test inheriting from a project context."""
-        project_context = ProjectContext(
-            root_dir=Path("/project"),
-            name="test-project"
-        )
+        project_context = ProjectContext(root_dir=Path("/project"), name="test-project")
 
         # Add directories to project context
         project_context.add_directory(
-            name="src",
-            path=Path("/project/src"),
-            is_source=True
+            name="src", path=Path("/project/src"), is_source=True
         )
         project_context.add_directory(
-            name="assets",
-            path=Path("/project/assets"),
-            is_asset=True
+            name="assets", path=Path("/project/assets"), is_asset=True
         )
 
         # Create content context from project context
@@ -229,7 +189,7 @@ class TestContentContext:
             directories=project_context.directories,
             config_file=project_context.config_file,
             name=project_context.name,
-            content_type="tutorial"
+            content_type="tutorial",
         )
 
         # Verify inheritance

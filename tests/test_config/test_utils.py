@@ -40,14 +40,8 @@ class TestConfigUtils:
     def test_load_env_config(self, temp_dir: Path, sample_config: QuackConfig) -> None:
         """Test loading environment-specific configuration."""
         # Create environment config files
-        dev_config = {
-            "general": {"debug": True},
-            "logging": {"level": "DEBUG"}
-        }
-        prod_config = {
-            "general": {"debug": False},
-            "logging": {"level": "INFO"}
-        }
+        dev_config = {"general": {"debug": True}, "logging": {"level": "DEBUG"}}
+        prod_config = {"general": {"debug": False}, "logging": {"level": "INFO"}}
 
         dev_file = temp_dir / "development.yaml"
         prod_file = temp_dir / "production.yaml"
@@ -86,8 +80,10 @@ class TestConfigUtils:
 
         # Test with error loading environment config (should return original)
         with patch("quackcore.config.utils.get_env", return_value="development"):
-            with patch("quackcore.config.utils.load_yaml_config",
-                       side_effect=Exception("Test error")):
+            with patch(
+                "quackcore.config.utils.load_yaml_config",
+                side_effect=Exception("Test error"),
+            ):
                 config = load_env_config(sample_config, temp_dir)
                 assert config is sample_config
 
@@ -117,19 +113,13 @@ class TestConfigUtils:
 
         # Test with default value
         assert get_config_value(sample_config, "nonexistent", "default") == "default"
-        assert get_config_value(sample_config, "general.nonexistent",
-                                "default") == "default"
+        assert (
+            get_config_value(sample_config, "general.nonexistent", "default")
+            == "default"
+        )
 
         # Test getting nested values
-        nested_config = QuackConfig(
-            custom={
-                "nested": {
-                    "deeply": {
-                        "value": 42
-                    }
-                }
-            }
-        )
+        nested_config = QuackConfig(custom={"nested": {"deeply": {"value": 42}}})
         assert get_config_value(nested_config, "custom.nested.deeply.value") == 42
         assert get_config_value(nested_config, "custom.nested.nonexistent") is None
 
@@ -137,15 +127,13 @@ class TestConfigUtils:
         """Test validating required configuration keys."""
         # Test with all required keys present
         missing = validate_required_config(
-            sample_config,
-            ["general.project_name", "logging.level", "paths.base_dir"]
+            sample_config, ["general.project_name", "logging.level", "paths.base_dir"]
         )
         assert missing == []
 
         # Test with some missing keys
         missing = validate_required_config(
-            sample_config,
-            ["general.nonexistent", "logging.file", "custom.key"]
+            sample_config, ["general.nonexistent", "logging.file", "custom.key"]
         )
         assert "general.nonexistent" in missing
         assert "logging.file" in missing
@@ -154,7 +142,7 @@ class TestConfigUtils:
         # Test with mixed present and missing keys
         missing = validate_required_config(
             sample_config,
-            ["general.project_name", "logging.nonexistent", "paths.base_dir"]
+            ["general.project_name", "logging.nonexistent", "paths.base_dir"],
         )
         assert len(missing) == 1
         assert "logging.nonexistent" in missing
@@ -168,18 +156,14 @@ class TestConfigUtils:
                 "output_dir": "output",
                 "data_dir": "data",
             },
-            plugins={
-                "paths": ["plugins", "../external/plugins"]
-            },
+            plugins={"paths": ["plugins", "../external/plugins"]},
             integrations={
                 "google": {
                     "client_secrets_file": "secrets.json",
-                    "credentials_file": "credentials.json"
+                    "credentials_file": "credentials.json",
                 }
             },
-            logging={
-                "file": "logs/app.log"
-            }
+            logging={"file": "logs/app.log"},
         )
 
         # Normalize paths
@@ -195,8 +179,14 @@ class TestConfigUtils:
         assert normalized.plugins.paths[1] == "/base/dir/../external/plugins"
 
         # Check integration paths
-        assert normalized.integrations.google.client_secrets_file == "/base/dir/secrets.json"
-        assert normalized.integrations.google.credentials_file == "/base/dir/credentials.json"
+        assert (
+            normalized.integrations.google.client_secrets_file
+            == "/base/dir/secrets.json"
+        )
+        assert (
+            normalized.integrations.google.credentials_file
+            == "/base/dir/credentials.json"
+        )
 
         # Check logging path
         assert normalized.logging.file == "/base/dir/logs/app.log"
@@ -210,5 +200,7 @@ class TestConfigUtils:
             }
         )
         normalized = normalize_paths(config)
-        assert normalized.paths.output_dir == "/absolute/output"  # Absolute path unchanged
+        assert (
+            normalized.paths.output_dir == "/absolute/output"
+        )  # Absolute path unchanged
         assert normalized.paths.data_dir == "/absolute/data"  # Absolute path unchanged

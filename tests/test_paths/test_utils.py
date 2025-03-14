@@ -39,16 +39,12 @@ class TestPathUtils:
 
         # Test with custom marker files
         root = find_project_root(
-            mock_project_structure,
-            marker_files=["pyproject.toml"]
+            mock_project_structure, marker_files=["pyproject.toml"]
         )
         assert root == mock_project_structure
 
         # Test with custom marker directories
-        root = find_project_root(
-            mock_project_structure,
-            marker_dirs=["src", "tests"]
-        )
+        root = find_project_root(mock_project_structure, marker_dirs=["src", "tests"])
         assert root == mock_project_structure
 
         # Test with non-existent path
@@ -91,14 +87,18 @@ class TestPathUtils:
         assert resolved == abs_path
 
         # Test resolving without explicit project root
-        with patch("quackcore.paths.utils.find_project_root",
-                   return_value=mock_project_structure):
+        with patch(
+            "quackcore.paths.utils.find_project_root",
+            return_value=mock_project_structure,
+        ):
             resolved = resolve_relative_to_project("src/file.txt")
             assert resolved == mock_project_structure / "src" / "file.txt"
 
         # Test when project root cannot be found
-        with patch("quackcore.paths.utils.find_project_root",
-                   side_effect=QuackFileNotFoundError("")):
+        with patch(
+            "quackcore.paths.utils.find_project_root",
+            side_effect=QuackFileNotFoundError(""),
+        ):
             # Should default to current directory
             with patch("pathlib.Path.cwd", return_value=Path("/current/dir")):
                 resolved = resolve_relative_to_project("file.txt")
@@ -179,21 +179,28 @@ class TestPathUtils:
         assert module_name == "test_module.submodule.test_file"
 
         # Test inferring from a file with a relative path
-        with patch("quackcore.paths.utils.find_project_root",
-                   return_value=mock_project_structure):
+        with patch(
+            "quackcore.paths.utils.find_project_root",
+            return_value=mock_project_structure,
+        ):
             module_name = infer_module_from_path(
-                "src/test_module/submodule/test_file.py")
+                "src/test_module/submodule/test_file.py"
+            )
             assert module_name == "test_module.submodule.test_file"
 
         # Test inferring when src directory cannot be found
-        with patch("quackcore.paths.utils.find_nearest_directory",
-                   side_effect=QuackFileNotFoundError("")):
+        with patch(
+            "quackcore.paths.utils.find_nearest_directory",
+            side_effect=QuackFileNotFoundError(""),
+        ):
             # Should use file's directory as fallback
             module_name = infer_module_from_path(module_file, mock_project_structure)
             assert "test_file" in module_name
 
         # Test inferring when file is not in project
-        with patch("quackcore.paths.utils.find_project_root",
-                   side_effect=QuackFileNotFoundError("")):
+        with patch(
+            "quackcore.paths.utils.find_project_root",
+            side_effect=QuackFileNotFoundError(""),
+        ):
             module_name = infer_module_from_path("/outside/project/file.py")
             assert module_name == "file"

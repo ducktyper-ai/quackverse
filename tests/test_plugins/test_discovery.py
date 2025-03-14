@@ -181,10 +181,7 @@ class TestPluginLoader:
                 mock_load_eps.return_value = [mock_plugin1]
                 mock_load_plugins.return_value = [mock_plugin2]
 
-                plugins = loader.discover_plugins(
-                    "test.plugins",
-                    ["test.module"]
-                )
+                plugins = loader.discover_plugins("test.plugins", ["test.module"])
 
                 assert len(plugins) == 2
                 assert plugins[0] is mock_plugin1

@@ -111,10 +111,7 @@ class TestConfigProvider(ProviderPluginProtocol):
         return "config_provider"
 
     def get_services(self) -> dict[str, object]:
-        return {
-            "get_config": self.get_config,
-            "get_value": self.get_value
-        }
+        return {"get_config": self.get_config, "get_value": self.get_value}
 
     def get_service(self, name: str) -> object | None:
         return self.get_services().get(name)
@@ -126,6 +123,7 @@ class TestConfigProvider(ProviderPluginProtocol):
     def get_value(self, path: str, default: object | None = None) -> object | None:
         """Get a configuration value by path."""
         from quackcore.config.utils import get_config_value
+
         return get_config_value(self.config, path, default)
 
 
@@ -137,17 +135,13 @@ class TestIntegration:
         # Create a test configuration file
         config_file = temp_dir / "test_config.yaml"
         config_data = {
-            "general": {
-                "project_name": "TestProject"
-            },
+            "general": {"project_name": "TestProject"},
             "paths": {
                 "base_dir": str(temp_dir),
                 "output_dir": "output",
-                "data_dir": "data"
+                "data_dir": "data",
             },
-            "logging": {
-                "level": "DEBUG"
-            }
+            "logging": {"level": "DEBUG"},
         }
         with open(config_file, "w") as f:
             yaml.dump(config_data, f)
@@ -195,8 +189,7 @@ class TestIntegration:
 
         # Initialize core components
         config = QuackConfig(
-            general={"project_name": "TestProject"},
-            paths={"base_dir": str(temp_dir)}
+            general={"project_name": "TestProject"}, paths={"base_dir": str(temp_dir)}
         )
         fs_service = FileSystemService(base_dir=temp_dir)
         path_resolver = PathResolver()

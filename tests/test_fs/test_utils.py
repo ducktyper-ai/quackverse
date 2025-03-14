@@ -11,7 +11,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
 from quackcore.errors import (
     QuackFileExistsError,
@@ -387,8 +388,9 @@ class TestFileUtilities:
         with patch("builtins.open", side_effect=OSError):
             assert get_file_type(text_file) == "unknown"
 
-    @pytest.mark.skipif("CI" in os.environ,
-                        reason="Disk usage may vary in CI environments")
+    @pytest.mark.skipif(
+        "CI" in os.environ, reason="Disk usage may vary in CI environments"
+    )
     def test_get_disk_usage(self, temp_dir: Path) -> None:
         """Test getting disk usage information."""
         usage = get_disk_usage(temp_dir)
@@ -627,8 +629,10 @@ class TestFileUtilities:
         assert result is True
         assert not dir_path.exists()
 
-    @pytest.mark.skipif(platform.system() != "Windows",
-                        reason="is_file_locked is mostly relevant on Windows")
+    @pytest.mark.skipif(
+        platform.system() != "Windows",
+        reason="is_file_locked is mostly relevant on Windows",
+    )
     def test_is_file_locked(self, temp_dir: Path) -> None:
         """Test checking if a file is locked."""
         # This test is minimal because actually locking files in a test is tricky

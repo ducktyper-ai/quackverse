@@ -3,7 +3,7 @@
 Tests for the plugin registry.
 """
 
-from unittest.mock import MagicMock
+from typing import Callable
 
 import pytest
 
@@ -37,7 +37,7 @@ class CommandPlugin(CommandPluginProtocol):
     def list_commands(self) -> list[str]:
         return ["cmd1", "cmd2"]
 
-    def get_command(self, name: str) -> callable | None:
+    def get_command(self, name: str) -> Callable | None:
         if name in self.list_commands():
             return lambda *args, **kwargs: f"Executed {name}"
         return None
@@ -59,7 +59,7 @@ class WorkflowPlugin(WorkflowPluginProtocol):
     def list_workflows(self) -> list[str]:
         return ["flow1", "flow2"]
 
-    def get_workflow(self, name: str) -> callable | None:
+    def get_workflow(self, name: str) -> Callable | None:
         if name in self.list_workflows():
             return lambda *args, **kwargs: f"Ran {name}"
         return None
@@ -81,11 +81,8 @@ class ExtensionPlugin(ExtensionPluginProtocol):
     def get_target_plugin(self) -> str:
         return "target_plugin"
 
-    def get_extensions(self) -> dict[str, callable]:
-        return {
-            "ext1": lambda: "Extension 1",
-            "ext2": lambda: "Extension 2"
-        }
+    def get_extensions(self) -> dict[str, Callable]:
+        return {"ext1": lambda: "Extension 1", "ext2": lambda: "Extension 2"}
 
 
 class ProviderPlugin(ProviderPluginProtocol):
@@ -96,10 +93,7 @@ class ProviderPlugin(ProviderPluginProtocol):
         return "provider_plugin"
 
     def get_services(self) -> dict[str, object]:
-        return {
-            "service1": "Service 1",
-            "service2": "Service 2"
-        }
+        return {"service1": "Service 1", "service2": "Service 2"}
 
     def get_service(self, name: str) -> object | None:
         return self.get_services().get(name)
@@ -192,21 +186,23 @@ class TestPluginRegistry:
             def list_commands(self) -> list[str]:
                 return ["cmd1", "cmd2"]
 
-            def get_command(self, name: str) -> callable | None:
+            def get_command(self, name: str) -> Callable | None:
                 return lambda: f"Command {name}"
 
-            def execute_command(self, name: str, *args: object,
-                                **kwargs: object) -> str:
+            def execute_command(
+                self, name: str, *args: object, **kwargs: object
+            ) -> str:
                 return f"Executed {name}"
 
             def list_workflows(self) -> list[str]:
                 return ["flow1", "flow2"]
 
-            def get_workflow(self, name: str) -> callable | None:
+            def get_workflow(self, name: str) -> Callable | None:
                 return lambda: f"Workflow {name}"
 
-            def execute_workflow(self, name: str, *args: object,
-                                 **kwargs: object) -> str:
+            def execute_workflow(
+                self, name: str, *args: object, **kwargs: object
+            ) -> str:
                 return f"Ran {name}"
 
         registry = PluginRegistry()
@@ -238,11 +234,12 @@ class TestPluginRegistry:
             def list_commands(self) -> list[str]:
                 return ["common", "cmd1"]
 
-            def get_command(self, name: str) -> callable | None:
+            def get_command(self, name: str) -> Callable | None:
                 return lambda: f"Plugin1 {name}"
 
-            def execute_command(self, name: str, *args: object,
-                                **kwargs: object) -> str:
+            def execute_command(
+                self, name: str, *args: object, **kwargs: object
+            ) -> str:
                 return f"Plugin1 executed {name}"
 
         class Plugin2(CommandPluginProtocol):
@@ -253,11 +250,12 @@ class TestPluginRegistry:
             def list_commands(self) -> list[str]:
                 return ["common", "cmd2"]
 
-            def get_command(self, name: str) -> callable | None:
+            def get_command(self, name: str) -> Callable | None:
                 return lambda: f"Plugin2 {name}"
 
-            def execute_command(self, name: str, *args: object,
-                                **kwargs: object) -> str:
+            def execute_command(
+                self, name: str, *args: object, **kwargs: object
+            ) -> str:
                 return f"Plugin2 executed {name}"
 
         plugin1 = Plugin1()
@@ -287,11 +285,12 @@ class TestPluginRegistry:
             def list_workflows(self) -> list[str]:
                 return ["common", "flow1"]
 
-            def get_workflow(self, name: str) -> callable | None:
+            def get_workflow(self, name: str) -> Callable | None:
                 return lambda: f"Plugin1 {name}"
 
-            def execute_workflow(self, name: str, *args: object,
-                                 **kwargs: object) -> str:
+            def execute_workflow(
+                self, name: str, *args: object, **kwargs: object
+            ) -> str:
                 return f"Plugin1 ran {name}"
 
         class Plugin2(WorkflowPluginProtocol):
@@ -302,11 +301,12 @@ class TestPluginRegistry:
             def list_workflows(self) -> list[str]:
                 return ["common", "flow2"]
 
-            def get_workflow(self, name: str) -> callable | None:
+            def get_workflow(self, name: str) -> Callable | None:
                 return lambda: f"Plugin2 {name}"
 
-            def execute_workflow(self, name: str, *args: object,
-                                 **kwargs: object) -> str:
+            def execute_workflow(
+                self, name: str, *args: object, **kwargs: object
+            ) -> str:
                 return f"Plugin2 ran {name}"
 
         plugin1 = Plugin1()
@@ -520,7 +520,7 @@ class TestPluginRegistry:
             def get_target_plugin(self) -> str:
                 return "target_plugin"
 
-            def get_extensions(self) -> dict[str, callable]:
+            def get_extensions(self) -> dict[str, Callable]:
                 return {"ext3": lambda: "Extension 3"}
 
         extension2 = Extension2()

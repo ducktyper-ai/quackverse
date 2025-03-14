@@ -33,9 +33,7 @@ class TestOperationResult:
     def test_failed_result(self) -> None:
         """Test creating a failed operation result."""
         result = OperationResult(
-            success=False,
-            path=Path("/test/path"),
-            error="Operation failed"
+            success=False, path=Path("/test/path"), error="Operation failed"
         )
 
         assert result.success is False
@@ -49,9 +47,7 @@ class TestReadResult:
     def test_text_result(self) -> None:
         """Test creating a read result with text content."""
         result = ReadResult(
-            path=Path("/test/file.txt"),
-            content="text content",
-            encoding="utf-8"
+            path=Path("/test/file.txt"), content="text content", encoding="utf-8"
         )
 
         assert result.success is True
@@ -69,10 +65,7 @@ class TestReadResult:
 
     def test_binary_result(self) -> None:
         """Test creating a read result with binary content."""
-        result = ReadResult(
-            path=Path("/test/file.bin"),
-            content=b"\x00\x01\x02\x03"
-        )
+        result = ReadResult(path=Path("/test/file.bin"), content=b"\x00\x01\x02\x03")
 
         assert result.success is True
         assert result.path == Path("/test/file.bin")
@@ -96,7 +89,7 @@ class TestReadResult:
         """Test handling invalid content types."""
         result = ReadResult(
             path=Path("/test/file"),
-            content=[1, 2, 3]  # type: ignore
+            content=[1, 2, 3],  # type: ignore
         )
 
         # Both text and binary properties should raise TypeError
@@ -112,10 +105,7 @@ class TestWriteResult:
 
     def test_basic_write_result(self) -> None:
         """Test creating a basic write result."""
-        result = WriteResult(
-            path=Path("/test/file.txt"),
-            bytes_written=100
-        )
+        result = WriteResult(path=Path("/test/file.txt"), bytes_written=100)
 
         assert result.success is True
         assert result.path == Path("/test/file.txt")
@@ -126,9 +116,7 @@ class TestWriteResult:
     def test_write_result_with_checksum(self) -> None:
         """Test creating a write result with checksum."""
         result = WriteResult(
-            path=Path("/test/file.txt"),
-            bytes_written=100,
-            checksum="abcdef1234567890"
+            path=Path("/test/file.txt"), bytes_written=100, checksum="abcdef1234567890"
         )
 
         assert result.success is True
@@ -139,7 +127,7 @@ class TestWriteResult:
         result = WriteResult(
             path=Path("/test/dest.txt"),
             original_path=Path("/test/source.txt"),
-            bytes_written=100
+            bytes_written=100,
         )
 
         assert result.success is True
@@ -163,7 +151,7 @@ class TestFileInfoResult:
             created=1234567800.0,
             owner="user",
             permissions=0o644,
-            mime_type="text/plain"
+            mime_type="text/plain",
         )
 
         assert result.success is True
@@ -189,7 +177,7 @@ class TestFileInfoResult:
             modified=1234567890.0,
             created=1234567800.0,
             owner="user",
-            permissions=0o755
+            permissions=0o755,
         )
 
         assert result.success is True
@@ -206,10 +194,7 @@ class TestFileInfoResult:
 
     def test_non_existent_file(self) -> None:
         """Test creating a result for a non-existent file."""
-        result = FileInfoResult(
-            path=Path("/test/nonexistent.txt"),
-            exists=False
-        )
+        result = FileInfoResult(path=Path("/test/nonexistent.txt"), exists=False)
 
         assert result.success is True
         assert result.path == Path("/test/nonexistent.txt")
@@ -240,7 +225,7 @@ class TestDirectoryInfoResult:
             directories=directories,
             total_files=2,
             total_directories=2,
-            total_size=1000
+            total_size=1000,
         )
 
         assert result.success is True
@@ -263,7 +248,7 @@ class TestDirectoryInfoResult:
             directories=[],
             total_files=0,
             total_directories=0,
-            total_size=0
+            total_size=0,
         )
 
         assert result.success is True
@@ -283,7 +268,9 @@ class TestDirectoryInfoResult:
             exists=False,
         )
 
-        assert result.success is True  # Operation succeeded, but directory doesn't exist
+        assert (
+            result.success is True
+        )  # Operation succeeded, but directory doesn't exist
         assert result.path == Path("/test/nonexistent_dir")
         assert result.exists is False
         assert result.is_empty is True
@@ -308,7 +295,7 @@ class TestFindResult:
             recursive=True,
             files=files,
             directories=directories,
-            total_matches=4
+            total_matches=4,
         )
 
         assert result.success is True
@@ -326,7 +313,7 @@ class TestFindResult:
             pattern="*.nonexistent",
             recursive=True,
             files=[],
-            directories=[]
+            directories=[],
         )
 
         assert result.success is True
@@ -343,11 +330,7 @@ class TestDataResult:
         """Test creating a YAML data result."""
         data = {"name": "Test", "values": [1, 2, 3]}
 
-        result = DataResult(
-            path=Path("/test/file.yaml"),
-            data=data,
-            format="yaml"
-        )
+        result = DataResult(path=Path("/test/file.yaml"), data=data, format="yaml")
 
         assert result.success is True
         assert result.path == Path("/test/file.yaml")
@@ -360,10 +343,7 @@ class TestDataResult:
         data = {"name": "Test", "values": [1, 2, 3]}
 
         result = DataResult(
-            path=Path("/test/file.json"),
-            data=data,
-            format="json",
-            schema_valid=True
+            path=Path("/test/file.json"), data=data, format="json", schema_valid=True
         )
 
         assert result.success is True
@@ -379,7 +359,7 @@ class TestDataResult:
             path=Path("/test/file.yaml"),
             data={},
             format="yaml",
-            error="Failed to parse YAML data"
+            error="Failed to parse YAML data",
         )
 
         assert result.success is False

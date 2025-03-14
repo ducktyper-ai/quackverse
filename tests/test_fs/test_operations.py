@@ -114,8 +114,9 @@ class TestFileSystemOperations:
         assert (temp_dir / "nonatomic.txt").read_text() == "content"
 
         # Test with calculate_checksum=True
-        result = operations.write_text("checksum.txt", "content",
-                                       calculate_checksum=True)
+        result = operations.write_text(
+            "checksum.txt", "content", calculate_checksum=True
+        )
         assert result.success is True
         assert result.checksum is not None
 
@@ -130,14 +131,16 @@ class TestFileSystemOperations:
         assert (temp_dir / "binary.bin").read_bytes() == b"\x00\x01\x02\x03"
 
         # Test with atomic=False
-        result = operations.write_binary("nonatomic.bin", b"\x04\x05\x06\x07",
-                                         atomic=False)
+        result = operations.write_binary(
+            "nonatomic.bin", b"\x04\x05\x06\x07", atomic=False
+        )
         assert result.success is True
         assert (temp_dir / "nonatomic.bin").read_bytes() == b"\x04\x05\x06\x07"
 
         # Test with calculate_checksum=True
-        result = operations.write_binary("checksum.bin", b"\x08\x09\x0A\x0B",
-                                         calculate_checksum=True)
+        result = operations.write_binary(
+            "checksum.bin", b"\x08\x09\x0a\x0b", calculate_checksum=True
+        )
         assert result.success is True
         assert result.checksum is not None
 
@@ -240,7 +243,8 @@ class TestFileSystemOperations:
         # Test creating existing directory with exist_ok=False
         with patch("quackcore.fs.operations.ensure_directory") as mock_ensure_directory:
             mock_ensure_directory.side_effect = QuackFileExistsError(
-                str(temp_dir / "new_dir"))
+                str(temp_dir / "new_dir")
+            )
             result = operations.create_directory("new_dir", exist_ok=False)
             assert result.success is False
             assert "already exists" in result.error.lower()
@@ -437,7 +441,7 @@ class TestFileSystemOperations:
 
         # Test non-dictionary JSON
         list_json = temp_dir / "list.json"
-        list_json.write_text('[1, 2, 3]')
+        list_json.write_text("[1, 2, 3]")
         result = operations.read_json("list.json")
         assert result.success is False
         assert "not an object" in result.error.lower()

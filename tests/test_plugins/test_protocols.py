@@ -2,6 +2,7 @@
 """
 Tests for plugin protocol interfaces.
 """
+from typing import Callable
 
 import pytest
 
@@ -34,7 +35,7 @@ class TestCommandPlugin(CommandPluginProtocol):
     def list_commands(self) -> list[str]:
         return ["cmd1", "cmd2"]
 
-    def get_command(self, name: str) -> callable | None:
+    def get_command(self, name: str) -> Callable | None:
         if name in self.list_commands():
             return lambda *args, **kwargs: f"Executed {name}"
         return None
@@ -56,7 +57,7 @@ class TestWorkflowPlugin(WorkflowPluginProtocol):
     def list_workflows(self) -> list[str]:
         return ["flow1", "flow2"]
 
-    def get_workflow(self, name: str) -> callable | None:
+    def get_workflow(self, name: str) -> Callable | None:
         if name in self.list_workflows():
             return lambda *args, **kwargs: f"Ran {name}"
         return None
@@ -78,11 +79,8 @@ class TestExtensionPlugin(ExtensionPluginProtocol):
     def get_target_plugin(self) -> str:
         return "target_plugin"
 
-    def get_extensions(self) -> dict[str, callable]:
-        return {
-            "ext1": lambda: "Extension 1",
-            "ext2": lambda: "Extension 2"
-        }
+    def get_extensions(self) -> dict[str, Callable]:
+        return {"ext1": lambda: "Extension 1", "ext2": lambda: "Extension 2"}
 
 
 class TestProviderPlugin(ProviderPluginProtocol):
@@ -93,10 +91,7 @@ class TestProviderPlugin(ProviderPluginProtocol):
         return "test_provider_plugin"
 
     def get_services(self) -> dict[str, object]:
-        return {
-            "service1": "Service 1",
-            "service2": "Service 2"
-        }
+        return {"service1": "Service 1", "service2": "Service 2"}
 
     def get_service(self, name: str) -> object | None:
         return self.get_services().get(name)
@@ -122,8 +117,8 @@ class TestConfigurablePlugin(ConfigurablePluginProtocol):
                 "type": "object",
                 "properties": {
                     "option1": {"type": "string"},
-                    "option2": {"type": "integer"}
-                }
+                    "option2": {"type": "integer"},
+                },
             }
         }
 
@@ -154,7 +149,7 @@ class TestMixedPlugin(CommandPluginProtocol, WorkflowPluginProtocol):
     def list_commands(self) -> list[str]:
         return ["cmd1", "cmd2"]
 
-    def get_command(self, name: str) -> callable | None:
+    def get_command(self, name: str) -> Callable | None:
         if name in self.list_commands():
             return lambda *args, **kwargs: f"Executed {name}"
         return None
@@ -168,7 +163,7 @@ class TestMixedPlugin(CommandPluginProtocol, WorkflowPluginProtocol):
     def list_workflows(self) -> list[str]:
         return ["flow1", "flow2"]
 
-    def get_workflow(self, name: str) -> callable | None:
+    def get_workflow(self, name: str) -> Callable | None:
         if name in self.list_workflows():
             return lambda *args, **kwargs: f"Ran {name}"
         return None

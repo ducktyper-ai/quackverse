@@ -134,8 +134,9 @@ class TestSpecificErrors:
 
     def test_configuration_error(self) -> None:
         """Test QuackConfigurationError."""
-        error = QuackConfigurationError("Config error", "/path/to/config.yaml",
-                                        "database.url")
+        error = QuackConfigurationError(
+            "Config error", "/path/to/config.yaml", "database.url"
+        )
 
         assert "Config error" in str(error)
         assert error.config_path == "/path/to/config.yaml"
@@ -151,8 +152,9 @@ class TestSpecificErrors:
 
     def test_authentication_error(self) -> None:
         """Test QuackAuthenticationError."""
-        error = QuackAuthenticationError("Auth error", "Google Drive",
-                                         "/path/to/credentials.json")
+        error = QuackAuthenticationError(
+            "Auth error", "Google Drive", "/path/to/credentials.json"
+        )
 
         assert "Auth error" in str(error)
         assert error.service == "Google Drive"

@@ -33,11 +33,7 @@ class TestConfigModels:
         assert config.console is True
 
         # Test with custom values
-        config = LoggingConfig(
-            level="DEBUG",
-            file=Path("/test/log.txt"),
-            console=False
-        )
+        config = LoggingConfig(level="DEBUG", file=Path("/test/log.txt"), console=False)
         assert config.level == "DEBUG"
         assert config.file == Path("/test/log.txt")
         assert config.console is False
@@ -109,7 +105,7 @@ class TestConfigModels:
             output_dir=Path("/test/output"),
             assets_dir=Path("/test/assets"),
             data_dir=Path("/test/data"),
-            temp_dir=Path("/test/temp")
+            temp_dir=Path("/test/temp"),
         )
         assert config.base_dir == Path("/test/base")
         assert config.output_dir == Path("/test/output")
@@ -133,7 +129,7 @@ class TestConfigModels:
             credentials_file=Path("/test/credentials.json"),
             shared_folder_id="test_folder_id",
             gmail_labels=["INBOX", "IMPORTANT"],
-            gmail_days_back=7
+            gmail_days_back=7,
         )
         assert config.client_secrets_file == Path("/test/secrets.json")
         assert config.credentials_file == Path("/test/credentials.json")
@@ -150,8 +146,7 @@ class TestConfigModels:
 
         # Test with custom values
         config = NotionConfig(
-            api_key="test_api_key",
-            database_ids={"projects": "db1", "tasks": "db2"}
+            api_key="test_api_key", database_ids={"projects": "db1", "tasks": "db2"}
         )
         assert config.api_key == "test_api_key"
         assert config.database_ids == {"projects": "db1", "tasks": "db2"}
@@ -166,7 +161,7 @@ class TestConfigModels:
         # Test with custom values
         config = IntegrationsConfig(
             google=GoogleConfig(client_secrets_file=Path("/test/secrets.json")),
-            notion=NotionConfig(api_key="test_api_key")
+            notion=NotionConfig(api_key="test_api_key"),
         )
         assert config.google.client_secrets_file == Path("/test/secrets.json")
         assert config.notion.api_key == "test_api_key"
@@ -185,7 +180,7 @@ class TestConfigModels:
             project_name="TestProject",
             environment="production",
             debug=True,
-            verbose=True
+            verbose=True,
         )
         assert config.project_name == "TestProject"
         assert config.environment == "production"
@@ -204,7 +199,7 @@ class TestConfigModels:
         config = PluginsConfig(
             enabled=["plugin1", "plugin2"],
             disabled=["plugin3"],
-            paths=[Path("/test/plugins"), Path("/test/more_plugins")]
+            paths=[Path("/test/plugins"), Path("/test/more_plugins")],
         )
         assert config.enabled == ["plugin1", "plugin2"]
         assert config.disabled == ["plugin3"]
@@ -227,7 +222,7 @@ class TestConfigModels:
             paths=PathsConfig(base_dir=Path("/test/base")),
             logging=LoggingConfig(level="DEBUG"),
             plugins=PluginsConfig(enabled=["plugin1"]),
-            custom={"key": "value"}
+            custom={"key": "value"},
         )
         assert config.general.project_name == "TestProject"
         assert config.paths.base_dir == Path("/test/base")
@@ -256,8 +251,9 @@ class TestConfigModels:
 
         # Test with disabled plugin
         config.plugins.disabled = ["plugin3", "plugin1"]
-        assert config.get_plugin_enabled(
-            "plugin1") is False  # In disabled list, even if in enabled
+        assert (
+            config.get_plugin_enabled("plugin1") is False
+        )  # In disabled list, even if in enabled
 
         # Test get_custom method
         assert config.get_custom("key") == "value"
