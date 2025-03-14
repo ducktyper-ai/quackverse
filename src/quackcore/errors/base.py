@@ -7,9 +7,10 @@ ecosystem, providing consistent error handling and detailed diagnostic informati
 """
 
 import builtins
+from collections.abc import Callable
 from functools import wraps
 from pathlib import Path
-from typing import Callable, TypeVar
+from typing import TypeVar
 
 T = TypeVar("T")  # Generic return type for functions
 R = TypeVar("R")  # Generic return type for wrapped functions
@@ -114,8 +115,10 @@ class QuackPermissionError(QuackIOError):
         if message is None:
             message = f"Permission denied for {operation} operation on {path}"
 
+        # Create context dictionary with both path and operation information
         context = {"path": str(path), "operation": operation}
-        super().__init__(message, path, original_error)
+        # Pass context to the parent constructor instead of just the path
+        super().__init__(message, context, original_error)
         self.operation = operation
 
 
@@ -194,8 +197,10 @@ class QuackFormatError(QuackIOError):
         if message is None:
             message = f"Invalid {format_name} format in {path}"
 
+        # Create context dictionary with both path and format information
         context = {"path": str(path), "format": format_name}
-        super().__init__(message, path, original_error)
+        # Pass the context to QuackIOError constructor
+        super().__init__(message, context, original_error)
         self.format_name = format_name
 
 

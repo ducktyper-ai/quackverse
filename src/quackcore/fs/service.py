@@ -22,8 +22,6 @@ from quackcore.fs.results import (
     WriteResult,
 )
 from quackcore.fs.utils import (
-    atomic_write,
-    compute_checksum,
     create_temp_directory,
     create_temp_file,
     ensure_directory,
@@ -42,9 +40,6 @@ from quackcore.fs.utils import (
     is_subdirectory,
     join_path,
     normalize_path,
-    safe_copy,
-    safe_delete,
-    safe_move,
     split_path,
 )
 
@@ -384,8 +379,8 @@ class FileSystemService:
         return self.operations.write_json(path, data, atomic, indent)
 
     # --- Advanced and Utility Operations ---
-    # For the following utility methods, we wrap with @wrap_io_errors
-    # so that any underlying IO errors are caught and wrapped as our custom exceptions.
+    # For the following utility methods, we directly use the utility functions
+    # instead of delegating to the operations instance.
 
     @wrap_io_errors
     def ensure_directory(self, path: str | Path, exist_ok: bool = True) -> Path:

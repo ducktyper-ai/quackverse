@@ -7,7 +7,7 @@ allowing QuackCore to expose configuration functionality to other modules.
 """
 
 from pathlib import Path
-from typing import Any, Protocol, TypeVar
+from typing import Protocol, TypeVar
 
 from quackcore.config.loader import load_config
 from quackcore.config.models import QuackConfig
@@ -102,7 +102,7 @@ class QuackConfigPlugin:
         self._config = normalize_paths(self._config)
         return self._config
 
-    def get_value(self, path: str, default: T | None = None) -> Any:
+    def get_value(self, path: str, default: T | None = None) -> T:
         """
         Get a configuration value by path.
 

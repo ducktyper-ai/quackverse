@@ -9,7 +9,8 @@ making it easier to diagnose and fix issues in the Quack ecosystem.
 import inspect
 import sys
 import traceback
-from typing import Callable, TypeVar
+from collections.abc import Callable
+from typing import TypeVar
 
 from rich.console import Console
 from rich.panel import Panel

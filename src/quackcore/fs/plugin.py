@@ -11,9 +11,6 @@ from typing import Protocol, TypeVar
 
 from quackcore.fs.results import (
     DataResult,
-    DirectoryInfoResult,
-    FileInfoResult,
-    FindResult,
     OperationResult,
     ReadResult,
     WriteResult,

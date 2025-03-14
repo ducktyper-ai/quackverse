@@ -51,15 +51,14 @@ def load_env_config(
     if not config_dir:
         # Try to guess the config directory from the general config
         if "config" in config.general.project_name.lower():
-            # If the project name contains 'config', assume it's already a config directory
+            # If the project name contains 'config',
+            # assume it's already a config directory
             return config
 
         # Use a heuristic: look for a 'config' directory in common locations
         candidates = [
-            # Config directory in the project
             Path("./config"),
             Path("./configs"),
-            # Config directory relative to the base directory
             Path(config.paths.base_dir) / "config",
             Path(config.paths.base_dir) / "configs",
         ]
@@ -76,7 +75,7 @@ def load_env_config(
     # Load environment-specific configuration
     env_file = Path(config_dir) / f"{env}.yaml"
     if not env_file.exists():
-        # No environment-specific config, try with .yml extension
+        # Try with .yml extension
         env_file = Path(config_dir) / f"{env}.yml"
         if not env_file.exists():
             # No environment-specific config, return the original
@@ -113,13 +112,9 @@ def get_config_value(
     Returns:
         Configuration value
     """
-    # Convert config to dictionary
     config_dict = config.to_dict()
-
-    # Split the path into parts
     parts = path.split(".")
 
-    # Traverse the dictionary
     current = config_dict
     for part in parts:
         if isinstance(current, dict) and part in current:
@@ -151,6 +146,21 @@ def validate_required_config(
     return missing
 
 
+def _normalize_path(value: str | Path, base_dir: Path) -> str:
+    """
+    Normalize a single path value relative to a base directory.
+
+    Args:
+        value: A string or Path representing a path
+        base_dir: Base directory for resolving relative paths
+
+    Returns:
+        Absolute path as string.
+    """
+    p = Path(value)
+    return str(p) if p.is_absolute() else str(base_dir / p)
+
+
 def normalize_paths(config: QuackConfig) -> QuackConfig:
     """
     Normalize all paths in the configuration.
@@ -163,38 +173,35 @@ def normalize_paths(config: QuackConfig) -> QuackConfig:
     Returns:
         Configuration with normalized paths
     """
-    # Make a copy of the configuration
     config_dict = config.to_dict()
     base_dir = Path(config_dict["paths"]["base_dir"])
 
-    # Normalize paths in the paths section
+    # Normalize the 'paths' section, except the base_dir key.
     for key, value in config_dict["paths"].items():
-        if key != "base_dir" and isinstance(value, (str, Path)):
-            path = Path(value)
-            if not path.is_absolute():
-                config_dict["paths"][key] = str(base_dir / path)
+        if key != "base_dir" and isinstance(value, str | Path):
+            config_dict["paths"][key] = _normalize_path(value, base_dir)
 
-    # Normalize paths in the plugins section
+    # Normalize the plugins' paths if present.
     if "plugins" in config_dict and "paths" in config_dict["plugins"]:
-        for i, path in enumerate(config_dict["plugins"]["paths"]):
-            if not Path(path).is_absolute():
-                config_dict["plugins"]["paths"][i] = str(base_dir / path)
+        config_dict["plugins"]["paths"] = [
+            _normalize_path(path, base_dir) for path in config_dict["plugins"]["paths"]
+        ]
 
-    # Normalize paths in Google integration
+    # Normalize Google integration file paths.
     if "integrations" in config_dict and "google" in config_dict["integrations"]:
         google = config_dict["integrations"]["google"]
         for key in ["client_secrets_file", "credentials_file"]:
-            if key in google and google[key] and not Path(google[key]).is_absolute():
-                google[key] = str(base_dir / google[key])
+            if key in google and google[key]:
+                google[key] = _normalize_path(google[key], base_dir)
 
-    # Normalize logging file path
+    # Normalize logging file path.
     if (
         "logging" in config_dict
         and "file" in config_dict["logging"]
         and config_dict["logging"]["file"]
     ):
-        log_path = Path(config_dict["logging"]["file"])
-        if not log_path.is_absolute():
-            config_dict["logging"]["file"] = str(base_dir / log_path)
+        config_dict["logging"]["file"] = _normalize_path(
+            config_dict["logging"]["file"], base_dir
+        )
 
     return QuackConfig.model_validate(config_dict)

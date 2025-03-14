@@ -88,7 +88,7 @@ class FileSystemOperations:
         """
         resolved_path = self.resolve_path(path)
         try:
-            with open(resolved_path, "r", encoding=encoding) as f:
+            with open(resolved_path, encoding=encoding) as f:
                 content = f.read()
             return ReadResult(
                 success=True,
