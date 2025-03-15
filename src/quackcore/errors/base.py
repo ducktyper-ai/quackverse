@@ -311,6 +311,10 @@ def wrap_io_errors(func: Callable[..., R]) -> Callable[..., R]:
     def wrapper(*args: object, **kwargs: object) -> R:
         try:
             return func(*args, **kwargs)
+        except (QuackError, QuackIOError, QuackFileNotFoundError,
+                QuackFileExistsError, QuackPermissionError):
+            # Don't wrap our own exceptions; re-raise them as-is.
+            raise
         except builtins.ValueError as e:
             raise QuackValidationError(str(e), original_error=e) from e
         except builtins.FileNotFoundError as e:
@@ -319,24 +323,21 @@ def wrap_io_errors(func: Callable[..., R]) -> Callable[..., R]:
         except builtins.PermissionError as e:
             path = getattr(e, "filename", None)
             operation = "access"
-            raise QuackPermissionError(
-                path or "unknown", operation, original_error=e
-            ) from e
+            raise QuackPermissionError(path or "unknown", operation,
+                                       original_error=e) from e
         except builtins.FileExistsError as e:
             path = getattr(e, "filename", None)
             raise QuackFileExistsError(path or "unknown", original_error=e) from e
         except builtins.IsADirectoryError as e:
             path = getattr(e, "filename", None)
-            raise QuackIOError(
-                f"Path is a directory: {path}", path, original_error=e
-            ) from e
+            raise QuackIOError(f"Path is a directory: {path}", path,
+                               original_error=e) from e
         except builtins.NotADirectoryError as e:
             path = getattr(e, "filename", None)
-            raise QuackIOError(
-                f"Path is not a directory: {path}", path, original_error=e
-            ) from e
+            raise QuackIOError(f"Path is not a directory: {path}", path,
+                               original_error=e) from e
         except OSError as e:
-            # Handle other OS errors
+            # Handle other OS errors.
             path = getattr(e, "filename", None)
             raise QuackIOError(str(e), path, original_error=e) from e
         except Exception as e:

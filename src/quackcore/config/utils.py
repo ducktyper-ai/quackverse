@@ -161,33 +161,35 @@ def _normalize_path(value: str | Path, base_dir: Path) -> str:
     return str(p) if p.is_absolute() else str(base_dir / p)
 
 
-# src/quackcore/config/utils.py fix for normalize_paths function
-
-
 def normalize_paths(config: QuackConfig) -> QuackConfig:
     """
     Normalize all paths in the configuration.
 
-    This converts all relative paths to absolute paths based on the base directory.
+    This converts all relative paths to absolute paths based on the base directory,
+    ensuring that all normalized paths are returned as strings.
 
     Args:
         config: Configuration object
 
     Returns:
-        Configuration with normalized paths
+        Configuration with normalized paths (all as strings)
     """
     config_dict = config.to_dict()
     base_dir = Path(config_dict["paths"]["base_dir"])
 
+    # For consistent behavior, convert base_dir to a string.
+    config_dict["paths"]["base_dir"] = str(base_dir)
+
     # Normalize the 'paths' section, except the base_dir key.
     for key, value in config_dict["paths"].items():
-        if key != "base_dir" and isinstance(value, (str | Path)):
-            config_dict["paths"][key] = _normalize_path(value, base_dir)
+        if key != "base_dir" and isinstance(value, (str, Path)):
+            config_dict["paths"][key] = str(_normalize_path(value, base_dir))
 
     # Normalize the plugins' paths if present.
     if "plugins" in config_dict and "paths" in config_dict["plugins"]:
         config_dict["plugins"]["paths"] = [
-            _normalize_path(path, base_dir) for path in config_dict["plugins"]["paths"]
+            str(_normalize_path(path, base_dir)) for path in
+            config_dict["plugins"]["paths"]
         ]
 
     # Normalize Google integration file paths.
@@ -195,18 +197,13 @@ def normalize_paths(config: QuackConfig) -> QuackConfig:
         google = config_dict["integrations"]["google"]
         for key in ["client_secrets_file", "credentials_file"]:
             if key in google and google[key]:
-                google[key] = _normalize_path(google[key], base_dir)
+                google[key] = str(_normalize_path(google[key], base_dir))
 
     # Normalize logging file path.
-    if (
-        "logging" in config_dict
-        and "file" in config_dict["logging"]
-        and config_dict["logging"]["file"]
-    ):
-        config_dict["logging"]["file"] = _normalize_path(
-            config_dict["logging"]["file"], base_dir
-        )
+    if "logging" in config_dict and "file" in config_dict["logging"] and \
+            config_dict["logging"]["file"]:
+        config_dict["logging"]["file"] = str(
+            _normalize_path(config_dict["logging"]["file"], base_dir))
 
     # Create a new configuration object with the normalized paths
-    # Use model_validate method instead of directly constructing
     return QuackConfig.model_validate(config_dict)

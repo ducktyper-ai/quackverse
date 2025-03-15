@@ -113,8 +113,8 @@ class PathResolver:
                 context.add_directory(name, dir_path, **attrs)
 
     def find_source_directory(
-        self,
-        start_dir: str | Path | None = None,
+            self,
+            start_dir: str | Path | None = None,
     ) -> Path:
         """
         Find the source directory of a project.
@@ -126,42 +126,37 @@ class PathResolver:
             Path to the source directory
 
         Raises:
-            QuackFileNotFoundError: If source directory cannot be found
+            QuackFileNotFoundError: If a source directory cannot be found
         """
+        current_dir = Path(start_dir) if start_dir else Path.cwd()
+
+        # First, check if the current directory is a Python package.
+        if (current_dir / "__init__.py").exists():
+            return current_dir
+
         try:
-            # Try to find a 'src' directory
+            # Try to find a 'src' directory starting from the given directory.
             return find_nearest_directory("src", start_dir)
         except QuackFileNotFoundError as e:
-            # If not found, look for a Python package
-            current_dir = Path(start_dir) if start_dir else Path.cwd()
-
-            # Check if current directory is a Python package
-            if (current_dir / "__init__.py").exists():
-                return current_dir
-
-            for _ in range(5):  # Check up to 5 levels
-                # Check if current directory has an __init__.py file
+            # If a 'src' directory is not found, search upward for a Python package.
+            for _ in range(5):  # Check up to 5 levels upward.
                 if (current_dir / "__init__.py").exists():
-                    # Found a Python package
                     return current_dir
-
                 parent_dir = current_dir.parent
-                if parent_dir == current_dir:
-                    # Reached filesystem root
+                if parent_dir == current_dir:  # Reached the filesystem root.
                     break
-
                 current_dir = parent_dir
 
-            # Could not find source directory
             raise QuackFileNotFoundError(
                 "src",
-                f"Could not find source directory in or near {start_dir or Path.cwd()}",
+                f"Could not find source directory in "
+                f"or near {start_dir or Path.cwd()}",
             ) from e
 
     def find_output_directory(
-        self,
-        start_dir: str | Path | None = None,
-        create: bool = False,
+            self,
+            start_dir: str | Path | None = None,
+            create: bool = False,
     ) -> Path:
         """
         Find or create an output directory for a project.
@@ -174,13 +169,20 @@ class PathResolver:
             Path to the output directory
 
         Raises:
-            QuackFileNotFoundError: If output directory cannot be found
-                                    and create is False
+            QuackFileNotFoundError: If output directory cannot be found and create is False
         """
+        # If start_dir is specified and create is True, prioritize creating there.
+        if start_dir and create:
+            start_path = Path(start_dir)
+            output_dir = start_path / "output"
+            output_dir.mkdir(parents=True, exist_ok=True)
+            return output_dir
+
         try:
-            # Try to find project root
+            # Try to find the project root.
             root_dir = find_project_root(start_dir)
-            # Check common output directories at the project root
+
+            # Check common output directories at the project root.
             output_dir = root_dir / "output"
             if output_dir.exists():
                 return output_dir
@@ -193,17 +195,8 @@ class PathResolver:
             if output_dir.exists():
                 return output_dir
 
-            # Use the provided start_dir for output directory if specified
-            if start_dir and start_dir != root_dir:
-                start_path = Path(start_dir)
-                if create:
-                    # Create output directory in the specified start_dir
-                    output_dir = start_path / "output"
-                    output_dir.mkdir(parents=True, exist_ok=True)
-                    return output_dir
-
             if create:
-                # Create 'output' directory at the project root
+                # Create the 'output' directory at the project root.
                 output_dir = root_dir / "output"
                 output_dir.mkdir(parents=True, exist_ok=True)
                 return output_dir
@@ -212,7 +205,7 @@ class PathResolver:
                 "output", f"Could not find output directory in project root {root_dir}"
             )
         except QuackFileNotFoundError as e:
-            # If project root cannot be found, try current directory
+            # If project root cannot be found, fall back to the current or provided directory.
             current_dir = Path(start_dir) if start_dir else Path.cwd()
             if create:
                 output_dir = current_dir / "output"

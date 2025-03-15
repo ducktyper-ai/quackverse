@@ -102,8 +102,8 @@ def _is_float(value: str) -> bool:
     """
     try:
         float(value)
-        # Allow both standard decimal point and trailing decimal point
-        return "." in value and (value[-1] != "." or len(value) > 1)
+        # Must have a decimal point with at least one digit after it
+        return "." in value and not value.endswith(".")
     except ValueError:
         return False
 
