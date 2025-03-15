@@ -73,9 +73,11 @@ class ErrorHandler:
 
         return "\n".join(result)
 
+    # In src/quackcore/errors/handlers.py
+
     def print_error(
         self, error: Exception, title: str | None = None, show_traceback: bool = False
-    ) -> None:
+    ) -> str:
         """
         Print an error to the console.
 
@@ -83,11 +85,15 @@ class ErrorHandler:
             error: The exception to print
             title: An optional title for the error panel
             show_traceback: Whether to show the traceback
+
+        Returns:
+            The formatted error message (for testing)
         """
         import traceback  # Import outside the try block so it's always available
 
         error_title = title or f"[bold red]{type(error).__name__}[/bold red]"
         formatted_error = self.format_error(error)
+        panel_content = formatted_error
 
         if show_traceback and error.__traceback__:
             try:
@@ -95,22 +101,26 @@ class ErrorHandler:
 
                 # Create a properly formatted traceback that can be displayed in Rich
                 tb = Traceback.from_exception(type(error), error, error.__traceback__)
+                panel_content = f"{formatted_error}\n\n{tb}"
                 self.console.print(
                     Panel(
-                        f"{formatted_error}\n\n{tb}",
+                        panel_content,
                         title=error_title,
                         border_style="red",
                     )
                 )
             except ImportError:
+                from rich.traceback import Traceback
+
                 # Only catch ImportError for more specific exception handling
                 # This is for when rich.traceback might not be available
                 trace_str = "".join(
                     traceback.format_exception(type(error), error, error.__traceback__)
                 )
+                panel_content = f"{formatted_error}\n\nTraceback:\n{trace_str}"
                 self.console.print(
                     Panel(
-                        f"{formatted_error}\n\nTraceback:\n{trace_str}",
+                        panel_content,
                         title=error_title,
                         border_style="red",
                     )
@@ -123,6 +133,8 @@ class ErrorHandler:
                     border_style="red",
                 )
             )
+
+        return panel_content
 
     def get_caller_info(self, depth: int = 1) -> dict[str, object]:
         """
@@ -185,7 +197,7 @@ class ErrorHandler:
         title: str | None = None,
         show_traceback: bool = False,
         exit_code: int | None = None,
-    ) -> None:
+    ) -> str:
         """
         Handle an error by printing it and optionally exiting.
 
@@ -194,10 +206,14 @@ class ErrorHandler:
             title: An optional title for the error panel
             show_traceback: Whether to show the traceback
             exit_code: If provided, exit with this code after handling the error
+
+        Returns:
+            The formatted error message (for testing)
         """
-        self.print_error(error, title, show_traceback)
+        panel_content = self.print_error(error, title, show_traceback)
         if exit_code is not None:
             sys.exit(exit_code)
+        return panel_content
 
 
 def handle_errors(

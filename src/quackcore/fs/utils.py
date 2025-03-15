@@ -48,9 +48,12 @@ def get_extension(path: str | Path) -> str:
     return path_obj.suffix.lstrip(".")
 
 
+@wrap_io_errors
 def normalize_path(path: str | Path) -> Path:
     """
     Normalize a path for cross-platform compatibility.
+
+    This does not check if the path exists.
 
     Args:
         path: Path to normalize
@@ -58,7 +61,12 @@ def normalize_path(path: str | Path) -> Path:
     Returns:
         Normalized Path object
     """
-    return Path(path).expanduser().resolve()
+    path_obj = Path(path).expanduser()
+    try:
+        return path_obj.resolve()
+    except FileNotFoundError:
+        # If the path doesn't exist, just normalize it without resolving symlinks
+        return path_obj
 
 
 def is_same_file(path1: str | Path, path2: str | Path) -> bool:

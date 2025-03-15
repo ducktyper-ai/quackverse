@@ -31,6 +31,8 @@ class PluginLoader:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(log_level)
 
+    # In src/quackcore/plugins/discovery.py
+
     def load_entry_points(
         self, group: str = "quackcore.plugins"
     ) -> list[QuackPluginProtocol]:
@@ -51,20 +53,22 @@ class PluginLoader:
             eps = entry_points(group=group)
 
             # Handle different return types based on Python version
+            discovered_eps = []
             if hasattr(eps, "select"):  # Python 3.10+
-                discovered_eps = eps
-            else:  # Earlier Python versions
-                discovered_eps = eps
+                discovered_eps = list(eps)
+            else:  # Earlier Python versions or different implementation
+                discovered_eps = list(eps)  # Force evaluation of the iterator
 
             for ep in discovered_eps:
                 try:
                     self.logger.debug(f"Loading entry point: {ep.name} from {ep.value}")
                     factory = ep.load()
-                    plugin = factory()
-                    plugins.append(plugin)
-                    self.logger.info(
-                        f"Loaded plugin {plugin.name} from entry point {ep.name}"
-                    )
+                    if callable(factory):
+                        plugin = factory()
+                        plugins.append(plugin)
+                        self.logger.info(
+                            f"Loaded plugin {plugin.name} from entry point {ep.name}"
+                        )
                 except Exception as e:
                     self.logger.error(f"Failed to load entry point {ep.name}: {e}")
         except Exception as e:
@@ -93,9 +97,7 @@ class PluginLoader:
 
             # Look for a create_plugin function
             if hasattr(module, "create_plugin"):
-                factory = (
-                    module.create_plugin
-                )  # Direct attribute access per B009 guidance
+                factory = module.create_plugin
                 if callable(factory):
                     plugin = factory()
                     if not hasattr(plugin, "name"):
@@ -110,18 +112,26 @@ class PluginLoader:
                     return plugin
 
             # If no create_plugin function, look for a class that implements QuackPlugin
-            for _, obj in inspect.getmembers(module):
+            for name, obj in inspect.getmembers(module):
                 if (
                     inspect.isclass(obj)
                     and hasattr(obj, "name")
-                    and not obj.__name__.startswith("_")
-                    and obj.__module__ == module.__name__
-                ):
-                    plugin = obj()
-                    self.logger.info(
-                        f"Loaded plugin {plugin.name} from module {module_path}"
+                    and not name.startswith("_")
+                    and (
+                        obj.__module__ == module.__name__
+                        or getattr(obj, "__module__", "").startswith(module.__name__)
                     )
-                    return plugin
+                ):
+                    try:
+                        plugin = obj()
+                        self.logger.info(
+                            f"Loaded plugin {plugin.name} from module {module_path}"
+                        )
+                        return plugin
+                    except Exception as e:
+                        self.logger.error(
+                            f"Error initializing plugin class {name}: {e}"
+                        )
 
             raise QuackPluginError(
                 f"No plugin found in module {module_path}",

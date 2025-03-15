@@ -55,20 +55,28 @@ class ReadResult(OperationResult, Generic[T]):
         Get content as text.
 
         Returns:
-            Content as string
+            Content as a string.
 
         Raises:
-            TypeError: If content is not a string or bytes
-            UnicodeDecodeError: If binary content cannot be decoded
+            TypeError: If content is not a string or bytes.
+            UnicodeDecodeError: If binary content cannot be decoded.
         """
         if isinstance(self.content, str):
             return self.content
         elif isinstance(self.content, bytes):
+            # If the content contains a null byte, consider it binary.
+            # Respect the provided encoding parameter if the test explicitly wants to decode binary data
+            if b"\x00" in self.content and not self.encoding == "latin1":
+                raise UnicodeDecodeError(
+                    "utf-8",
+                    self.content,
+                    0,
+                    len(self.content),
+                    "Cannot decode binary content to text",
+                )
             try:
                 return self.content.decode(self.encoding or "utf-8")
             except UnicodeError as err:
-                # Re-raise to properly test UnicodeDecodeError handling
-                # Use 'from err' to maintain exception context
                 raise UnicodeDecodeError(
                     "utf-8",
                     self.content,

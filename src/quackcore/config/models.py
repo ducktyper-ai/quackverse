@@ -30,6 +30,8 @@ class LoggingConfig(BaseModel):
     file: Path | None = Field(default=None, description="Log file path")
     console: bool = Field(default=True, description="Log to console")
 
+    # In src/quackcore/config/models.py
+
     @field_validator("level")
     @classmethod
     def validate_level(cls, v: str) -> str:

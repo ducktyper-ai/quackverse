@@ -113,8 +113,8 @@ class PathResolver:
                 context.add_directory(name, dir_path, **attrs)
 
     def find_source_directory(
-            self,
-            start_dir: str | Path | None = None,
+        self,
+        start_dir: str | Path | None = None,
     ) -> Path:
         """
         Find the source directory of a project.
@@ -149,14 +149,13 @@ class PathResolver:
 
             raise QuackFileNotFoundError(
                 "src",
-                f"Could not find source directory in "
-                f"or near {start_dir or Path.cwd()}",
+                f"Could not find source directory in or near {start_dir or Path.cwd()}",
             ) from e
 
     def find_output_directory(
-            self,
-            start_dir: str | Path | None = None,
-            create: bool = False,
+        self,
+        start_dir: str | Path | None = None,
+        create: bool = False,
     ) -> Path:
         """
         Find or create an output directory for a project.
@@ -201,6 +200,7 @@ class PathResolver:
                 output_dir.mkdir(parents=True, exist_ok=True)
                 return output_dir
 
+            # Fix: Always raise when not found and create=False
             raise QuackFileNotFoundError(
                 "output", f"Could not find output directory in project root {root_dir}"
             )
@@ -314,9 +314,13 @@ class PathResolver:
         if start_dir is None:
             start_dir = Path.cwd()
         start_dir = Path(start_dir)
-        cache_key = str(start_dir)
+
+        # Fix: Use absolute path for cache key
+        cache_key = str(start_dir.resolve())
+
         if cache_key in self._cache:
             return self._cache[cache_key]
+
         try:
             root_dir = find_project_root(start_dir)
             context = ProjectContext(root_dir=root_dir)
@@ -340,14 +344,14 @@ class PathResolver:
         """
         root_dir = context.root_dir
         config_files = [
-            "pyproject.toml",
-            "setup.py",
-            "setup.cfg",
-            "quack_config.yaml",
-            "quack_config.yml",
             "config/default.yaml",
             "config/default.yml",
+            "quack_config.yaml",
+            "quack_config.yml",
             ".quack",
+            "pyproject.toml",  # Move this to the end
+            "setup.py",
+            "setup.cfg",
         ]
         for filename in config_files:
             file_path = root_dir / filename
@@ -376,9 +380,12 @@ class PathResolver:
             directories=project_context.directories,
             config_file=project_context.config_file,
             name=project_context.name,
-            content_type=content_type,
+            content_type=content_type,  # Use the provided content_type
         )
-        self._infer_content_structure(context, start_dir)
+
+        # Only infer content structure if content_type wasn't explicitly provided
+        if content_type is None:
+            self._infer_content_structure(context, start_dir)
         return context
 
     def infer_current_content(

@@ -172,8 +172,6 @@ class FileSystemService:
         """
         return self.operations.write_binary(path, content, atomic)
 
-    # Fixed write_lines method for FileSystemService
-
     def write_lines(
         self,
         path: str | Path,
@@ -182,30 +180,30 @@ class FileSystemService:
         atomic: bool = True,
         line_ending: str = "\n",
     ) -> WriteResult:
-        """
-        Write lines to a text file.
+        """Write lines to a text file.
+
+        This method explicitly joins the lines using the specified line ending.
+        When a non-default line ending is provided, the content is encoded and written
+        in binary mode to prevent any unwanted normalization.
 
         Args:
-            path: Path to the file
-            lines: Lines to write
-            encoding: Text encoding
-            atomic: Whether to use atomic writing
-            line_ending: Line ending to use
+            path: Path to the file.
+            lines: Lines to write.
+            encoding: Text encoding to use.
+            atomic: Whether to write the file atomically.
+            line_ending: The line ending to use.
 
         Returns:
-            WriteResult with operation status
+            WriteResult indicating the outcome of the write operation.
         """
-        # Explicitly join lines with the specified line ending
-        # and ensure the line ending is preserved during write operations
         content = line_ending.join(lines)
 
-        # Use binary mode to ensure exact line endings are preserved,
-        # especially for \r\n which might be normalized in text mode
+        # For non-default line endings, encode and write in binary mode
         if line_ending != "\n":
-            encoded_content = content.encode(encoding)
-            return self.operations.write_binary(path, encoded_content, atomic)
-        else:
-            return self.operations.write_text(path, content, encoding, atomic)
+            bytes_content = content.encode(encoding)
+            return self.operations.write_binary(path, bytes_content, atomic)
+
+        return self.operations.write_text(path, content, encoding, atomic)
 
     # --- File Management Operations ---
 

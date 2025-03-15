@@ -177,7 +177,12 @@ def normalize_path(path: str | Path) -> Path:
     Returns:
         Normalized Path object
     """
-    return Path(path).expanduser().resolve()
+    path_obj = Path(path).expanduser()
+    try:
+        return path_obj.resolve(strict=False)
+    except (FileNotFoundError, OSError):
+        # If path resolution fails, return the expanded path
+        return path_obj
 
 
 @wrap_io_errors
@@ -212,16 +217,27 @@ def split_path(path: str | Path) -> list[str]:
 
 
 def get_extension(path: str | Path) -> str:
-    """
-    Get the file extension from a path.
+    """Get the file extension from a path.
 
     Args:
         path: File path
 
     Returns:
-        File extension without the dot
+        File extension without the dot. For dotfiles (e.g., .gitignore), the extension
+        is considered to be the filename without the leading dot.
     """
-    return Path(path).suffix.lstrip(".")
+    path_obj = Path(path)
+    filename = path_obj.name
+
+    # Special case for dotfiles: if the filename starts with a dot and contains no
+    # other dot, treat the whole filename (minus the dot) as the extension.
+    if filename.startswith(".") and "." not in filename[1:]:
+        return filename[1:]
+
+    return path_obj.suffix.lstrip(".")
+
+
+# In src/quackcore/paths/utils.py
 
 
 def infer_module_from_path(
@@ -245,14 +261,24 @@ def infer_module_from_path(
         try:
             project_root = find_project_root()
         except QuackFileNotFoundError:
-            # If project root cannot be found, use current directory
-            project_root = Path.cwd()
+            # If project root cannot be found, use current directory or path's parent
+            try:
+                project_root = Path.cwd()
+            except (FileNotFoundError, OSError):
+                # If cwd fails (rare), use path's parent or a reasonable fallback
+                project_root = (
+                    path_obj.parent if not path_obj.is_absolute() else Path("/")
+                )
 
     project_root = Path(project_root)
 
     # Make path absolute if it's not already
     if not path_obj.is_absolute():
-        path_obj = project_root / path_obj
+        try:
+            path_obj = project_root / path_obj
+        except Exception:
+            # In case of path joining issues
+            pass
 
     # Try to find the source directory
     try:

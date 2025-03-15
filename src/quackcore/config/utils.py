@@ -188,8 +188,8 @@ def normalize_paths(config: QuackConfig) -> QuackConfig:
     # Normalize the plugins' paths if present.
     if "plugins" in config_dict and "paths" in config_dict["plugins"]:
         config_dict["plugins"]["paths"] = [
-            str(_normalize_path(path, base_dir)) for path in
-            config_dict["plugins"]["paths"]
+            str(_normalize_path(path, base_dir))
+            for path in config_dict["plugins"]["paths"]
         ]
 
     # Normalize Google integration file paths.
@@ -200,10 +200,14 @@ def normalize_paths(config: QuackConfig) -> QuackConfig:
                 google[key] = str(_normalize_path(google[key], base_dir))
 
     # Normalize logging file path.
-    if "logging" in config_dict and "file" in config_dict["logging"] and \
-            config_dict["logging"]["file"]:
+    if (
+        "logging" in config_dict
+        and "file" in config_dict["logging"]
+        and config_dict["logging"]["file"]
+    ):
         config_dict["logging"]["file"] = str(
-            _normalize_path(config_dict["logging"]["file"], base_dir))
+            _normalize_path(config_dict["logging"]["file"], base_dir)
+        )
 
     # Create a new configuration object with the normalized paths
     return QuackConfig.model_validate(config_dict)

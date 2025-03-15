@@ -34,41 +34,38 @@ class TestPluginLoader:
         """Test loading plugins from entry points."""
         loader = PluginLoader()
 
-        # Create mock entry points
+        # Create a mock plugin and a factory that returns it.
         mock_plugin = MockPlugin()
         mock_factory = MagicMock(return_value=mock_plugin)
 
+        # Set up a mock entry point with required attributes.
         mock_ep1 = MagicMock()
         mock_ep1.name = "plugin1"
         mock_ep1.value = "module:factory"
         mock_ep1.load.return_value = mock_factory
 
-        # Test successful loading
-        with patch("importlib.metadata.entry_points") as mock_entry_points:
-            mock_entry_points.return_value = [mock_ep1]
-
+        # Test successful loading: the entry point's load() should return the factory,
+        # which when called returns the mock plugin.
+        with patch(
+            "importlib.metadata.entry_points", return_value=[mock_ep1]
+        ) as mock_entry_points:
             plugins = loader.load_entry_points("test.plugins")
-
-            assert len(plugins) == 1
+            assert len(plugins) == 1  # Expecting one plugin
             assert plugins[0] is mock_plugin
             mock_entry_points.assert_called_once_with(group="test.plugins")
             mock_ep1.load.assert_called_once()
             mock_factory.assert_called_once()
 
-        # Test error handling
-        with patch("importlib.metadata.entry_points") as mock_entry_points:
-            mock_entry_points.return_value = [mock_ep1]
+        # Test error handling: simulate an error during load() from the entry point.
+        with patch("importlib.metadata.entry_points", return_value=[mock_ep1]):
             mock_ep1.load.side_effect = Exception("Test error")
-
-            # Should not raise but log the error
             plugins = loader.load_entry_points("test.plugins")
             assert len(plugins) == 0
 
-        # Test error in entry_points itself
-        with patch("importlib.metadata.entry_points") as mock_entry_points:
-            mock_entry_points.side_effect = Exception("Test error")
-
-            # Should not raise but log the error
+        # Test error in retrieving entry points: simulate an error when fetching entry points.
+        with patch(
+            "importlib.metadata.entry_points", side_effect=Exception("Test error")
+        ):
             plugins = loader.load_entry_points("test.plugins")
             assert len(plugins) == 0
 

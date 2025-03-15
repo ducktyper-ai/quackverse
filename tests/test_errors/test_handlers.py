@@ -3,9 +3,9 @@
 Tests for error handling utilities.
 """
 
+import inspect
 import sys
 from unittest.mock import MagicMock, patch
-import inspect
 
 import pytest
 

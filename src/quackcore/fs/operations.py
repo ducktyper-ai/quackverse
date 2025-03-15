@@ -9,6 +9,7 @@ with proper error handling and consistent return values.
 import json
 import logging
 import mimetypes
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import TypeVar
 
@@ -679,32 +680,29 @@ class FileSystemOperations:
         Perform the actual search for files and directories matching a pattern.
 
         Args:
-            directory: Directory to search in
-            pattern: Pattern to match against
-            recursive: Whether to search recursively
-            include_hidden: Whether to include hidden files
+            directory: Directory to search in.
+            pattern: Pattern to match against.
+            recursive: Whether to search recursively.
+            include_hidden: Whether to include hidden files.
 
         Returns:
             Tuple of (matching files, matching directories)
         """
-        files = []
-        directories = []
+        files: list[Path] = []
+        directories: list[Path] = []
 
-        # Choose the appropriate glob method based on recursion setting
-        if recursive:
-            # Use rglob with pattern as positional argument
-            items = directory.rglob(pattern)
-        else:
-            # Use glob with pattern as positional argument
-            items = directory.glob(pattern)
+        # Choose the appropriate glob method: rglob if recursive, glob otherwise.
+        glob_method: Callable[[str], Iterator[Path]] = (
+            directory.rglob if recursive else directory.glob
+        )
 
-        # Process the results
-        for item in items:
-            # Skip hidden items if not requested
-            if not include_hidden and any(p.startswith(".") for p in item.parts):
+        # Use the glob method with the pattern as a positional argument.
+        for item in glob_method(pattern):
+            # Skip hidden items if not requested.
+            if not include_hidden and any(part.startswith(".") for part in item.parts):
                 continue
 
-            # Categorize the item
+            # Categorize the item.
             if item.is_file():
                 files.append(item)
             elif item.is_dir():
