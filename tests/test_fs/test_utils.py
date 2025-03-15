@@ -8,7 +8,7 @@ import platform
 import tempfile
 from hashlib import sha256
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from hypothesis import given
@@ -236,25 +236,25 @@ class TestFileUtilities:
     def test_create_temp_directory(self) -> None:
         """Test creating a temporary directory."""
         # Test with default parameters
-        temp_dir = create_temp_directory()
+        created_dir = create_temp_directory()
         try:
-            assert temp_dir.exists()
-            assert temp_dir.is_dir()
-            assert "quackcore_" in temp_dir.name
+            assert created_dir.exists()
+            assert created_dir.is_dir()
+            assert "quackcore_" in created_dir.name
         finally:
             # Clean up
-            temp_dir.rmdir()
+            created_dir.rmdir()
 
         # Test with custom prefix and suffix
-        temp_dir = create_temp_directory(prefix="testprefix_", suffix="_testsuffix")
+        created_dir = create_temp_directory(prefix="testprefix_", suffix="_testsuffix")
         try:
-            assert temp_dir.exists()
-            assert temp_dir.is_dir()
-            assert temp_dir.name.startswith("testprefix_")
-            assert temp_dir.name.endswith("_testsuffix")
+            assert created_dir.exists()
+            assert created_dir.is_dir()
+            assert created_dir.name.startswith("testprefix_")
+            assert created_dir.name.endswith("_testsuffix")
         finally:
             # Clean up
-            temp_dir.rmdir()
+            created_dir.rmdir()
 
     def test_create_temp_file(self) -> None:
         """Test creating a temporary file."""

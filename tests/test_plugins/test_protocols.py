@@ -2,7 +2,9 @@
 """
 Tests for plugin protocol interfaces.
 """
-from typing import Callable
+
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 
@@ -102,16 +104,16 @@ class TestConfigurablePlugin(ConfigurablePluginProtocol):
 
     def __init__(self) -> None:
         """Initialize with default configuration."""
-        self._config = {}
+        self._config: dict[str, Any] = {}  # Use Any for typing
 
     @property
     def name(self) -> str:
         return "test_configurable_plugin"
 
-    def configure(self, config: dict[str, object]) -> None:
+    def configure(self, config: dict[str, Any]) -> None:  # Use Any here
         self._config = config
 
-    def get_config_schema(self) -> dict[str, object]:
+    def get_config_schema(self) -> dict[str, Any]:  # Use Any here
         return {
             "settings": {
                 "type": "object",
@@ -122,7 +124,9 @@ class TestConfigurablePlugin(ConfigurablePluginProtocol):
             }
         }
 
-    def validate_config(self, config: dict[str, object]) -> tuple[bool, list[str]]:
+    def validate_config(
+        self, config: dict[str, Any]
+    ) -> tuple[bool, list[str]]:  # Use Any here
         errors = []
 
         if "settings" not in config:
@@ -131,9 +135,10 @@ class TestConfigurablePlugin(ConfigurablePluginProtocol):
             errors.append("'settings' must be an object")
         else:
             settings = config["settings"]
-            if "option1" in settings and not isinstance(settings["option1"], str):
+            # Use safer dictionary access with .get()
+            if "option1" in settings and not isinstance(settings.get("option1"), str):
                 errors.append("'option1' must be a string")
-            if "option2" in settings and not isinstance(settings["option2"], int):
+            if "option2" in settings and not isinstance(settings.get("option2"), int):
                 errors.append("'option2' must be an integer")
 
         return len(errors) == 0, errors

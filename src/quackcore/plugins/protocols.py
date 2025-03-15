@@ -244,6 +244,7 @@ class ProviderPluginProtocol(QuackPluginProtocol, Protocol):
         ...
 
 
+@runtime_checkable
 class ConfigurablePluginProtocol(QuackPluginProtocol, Protocol):
     """Protocol for plugins that can be configured."""
 

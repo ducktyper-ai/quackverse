@@ -6,38 +6,28 @@ Tests for the FileSystemService class.
 import json
 import os
 import platform
+import tempfile
 from pathlib import Path
-from unittest.mock import patch
 
-import pytest
 import yaml
 from hypothesis import given
 from hypothesis import strategies as st
 
-from quackcore.errors import QuackFileExistsError, QuackFileNotFoundError
-from quackcore.fs.results import (
-    DataResult,
-    DirectoryInfoResult,
-    FileInfoResult,
-    FindResult,
-    OperationResult,
-)
 from quackcore.fs.service import FileSystemService
 
 
 class TestFileSystemService:
     """Tests for FileSystemService."""
 
-    def test_initialize(self) -> None:
+    def test_initialize(self, temp_dir: Path) -> None:
         """Test initializing the service with and without base_dir."""
         # Default initialization
         service = FileSystemService()
         assert service.base_dir == Path.cwd()
 
-        # Initialize with custom base_dir
-        custom_dir = Path("/tmp/custom")
-        service = FileSystemService(base_dir=custom_dir)
-        assert service.base_dir == custom_dir
+        # Initialize with custom base_dir (using the temp_dir fixture)
+        service = FileSystemService(base_dir=temp_dir)
+        assert service.base_dir == temp_dir
 
     def test_read_text(self, test_file: Path) -> None:
         """Test reading text from a file."""

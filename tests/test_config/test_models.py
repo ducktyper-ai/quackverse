@@ -3,11 +3,8 @@
 Tests for configuration models.
 """
 
-import logging
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from quackcore.config.models import (
     GeneralConfig,
@@ -40,6 +37,9 @@ class TestConfigModels:
 
         # Test invalid level (should normalize to INFO)
         config = LoggingConfig(level="INVALID")
+        # Assert that the invalid level
+        # was normalized to INFO
+        assert config.level == "INFO"
 
         # Test setup_logging method
         with patch("logging.basicConfig") as mock_basic_config:

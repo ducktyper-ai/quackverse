@@ -4,7 +4,6 @@ Tests for error handling utilities.
 """
 
 import sys
-from io import StringIO
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -69,7 +68,8 @@ class TestErrorHandler:
 
         handler.print_error(error, show_traceback=True)
 
-        # Verify console.print was called with a Panel containing both error and traceback
+        # Verify console.print was called with a
+        # Panel containing both error and traceback
         mock_console.print.assert_called_once()
         args, _ = mock_console.print.call_args
         panel = args[0]

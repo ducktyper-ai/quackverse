@@ -3,7 +3,7 @@
 Integration tests for QuackCore components working together.
 """
 
-import tempfile
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -17,7 +17,6 @@ from quackcore.paths.resolver import PathResolver
 from quackcore.plugins.protocols import (
     CommandPluginProtocol,
     ProviderPluginProtocol,
-    QuackPluginProtocol,
 )
 from quackcore.plugins.registry import PluginRegistry
 
@@ -37,7 +36,7 @@ class TestFilePlugin(CommandPluginProtocol):
     def list_commands(self) -> list[str]:
         return ["read_file", "write_file"]
 
-    def get_command(self, name: str) -> callable | None:
+    def get_command(self, name: str) -> Callable | None:
         if name == "read_file":
             return self.read_file
         elif name == "write_file":
@@ -77,7 +76,7 @@ class TestPathPlugin(CommandPluginProtocol):
     def list_commands(self) -> list[str]:
         return ["find_project_root", "resolve_path"]
 
-    def get_command(self, name: str) -> callable | None:
+    def get_command(self, name: str) -> Callable | None:
         if name == "find_project_root":
             return self.find_project_root
         elif name == "resolve_path":

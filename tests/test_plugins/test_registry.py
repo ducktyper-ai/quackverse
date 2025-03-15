@@ -3,7 +3,7 @@
 Tests for the plugin registry.
 """
 
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 
@@ -273,7 +273,8 @@ class TestPluginRegistry:
         assert registry._commands["cmd2"] is plugin2
 
     def test_workflow_override(self) -> None:
-        """Test that newer workflow plugins override older ones for the same workflow."""
+        """Test that newer workflow plugins override
+        older ones for the same workflow."""
         registry = PluginRegistry()
 
         # Create two workflow plugins with overlapping workflows

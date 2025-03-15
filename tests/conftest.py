@@ -3,22 +3,20 @@
 Shared fixtures for QuackCore tests.
 """
 
-import os
 import shutil
 import tempfile
+from collections.abc import Generator  # Changed from typing to collections.abc
 from pathlib import Path
-from typing import Generator
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 from quackcore.config.models import QuackConfig
-from quackcore.errors import QuackError
 from quackcore.plugins.protocols import QuackPluginProtocol
 
 
 @pytest.fixture
-def temp_dir() -> Generator[Path, None, None]:
+def temp_dir() -> Generator[Path]:  # Removed unnecessary None, None
     """Create a temporary directory for tests."""
     tmp_dir = Path(tempfile.mkdtemp())
     try:
@@ -28,7 +26,7 @@ def temp_dir() -> Generator[Path, None, None]:
 
 
 @pytest.fixture
-def test_file(temp_dir: Path) -> Generator[Path, None, None]:
+def test_file(temp_dir: Path) -> Generator[Path]:  # Removed unnecessary None, None
     """Create a test file with content."""
     file_path = temp_dir / "test_file.txt"
     with open(file_path, "w") as f:
@@ -37,7 +35,9 @@ def test_file(temp_dir: Path) -> Generator[Path, None, None]:
 
 
 @pytest.fixture
-def test_binary_file(temp_dir: Path) -> Generator[Path, None, None]:
+def test_binary_file(
+    temp_dir: Path,
+) -> Generator[Path]:  # Removed unnecessary None, None
     """Create a binary test file."""
     file_path = temp_dir / "test_binary_file.bin"
     with open(file_path, "wb") as f:
@@ -46,7 +46,7 @@ def test_binary_file(temp_dir: Path) -> Generator[Path, None, None]:
 
 
 @pytest.fixture
-def sample_config() -> QuackConfig:
+def sample_config(temp_dir: Path) -> QuackConfig:  # Using temp_dir fixture for security
     """Create a sample configuration."""
     return QuackConfig(
         general={
@@ -55,8 +55,10 @@ def sample_config() -> QuackConfig:
             "debug": True,
         },
         paths={
-            "base_dir": "/tmp/test",
-            "output_dir": "/tmp/test/output",
+            "base_dir": str(temp_dir),  # Using temp_dir instead of hardcoded path
+            "output_dir": str(
+                temp_dir / "output"
+            ),  # Using temp_dir instead of hardcoded path
         },
         logging={
             "level": "DEBUG",

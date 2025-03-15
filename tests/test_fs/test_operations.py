@@ -7,26 +7,24 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
 import yaml
 
-from quackcore.errors import QuackFileExistsError, QuackFileNotFoundError, QuackIOError
+from quackcore.errors import QuackFileExistsError, QuackIOError
 from quackcore.fs.operations import FileSystemOperations
 
 
 class TestFileSystemOperations:
     """Tests for the FileSystemOperations class."""
 
-    def test_initialize(self) -> None:
+    def test_initialize(self, temp_dir: Path) -> None:
         """Test initializing operations with and without base_dir."""
         # Default initialization
         operations = FileSystemOperations()
         assert operations.base_dir == Path.cwd()
 
-        # Initialize with custom base_dir
-        custom_dir = Path("/tmp/custom")
-        operations = FileSystemOperations(base_dir=custom_dir)
-        assert operations.base_dir == custom_dir
+        # Initialize with custom base_dir (using the temp_dir fixture)
+        operations = FileSystemOperations(base_dir=temp_dir)
+        assert operations.base_dir == temp_dir
 
     def test_resolve_path(self) -> None:
         """Test resolving paths relative to the base directory."""
