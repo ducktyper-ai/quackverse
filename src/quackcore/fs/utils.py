@@ -38,7 +38,14 @@ def get_extension(path: str | Path) -> str:
     Returns:
         File extension without the dot
     """
-    return Path(path).suffix.lstrip(".")
+    path_obj = Path(path)
+    filename = path_obj.name
+
+    # Special case for dotfiles
+    if filename.startswith(".") and "." not in filename[1:]:
+        return filename[1:]  # Return everything after the first dot for dotfiles
+
+    return path_obj.suffix.lstrip(".")
 
 
 def normalize_path(path: str | Path) -> Path:
@@ -85,6 +92,11 @@ def is_subdirectory(child: str | Path, parent: str | Path) -> bool:
     """
     child_path = normalize_path(child)
     parent_path = normalize_path(parent)
+
+    # A directory cannot be a subdirectory of itself
+    if child_path == parent_path:
+        return False
+
     try:
         child_path.relative_to(parent_path)
         return True

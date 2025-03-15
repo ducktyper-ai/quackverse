@@ -19,7 +19,7 @@ from quackcore.plugins.protocols import (
 
 
 # Test implementations of each protocol
-class TestPlugin(QuackPluginProtocol):
+class SamplePlugin(QuackPluginProtocol):
     """Test implementation of QuackPluginProtocol."""
 
     @property
@@ -27,7 +27,7 @@ class TestPlugin(QuackPluginProtocol):
         return "test_plugin"
 
 
-class TestCommandPlugin(CommandPluginProtocol):
+class SampleCommandPlugin(CommandPluginProtocol):
     """Test implementation of CommandPluginProtocol."""
 
     @property
@@ -49,7 +49,7 @@ class TestCommandPlugin(CommandPluginProtocol):
         raise ValueError(f"Command {name} not found")
 
 
-class TestWorkflowPlugin(WorkflowPluginProtocol):
+class SampleWorkflowPlugin(WorkflowPluginProtocol):
     """Test implementation of WorkflowPluginProtocol."""
 
     @property
@@ -71,7 +71,7 @@ class TestWorkflowPlugin(WorkflowPluginProtocol):
         raise ValueError(f"Workflow {name} not found")
 
 
-class TestExtensionPlugin(ExtensionPluginProtocol):
+class SampleExtensionPlugin(ExtensionPluginProtocol):
     """Test implementation of ExtensionPluginProtocol."""
 
     @property
@@ -85,7 +85,7 @@ class TestExtensionPlugin(ExtensionPluginProtocol):
         return {"ext1": lambda: "Extension 1", "ext2": lambda: "Extension 2"}
 
 
-class TestProviderPlugin(ProviderPluginProtocol):
+class SampleProviderPlugin(ProviderPluginProtocol):
     """Test implementation of ProviderPluginProtocol."""
 
     @property
@@ -99,7 +99,7 @@ class TestProviderPlugin(ProviderPluginProtocol):
         return self.get_services().get(name)
 
 
-class TestConfigurablePlugin(ConfigurablePluginProtocol):
+class SampleConfigurablePlugin(ConfigurablePluginProtocol):
     """Test implementation of ConfigurablePluginProtocol."""
 
     def __init__(self) -> None:
@@ -144,7 +144,7 @@ class TestConfigurablePlugin(ConfigurablePluginProtocol):
         return len(errors) == 0, errors
 
 
-class TestMixedPlugin(CommandPluginProtocol, WorkflowPluginProtocol):
+class SampleMixedPlugin(CommandPluginProtocol, WorkflowPluginProtocol):
     """Test implementation mixing multiple protocols."""
 
     @property
@@ -180,12 +180,12 @@ class TestMixedPlugin(CommandPluginProtocol, WorkflowPluginProtocol):
         raise ValueError(f"Workflow {name} not found")
 
 
-class TestProtocols:
+class SampleProtocols:
     """Tests for plugin protocols."""
 
     def test_basic_plugin_protocol(self) -> None:
         """Test the base QuackPluginProtocol."""
-        plugin = TestPlugin()
+        plugin = SamplePlugin()
 
         # Test protocol conformance
         assert isinstance(plugin, QuackPluginProtocol)
@@ -195,7 +195,7 @@ class TestProtocols:
 
     def test_command_plugin_protocol(self) -> None:
         """Test the CommandPluginProtocol."""
-        plugin = TestCommandPlugin()
+        plugin = SampleCommandPlugin()
 
         # Test protocol conformance
         assert isinstance(plugin, QuackPluginProtocol)
@@ -214,7 +214,7 @@ class TestProtocols:
 
     def test_workflow_plugin_protocol(self) -> None:
         """Test the WorkflowPluginProtocol."""
-        plugin = TestWorkflowPlugin()
+        plugin = SampleWorkflowPlugin()
 
         # Test protocol conformance
         assert isinstance(plugin, QuackPluginProtocol)
@@ -233,7 +233,7 @@ class TestProtocols:
 
     def test_extension_plugin_protocol(self) -> None:
         """Test the ExtensionPluginProtocol."""
-        plugin = TestExtensionPlugin()
+        plugin = SampleExtensionPlugin()
 
         # Test protocol conformance
         assert isinstance(plugin, QuackPluginProtocol)
@@ -254,7 +254,7 @@ class TestProtocols:
 
     def test_provider_plugin_protocol(self) -> None:
         """Test the ProviderPluginProtocol."""
-        plugin = TestProviderPlugin()
+        plugin = SampleProviderPlugin()
 
         # Test protocol conformance
         assert isinstance(plugin, QuackPluginProtocol)
@@ -274,7 +274,7 @@ class TestProtocols:
 
     def test_configurable_plugin_protocol(self) -> None:
         """Test the ConfigurablePluginProtocol."""
-        plugin = TestConfigurablePlugin()
+        plugin = SampleConfigurablePlugin()
 
         # Test protocol conformance
         assert isinstance(plugin, QuackPluginProtocol)
@@ -303,7 +303,7 @@ class TestProtocols:
 
     def test_mixed_plugin_protocols(self) -> None:
         """Test mixing multiple plugin protocols."""
-        plugin = TestMixedPlugin()
+        plugin = SampleMixedPlugin()
 
         # Test protocol conformance
         assert isinstance(plugin, QuackPluginProtocol)

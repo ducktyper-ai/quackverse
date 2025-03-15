@@ -173,6 +173,8 @@ class FileSystemOperations:
     # -------------------------------
     # Writing operations
     # -------------------------------
+    # Fixed write_text method for FileSystemOperations
+
     def write_text(
         self,
         path: str | Path,
@@ -197,11 +199,35 @@ class FileSystemOperations:
         resolved_path = self.resolve_path(path)
         try:
             ensure_directory(resolved_path.parent)
-            if atomic:
-                atomic_write(resolved_path, content)
+
+            # For UTF-16, we need to ensure a BOM is written
+            if encoding.lower().startswith("utf-16"):
+                # Convert to bytes first with proper BOM
+                if encoding.lower() == "utf-16":
+                    # Default to UTF-16-LE with BOM on most platforms
+                    bytes_content = content.encode("utf-16")
+                elif encoding.lower() == "utf-16-le":
+                    # Explicitly use little-endian with BOM
+                    bytes_content = content.encode("utf-16-le")
+                elif encoding.lower() == "utf-16-be":
+                    # Explicitly use big-endian with BOM
+                    bytes_content = content.encode("utf-16-be")
+                else:
+                    bytes_content = content.encode(encoding)
+
+                if atomic:
+                    atomic_write(resolved_path, bytes_content)
+                else:
+                    with open(resolved_path, "wb") as f:
+                        f.write(bytes_content)
             else:
-                with open(resolved_path, "w", encoding=encoding) as f:
-                    f.write(content)
+                # For other encodings, use text mode
+                if atomic:
+                    atomic_write(resolved_path, content)
+                else:
+                    with open(resolved_path, "w", encoding=encoding) as f:
+                        f.write(content)
+
             bytes_written = len(content.encode(encoding))
             checksum = compute_checksum(resolved_path) if calculate_checksum else None
             return WriteResult(
@@ -586,7 +612,8 @@ class FileSystemOperations:
         """
         resolved_path = self.resolve_path(path)
         try:
-            if not resolved_path.exists() or not resolved_path.is_dir():
+            # Early validation of the path
+            if not self._validate_search_path(resolved_path):
                 return FindResult(
                     success=False,
                     path=resolved_path,
@@ -596,24 +623,12 @@ class FileSystemOperations:
                     f"is not a directory: {resolved_path}",
                 )
 
-            files = []
-            directories = []
+            # Perform the search
+            files, directories = self._perform_pattern_search(
+                resolved_path, pattern, recursive, include_hidden
+            )
 
-            if recursive:
-                glob_pattern = f"**/{pattern}"
-            else:
-                glob_pattern = pattern
-
-            for item in resolved_path.glob(glob_pattern):
-                # Skip hidden items if not requested
-                if not include_hidden and any(p.startswith(".") for p in item.parts):
-                    continue
-
-                if item.is_file():
-                    files.append(item)
-                elif item.is_dir():
-                    directories.append(item)
-
+            # Create the result
             total_matches = len(files) + len(directories)
             return FindResult(
                 success=True,
@@ -644,6 +659,58 @@ class FileSystemOperations:
                 recursive=recursive,
                 error=str(e),
             )
+
+    def _validate_search_path(self, path: Path) -> bool:
+        """
+        Validate that a path exists and is a directory.
+
+        Args:
+            path: Path to validate
+
+        Returns:
+            True if the path exists and is a directory, False otherwise
+        """
+        return path.exists() and path.is_dir()
+
+    def _perform_pattern_search(
+        self, directory: Path, pattern: str, recursive: bool, include_hidden: bool
+    ) -> tuple[list[Path], list[Path]]:
+        """
+        Perform the actual search for files and directories matching a pattern.
+
+        Args:
+            directory: Directory to search in
+            pattern: Pattern to match against
+            recursive: Whether to search recursively
+            include_hidden: Whether to include hidden files
+
+        Returns:
+            Tuple of (matching files, matching directories)
+        """
+        files = []
+        directories = []
+
+        # Choose the appropriate glob method based on recursion setting
+        if recursive:
+            # Use rglob with pattern as positional argument
+            items = directory.rglob(pattern)
+        else:
+            # Use glob with pattern as positional argument
+            items = directory.glob(pattern)
+
+        # Process the results
+        for item in items:
+            # Skip hidden items if not requested
+            if not include_hidden and any(p.startswith(".") for p in item.parts):
+                continue
+
+            # Categorize the item
+            if item.is_file():
+                files.append(item)
+            elif item.is_dir():
+                directories.append(item)
+
+        return files, directories
 
     # -------------------------------
     # YAML operations

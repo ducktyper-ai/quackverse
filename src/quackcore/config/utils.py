@@ -161,6 +161,9 @@ def _normalize_path(value: str | Path, base_dir: Path) -> str:
     return str(p) if p.is_absolute() else str(base_dir / p)
 
 
+# src/quackcore/config/utils.py fix for normalize_paths function
+
+
 def normalize_paths(config: QuackConfig) -> QuackConfig:
     """
     Normalize all paths in the configuration.
@@ -178,7 +181,7 @@ def normalize_paths(config: QuackConfig) -> QuackConfig:
 
     # Normalize the 'paths' section, except the base_dir key.
     for key, value in config_dict["paths"].items():
-        if key != "base_dir" and isinstance(value, str | Path):
+        if key != "base_dir" and isinstance(value, (str | Path)):
             config_dict["paths"][key] = _normalize_path(value, base_dir)
 
     # Normalize the plugins' paths if present.
@@ -204,4 +207,6 @@ def normalize_paths(config: QuackConfig) -> QuackConfig:
             config_dict["logging"]["file"], base_dir
         )
 
+    # Create a new configuration object with the normalized paths
+    # Use model_validate method instead of directly constructing
     return QuackConfig.model_validate(config_dict)

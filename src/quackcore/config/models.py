@@ -8,9 +8,9 @@ with support for validation, defaults, and merging of configurations.
 
 import logging
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any, ClassVar, TypeVar
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 T = TypeVar("T")  # Generic type for flexible typing
 
@@ -18,9 +18,26 @@ T = TypeVar("T")  # Generic type for flexible typing
 class LoggingConfig(BaseModel):
     """Configuration for logging."""
 
+    VALID_LEVELS: ClassVar[list[str]] = [
+        "DEBUG",
+        "INFO",
+        "WARNING",
+        "ERROR",
+        "CRITICAL",
+    ]
+
     level: str = Field(default="INFO", description="Logging level")
     file: Path | None = Field(default=None, description="Log file path")
     console: bool = Field(default=True, description="Log to console")
+
+    @field_validator("level")
+    @classmethod
+    def validate_level(cls, v: str) -> str:
+        """Validate and normalize logging level."""
+        level_name = v.upper()
+        if level_name not in cls.VALID_LEVELS:
+            return "INFO"
+        return level_name
 
     def setup_logging(self) -> None:
         """
@@ -29,7 +46,7 @@ class LoggingConfig(BaseModel):
         This configures the root logger according to the settings.
         """
         level_name = self.level.upper()
-        if level_name not in ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"):
+        if level_name not in self.VALID_LEVELS:
             level_name = "INFO"
 
         level = getattr(logging, level_name)

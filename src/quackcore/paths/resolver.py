@@ -12,11 +12,10 @@ from pathlib import Path
 from typing import TypeVar
 
 from quackcore.errors import QuackFileNotFoundError, wrap_io_errors
-from quackcore.paths.context import ContentContext, ProjectContext, ProjectDirectory
+from quackcore.paths.context import ContentContext, ProjectContext
 from quackcore.paths.utils import (
     find_nearest_directory,
     find_project_root,
-    resolve_relative_to_project,
 )
 
 T = TypeVar("T")  # Generic type for flexible typing
@@ -63,6 +62,56 @@ class PathResolver:
         """
         return find_project_root(start_dir, marker_files, marker_dirs)
 
+    # src/quackcore/paths/resolver.py fixes for PathResolver methods
+
+    def _detect_standard_directories(self, context: ProjectContext) -> None:
+        """
+        Detect standard directories in a project and add them to the context.
+
+        Args:
+            context: ProjectContext to update
+        """
+        root_dir = context.root_dir
+
+        # Look for source directory
+        try:
+            src_dir = self.find_source_directory(root_dir)
+            # Mark it explicitly as a source directory when adding to context
+            context.add_directory("src", src_dir, is_source=True)
+        except QuackFileNotFoundError:
+            try:
+                src_dir = find_nearest_directory("src", str(root_dir))
+                context.add_directory("src", src_dir, is_source=True)
+            except QuackFileNotFoundError:
+                pass
+
+        # Look for output directory
+        try:
+            output_dir = self.find_output_directory(str(root_dir))
+            context.add_directory("output", output_dir, is_output=True)
+        except QuackFileNotFoundError:
+            pass
+
+        # Look for other standard directories
+        standard_dirs = {
+            "tests": {"is_test": True},
+            "test": {"is_test": True},
+            "data": {"is_data": True},
+            "config": {"is_config": True},
+            "configs": {"is_config": True},
+            "docs": {},
+            "assets": {"is_asset": True},
+            "resources": {},
+            "scripts": {},
+            "examples": {},
+            "temp": {"is_temp": True},
+        }
+
+        for name, attrs in standard_dirs.items():
+            dir_path = root_dir / name
+            if dir_path.is_dir():
+                context.add_directory(name, dir_path, **attrs)
+
     def find_source_directory(
         self,
         start_dir: str | Path | None = None,
@@ -85,6 +134,10 @@ class PathResolver:
         except QuackFileNotFoundError as e:
             # If not found, look for a Python package
             current_dir = Path(start_dir) if start_dir else Path.cwd()
+
+            # Check if current directory is a Python package
+            if (current_dir / "__init__.py").exists():
+                return current_dir
 
             for _ in range(5):  # Check up to 5 levels
                 # Check if current directory has an __init__.py file
@@ -140,6 +193,15 @@ class PathResolver:
             if output_dir.exists():
                 return output_dir
 
+            # Use the provided start_dir for output directory if specified
+            if start_dir and start_dir != root_dir:
+                start_path = Path(start_dir)
+                if create:
+                    # Create output directory in the specified start_dir
+                    output_dir = start_path / "output"
+                    output_dir.mkdir(parents=True, exist_ok=True)
+                    return output_dir
+
             if create:
                 # Create 'output' directory at the project root
                 output_dir = root_dir / "output"
@@ -175,7 +237,69 @@ class PathResolver:
         Returns:
             Resolved absolute path
         """
-        return resolve_relative_to_project(path, project_root)
+        path_obj = Path(path)
+
+        # If path is absolute, return it as is
+        if path_obj.is_absolute():
+            return path_obj
+
+        # If project root is not specified, try to find it
+        root_path = None
+        if project_root is None:
+            try:
+                root_path = self.find_project_root()
+            except QuackFileNotFoundError:
+                # If project root cannot be found, use current directory
+                root_path = Path.cwd()
+        else:
+            root_path = Path(project_root)
+
+        # Resolve path relative to project root
+        return root_path / path_obj
+
+    def _infer_content_structure(
+        self,
+        context: ContentContext,
+        current_dir: str | Path | None = None,
+    ) -> None:
+        """
+        Infer content structure from directory structure and update context.
+
+        Args:
+            context: ContentContext to update
+            current_dir: Current directory (default: current working directory)
+        """
+        if current_dir is None:
+            current_dir = Path.cwd()
+        current_dir = Path(current_dir)
+        src_dir = context.get_source_dir()
+        if not src_dir:
+            return
+
+        try:
+            # Check if current_dir is within the src directory
+            if not current_dir.is_relative_to(src_dir):
+                return
+
+            rel_path = current_dir.relative_to(src_dir)
+            parts = rel_path.parts
+
+            # Only process if there are path components to analyze
+            if not parts:
+                return
+
+            # The first level might be a content type directory
+            content_types = ["tutorials", "videos", "images", "distro"]
+            if len(parts) >= 1 and parts[0] in content_types:
+                context.content_type = parts[0]
+
+            # The second level might be a content name
+            if len(parts) >= 2:
+                context.content_name = parts[1]
+                context.content_dir = src_dir / parts[0] / parts[1]
+        except (ValueError, IndexError):
+            # Handle any exceptions during path processing
+            pass
 
     @wrap_io_errors
     def detect_project_context(
@@ -213,57 +337,6 @@ class PathResolver:
             context = ProjectContext(root_dir=start_dir)
             self._cache[cache_key] = context
             return context
-
-    def _detect_standard_directories(self, context: ProjectContext) -> None:
-        """
-        Detect standard directories in a project and add them to the context.
-
-        Args:
-            context: ProjectContext to update
-        """
-        root_dir = context.root_dir
-
-        # Look for source directory
-        try:
-            src_dir = self.find_source_directory(root_dir)
-            proj_dir = ProjectDirectory(name="src", path=src_dir, is_source=True)
-            context.add_directory(proj_dir.name, proj_dir.path)
-        except QuackFileNotFoundError:
-            try:
-                src_dir = find_nearest_directory("src", str(root_dir))
-                proj_dir = ProjectDirectory(name="src", path=src_dir, is_source=True)
-                context.add_directory(proj_dir.name, proj_dir.path)
-            except QuackFileNotFoundError:
-                pass
-
-        # Look for output directory
-        try:
-            output_dir = self.find_output_directory(str(root_dir))
-            proj_dir = ProjectDirectory(name="output", path=output_dir, is_output=True)
-            context.add_directory(proj_dir.name, proj_dir.path)
-        except QuackFileNotFoundError:
-            pass
-
-        # Look for other standard directories
-        standard_dirs = {
-            "tests": {"is_test": True},
-            "test": {"is_test": True},
-            "data": {"is_data": True},
-            "config": {"is_config": True},
-            "configs": {"is_config": True},
-            "docs": {},
-            "assets": {"is_asset": True},
-            "resources": {},
-            "scripts": {},
-            "examples": {},
-            "temp": {"is_temp": True},
-        }
-
-        for name, attrs in standard_dirs.items():
-            dir_path = root_dir / name
-            if dir_path.is_dir():
-                proj_dir = ProjectDirectory(name=name, path=dir_path, **attrs)
-                context.add_directory(name, proj_dir.path)
 
     def _detect_config_file(self, context: ProjectContext) -> None:
         """
@@ -314,43 +387,6 @@ class PathResolver:
         )
         self._infer_content_structure(context, start_dir)
         return context
-
-    def _infer_content_structure(
-        self,
-        context: ContentContext,
-        current_dir: str | Path | None = None,
-    ) -> None:
-        """
-        Infer content structure from directory structure and update context.
-
-        Args:
-            context: ContentContext to update
-            current_dir: Current directory (default: current working directory)
-        """
-        if current_dir is None:
-            current_dir = Path.cwd()
-        current_dir = Path(current_dir)
-        src_dir = context.get_source_dir()
-        if not src_dir:
-            return
-        try:
-            rel_path = current_dir.relative_to(src_dir)
-            parts = rel_path.parts
-            if len(parts) >= 1:
-                # The first level might be a content type directory
-                if context.content_type is None and parts[0] in [
-                    "tutorials",
-                    "videos",
-                    "images",
-                    "distro",
-                ]:
-                    context.content_type = parts[0]
-            if len(parts) >= 2:
-                # The second level might be a content name
-                context.content_name = parts[1]
-                context.content_dir = src_dir / parts[0] / parts[1]
-        except ValueError:
-            pass
 
     def infer_current_content(
         self,

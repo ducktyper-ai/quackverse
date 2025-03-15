@@ -22,7 +22,7 @@ from quackcore.plugins.registry import PluginRegistry
 
 
 # Test plugins to register in the registry
-class TestFilePlugin(CommandPluginProtocol):
+class SampleFilePlugin(CommandPluginProtocol):
     """A test plugin for file operations."""
 
     def __init__(self, fs_service: FileSystemService) -> None:
@@ -62,7 +62,7 @@ class TestFilePlugin(CommandPluginProtocol):
         return result.success
 
 
-class TestPathPlugin(CommandPluginProtocol):
+class SamplePathPlugin(CommandPluginProtocol):
     """A test plugin for path operations."""
 
     def __init__(self, path_resolver: PathResolver) -> None:
@@ -98,7 +98,7 @@ class TestPathPlugin(CommandPluginProtocol):
         return self.resolver.resolve_project_path(path, project_root)
 
 
-class TestConfigProvider(ProviderPluginProtocol):
+class SampleConfigProvider(ProviderPluginProtocol):
     """A test plugin providing configuration services."""
 
     def __init__(self, config: QuackConfig) -> None:
@@ -194,9 +194,9 @@ class TestIntegration:
         path_resolver = PathResolver()
 
         # Initialize plugins
-        file_plugin = TestFilePlugin(fs_service)
-        path_plugin = TestPathPlugin(path_resolver)
-        config_provider = TestConfigProvider(config)
+        file_plugin = SampleFilePlugin(fs_service)
+        path_plugin = SamplePathPlugin(path_resolver)
+        config_provider = SampleConfigProvider(config)
 
         # Register plugins in the registry
         registry = PluginRegistry()
@@ -236,7 +236,7 @@ class TestIntegration:
         fs_service = FileSystemService(base_dir=temp_dir)
 
         # Initialize plugin
-        file_plugin = TestFilePlugin(fs_service)
+        file_plugin = SampleFilePlugin(fs_service)
 
         # Register plugin in the registry
         registry = PluginRegistry()

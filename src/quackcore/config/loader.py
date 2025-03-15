@@ -9,7 +9,7 @@ from various sources, with support for environment-specific overrides.
 import logging
 import os
 from pathlib import Path
-from typing import TypeVar
+from typing import Any, TypeVar
 
 import yaml
 
@@ -20,7 +20,7 @@ from quackcore.paths import resolver
 T = TypeVar("T")  # Generic type for flexible typing
 
 # Default configuration values to be merged when merge_defaults is True.
-DEFAULT_CONFIG_VALUES: dict[str, T] = {
+DEFAULT_CONFIG_VALUES: dict[str, Any] = {
     "logging": {
         "level": "INFO",
         "file": "logs/quackcore.log",
@@ -49,7 +49,7 @@ logger = logging.getLogger(__name__)
 
 
 @wrap_io_errors
-def load_yaml_config(path: str | Path) -> dict[str, T]:
+def load_yaml_config(path: str | Path) -> dict[str, Any]:
     """
     Load a YAML configuration file.
 
@@ -70,7 +70,7 @@ def load_yaml_config(path: str | Path) -> dict[str, T]:
         raise QuackConfigurationError(f"Failed to load YAML config: {e}", path) from e
 
 
-def _deep_merge(base: dict[str, T], override: dict[str, T]) -> dict[str, T]:
+def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
     """
     Deep merge two dictionaries.
 
@@ -102,12 +102,13 @@ def _is_float(value: str) -> bool:
     """
     try:
         float(value)
-        return "." in value  # Ensure it has a decimal point
+        # Allow both standard decimal point and trailing decimal point
+        return "." in value and (value[-1] != "." or len(value) > 1)
     except ValueError:
         return False
 
 
-def _convert_env_value(value: str) -> T:
+def _convert_env_value(value: str) -> bool | int | float | str:
     """
     Convert an environment variable string value to an appropriate type.
 
@@ -122,14 +123,21 @@ def _convert_env_value(value: str) -> T:
         return True
     if v_lower == "false":
         return False
+
+    # Convert negative integers (handle the minus sign)
+    if value.startswith("-") and value[1:].isdigit():
+        return int(value)
+    # Convert positive integers
     if value.isdigit():
         return int(value)
+    # Convert floats
     if _is_float(value):
         return float(value)
+
     return value
 
 
-def _get_env_config() -> dict[str, T]:
+def _get_env_config() -> dict[str, Any]:
     """
     Get configuration from environment variables.
 
@@ -140,7 +148,7 @@ def _get_env_config() -> dict[str, T]:
     Returns:
         Dictionary with configuration values
     """
-    config: dict[str, T] = {}
+    config: dict[str, Any] = {}
     for key, value in os.environ.items():
         if key.startswith(ENV_PREFIX):
             key_parts = key[len(ENV_PREFIX) :].lower().split("__")
@@ -208,7 +216,7 @@ def load_config(
     Raises:
         QuackConfigurationError: If no configuration could be loaded
     """
-    config_dict: dict[str, T] = {}
+    config_dict: dict[str, Any] = {}
 
     # Load configuration from file if specified
     if config_path:
@@ -237,7 +245,7 @@ def load_config(
     return config
 
 
-def merge_configs(base: QuackConfig, override: dict[str, T]) -> QuackConfig:
+def merge_configs(base: QuackConfig, override: dict[str, Any]) -> QuackConfig:
     """
     Merge a base configuration with override values.
 

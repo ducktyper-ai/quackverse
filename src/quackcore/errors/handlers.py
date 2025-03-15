@@ -8,13 +8,11 @@ making it easier to diagnose and fix issues in the Quack ecosystem.
 
 import inspect
 import sys
-import traceback
 from collections.abc import Callable
 from typing import TypeVar
 
 from rich.console import Console
 from rich.panel import Panel
-from rich.traceback import Traceback
 
 from quackcore.errors.base import QuackError
 
@@ -86,22 +84,37 @@ class ErrorHandler:
             title: An optional title for the error panel
             show_traceback: Whether to show the traceback
         """
+        import traceback  # Import outside the try block so it's always available
+
         error_title = title or f"[bold red]{type(error).__name__}[/bold red]"
         formatted_error = self.format_error(error)
 
-        if show_traceback:
-            tb = Traceback.extract(
-                type(error),
-                error,
-                traceback.extract_tb(error.__traceback__),
-            )
-            self.console.print(
-                Panel(
-                    f"{formatted_error}\n\n{tb}",
-                    title=error_title,
-                    border_style="red",
+        if show_traceback and error.__traceback__:
+            try:
+                from rich.traceback import Traceback
+
+                # Create a properly formatted traceback that can be displayed in Rich
+                tb = Traceback.from_exception(type(error), error, error.__traceback__)
+                self.console.print(
+                    Panel(
+                        f"{formatted_error}\n\n{tb}",
+                        title=error_title,
+                        border_style="red",
+                    )
                 )
-            )
+            except ImportError:
+                # Only catch ImportError for more specific exception handling
+                # This is for when rich.traceback might not be available
+                trace_str = "".join(
+                    traceback.format_exception(type(error), error, error.__traceback__)
+                )
+                self.console.print(
+                    Panel(
+                        f"{formatted_error}\n\nTraceback:\n{trace_str}",
+                        title=error_title,
+                        border_style="red",
+                    )
+                )
         else:
             self.console.print(
                 Panel(
@@ -110,6 +123,61 @@ class ErrorHandler:
                     border_style="red",
                 )
             )
+
+    def get_caller_info(self, depth: int = 1) -> dict[str, object]:
+        """
+        Get information about the caller of a function.
+
+        Args:
+            depth: How many frames to go back in the call stack
+
+        Returns:
+            A dictionary with caller information
+        """
+        frame = inspect.currentframe()
+        if frame is None:
+            return {}
+
+        # Go back 'depth' frames
+        try:
+            for _ in range(depth + 1):
+                if frame.f_back is None:
+                    break
+                frame = frame.f_back
+
+            # Get caller information
+            frame_info = inspect.getframeinfo(frame)
+
+            # Get the name of the function that called us
+            # We need to look at the code context to get
+            # the actual function name in nested functions
+            context = (
+                frame_info.code_context[0].strip() if frame_info.code_context else ""
+            )
+            calling_function = frame_info.function
+
+            # If this is a nested function,
+            # the calling function name will be the outer function
+            # We need to extract the inner function name from the context
+            if "def " in context:
+                # Extract function name from 'def function_name'
+                function_name = context.split("def ")[1].split("(")[0].strip()
+                # Use the inner function name if we found one
+                if function_name:
+                    calling_function = function_name
+
+            return {
+                "file": frame_info.filename,
+                "line": frame_info.lineno,
+                "function": calling_function,
+                "code": context,
+                "module": inspect.getmodule(frame).__name__
+                if inspect.getmodule(frame)
+                else None,
+            }
+        finally:
+            # Clean up references to avoid memory leaks
+            del frame
 
     def handle_error(
         self,
@@ -130,41 +198,6 @@ class ErrorHandler:
         self.print_error(error, title, show_traceback)
         if exit_code is not None:
             sys.exit(exit_code)
-
-    @staticmethod
-    def get_caller_info(depth: int = 1) -> dict[str, object]:
-        """
-        Get information about the caller of a function.
-
-        Args:
-            depth: How many frames to go back in the call stack
-
-        Returns:
-            A dictionary with caller information
-        """
-        frame = inspect.currentframe()
-        if frame is None:
-            return {}
-
-        # Go back 'depth' frames
-        for _ in range(depth + 1):
-            if frame.f_back is None:
-                break
-            frame = frame.f_back
-
-        # Get caller information
-        frame_info = inspect.getframeinfo(frame)
-        return {
-            "file": frame_info.filename,
-            "line": frame_info.lineno,
-            "function": frame_info.function,
-            "code": frame_info.code_context[0].strip()
-            if frame_info.code_context
-            else None,
-            "module": inspect.getmodule(frame).__name__
-            if inspect.getmodule(frame)
-            else None,
-        }
 
 
 def handle_errors(

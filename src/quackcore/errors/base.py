@@ -115,10 +115,14 @@ class QuackPermissionError(QuackIOError):
         if message is None:
             message = f"Permission denied for {operation} operation on {path}"
 
-        # Create context dictionary with both path and operation information
-        context = {"path": str(path), "operation": operation}
-        # Pass context to the parent constructor instead of just the path
-        super().__init__(message, context, original_error)
+        # Instead of creating a separate context, let's use QuackError directly
+        # to bypass QuackIOError's context creation
+        QuackError.__init__(
+            self, message, {"path": str(path), "operation": operation}, original_error
+        )
+
+        # Still set these attributes for compatibility
+        self.path = str(path) if path else None
         self.operation = operation
 
 
@@ -197,10 +201,8 @@ class QuackFormatError(QuackIOError):
         if message is None:
             message = f"Invalid {format_name} format in {path}"
 
-        # Create context dictionary with both path and format information
-        context = {"path": str(path), "format": format_name}
-        # Pass the context to QuackIOError constructor
-        super().__init__(message, context, original_error)
+        # Pass path directly to QuackIOError which will create the context
+        super().__init__(message, str(path), original_error)
         self.format_name = format_name
 
 

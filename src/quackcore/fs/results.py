@@ -59,11 +59,23 @@ class ReadResult(OperationResult, Generic[T]):
 
         Raises:
             TypeError: If content is not a string or bytes
+            UnicodeDecodeError: If binary content cannot be decoded
         """
         if isinstance(self.content, str):
             return self.content
         elif isinstance(self.content, bytes):
-            return self.content.decode(self.encoding or "utf-8")
+            try:
+                return self.content.decode(self.encoding or "utf-8")
+            except UnicodeError as err:
+                # Re-raise to properly test UnicodeDecodeError handling
+                # Use 'from err' to maintain exception context
+                raise UnicodeDecodeError(
+                    "utf-8",
+                    self.content,
+                    0,
+                    len(self.content),
+                    "Cannot decode binary content to text",
+                ) from err
         else:
             raise TypeError(f"Content is not text: {type(self.content)}")
 
@@ -221,7 +233,8 @@ class FindResult(OperationResult):
     )
 
 
-class DataResult(Generic[T], OperationResult):
+# Fixed the order here - OperationResult (BaseModel) before Generic[T]
+class DataResult(OperationResult, Generic[T]):
     """Result for structured data operations (YAML, JSON, etc.)."""
 
     data: T = Field(

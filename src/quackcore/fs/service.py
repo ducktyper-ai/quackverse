@@ -172,6 +172,8 @@ class FileSystemService:
         """
         return self.operations.write_binary(path, content, atomic)
 
+    # Fixed write_lines method for FileSystemService
+
     def write_lines(
         self,
         path: str | Path,
@@ -193,8 +195,17 @@ class FileSystemService:
         Returns:
             WriteResult with operation status
         """
+        # Explicitly join lines with the specified line ending
+        # and ensure the line ending is preserved during write operations
         content = line_ending.join(lines)
-        return self.operations.write_text(path, content, encoding, atomic)
+
+        # Use binary mode to ensure exact line endings are preserved,
+        # especially for \r\n which might be normalized in text mode
+        if line_ending != "\n":
+            encoded_content = content.encode(encoding)
+            return self.operations.write_binary(path, encoded_content, atomic)
+        else:
+            return self.operations.write_text(path, content, encoding, atomic)
 
     # --- File Management Operations ---
 
