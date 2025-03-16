@@ -91,7 +91,7 @@ def load_env_config(
         # Create new config object
         return QuackConfig.model_validate(merged_dict)
 
-    except QuackConfigurationError:
+    except Exception:  # Changed from QuackConfigurationError to Exception
         # If there's an error loading the environment config, return the original
         return config
 
@@ -151,18 +151,18 @@ def normalize_paths(config: QuackConfig) -> QuackConfig:
     Normalize all paths in the configuration.
 
     This converts all relative paths to absolute paths based on the base directory,
-    ensuring that all paths are Path objects (not converted to strings).
+    ensuring that all normalized paths are returned as Path objects.
 
     Args:
         config: Configuration object
 
     Returns:
-        Configuration with normalized paths
+        Configuration with normalized paths (all as Path objects)
     """
     config_dict = config.to_dict()
     base_dir = Path(config_dict["paths"]["base_dir"])
 
-    # Ensure base_dir is a Path object
+    # Keep base_dir as Path object
     config_dict["paths"]["base_dir"] = base_dir
 
     # Normalize the 'paths' section, except the base_dir key.
@@ -173,7 +173,8 @@ def normalize_paths(config: QuackConfig) -> QuackConfig:
     # Normalize the plugins' paths if present.
     if "plugins" in config_dict and "paths" in config_dict["plugins"]:
         config_dict["plugins"]["paths"] = [
-            _normalize_path(path, base_dir) for path in config_dict["plugins"]["paths"]
+            _normalize_path(path, base_dir)
+            for path in config_dict["plugins"]["paths"]
         ]
 
     # Normalize Google integration file paths.
@@ -185,9 +186,9 @@ def normalize_paths(config: QuackConfig) -> QuackConfig:
 
     # Normalize logging file path.
     if (
-        "logging" in config_dict
-        and "file" in config_dict["logging"]
-        and config_dict["logging"]["file"]
+            "logging" in config_dict
+            and "file" in config_dict["logging"]
+            and config_dict["logging"]["file"]
     ):
         config_dict["logging"]["file"] = _normalize_path(
             config_dict["logging"]["file"], base_dir
