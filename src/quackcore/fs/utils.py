@@ -63,10 +63,13 @@ def normalize_path(path: str | Path) -> Path:
     """
     path_obj = Path(path).expanduser()
     try:
+        # If the path doesn't exist, make it absolute without resolving
+        if not path_obj.exists():
+            return path_obj.absolute() if not path_obj.is_absolute() else path_obj
         return path_obj.resolve()
     except FileNotFoundError:
-        # If the path doesn't exist, just normalize it without resolving symlinks
-        return path_obj
+        # If the path doesn't exist, just make it absolute
+        return path_obj.absolute() if not path_obj.is_absolute() else path_obj
 
 
 def is_same_file(path1: str | Path, path2: str | Path) -> bool:

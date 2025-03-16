@@ -74,7 +74,8 @@ class LoggingConfig(BaseModel):
                 parent_dir = self.file.parent
                 parent_dir.mkdir(parents=True, exist_ok=True)
 
-                file_handler = logging.FileHandler(self.file)
+                # Create the file handler (changed to use str for path)
+                file_handler = logging.FileHandler(str(self.file))
                 file_handler.setFormatter(logging.Formatter(log_format))
                 logging.getLogger().addHandler(file_handler)
             except Exception as e:

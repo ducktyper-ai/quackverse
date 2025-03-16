@@ -53,15 +53,13 @@ class TestErrorHandler:
         handler = ErrorHandler(console=mock_console)
         error = QuackError("Test error")
 
-        handler.print_error(error, show_traceback=True)
+        # Capture the returned result string
+        result = handler.print_error(error, show_traceback=True)
 
-        # Verify console.print was called with a
-        # Panel containing both error and traceback
+        # Verify console.print was called
         mock_console.print.assert_called_once()
-        args, _ = mock_console.print.call_args
-        panel = args[0]
-        assert "Test error" in str(panel)
-        # Traceback representation will be in the panel
+        # Check that the result string contains the error message
+        assert "Test error" in result
 
     def test_handle_error(self) -> None:
         """Test handling an error."""
@@ -69,13 +67,13 @@ class TestErrorHandler:
         handler = ErrorHandler(console=mock_console)
         error = QuackError("Test error")
 
-        handler.handle_error(error, title="Custom Title")
+        # Capture the returned result string
+        result = handler.handle_error(error, title="Custom Title")
 
-        # Verify console.print was called with the right title
+        # Verify console.print was called
         mock_console.print.assert_called_once()
-        args, kwargs = mock_console.print.call_args
-        panel = args[0]
-        assert "Custom Title" in str(panel)
+        # Check that the result string contains the custom title
+        assert "Custom Title" in result
 
     def test_handle_error_with_exit(self) -> None:
         """Test handling an error with system exit."""

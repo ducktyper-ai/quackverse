@@ -172,7 +172,6 @@ class FileSystemService:
         """
         return self.operations.write_binary(path, content, atomic)
 
-    # In src/quackcore/fs/service.py
     def write_lines(
         self,
         path: str | Path,

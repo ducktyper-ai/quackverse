@@ -169,7 +169,7 @@ class TestConfigUtils:
         normalized = normalize_paths(config)
 
         # Check that paths were normalized
-        assert normalized.paths.base_dir == "/base/dir"  # Absolute path unchanged
+        assert str(normalized.paths.base_dir) == "/base/dir"  # Absolute path unchanged
         assert normalized.paths.output_dir == "/base/dir/output"  # Relative to base_dir
         assert normalized.paths.data_dir == "/base/dir/data"  # Relative to base_dir
 

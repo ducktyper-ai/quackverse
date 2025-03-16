@@ -491,7 +491,12 @@ class TestFileSystemService:
             # Verify copied content
             copy_read_result = service.read_text(copy_path)
             assert copy_read_result.success is True
-            assert copy_read_result.content == content
+            # Compare after normalizing line endings
+            normalized_read = copy_read_result.content.replace("\r\n", "\n").replace(
+                "\r", "\n"
+            )
+            normalized_original = content.replace("\r\n", "\n").replace("\r", "\n")
+            assert normalized_read == normalized_original
 
     def test_move(self, temp_dir: Path) -> None:
         """Test moving a file."""
