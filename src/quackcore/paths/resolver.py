@@ -153,9 +153,9 @@ class PathResolver:
             ) from e
 
     def find_output_directory(
-        self,
-        start_dir: str | Path | None = None,
-        create: bool = False,
+            self,
+            start_dir: str | Path | None = None,
+            create: bool = False,
     ) -> Path:
         """
         Find or create an output directory for a project.
@@ -200,7 +200,7 @@ class PathResolver:
                 output_dir.mkdir(parents=True, exist_ok=True)
                 return output_dir
 
-            # Fix: Always raise when not found and create=False
+            # Always raise when not found and create=False
             raise QuackFileNotFoundError(
                 "output", f"Could not find output directory in project root {root_dir}"
             )
@@ -295,6 +295,7 @@ class PathResolver:
             pass
 
     @wrap_io_errors
+    # In src/quackcore/paths/resolver.py
     def detect_project_context(
         self,
         start_dir: str | Path | None = None,
@@ -315,14 +316,14 @@ class PathResolver:
             start_dir = Path.cwd()
         start_dir = Path(start_dir)
 
-        # Fix: Use absolute path for cache key
-        cache_key = str(start_dir.resolve())
-
-        if cache_key in self._cache:
-            return self._cache[cache_key]
-
         try:
             root_dir = find_project_root(start_dir)
+            # Use resolved root directory for cache key
+            cache_key = str(root_dir.resolve())
+
+            if cache_key in self._cache:
+                return self._cache[cache_key]
+
             context = ProjectContext(root_dir=root_dir)
             context.name = root_dir.name
             self._detect_standard_directories(context)
@@ -332,7 +333,7 @@ class PathResolver:
         except QuackFileNotFoundError as e:
             self.logger.warning(f"Could not detect project context: {e}")
             context = ProjectContext(root_dir=start_dir)
-            self._cache[cache_key] = context
+            # Don't cache this fallback context
             return context
 
     def _detect_config_file(self, context: ProjectContext) -> None:

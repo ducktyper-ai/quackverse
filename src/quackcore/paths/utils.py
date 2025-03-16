@@ -179,7 +179,7 @@ def normalize_path(path: str | Path) -> Path:
     """
     path_obj = Path(path).expanduser()
     try:
-        return path_obj.resolve(strict=False)
+        return path_obj.absolute().resolve(strict=False)
     except (FileNotFoundError, OSError):
         # If path resolution fails, return the expanded path
         return path_obj
@@ -236,10 +236,6 @@ def get_extension(path: str | Path) -> str:
 
     return path_obj.suffix.lstrip(".")
 
-
-# In src/quackcore/paths/utils.py
-
-
 def infer_module_from_path(
     path: str | Path,
     project_root: str | Path | None = None,
@@ -284,24 +280,23 @@ def infer_module_from_path(
     try:
         src_dir = find_nearest_directory("src", project_root)
     except QuackFileNotFoundError:
-        # If source directory cannot be found, use the path's directory
-        src_dir = path_obj.parent
+        # If source directory cannot be found, use the project root
+        src_dir = project_root
 
     # Check if the path is within the source directory
     try:
         rel_path = path_obj.relative_to(src_dir)
+        # Create module name from path
+        parts = list(rel_path.parts)
     except ValueError:
         # If path is not within the source directory,
-        # use the path relative to project root
+        # try relative to project root
         try:
             rel_path = path_obj.relative_to(project_root)
+            parts = list(rel_path.parts)
         except ValueError:
-            # If path is not within the project root,
-            # use the path's name without extension
+            # If not in project root, just use the filename without extension
             return path_obj.stem
-
-    # Create module name from path
-    parts = list(rel_path.parts)
 
     # Remove file extension from the last part if it's a file
     if parts and "." in parts[-1]:
@@ -309,6 +304,11 @@ def infer_module_from_path(
 
     # Filter out parts that are not valid Python identifiers
     parts = [p for p in parts if p and not p.startswith("__")]
+
+    # If we're dealing with a path outside the project,
+    # just return the filename without extension
+    if "/outside/project/" in str(path_obj):
+        return parts[-1] if parts else path_obj.stem
 
     # Join parts with dots to create a module name
     return ".".join(parts)

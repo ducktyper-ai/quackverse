@@ -172,6 +172,7 @@ class FileSystemService:
         """
         return self.operations.write_binary(path, content, atomic)
 
+    # In src/quackcore/fs/service.py
     def write_lines(
         self,
         path: str | Path,
@@ -202,8 +203,8 @@ class FileSystemService:
         if line_ending != "\n":
             bytes_content = content.encode(encoding)
             return self.operations.write_binary(path, bytes_content, atomic)
-
-        return self.operations.write_text(path, content, encoding, atomic)
+        else:
+            return self.operations.write_text(path, content, encoding, atomic)
 
     # --- File Management Operations ---
 

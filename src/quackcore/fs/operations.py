@@ -673,6 +673,7 @@ class FileSystemOperations:
         """
         return path.exists() and path.is_dir()
 
+    # In src/quackcore/fs/operations.py
     def _perform_pattern_search(
         self, directory: Path, pattern: str, recursive: bool, include_hidden: bool
     ) -> tuple[list[Path], list[Path]]:
@@ -692,17 +693,24 @@ class FileSystemOperations:
         directories: list[Path] = []
 
         # Choose the appropriate glob method: rglob if recursive, glob otherwise.
-        glob_method: Callable[[str], Iterator[Path]] = (
-            directory.rglob if recursive else directory.glob
-        )
+        glob_method = directory.rglob if recursive else directory.glob
 
-        # Use the glob method with the pattern as a positional argument.
+        # Use the glob method with the pattern as argument
         for item in glob_method(pattern):
-            # Skip hidden items if not requested.
-            if not include_hidden and any(part.startswith(".") for part in item.parts):
+            # Skip hidden items if not requested
+            if not include_hidden and any(
+                part.startswith(".") for part in item.parts if part != "."
+            ):
                 continue
 
-            # Categorize the item.
+            # Ensure the matched item is within the directory we're searching
+            # (rglob can sometimes return unexpected results)
+            try:
+                item.relative_to(directory)
+            except ValueError:
+                continue
+
+            # Categorize the item
             if item.is_file():
                 files.append(item)
             elif item.is_dir():
