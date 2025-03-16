@@ -1,4 +1,3 @@
-# src/quackcore/paths/utils.py
 """
 Utility functions for path resolution.
 
@@ -6,13 +5,36 @@ This module provides utility functions for path resolution,
 including functions for finding project roots and navigating directories.
 """
 
+import logging
 import os
 from pathlib import Path
-from typing import TypeVar
+
+from pydantic import BaseModel, Field
 
 from quackcore.errors import QuackFileNotFoundError, wrap_io_errors
 
-T = TypeVar("T")  # Generic type for flexible typing
+# Configure logging (if not configured elsewhere)
+logging.basicConfig(level=logging.INFO)
+
+
+class ProjectConfig(BaseModel):
+    marker_files: list[str] = Field(
+        default_factory=lambda: [
+            "pyproject.toml",
+            "setup.py",
+            ".git",
+            ".quack",
+            "quack_config.yaml",
+        ]
+    )
+    marker_dirs: list[str] = Field(
+        default_factory=lambda: [
+            "src",
+            "quackcore",
+            "tests",
+        ]
+    )
+    max_levels: int = 5
 
 
 @wrap_io_errors
@@ -37,47 +59,30 @@ def find_project_root(
     Raises:
         QuackFileNotFoundError: If project root cannot be found
     """
-    if marker_files is None:
-        marker_files = [
-            "pyproject.toml",
-            "setup.py",
-            ".git",
-            ".quack",
-            "quack_config.yaml",
-        ]
+    if marker_files is None or marker_dirs is None:
+        config = ProjectConfig()
+        marker_files = marker_files or config.marker_files
+        marker_dirs = marker_dirs or config.marker_dirs
 
-    if marker_dirs is None:
-        marker_dirs = ["src", "quackcore", "tests"]
+    current_dir: Path = Path(start_dir) if start_dir else Path.cwd()
 
-    # Start from current directory if not specified
-    current_dir = Path(start_dir) if start_dir else Path.cwd()
-
-    # Search up to max_levels parent directories
     for _ in range(max_levels):
-        # Check if any marker files exist in this directory
-        for marker in marker_files:
-            if (current_dir / marker).exists():
-                return current_dir
+        # Check for marker files in the current directory.
+        if any((current_dir / marker).exists() for marker in marker_files):
+            return current_dir
 
-        # Check if any marker directories exist in this directory
-        dir_markers_found = 0
-        for marker in marker_dirs:
-            if (current_dir / marker).is_dir():
-                dir_markers_found += 1
-
-        # If multiple directory markers are found, this is likely the project root
+        # Check for marker directories: if two or more are found, assume project root.
+        dir_markers_found: int = sum(
+            1 for marker in marker_dirs if (current_dir / marker).is_dir()
+        )
         if dir_markers_found >= 2:
             return current_dir
 
-        # Move up one directory
-        parent_dir = current_dir.parent
+        parent_dir: Path = current_dir.parent
         if parent_dir == current_dir:
-            # Reached filesystem root without finding project root
-            break
-
+            break  # Reached filesystem root.
         current_dir = parent_dir
 
-    # Could not find project root
     raise QuackFileNotFoundError(
         str(start_dir or Path.cwd()),
         "Could not find project root directory. Please specify it explicitly.",
@@ -104,26 +109,22 @@ def find_nearest_directory(
     Raises:
         QuackFileNotFoundError: If directory cannot be found
     """
-    current_dir = Path(start_dir) if start_dir else Path.cwd()
+    current_dir: Path = Path(start_dir) if start_dir else Path.cwd()
 
-    # First, check if the directory exists at or below the start directory
+    # First, search within the current directory and its subdirectories.
     for root, dirs, _ in os.walk(str(current_dir)):
         if name in dirs:
             return Path(root) / name
 
-    # If not found, check parent directories
+    # If not found, search upward through parent directories.
     for _ in range(max_levels):
-        parent_dir = current_dir.parent
+        parent_dir: Path = current_dir.parent
         if parent_dir == current_dir:
-            # Reached filesystem root
-            break
-
+            break  # Reached filesystem root.
         current_dir = parent_dir
-
         if (current_dir / name).is_dir():
             return current_dir / name
 
-    # Could not find directory
     raise QuackFileNotFoundError(
         str(name),
         f"Could not find directory '{name}' in or near {start_dir or Path.cwd()}",
@@ -148,21 +149,16 @@ def resolve_relative_to_project(
     Raises:
         QuackFileNotFoundError: If project root cannot be found and path is relative
     """
-    path_obj = Path(path)
-
-    # If path is absolute, return it as is
+    path_obj: Path = Path(path)
     if path_obj.is_absolute():
         return path_obj
 
-    # If project root is not specified, try to find it
     if project_root is None:
         try:
             project_root = find_project_root()
         except QuackFileNotFoundError:
-            # If project root cannot be found, use current directory
             project_root = Path.cwd()
 
-    # Resolve path relative to project root
     return Path(project_root) / path_obj
 
 
@@ -177,11 +173,11 @@ def normalize_path(path: str | Path) -> Path:
     Returns:
         Normalized Path object
     """
-    path_obj = Path(path).expanduser()
+    path_obj: Path = Path(path).expanduser()
     try:
         return path_obj.absolute().resolve(strict=False)
-    except (FileNotFoundError, OSError):
-        # If path resolution fails, return the expanded path
+    except (FileNotFoundError, OSError) as e:
+        logging.error("Error resolving path %s: %s", path, e)
         return path_obj
 
 
@@ -210,32 +206,73 @@ def split_path(path: str | Path) -> list[str]:
     Returns:
         List of path components
     """
-    parts = list(Path(path).parts)
+    parts: list[str] = list(Path(path).parts)
     if str(path).startswith("./"):
         parts.insert(0, ".")
     return parts
 
 
 def get_extension(path: str | Path) -> str:
-    """Get the file extension from a path.
+    """
+    Get the file extension from a path.
 
     Args:
         path: File path
 
     Returns:
-        File extension without the dot. For dotfiles (e.g., .gitignore), the extension
-        is considered to be the filename without the leading dot.
+        File extension without the dot.
+        For dotfiles, the extension is the filename without the leading dot.
     """
-    path_obj = Path(path)
-    filename = path_obj.name
+    path_obj: Path = Path(path)
+    filename: str = path_obj.name
 
-    # Special case for dotfiles: if the filename starts with a dot and contains no
-    # other dot, treat the whole filename (minus the dot) as the extension.
     if filename.startswith(".") and "." not in filename[1:]:
         return filename[1:]
-
     return path_obj.suffix.lstrip(".")
 
+
+def _resolve_project_root(path_obj: Path, project_root: str | Path | None) -> Path:
+    """
+    Resolve the project root.
+
+    Args:
+        path_obj: The path being processed.
+        project_root: Provided project root or None.
+
+    Returns:
+        A valid project root Path.
+    """
+    if project_root is not None:
+        return Path(project_root)
+    try:
+        return find_project_root()
+    except QuackFileNotFoundError as e:
+        logging.error("Project root not found: %s", e)
+        try:
+            return Path.cwd()
+        except Exception as ex:
+            logging.error("Error obtaining current working directory: %s", ex)
+            return path_obj.parent if not path_obj.is_absolute() else Path("/")
+
+
+def _get_relative_parts(path_obj: Path, base: Path) -> list[str] | None:
+    """
+    Get relative path parts of path_obj with respect to base.
+
+    Args:
+        path_obj: The absolute path.
+        base: The base directory to compute the relative path from.
+
+    Returns:
+        List of parts if the relative path can be computed, otherwise None.
+    """
+    try:
+        return list(path_obj.relative_to(base).parts)
+    except ValueError:
+        return None
+
+
+@wrap_io_errors
 def infer_module_from_path(
     path: str | Path,
     project_root: str | Path | None = None,
@@ -244,71 +281,40 @@ def infer_module_from_path(
     Infer a Python module name from a file path.
 
     Args:
-        path: Path to the Python file
-        project_root: Project root directory (default: auto-detected)
+        path: Path to the Python file.
+        project_root: Project root directory (default: auto-detected).
 
     Returns:
-        Python module name
+        Python module name.
     """
-    path_obj = Path(path)
+    path_obj: Path = Path(path)
+    resolved_root: Path = _resolve_project_root(path_obj, project_root)
 
-    # Get project root if not specified
-    if project_root is None:
-        try:
-            project_root = find_project_root()
-        except QuackFileNotFoundError:
-            # If project root cannot be found, use current directory or path's parent
-            try:
-                project_root = Path.cwd()
-            except (FileNotFoundError, OSError):
-                # If cwd fails (rare), use path's parent or a reasonable fallback
-                project_root = (
-                    path_obj.parent if not path_obj.is_absolute() else Path("/")
-                )
-
-    project_root = Path(project_root)
-
-    # Make path absolute if it's not already
+    # Ensure the path is absolute.
     if not path_obj.is_absolute():
-        try:
-            path_obj = project_root / path_obj
-        except Exception:
-            # In case of path joining issues
-            pass
+        path_obj = resolved_root / path_obj
 
-    # Try to find the source directory
+    # Attempt to find the source directory ("src") within the project.
     try:
-        src_dir = find_nearest_directory("src", project_root)
+        src_dir: Path = find_nearest_directory("src", resolved_root)
     except QuackFileNotFoundError:
-        # If source directory cannot be found, use the project root
-        src_dir = project_root
+        src_dir = resolved_root
 
-    # Check if the path is within the source directory
-    try:
-        rel_path = path_obj.relative_to(src_dir)
-        # Create module name from path
-        parts = list(rel_path.parts)
-    except ValueError:
-        # If path is not within the source directory,
-        # try relative to project root
-        try:
-            rel_path = path_obj.relative_to(project_root)
-            parts = list(rel_path.parts)
-        except ValueError:
-            # If not in project root, just use the filename without extension
-            return path_obj.stem
+    parts: list[str] | None = _get_relative_parts(path_obj, src_dir)
+    if parts is None:
+        parts = _get_relative_parts(path_obj, resolved_root)
+    if parts is None:
+        return path_obj.stem
 
-    # Remove file extension from the last part if it's a file
+    # Remove file extension from the last part if it's a file.
     if parts and "." in parts[-1]:
         parts[-1] = parts[-1].split(".", 1)[0]
 
-    # Filter out parts that are not valid Python identifiers
+    # Filter out parts that are not valid (e.g. parts starting with '__').
     parts = [p for p in parts if p and not p.startswith("__")]
 
-    # If we're dealing with a path outside the project,
-    # just return the filename without extension
+    # Special handling for paths outside the project.
     if "/outside/project/" in str(path_obj):
         return parts[-1] if parts else path_obj.stem
 
-    # Join parts with dots to create a module name
     return ".".join(parts)

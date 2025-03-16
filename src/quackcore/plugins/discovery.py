@@ -31,9 +31,8 @@ class PluginLoader:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(log_level)
 
-
     def load_entry_points(
-            self, group: str = "quackcore.plugins"
+        self, group: str = "quackcore.plugins"
     ) -> list[QuackPluginProtocol]:
         """
         Load plugins from entry points.
@@ -117,13 +116,13 @@ class PluginLoader:
             # If no create_plugin function, look for a class that implements QuackPlugin
             for name, obj in inspect.getmembers(module):
                 if (
-                        inspect.isclass(obj)
-                        and hasattr(obj, "name")
-                        and not name.startswith("_")
-                        and (
+                    inspect.isclass(obj)
+                    and hasattr(obj, "name")
+                    and not name.startswith("_")
+                    and (
                         obj.__module__ == module.__name__
                         or getattr(obj, "__module__", "").startswith(module.__name__)
-                )
+                    )
                 ):
                     try:
                         plugin = obj()

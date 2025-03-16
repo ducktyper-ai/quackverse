@@ -12,7 +12,6 @@ from typing import TypeVar
 
 from quackcore.config.loader import _deep_merge, load_yaml_config
 from quackcore.config.models import QuackConfig
-from quackcore.errors import QuackConfigurationError
 
 T = TypeVar("T")
 
@@ -167,14 +166,13 @@ def normalize_paths(config: QuackConfig) -> QuackConfig:
 
     # Normalize the 'paths' section, except the base_dir key.
     for key, value in config_dict["paths"].items():
-        if key != "base_dir" and isinstance(value, (str, Path)):
+        if key != "base_dir" and isinstance(value, (str | Path)):
             config_dict["paths"][key] = _normalize_path(value, base_dir)
 
     # Normalize the plugins' paths if present.
     if "plugins" in config_dict and "paths" in config_dict["plugins"]:
         config_dict["plugins"]["paths"] = [
-            _normalize_path(path, base_dir)
-            for path in config_dict["plugins"]["paths"]
+            _normalize_path(path, base_dir) for path in config_dict["plugins"]["paths"]
         ]
 
     # Normalize Google integration file paths.
@@ -186,9 +184,9 @@ def normalize_paths(config: QuackConfig) -> QuackConfig:
 
     # Normalize logging file path.
     if (
-            "logging" in config_dict
-            and "file" in config_dict["logging"]
-            and config_dict["logging"]["file"]
+        "logging" in config_dict
+        and "file" in config_dict["logging"]
+        and config_dict["logging"]["file"]
     ):
         config_dict["logging"]["file"] = _normalize_path(
             config_dict["logging"]["file"], base_dir

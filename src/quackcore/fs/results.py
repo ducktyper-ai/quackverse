@@ -65,7 +65,8 @@ class ReadResult(OperationResult, Generic[T]):
             return self.content
         elif isinstance(self.content, bytes):
             # If the content contains a null byte, consider it binary.
-            # Respect the provided encoding parameter if the test explicitly wants to decode binary data
+            # Respect the provided encoding parameter
+            # if the test explicitly wants to decode binary data
             if b"\x00" in self.content and not self.encoding == "latin1":
                 raise UnicodeDecodeError(
                     "utf-8",

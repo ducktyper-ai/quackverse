@@ -6,13 +6,11 @@ This module defines the base exception hierarchy for all errors in the QuackCore
 ecosystem, providing consistent error handling and detailed diagnostic information.
 """
 
-import builtins
 from collections.abc import Callable
 from functools import wraps
 from pathlib import Path
 from typing import TypeVar
 
-T = TypeVar("T")  # Generic return type for functions
 R = TypeVar("R")  # Generic return type for wrapped functions
 
 
@@ -33,10 +31,9 @@ class QuackError(Exception):
             context: Additional context information (optional)
             original_error: The original exception that caused this error (optional)
         """
-        self.context = context or {}
-        self.original_error = original_error
+        self.context: dict[str, object] = context or {}
+        self.original_error: Exception | None = original_error
 
-        # Create a formatted message with context information
         formatted_message = message
         if context:
             context_str = ", ".join(f"{k}={v!r}" for k, v in context.items())
@@ -62,12 +59,12 @@ class QuackIOError(QuackError):
             path: The file or directory path related to the error (optional)
             original_error: The original exception that caused this error (optional)
         """
-        context = {}
+        context: dict[str, object] = {}
         if path is not None:
             context["path"] = str(path)
 
         super().__init__(message, context, original_error)
-        self.path = str(path) if path else None
+        self.path: str | None = str(path) if path else None
 
 
 class QuackFileNotFoundError(QuackIOError):
@@ -89,7 +86,6 @@ class QuackFileNotFoundError(QuackIOError):
         """
         if message is None:
             message = f"File or directory not found: {path}"
-
         super().__init__(message, path, original_error)
 
 
@@ -114,16 +110,13 @@ class QuackPermissionError(QuackIOError):
         """
         if message is None:
             message = f"Permission denied for {operation} operation on {path}"
-
-        # Instead of creating a separate context, let's use QuackError directly
-        # to bypass QuackIOError's context creation
+        # Directly calling QuackError.__init__
+        # to bypass QuackIOError's context creation.
         QuackError.__init__(
             self, message, {"path": str(path), "operation": operation}, original_error
         )
-
-        # Still set these attributes for compatibility
         self.path = str(path) if path else None
-        self.operation = operation
+        self.operation: str = operation
 
 
 class QuackFileExistsError(QuackIOError):
@@ -145,7 +138,6 @@ class QuackFileExistsError(QuackIOError):
         """
         if message is None:
             message = f"File or directory already exists: {path}"
-
         super().__init__(message, path, original_error)
 
 
@@ -168,15 +160,15 @@ class QuackValidationError(QuackError):
             errors: Detailed validation errors (optional)
             original_error: The original exception that caused this error (optional)
         """
-        context = {}
+        context: dict[str, object] = {}
         if path is not None:
             context["path"] = str(path)
         if errors is not None:
             context["errors"] = errors
 
         super().__init__(message, context, original_error)
-        self.path = str(path) if path else None
-        self.errors = errors or {}
+        self.path: str | None = str(path) if path else None
+        self.errors: dict[str, list[str]] = errors or {}
 
 
 class QuackFormatError(QuackIOError):
@@ -200,10 +192,8 @@ class QuackFormatError(QuackIOError):
         """
         if message is None:
             message = f"Invalid {format_name} format in {path}"
-
-        # Pass path directly to QuackIOError which will create the context
         super().__init__(message, str(path), original_error)
-        self.format_name = format_name
+        self.format_name: str = format_name
 
 
 class QuackConfigurationError(QuackError):
@@ -225,15 +215,15 @@ class QuackConfigurationError(QuackError):
             config_key: The specific configuration key with the error (optional)
             original_error: The original exception that caused this error (optional)
         """
-        context = {}
+        context: dict[str, object] = {}
         if config_path is not None:
             context["config_path"] = str(config_path)
         if config_key is not None:
             context["config_key"] = config_key
 
         super().__init__(message, context, original_error)
-        self.config_path = str(config_path) if config_path else None
-        self.config_key = config_key
+        self.config_path: str | None = str(config_path) if config_path else None
+        self.config_key: str | None = config_key
 
 
 class QuackPluginError(QuackError):
@@ -255,15 +245,15 @@ class QuackPluginError(QuackError):
             plugin_path: The path to the plugin module or file (optional)
             original_error: The original exception that caused this error (optional)
         """
-        context = {}
+        context: dict[str, object] = {}
         if plugin_name is not None:
             context["plugin_name"] = plugin_name
         if plugin_path is not None:
             context["plugin_path"] = str(plugin_path)
 
         super().__init__(message, context, original_error)
-        self.plugin_name = plugin_name
-        self.plugin_path = str(plugin_path) if plugin_path else None
+        self.plugin_name: str | None = plugin_name
+        self.plugin_path: str | None = str(plugin_path) if plugin_path else None
 
 
 class QuackAuthenticationError(QuackError):
@@ -285,15 +275,46 @@ class QuackAuthenticationError(QuackError):
             credentials_path: The path to the credentials file (optional)
             original_error: The original exception that caused this error (optional)
         """
-        context = {}
+        context: dict[str, object] = {}
         if service is not None:
             context["service"] = service
         if credentials_path is not None:
             context["credentials_path"] = str(credentials_path)
 
         super().__init__(message, context, original_error)
-        self.service = service
-        self.credentials_path = str(credentials_path) if credentials_path else None
+        self.service: str | None = service
+        self.credentials_path: str | None = (
+            str(credentials_path) if credentials_path else None
+        )
+
+
+def _exception_converter(e: Exception) -> Exception:
+    """
+    Convert a standard exception to a QuackCore custom exception.
+    The order of checks ensures that more specific exceptions are handled before their
+    parent classes (e.g., FileNotFoundError before OSError).
+    """
+    if isinstance(e, ValueError):
+        return QuackValidationError(str(e), original_error=e)
+    if isinstance(e, FileNotFoundError):
+        path = getattr(e, "filename", None)
+        return QuackFileNotFoundError(path or "unknown", original_error=e)
+    if isinstance(e, PermissionError):
+        path = getattr(e, "filename", None)
+        return QuackPermissionError(path or "unknown", "access", original_error=e)
+    if isinstance(e, FileExistsError):
+        path = getattr(e, "filename", None)
+        return QuackFileExistsError(path or "unknown", original_error=e)
+    if isinstance(e, IsADirectoryError):
+        path = getattr(e, "filename", None)
+        return QuackIOError(f"Path is a directory: {path}", path, original_error=e)
+    if isinstance(e, NotADirectoryError):
+        path = getattr(e, "filename", None)
+        return QuackIOError(f"Path is not a directory: {path}", path, original_error=e)
+    if isinstance(e, OSError):
+        path = getattr(e, "filename", None)
+        return QuackIOError(str(e), path, original_error=e)
+    return QuackError(str(e), original_error=e)
 
 
 def wrap_io_errors(func: Callable[..., R]) -> Callable[..., R]:
@@ -304,51 +325,23 @@ def wrap_io_errors(func: Callable[..., R]) -> Callable[..., R]:
         func: Function to wrap
 
     Returns:
-        A wrapped function that converts standard exceptions to QuackCore exceptions
+        A wrapped function that converts standard exceptions to QuackCore exceptions.
     """
 
     @wraps(func)
     def wrapper(*args: object, **kwargs: object) -> R:
         try:
             return func(*args, **kwargs)
-        except (
-            QuackError,
-            QuackIOError,
-            QuackFileNotFoundError,
-            QuackFileExistsError,
-            QuackPermissionError,
-        ):
-            # Don't wrap our own exceptions; re-raise them as-is.
-            raise
-        except builtins.ValueError as e:
-            raise QuackValidationError(str(e), original_error=e) from e
-        except builtins.FileNotFoundError as e:
-            path = getattr(e, "filename", None)
-            raise QuackFileNotFoundError(path or "unknown", original_error=e) from e
-        except builtins.PermissionError as e:
-            path = getattr(e, "filename", None)
-            operation = "access"
-            raise QuackPermissionError(
-                path or "unknown", operation, original_error=e
-            ) from e
-        except builtins.FileExistsError as e:
-            path = getattr(e, "filename", None)
-            raise QuackFileExistsError(path or "unknown", original_error=e) from e
-        except builtins.IsADirectoryError as e:
-            path = getattr(e, "filename", None)
-            raise QuackIOError(
-                f"Path is a directory: {path}", path, original_error=e
-            ) from e
-        except builtins.NotADirectoryError as e:
-            path = getattr(e, "filename", None)
-            raise QuackIOError(
-                f"Path is not a directory: {path}", path, original_error=e
-            ) from e
-        except OSError as e:
-            # Handle other OS errors.
-            path = getattr(e, "filename", None)
-            raise QuackIOError(str(e), path, original_error=e) from e
         except Exception as e:
-            raise QuackError(str(e), original_error=e) from e
+            if isinstance(
+                e,
+                QuackError
+                | QuackIOError
+                | QuackFileNotFoundError
+                | QuackFileExistsError
+                | QuackPermissionError,
+            ):
+                raise
+            raise _exception_converter(e) from e
 
     return wrapper

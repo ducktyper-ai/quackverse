@@ -9,7 +9,6 @@ with proper error handling and consistent return values.
 import json
 import logging
 import mimetypes
-from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import TypeVar
 

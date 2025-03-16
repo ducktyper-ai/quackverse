@@ -62,7 +62,8 @@ class TestPluginLoader:
             plugins = loader.load_entry_points("test.plugins")
             assert len(plugins) == 0
 
-        # Test error in retrieving entry points: simulate an error when fetching entry points.
+        # Test error in retrieving entry points:
+        # simulate an error when fetching entry points.
         with patch(
             "importlib.metadata.entry_points", side_effect=Exception("Test error")
         ):

@@ -77,8 +77,7 @@ class ErrorHandler:
 
     # In src/quackcore/errors/handlers.py
     def print_error(
-            self, error: Exception, title: str | None = None,
-            show_traceback: bool = False
+        self, error: Exception, title: str | None = None, show_traceback: bool = False
     ) -> str:
         """
         Print an error to the console.
@@ -194,11 +193,11 @@ class ErrorHandler:
 
     # In src/quackcore/errors/handlers.py
     def handle_error(
-            self,
-            error: Exception,
-            title: str | None = None,
-            show_traceback: bool = False,
-            exit_code: int | None = None,
+        self,
+        error: Exception,
+        title: str | None = None,
+        show_traceback: bool = False,
+        exit_code: int | None = None,
     ) -> str:
         """
         Handle an error by printing it and optionally exiting.
@@ -216,6 +215,7 @@ class ErrorHandler:
         if exit_code is not None:
             sys.exit(exit_code)
         return panel_content
+
 
 def handle_errors(
     error_types: type[Exception] | tuple[type[Exception], ...] = Exception,
