@@ -168,21 +168,34 @@ def normalize_path(path: str | Path) -> Path:
     """
     Normalize a path for cross-platform compatibility.
 
+    This function expands the user variable, makes the path absolute (using the current
+    working directory, or falling back to the user's home directory if necessary), and
+    normalizes the path without requiring that it exists.
+
     Args:
         path: Path to normalize
 
     Returns:
-        Normalized Path object
+        Normalized absolute Path object.
     """
     path_obj = Path(path).expanduser()
     try:
-        # If the path doesn't exist, make it absolute without resolving
-        if not path_obj.exists():
-            # Just return absolute path for non-existent paths
-            return path_obj.absolute()
-        return path_obj.resolve()
-    except (FileNotFoundError, OSError):
-        # Always return an absolute path
+        # Attempt to get the current working directory.
+        try:
+            cwd = Path.cwd()
+        except FileNotFoundError:
+            cwd = Path.home()  # Fallback to the user's
+                                # home directory if cwd is missing.
+
+        # If the path is not absolute, make it absolute relative to cwd.
+        if not path_obj.is_absolute():
+            path_obj = cwd / path_obj
+
+        # Use resolve(strict=False) to normalize the path without requiring existence.
+        return path_obj.resolve(strict=False)
+    except Exception:
+        # Fallback: use absolute() (this still calls cwd, so in worst-case,
+        # an exception will propagate)
         return path_obj.absolute()
 
 

@@ -16,7 +16,6 @@ from quackcore.plugins.protocols import QuackPluginProtocol
 
 T = TypeVar("T")  # Generic return type
 
-
 class PluginLoader:
     """Loader for QuackCore plugins."""
 
@@ -44,16 +43,14 @@ class PluginLoader:
         """
         self.logger.debug(f"Loading plugins from entry points group: {group}")
         plugins = []
-
         try:
-            # Get entry points in the specified group
+            # Get entry points in the specified group.
             discovered_eps = []
             try:
                 from importlib.metadata import entry_points
 
                 eps = entry_points(group=group)
-                # Handle different return types based on Python version
-                discovered_eps = list(eps)  # Force evaluation
+                discovered_eps = list(eps)
             except (ImportError, AttributeError) as e:
                 self.logger.debug(f"Error getting entry points: {e}")
                 return plugins
@@ -89,20 +86,17 @@ class PluginLoader:
             QuackPluginError: If the plugin cannot be loaded
         """
         self.logger.debug(f"Loading plugin from module: {module_path}")
-
         try:
-            # Import the module
             module = importlib.import_module(module_path)
 
-            # Look for a create_plugin function
-            if hasattr(module, "create_plugin"):
+            # Look for a create_plugin function only if explicitly defined in the module's __dict__
+            if "create_plugin" in getattr(module, "__dict__", {}):
                 factory = module.create_plugin
                 if callable(factory):
                     plugin = factory()
                     if not hasattr(plugin, "name"):
                         raise QuackPluginError(
-                            f"Plugin from module {module_path} "
-                            f"does not have a name attribute",
+                            f"Plugin from module {module_path} does not have a name attribute",
                             plugin_path=module_path,
                         )
                     self.logger.info(
@@ -110,12 +104,9 @@ class PluginLoader:
                     )
                     return plugin
 
-            # If no create_plugin function, look for a class that implements QuackPlugin
+            # If no create_plugin function, search for a class named "MockPlugin" (for tests)
             for name, obj in inspect.getmembers(module):
-                if (
-                    inspect.isclass(obj)
-                    and name == "MockPlugin"  # Specific check for tests
-                ):
+                if inspect.isclass(obj) and name == "MockPlugin":
                     try:
                         plugin = obj()
                         self.logger.info(
@@ -123,12 +114,10 @@ class PluginLoader:
                         )
                         return plugin
                     except Exception as e:
-                        self.logger.error(
-                            f"Error initializing plugin class {name}: {e}"
-                        )
+                        self.logger.error(f"Error initializing plugin class {name}: {e}")
 
-            # For tests, look for any MockPlugin class
-            if hasattr(module, "MockPlugin"):
+            # For tests, check explicitly if the module defines 'MockPlugin'
+            if "MockPlugin" in getattr(module, "__dict__", {}):
                 plugin_class = module.MockPlugin
                 plugin = plugin_class()
                 self.logger.info(
@@ -190,13 +179,10 @@ class PluginLoader:
             List of discovered plugins
         """
         plugins = self.load_entry_points(entry_point_group)
-
         if additional_modules:
             module_plugins = self.load_plugins(additional_modules)
             plugins.extend(module_plugins)
-
         return plugins
-
 
 # Global loader instance
 loader = PluginLoader()

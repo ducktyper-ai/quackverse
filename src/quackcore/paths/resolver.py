@@ -294,8 +294,8 @@ class PathResolver:
 
     @wrap_io_errors
     def detect_project_context(
-        self,
-        start_dir: str | Path | None = None,
+            self,
+            start_dir: str | Path | None = None,
     ) -> ProjectContext:
         """
         Detect project context from a directory.
@@ -307,33 +307,33 @@ class PathResolver:
             ProjectContext object
 
         Raises:
-            QuackFileNotFoundError: If project root cannot be found
+            QuackFileNotFoundError: If the start directory does not exist.
         """
         if start_dir is None:
             start_dir = Path.cwd()
         start_dir = Path(start_dir)
 
-        # When a non-existent path is provided, should raise the exception
+        # If the start directory doesn't exist, raise an error.
         if not start_dir.exists():
             raise QuackFileNotFoundError(str(start_dir))
 
         try:
             root_dir = find_project_root(start_dir)
-            # Use resolved root directory for cache key
-            cache_key = str(root_dir.resolve())
-
-            if cache_key in self._cache:
-                return self._cache[cache_key]
-
-            context = ProjectContext(root_dir=root_dir)
-            context.name = root_dir.name
-            self._detect_standard_directories(context)
-            self._detect_config_file(context)
-            self._cache[cache_key] = context
-            return context
         except QuackFileNotFoundError:
-            # Don't catch the exception, let it propagate
-            raise
+            # Fallback: if no markers are found, use the provided directory as the root.
+            root_dir = start_dir
+
+        # Use the resolved root directory as the cache key.
+        cache_key = str(root_dir.resolve())
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+
+        context = ProjectContext(root_dir=root_dir)
+        context.name = root_dir.name
+        self._detect_standard_directories(context)
+        self._detect_config_file(context)
+        self._cache[cache_key] = context
+        return context
 
     def _detect_config_file(self, context: ProjectContext) -> None:
         """
