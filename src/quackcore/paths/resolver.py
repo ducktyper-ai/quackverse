@@ -153,9 +153,9 @@ class PathResolver:
             ) from e
 
     def find_output_directory(
-            self,
-            start_dir: str | Path | None = None,
-            create: bool = False,
+        self,
+        start_dir: str | Path | None = None,
+        create: bool = False,
     ) -> Path:
         """
         Find or create an output directory for a project.
@@ -168,7 +168,8 @@ class PathResolver:
             Path to the output directory
 
         Raises:
-            QuackFileNotFoundError: If output directory cannot be found and create is False
+            QuackFileNotFoundError: If output directory
+                                    cannot be found and create is False
         """
         # If start_dir is specified and create is True, prioritize creating there.
         if start_dir and create:

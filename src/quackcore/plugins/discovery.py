@@ -31,7 +31,7 @@ class PluginLoader:
         self.logger.setLevel(log_level)
 
     def load_entry_points(
-            self, group: str = "quackcore.plugins"
+        self, group: str = "quackcore.plugins"
     ) -> list[QuackPluginProtocol]:
         """
         Load plugins from entry points.
@@ -50,6 +50,7 @@ class PluginLoader:
             discovered_eps = []
             try:
                 from importlib.metadata import entry_points
+
                 eps = entry_points(group=group)
                 # Handle different return types based on Python version
                 discovered_eps = list(eps)  # Force evaluation
@@ -112,11 +113,11 @@ class PluginLoader:
             # If no create_plugin function, look for a class that implements QuackPlugin
             for name, obj in inspect.getmembers(module):
                 if (
-                        inspect.isclass(obj)
-                        and hasattr(obj, "name")
-                        and not name.startswith("_")
-                        and name == "MockPlugin"
-                # Check specifically for MockPlugin for tests
+                    inspect.isclass(obj)
+                    and hasattr(obj, "name")
+                    and not name.startswith("_")
+                    and name == "MockPlugin"
+                    # Check specifically for MockPlugin for tests
                 ):
                     try:
                         plugin = obj()
@@ -154,7 +155,7 @@ class PluginLoader:
                 plugin_path=module_path,
                 original_error=e,
             ) from e
-        
+
     def load_plugins(self, modules: list[str]) -> list[QuackPluginProtocol]:
         """
         Load multiple plugins from module paths.
