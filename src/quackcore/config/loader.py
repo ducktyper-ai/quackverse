@@ -186,7 +186,7 @@ def find_config_file() -> Path | None:
 
     # Try to find project root and check for config there
     try:
-        root = resolver.find_project_root()
+        root = resolver.get_project_root()
         for name in ["quack_config.yaml", "config/quack_config.yaml"]:
             path = root / name
             if path.exists():

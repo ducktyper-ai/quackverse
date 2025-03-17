@@ -169,26 +169,24 @@ class TestConfigUtils:
         normalized = normalize_paths(config)
 
         # Check that paths were normalized
-        assert str(normalized.paths.base_dir) == "/base/dir"  # Absolute path unchanged
-        assert normalized.paths.output_dir == "/base/dir/output"  # Relative to base_dir
-        assert normalized.paths.data_dir == "/base/dir/data"  # Relative to base_dir
+        assert normalized.paths.base_dir == Path("/base/dir")  # Compare as Path
+        assert normalized.paths.output_dir == Path("/base/dir/output")
+        assert normalized.paths.data_dir == Path("/base/dir/data")
 
         # Check plugin paths
-        assert normalized.plugins.paths[0] == "/base/dir/plugins"
-        assert normalized.plugins.paths[1] == "/base/dir/../external/plugins"
+        assert normalized.plugins.paths[0] == Path("/base/dir/plugins")
+        assert normalized.plugins.paths[1] == Path("/base/dir/../external/plugins")
 
         # Check integration paths
-        assert (
-            normalized.integrations.google.client_secrets_file
-            == "/base/dir/secrets.json"
+        assert normalized.integrations.google.client_secrets_file == Path(
+            "/base/dir/secrets.json"
         )
-        assert (
-            normalized.integrations.google.credentials_file
-            == "/base/dir/credentials.json"
+        assert normalized.integrations.google.credentials_file == Path(
+            "/base/dir/credentials.json"
         )
 
         # Check logging path
-        assert normalized.logging.file == "/base/dir/logs/app.log"
+        assert normalized.logging.file == Path("/base/dir/logs/app.log")
 
         # Check with already absolute paths
         config = QuackConfig(
@@ -199,7 +197,8 @@ class TestConfigUtils:
             }
         )
         normalized = normalize_paths(config)
-        assert (
-            normalized.paths.output_dir == "/absolute/output"
+        assert normalized.paths.output_dir == Path("/absolute/output")
+        # Absolute path unchanged
+        assert normalized.paths.data_dir == Path(
+            "/absolute/data"
         )  # Absolute path unchanged
-        assert normalized.paths.data_dir == "/absolute/data"  # Absolute path unchanged

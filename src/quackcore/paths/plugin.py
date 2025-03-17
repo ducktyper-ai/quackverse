@@ -84,7 +84,7 @@ class QuackPathsPlugin:
         Returns:
             Path to the project root directory as a string
         """
-        return str(self._resolver.find_project_root(start_dir))
+        return str(self._resolver.get_project_root(start_dir))
 
     def detect_project_context(self, start_dir: str | None = None) -> ProjectContext:
         """

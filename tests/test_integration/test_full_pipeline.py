@@ -91,7 +91,7 @@ class SamplePathPlugin(CommandPluginProtocol):
 
     def find_project_root(self, start_dir: str | None = None) -> Path:
         """Find the project root directory."""
-        return self.resolver.find_project_root(start_dir)
+        return self.resolver.get_project_root(start_dir)
 
     def resolve_path(self, path: str, project_root: str | None = None) -> Path:
         """Resolve a path relative to the project root."""
@@ -253,7 +253,7 @@ class TestIntegration:
         # Test path resolution error handling
         path_resolver = PathResolver()
         with pytest.raises(QuackError):
-            path_resolver.find_project_root("/nonexistent/path")
+            path_resolver.get_project_root("/nonexistent/path")
 
         # Test config loading error handling
         with pytest.raises(QuackError):

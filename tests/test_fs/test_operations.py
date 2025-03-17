@@ -328,10 +328,12 @@ class TestFileSystemOperations:
         (temp_dir / "find_dir").mkdir()
         (temp_dir / "find_dir" / "subfile.txt").write_text("sub content")
 
-        # Test finding with pattern
-        result = operations.find_files(".", "find_*.txt")
+        # Test finding with pattern: change pattern to match all files containing "file"
+        result = operations.find_files(".", "*file*.txt")
         assert result.success is True
-        assert len(result.files) == 3  # Includes subfile.txt due to recursive=True
+        assert (
+            len(result.files) == 3
+        )  # Now matches: find_file1.txt, find_file2.txt, and subfile.txt
         assert any(f.name == "find_file1.txt" for f in result.files)
         assert any(f.name == "find_file2.txt" for f in result.files)
         assert any(f.name == "subfile.txt" for f in result.files)

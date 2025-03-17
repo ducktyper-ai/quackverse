@@ -70,11 +70,14 @@ class TestConfigModels:
                         mock_file_handler.reset_mock()
 
                         # Test with file config
-                        config = LoggingConfig(file=Path("/test/log.txt"))
-                        config.setup_logging()
+                        with patch.object(Path, "mkdir", return_value=None):
+                            config = LoggingConfig(file=Path("/test/log.txt"))
+                            config.setup_logging()
 
                         # Verify file handler added
-                        mock_file_handler.assert_called_once_with(Path("/test/log.txt"))
+                        mock_file_handler.assert_called_once_with(
+                            str(Path("/test/log.txt"))
+                        )
 
                         # Test with error during file handler setup
                         mock_basic_config.reset_mock()

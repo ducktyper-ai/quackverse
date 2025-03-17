@@ -22,40 +22,40 @@ class TestPathResolver:
         assert resolver is not None
         assert resolver._cache == {}
 
-    def test_find_project_root(self, mock_project_structure: Path) -> None:
+    def test_get_project_root(self, mock_project_structure: Path) -> None:
         """Test finding a project root based on marker files."""
         resolver = PathResolver()
 
         # Test finding from project root
-        root = resolver.find_project_root(mock_project_structure)
+        root = resolver.get_project_root(mock_project_structure)
         assert root == mock_project_structure
 
         # Test finding from subdirectory
         subdir = mock_project_structure / "src"
-        root = resolver.find_project_root(subdir)
+        root = resolver.get_project_root(subdir)
         assert root == mock_project_structure
 
         # Test with custom marker files
-        root = resolver.find_project_root(
+        root = resolver.get_project_root(
             mock_project_structure, marker_files=["pyproject.toml"]
         )
         assert root == mock_project_structure
 
         # Test with custom marker directories
-        root = resolver.find_project_root(
+        root = resolver.get_project_root(
             mock_project_structure, marker_dirs=["src", "tests"]
         )
         assert root == mock_project_structure
 
         # Test with non-existent path (should raise)
         with pytest.raises(QuackFileNotFoundError):
-            resolver.find_project_root("/nonexistent/path")
+            resolver.get_project_root("/nonexistent/path")
 
         # Test where no project root can be found
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             with pytest.raises(QuackFileNotFoundError):
-                resolver.find_project_root(tmp_path)
+                resolver.get_project_root(tmp_path)
 
     def test_find_source_directory(self, mock_project_structure: Path) -> None:
         """Test finding a source directory."""
@@ -75,7 +75,6 @@ class TestPathResolver:
         assert src_dir == package_dir
 
     def test_find_output_directory(self, mock_project_structure: Path) -> None:
-        """Test finding an output directory."""
         resolver = PathResolver()
 
         # Test finding existing output directory
@@ -85,13 +84,18 @@ class TestPathResolver:
         # Test creating output directory
         no_output_dir = mock_project_structure / "no_output"
         no_output_dir.mkdir()
-        output_dir = resolver.find_output_directory(no_output_dir, create=True)
-        assert output_dir == no_output_dir / "output"
-        assert output_dir.exists()
+        created_output = resolver.find_output_directory(no_output_dir, create=True)
+        assert created_output == no_output_dir / "output"
+        assert created_output.exists()
 
-        # Test finding non-existent output directory (should raise without create=True)
-        with pytest.raises(QuackFileNotFoundError):
-            resolver.find_output_directory(no_output_dir, create=False)
+        # Now, simulate a scenario where no output directory exists by patching
+        # get_project_root to return a fresh directory
+        # that does not contain an output folder.
+        non_existent_dir = mock_project_structure / "non_existent_dir"
+        non_existent_dir.mkdir()
+        with patch.object(resolver, "get_project_root", return_value=non_existent_dir):
+            with pytest.raises(QuackFileNotFoundError):
+                resolver.find_output_directory(non_existent_dir, create=False)
 
     def test_resolve_project_path(self, mock_project_structure: Path) -> None:
         """Test resolving a path relative to the project root."""
@@ -108,14 +112,14 @@ class TestPathResolver:
 
         # Test resolving without explicit project root (should find it)
         with patch.object(
-            resolver, "find_project_root", return_value=mock_project_structure
+            resolver, "get_project_root", return_value=mock_project_structure
         ):
             resolved = resolver.resolve_project_path("src/file.txt")
             assert resolved == mock_project_structure / "src" / "file.txt"
 
         # Test resolving when project root cannot be found
         with patch.object(
-            resolver, "find_project_root", side_effect=QuackFileNotFoundError("")
+            resolver, "get_project_root", side_effect=QuackFileNotFoundError("")
         ):
             # Should use current directory as fallback
             with patch("pathlib.Path.cwd", return_value=Path("/current/dir")):

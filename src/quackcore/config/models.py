@@ -6,7 +6,6 @@ This module provides Pydantic models for configuration management,
 with support for validation, defaults, and merging of configurations.
 """
 
-import logging
 from pathlib import Path
 from typing import Any, ClassVar, TypeVar
 
@@ -47,11 +46,13 @@ class LoggingConfig(BaseModel):
 
         This configures the root logger according to the settings.
         """
+        import logging
+
         level_name = self.level.upper()
         if level_name not in self.VALID_LEVELS:
             level_name = "INFO"
 
-        level = getattr(logging, level_name)
+        level = getattr(logging, level_name, logging.INFO)
         log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
         # Configure the root logger
@@ -61,25 +62,28 @@ class LoggingConfig(BaseModel):
             handlers=[],
         )
 
+        # Get the root logger instance
+        logger = logging.getLogger()
+
         # Add console handler if enabled
         if self.console:
             console_handler = logging.StreamHandler()
             console_handler.setFormatter(logging.Formatter(log_format))
-            logging.getLogger().addHandler(console_handler)
+            logger.addHandler(console_handler)
 
         # Add file handler if a file is specified
         if self.file:
             try:
                 # Ensure the directory exists
-                parent_dir = self.file.parent
-                parent_dir.mkdir(parents=True, exist_ok=True)
+                self.file.parent.mkdir(parents=True, exist_ok=True)
 
-                # Create the file handler (changed to use str for path)
+                # Create the file handler using a string path for compatibility
+                # with Python 3.13
                 file_handler = logging.FileHandler(str(self.file))
                 file_handler.setFormatter(logging.Formatter(log_format))
-                logging.getLogger().addHandler(file_handler)
+                logger.addHandler(file_handler)
             except Exception as e:
-                logging.error(f"Failed to set up file logging: {e}")
+                logger.error(f"Failed to set up file logging: {e}")
 
 
 class PathsConfig(BaseModel):

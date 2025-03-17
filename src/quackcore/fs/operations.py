@@ -692,9 +692,9 @@ class FileSystemOperations:
 
         # Choose the appropriate search method explicitly
         if recursive:
-            items = directory.rglob(pattern)
+            items = list(directory.rglob(pattern))
         else:
-            items = directory.glob(pattern)
+            items = list(directory.glob(pattern))
 
         for item in items:
             # Skip hidden items if not requested

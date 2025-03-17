@@ -127,7 +127,10 @@ class TestFileSystemService:
         # Test writing with different line ending
         result = service.write_lines(file_path, lines, line_ending="\r\n")
         assert result.success is True
-        assert file_path.read_text() == "line 1\r\nline 2\r\nline 3"
+        # Read the file with newline="" to preserve the written line endings.
+        with open(file_path, encoding="utf-8", newline="") as f:
+            content = f.read()
+        assert content == "line 1\r\nline 2\r\nline 3"
 
     def test_copy(self, test_file: Path, temp_dir: Path) -> None:
         """Test copying a file."""

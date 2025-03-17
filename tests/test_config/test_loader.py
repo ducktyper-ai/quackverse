@@ -190,7 +190,7 @@ class TestConfigLoader:
 
             # Patch project root detection
             with patch(
-                "quackcore.config.loader.resolver.find_project_root",
+                "quackcore.config.loader.resolver.get_project_root",
                 return_value=tmp_path,
             ):
                 found = find_config_file()
@@ -199,7 +199,7 @@ class TestConfigLoader:
         # Test when no config file can be found
         with patch("os.path.exists", return_value=False):
             with patch(
-                "quackcore.config.loader.resolver.find_project_root",
+                "quackcore.config.loader.resolver.get_project_root",
                 side_effect=Exception,
             ):
                 found = find_config_file()

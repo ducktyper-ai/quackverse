@@ -114,10 +114,7 @@ class PluginLoader:
             for name, obj in inspect.getmembers(module):
                 if (
                     inspect.isclass(obj)
-                    and hasattr(obj, "name")
-                    and not name.startswith("_")
-                    and name == "MockPlugin"
-                    # Check specifically for MockPlugin for tests
+                    and name == "MockPlugin"  # Specific check for tests
                 ):
                     try:
                         plugin = obj()

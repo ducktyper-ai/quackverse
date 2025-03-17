@@ -174,12 +174,16 @@ def normalize_path(path: str | Path) -> Path:
     Returns:
         Normalized Path object
     """
-    path_obj: Path = Path(path).expanduser()
+    path_obj = Path(path).expanduser()
     try:
-        return path_obj.absolute().resolve(strict=False)
-    except (FileNotFoundError, OSError) as e:
-        logging.error("Error resolving path %s: %s", path, e)
-        return path_obj
+        # If the path doesn't exist, make it absolute without resolving
+        if not path_obj.exists():
+            # Just return absolute path for non-existent paths
+            return path_obj.absolute()
+        return path_obj.resolve()
+    except (FileNotFoundError, OSError):
+        # Always return an absolute path
+        return path_obj.absolute()
 
 
 @wrap_io_errors

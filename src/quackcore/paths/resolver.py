@@ -40,7 +40,7 @@ class PathResolver:
         self.logger.setLevel(log_level)
         self._cache: dict[str, ProjectContext] = {}
 
-    def find_project_root(
+    def get_project_root(
         self,
         start_dir: str | Path | None = None,
         marker_files: list[str] | None = None,
@@ -179,10 +179,9 @@ class PathResolver:
             return output_dir
 
         try:
-            # Try to find the project root.
-            root_dir = find_project_root(start_dir)
+            root_dir = self.get_project_root(start_dir)
 
-            # Check common output directories at the project root.
+            # Check common output directories
             output_dir = root_dir / "output"
             if output_dir.exists():
                 return output_dir
@@ -196,18 +195,15 @@ class PathResolver:
                 return output_dir
 
             if create:
-                # Create the 'output' directory at the project root.
                 output_dir = root_dir / "output"
                 output_dir.mkdir(parents=True, exist_ok=True)
                 return output_dir
 
-            # Always raise when not found and create=False
+            # This line should properly raise the exception
             raise QuackFileNotFoundError(
                 "output", f"Could not find output directory in project root {root_dir}"
             )
         except QuackFileNotFoundError as e:
-            # If project root cannot be found,
-            # fall back to the current or provided directory.
             current_dir = Path(start_dir) if start_dir else Path.cwd()
             if create:
                 output_dir = current_dir / "output"
@@ -242,7 +238,7 @@ class PathResolver:
         root_path = None
         if project_root is None:
             try:
-                root_path = self.find_project_root()
+                root_path = self.get_project_root()
             except QuackFileNotFoundError:
                 # If project root cannot be found, use current directory
                 root_path = Path.cwd()
@@ -297,7 +293,6 @@ class PathResolver:
             pass
 
     @wrap_io_errors
-    # In src/quackcore/paths/resolver.py
     def detect_project_context(
         self,
         start_dir: str | Path | None = None,
@@ -318,6 +313,10 @@ class PathResolver:
             start_dir = Path.cwd()
         start_dir = Path(start_dir)
 
+        # When a non-existent path is provided, should raise the exception
+        if not start_dir.exists():
+            raise QuackFileNotFoundError(str(start_dir))
+
         try:
             root_dir = find_project_root(start_dir)
             # Use resolved root directory for cache key
@@ -332,11 +331,9 @@ class PathResolver:
             self._detect_config_file(context)
             self._cache[cache_key] = context
             return context
-        except QuackFileNotFoundError as e:
-            self.logger.warning(f"Could not detect project context: {e}")
-            context = ProjectContext(root_dir=start_dir)
-            # Don't cache this fallback context
-            return context
+        except QuackFileNotFoundError:
+            # Don't catch the exception, let it propagate
+            raise
 
     def _detect_config_file(self, context: ProjectContext) -> None:
         """
@@ -411,3 +408,16 @@ class PathResolver:
         if context.content_name:
             result["name"] = context.content_name
         return result
+
+
+def get_project_root(
+    start_dir: str | Path | None = None,
+    marker_files: list[str] | None = None,
+    marker_dirs: list[str] | None = None,
+) -> Path:
+    """
+    Module-level function to get the project root directory.
+
+    This function instantiates a PathResolver and returns the project root.
+    """
+    return PathResolver().get_project_root(start_dir, marker_files, marker_dirs)
