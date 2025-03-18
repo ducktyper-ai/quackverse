@@ -1,4 +1,4 @@
-# src/quackcore/__init__.py
+# src/quackcore/__init__.py (Updated)
 """
 QuackCore: Core infrastructure for the Quack ecosystem of media production tools.
 
@@ -13,8 +13,17 @@ __version__ = "0.1.0"
 from quackcore.config import config
 from quackcore.config.loader import load_config
 from quackcore.config.models import QuackConfig
-from quackcore.errors import QuackError, wrap_io_errors
+from quackcore.errors import (
+    QuackApiError,
+    QuackAuthenticationError,
+    QuackError,
+    QuackIntegrationError,
+    QuackQuotaExceededError,
+    wrap_io_errors,
+)
 from quackcore.fs import service as fs
+from quackcore.integrations import registry as integration_registry
+from quackcore.integrations import IntegrationRegistry
 from quackcore.paths import resolver as paths
 from quackcore.plugins import QuackPluginProtocol, loader, registry
 
@@ -33,7 +42,14 @@ __all__ = [
     "registry",
     "loader",
     "QuackPluginProtocol",
+    # Integrations
+    "integration_registry",
+    "IntegrationRegistry",
     # Errors
     "QuackError",
+    "QuackIntegrationError",
+    "QuackApiError",
+    "QuackAuthenticationError",
+    "QuackQuotaExceededError",
     "wrap_io_errors",
 ]

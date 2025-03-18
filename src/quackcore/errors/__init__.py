@@ -7,7 +7,7 @@ and error messages for better diagnostics and troubleshooting.
 """
 
 from quackcore.errors.base import (
-    QuackAuthenticationError,
+    QuackAuthenticationError as _BaseAuthError,
     QuackConfigurationError,
     QuackError,
     QuackFileExistsError,
@@ -18,6 +18,12 @@ from quackcore.errors.base import (
     QuackPluginError,
     QuackValidationError,
     wrap_io_errors,
+)
+from quackcore.errors.integration import (
+    QuackApiError,
+    QuackAuthenticationError,
+    QuackIntegrationError,
+    QuackQuotaExceededError,
 )
 
 __all__ = [
@@ -31,5 +37,8 @@ __all__ = [
     "QuackConfigurationError",
     "QuackPluginError",
     "QuackAuthenticationError",
+    "QuackIntegrationError",
+    "QuackApiError",
+    "QuackQuotaExceededError",
     "wrap_io_errors",
 ]
