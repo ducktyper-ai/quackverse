@@ -356,7 +356,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             try:
                 file_metadata = (
                     self.drive_service.files()
-                    .get(fileId=remote_id, fields="name, mimeType")
+                    .get(file_id=remote_id, fields="name, mimeType")
                     .execute()
                 )
             except Exception as api_error:
@@ -376,7 +376,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
                 )
 
             try:
-                request = self.drive_service.files().get_media(fileId=remote_id)
+                request = self.drive_service.files().get_media(file_id=remote_id)
                 from googleapiclient.http import MediaIoBaseDownload
 
                 fh = io.BytesIO()
@@ -442,7 +442,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
                             "files(id, name, mimeType, webViewLink, webContentLink, "
                             "size, createdTime, modifiedTime, parents, shared, trashed)"
                         ),
-                        pageSize=100,
+                        page_size=100,
                     )
                     .execute()
                 )
@@ -554,7 +554,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             permission = {"type": type_, "role": role, "allowFileDiscovery": True}
             try:
                 self.drive_service.permissions().create(
-                    fileId=file_id, body=permission, fields="id"
+                    file_id=file_id, body=permission, fields="id"
                 ).execute()
             except Exception as api_error:
                 raise QuackApiError(
@@ -594,7 +594,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             try:
                 file_metadata = (
                     self.drive_service.files()
-                    .get(fileId=file_id, fields="webViewLink, webContentLink")
+                    .get(file_id=file_id, fields="webViewLink, webContentLink")
                     .execute()
                 )
             except Exception as api_error:
@@ -641,10 +641,10 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
         try:
             try:
                 if permanent:
-                    self.drive_service.files().delete(fileId=file_id).execute()
+                    self.drive_service.files().delete(file_id=file_id).execute()
                 else:
                     self.drive_service.files().update(
-                        fileId=file_id, body={"trashed": True}
+                        file_id=file_id, body={"trashed": True}
                     ).execute()
             except Exception as api_error:
                 api_method = "files.delete" if permanent else "files.update"

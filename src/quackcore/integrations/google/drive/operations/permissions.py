@@ -1,0 +1,119 @@
+# src/quackcore/integrations/google/drive/operations/permissions.py
+"""
+Permission operations for Google Drive integration.
+
+This module provides functions for managing file permissions in Google Drive,
+including setting permissions and retrieving sharing links.
+"""
+
+import logging
+
+from quackcore.errors import QuackApiError
+from quackcore.integrations.google.drive.protocols import DriveService
+from quackcore.integrations.google.drive.utils.api import execute_api_request
+from quackcore.integrations.results import IntegrationResult
+
+
+def set_file_permissions(
+    drive_service: DriveService,
+    file_id: str,
+    role: str = "reader",
+    type_: str = "anyone",
+    logger: logging.Logger | None = None,
+) -> IntegrationResult[bool]:
+    """
+    Set permissions for a file or folder in Google Drive.
+
+    Args:
+        drive_service: Google Drive service object.
+        file_id: ID of the file or folder.
+        role: Permission role (e.g., "reader", "writer").
+        type_: Permission type (e.g., "anyone", "user").
+        logger: Optional logger instance.
+
+    Returns:
+        IntegrationResult indicating success.
+    """
+    logger = logger or logging.getLogger(__name__)
+
+    try:
+        # Create permission object
+        permission: dict[str, object] = {
+            "type": type_,
+            "role": role,
+            "allowFileDiscovery": True
+        }
+
+        # Execute permission creation
+        execute_api_request(
+            drive_service.files().permissions().create(
+                file_id=file_id, body=permission, fields="id"
+            ),
+            "Failed to set permissions in Google Drive",
+            "permissions.create",
+        )
+
+        return IntegrationResult.success_result(
+            content=True,
+            message=f"Permission set successfully: {role} for {type_}"
+        )
+
+    except QuackApiError as e:
+        logger.error(f"API error during setting permissions: {e}")
+        return IntegrationResult.error_result(f"API error: {e}")
+    except Exception as e:
+        logger.error(f"Failed to set permissions: {e}")
+        return IntegrationResult.error_result(
+            f"Failed to set permissions in Google Drive: {e}"
+        )
+
+
+def get_sharing_link(
+    drive_service: DriveService,
+    file_id: str,
+    logger: logging.Logger | None = None,
+) -> IntegrationResult[str]:
+    """
+    Get the sharing link for a file in Google Drive.
+
+    Args:
+        drive_service: Google Drive service object.
+        file_id: ID of the file.
+        logger: Optional logger instance.
+
+    Returns:
+        IntegrationResult with the sharing link.
+    """
+    logger = logger or logging.getLogger(__name__)
+
+    try:
+        # Get file metadata with link information
+        file_metadata = execute_api_request(
+            drive_service.files().get(
+                file_id=file_id, fields="webViewLink, webContentLink"
+            ),
+            "Failed to get file metadata from Google Drive",
+            "files.get",
+        )
+
+        # Extract link with explicit type annotation
+        link: str = (
+            str(file_metadata.get("webViewLink", ""))
+            or str(file_metadata.get("webContentLink", ""))
+            or f"https://drive.google.com/file/d/{file_id}/view"
+        )
+
+        # Using the explicit type annotation
+        return IntegrationResult.success_result(
+            content=link,
+            message="Got sharing link successfully"
+        )
+
+    except QuackApiError as e:
+        logger.error(f"API error during getting sharing link: {e}")
+        return IntegrationResult.error_result(f"API error: {e}")
+    except Exception as e:
+        logger.error(f"Failed to get sharing link: {e}")
+        return IntegrationResult.error_result(
+            f"Failed to get sharing link from Google Drive: {e}"
+        )
