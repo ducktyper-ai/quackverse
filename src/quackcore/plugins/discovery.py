@@ -16,6 +16,7 @@ from quackcore.plugins.protocols import QuackPluginProtocol
 
 T = TypeVar("T")  # Generic return type
 
+
 class PluginLoader:
     """Loader for QuackCore plugins."""
 
@@ -114,7 +115,9 @@ class PluginLoader:
                         )
                         return plugin
                     except Exception as e:
-                        self.logger.error(f"Error initializing plugin class {name}: {e}")
+                        self.logger.error(
+                            f"Error initializing plugin class {name}: {e}"
+                        )
 
             # For tests, check explicitly if the module defines 'MockPlugin'
             if "MockPlugin" in getattr(module, "__dict__", {}):
@@ -183,6 +186,7 @@ class PluginLoader:
             module_plugins = self.load_plugins(additional_modules)
             plugins.extend(module_plugins)
         return plugins
+
 
 # Global loader instance
 loader = PluginLoader()

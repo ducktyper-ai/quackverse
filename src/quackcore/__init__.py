@@ -22,8 +22,8 @@ from quackcore.errors import (
     wrap_io_errors,
 )
 from quackcore.fs import service as fs
-from quackcore.integrations import registry as integration_registry
 from quackcore.integrations import IntegrationRegistry
+from quackcore.integrations import registry as integration_registry
 from quackcore.paths import resolver as paths
 from quackcore.plugins import QuackPluginProtocol, loader, registry
 

@@ -123,8 +123,6 @@ class QuackQuotaExceededError(QuackApiError):
         if limit is not None:
             context["limit"] = limit
 
-        super().__init__(
-            message, service, 429, "quota_check", original_error
-        )
+        super().__init__(message, service, 429, "quota_check", original_error)
         self.resource: str | None = resource
         self.limit: int | None = limit

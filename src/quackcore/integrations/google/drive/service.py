@@ -13,8 +13,11 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from quackcore.errors import QuackApiError, QuackAuthenticationError, \
-    QuackIntegrationError
+from quackcore.errors import (
+    QuackApiError,
+    QuackAuthenticationError,
+    QuackIntegrationError,
+)
 from quackcore.fs import service as fs
 from quackcore.integrations.base import BaseIntegrationService
 from quackcore.integrations.google.auth import GoogleAuthProvider
@@ -34,13 +37,13 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
     ]
 
     def __init__(
-            self,
-            client_secrets_file: str | Path | None = None,
-            credentials_file: str | Path | None = None,
-            shared_folder_id: str | None = None,
-            config_path: str | Path | None = None,
-            scopes: list[str] | None = None,
-            log_level: int = logging.INFO,
+        self,
+        client_secrets_file: str | Path | None = None,
+        credentials_file: str | Path | None = None,
+        shared_folder_id: str | None = None,
+        config_path: str | Path | None = None,
+        scopes: list[str] | None = None,
+        log_level: int = logging.INFO,
     ) -> None:
         """
         Initialize the Google Drive integration service.
@@ -85,10 +88,10 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
         return "GoogleDrive"
 
     def _initialize_config(
-            self,
-            client_secrets_file: str | Path | None,
-            credentials_file: str | Path | None,
-            shared_folder_id: str | None,
+        self,
+        client_secrets_file: str | Path | None,
+        credentials_file: str | Path | None,
+        shared_folder_id: str | None,
     ) -> dict[str, Any]:
         """
         Initialize configuration from parameters or config file.
@@ -152,18 +155,38 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
                 return init_result
 
             # Get authenticated credentials
-            credentials = self.auth_provider.get_credentials()
+            try:
+                credentials = self.auth_provider.get_credentials()
+            except QuackAuthenticationError as auth_error:
+                self.logger.error(f"Authentication failed: {auth_error}")
+                return IntegrationResult.error_result(
+                    f"Failed to authenticate with Google Drive: {str(auth_error)}"
+                )
 
             # Initialize the Drive API service
-            from googleapiclient.discovery import build
+            try:
+                from googleapiclient.discovery import build
 
-            self.drive_service = build("drive", "v3", credentials=credentials)
+                self.drive_service = build("drive", "v3", credentials=credentials)
+            except Exception as api_error:
+                raise QuackApiError(
+                    f"Failed to initialize Google Drive API: {str(api_error)}",
+                    service="Google Drive",
+                    api_method="build",
+                    original_error=api_error,
+                )
 
             self._initialized = True
             return IntegrationResult.success_result(
                 message="Google Drive service initialized successfully"
             )
 
+        except QuackApiError as e:
+            self.logger.error(f"API error during initialization: {e}")
+            return IntegrationResult.error_result(f"API error: {str(e)}")
+        except QuackAuthenticationError as e:
+            self.logger.error(f"Authentication error during initialization: {e}")
+            return IntegrationResult.error_result(f"Authentication error: {str(e)}")
         except Exception as e:
             self.logger.error(f"Failed to initialize Google Drive service: {e}")
             return IntegrationResult.error_result(
@@ -171,12 +194,12 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             )
 
     def upload_file(
-            self,
-            file_path: str | Path,
-            remote_path: str | None = None,
-            description: str | None = None,
-            parent_folder_id: str | None = None,
-            public: bool | None = None,
+        self,
+        file_path: str | Path,
+        remote_path: str | None = None,
+        description: str | None = None,
+        parent_folder_id: str | None = None,
+        public: bool | None = None,
     ) -> IntegrationResult[str]:
         """
         Upload a file to Google Drive.
@@ -202,9 +225,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             # Verify file exists
             file_info = fs.get_file_info(path_obj)
             if not file_info.success or not file_info.exists:
-                return IntegrationResult.error_result(
-                    f"File not found: {file_path}"
-                )
+                return IntegrationResult.error_result(f"File not found: {file_path}")
 
             # Determine filename
             if remote_path and not remote_path.startswith("/"):
@@ -220,18 +241,18 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             # Determine MIME type
             mime_type, _ = mimetypes.guess_type(str(path_obj))
             if not mime_type:
-                mime_type = 'application/octet-stream'
+                mime_type = "application/octet-stream"
 
             # Prepare file metadata
             file_metadata = {
-                'name': filename,
-                'description': description,
-                'mimeType': mime_type,
+                "name": filename,
+                "description": description,
+                "mimeType": mime_type,
             }
 
             # Add parent folder if specified
             if folder_id:
-                file_metadata['parents'] = [folder_id]
+                file_metadata["parents"] = [folder_id]
 
             # Read file content
             media_content = fs.read_binary(path_obj)
@@ -240,42 +261,62 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
                     f"Failed to read file: {media_content.error}"
                 )
 
-            from googleapiclient.http import MediaInMemoryUpload
+            try:
+                from googleapiclient.http import MediaInMemoryUpload
 
-            # Create media content
-            media = MediaInMemoryUpload(
-                media_content.content,
-                mimetype=mime_type,
-                resumable=True
-            )
+                # Create media content
+                media = MediaInMemoryUpload(
+                    media_content.content, mimetype=mime_type, resumable=True
+                )
 
-            # Upload the file
-            file = self.drive_service.files().create(
-                body=file_metadata,
-                media_body=media,
-                fields='id, webViewLink, webContentLink'
-            ).execute()
+                # Upload the file
+                file = (
+                    self.drive_service.files()
+                    .create(
+                        body=file_metadata,
+                        media_body=media,
+                        fields="id, webViewLink, webContentLink",
+                    )
+                    .execute()
+                )
+            except Exception as api_error:
+                raise QuackApiError(
+                    f"Failed to upload file to Google Drive: {str(api_error)}",
+                    service="Google Drive",
+                    api_method="files.create",
+                    original_error=api_error,
+                )
 
             # Set permissions if requested
             config_public = self.config.get("public_sharing", True)
             make_public = public if public is not None else config_public
 
             if make_public:
-                self.set_file_permissions(file['id'])
+                perm_result = self.set_file_permissions(file["id"])
+                if not perm_result.success:
+                    self.logger.warning(
+                        f"Failed to set permissions: {perm_result.error}"
+                    )
 
             # Return the sharing link
-            if 'webViewLink' in file:
-                link = file['webViewLink']
-            elif 'webContentLink' in file:
-                link = file['webContentLink']
+            if "webViewLink" in file:
+                link = file["webViewLink"]
+            elif "webContentLink" in file:
+                link = file["webContentLink"]
             else:
                 link = f"https://drive.google.com/file/d/{file['id']}/view"
 
             return IntegrationResult.success_result(
                 content=link,
-                message=f"File uploaded successfully with ID: {file['id']}"
+                message=f"File uploaded successfully with ID: {file['id']}",
             )
 
+        except QuackApiError as e:
+            self.logger.error(f"API error during file upload: {e}")
+            return IntegrationResult.error_result(f"API error: {str(e)}")
+        except QuackAuthenticationError as e:
+            self.logger.error(f"Authentication error during file upload: {e}")
+            return IntegrationResult.error_result(f"Authentication error: {str(e)}")
         except Exception as e:
             self.logger.error(f"Failed to upload file: {e}")
             return IntegrationResult.error_result(
@@ -283,9 +324,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             )
 
     def download_file(
-            self,
-            remote_id: str,
-            local_path: str | Path | None = None
+        self, remote_id: str, local_path: str | Path | None = None
     ) -> IntegrationResult[Path]:
         """
         Download a file from Google Drive.
@@ -303,37 +342,56 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
 
         try:
             # Get file metadata
-            file_metadata = self.drive_service.files().get(
-                fileId=remote_id,
-                fields='name, mimeType'
-            ).execute()
+            try:
+                file_metadata = (
+                    self.drive_service.files()
+                    .get(fileId=remote_id, fields="name, mimeType")
+                    .execute()
+                )
+            except Exception as api_error:
+                raise QuackApiError(
+                    f"Failed to get file metadata from Google Drive: {str(api_error)}",
+                    service="Google Drive",
+                    api_method="files.get",
+                    original_error=api_error,
+                )
 
             # Determine download path
             if not local_path:
                 # Create a temporary file with the same name
                 temp_dir = fs.create_temp_directory(prefix="quackcore_gdrive_")
-                download_path = Path(temp_dir) / file_metadata['name']
+                download_path = Path(temp_dir) / file_metadata["name"]
             else:
                 download_path = Path(local_path)
 
                 # If local_path is a directory, append the filename
                 if download_path.is_dir():
-                    download_path = download_path / file_metadata['name']
+                    download_path = download_path / file_metadata["name"]
 
                 # Ensure parent directory exists
                 fs.create_directory(download_path.parent, exist_ok=True)
 
             # Download the file
-            request = self.drive_service.files().get_media(fileId=remote_id)
-            from googleapiclient.http import MediaIoBaseDownload
+            try:
+                request = self.drive_service.files().get_media(fileId=remote_id)
+                from googleapiclient.http import MediaIoBaseDownload
 
-            fh = io.BytesIO()
-            downloader = MediaIoBaseDownload(fh, request)
+                fh = io.BytesIO()
+                downloader = MediaIoBaseDownload(fh, request)
 
-            done = False
-            while not done:
-                status, done = downloader.next_chunk()
-                self.logger.debug(f"Download progress: {int(status.progress() * 100)}%")
+                done = False
+                while not done:
+                    status, done = downloader.next_chunk()
+                    self.logger.debug(
+                        f"Download progress: {int(status.progress() * 100)}%"
+                    )
+            except Exception as api_error:
+                raise QuackApiError(
+                    f"Failed to download file from Google Drive: {str(api_error)}",
+                    service="Google Drive",
+                    api_method="files.get_media",
+                    original_error=api_error,
+                )
 
             # Save the file
             fh.seek(0)
@@ -345,9 +403,15 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
 
             return IntegrationResult.success_result(
                 content=download_path,
-                message=f"File downloaded successfully to {download_path}"
+                message=f"File downloaded successfully to {download_path}",
             )
 
+        except QuackApiError as e:
+            self.logger.error(f"API error during file download: {e}")
+            return IntegrationResult.error_result(f"API error: {str(e)}")
+        except QuackAuthenticationError as e:
+            self.logger.error(f"Authentication error during file download: {e}")
+            return IntegrationResult.error_result(f"Authentication error: {str(e)}")
         except Exception as e:
             self.logger.error(f"Failed to download file: {e}")
             return IntegrationResult.error_result(
@@ -355,9 +419,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             )
 
     def list_files(
-            self,
-            remote_path: str | None = None,
-            pattern: str | None = None
+        self, remote_path: str | None = None, pattern: str | None = None
     ) -> IntegrationResult[list[Mapping]]:
         """
         List files in Google Drive.
@@ -387,9 +449,9 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
 
             # Filter by filename pattern if specified
             if pattern:
-                if '*' in pattern:
+                if "*" in pattern:
                     # Convert glob pattern to partial match
-                    name_pattern = pattern.replace('*', '')
+                    name_pattern = pattern.replace("*", "")
                     if name_pattern:
                         query_parts.append(f"name contains '{name_pattern}'")
                 else:
@@ -400,25 +462,43 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             query = " and ".join(query_parts)
 
             # List files
-            response = self.drive_service.files().list(
-                q=query,
-                fields="files(id, name, mimeType, webViewLink, webContentLink, size, createdTime, modifiedTime, parents, shared, trashed)",
-                pageSize=100
-            ).execute()
+            try:
+                response = (
+                    self.drive_service.files()
+                    .list(
+                        q=query,
+                        fields="files(id, name, mimeType, webViewLink, webContentLink, size, createdTime, modifiedTime, parents, shared, trashed)",
+                        pageSize=100,
+                    )
+                    .execute()
+                )
+            except Exception as api_error:
+                raise QuackApiError(
+                    f"Failed to list files from Google Drive: {str(api_error)}",
+                    service="Google Drive",
+                    api_method="files.list",
+                    original_error=api_error,
+                )
 
             # Convert to model objects
             files = []
-            for item in response.get('files', []):
-                if item['mimeType'] == 'application/vnd.google-apps.folder':
+            for item in response.get("files", []):
+                if item["mimeType"] == "application/vnd.google-apps.folder":
                     files.append(DriveFolder.from_api_response(item))
                 else:
                     files.append(DriveFile.from_api_response(item))
 
             return IntegrationResult.success_result(
                 content=[file.model_dump() for file in files],
-                message=f"Listed {len(files)} files"
+                message=f"Listed {len(files)} files",
             )
 
+        except QuackApiError as e:
+            self.logger.error(f"API error during listing files: {e}")
+            return IntegrationResult.error_result(f"API error: {str(e)}")
+        except QuackAuthenticationError as e:
+            self.logger.error(f"Authentication error during listing files: {e}")
+            return IntegrationResult.error_result(f"Authentication error: {str(e)}")
         except Exception as e:
             self.logger.error(f"Failed to list files: {e}")
             return IntegrationResult.error_result(
@@ -426,9 +506,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             )
 
     def create_folder(
-            self,
-            folder_name: str,
-            parent_path: str | None = None
+        self, folder_name: str, parent_path: str | None = None
     ) -> IntegrationResult[str]:
         """
         Create a folder in Google Drive.
@@ -450,29 +528,48 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
 
             # Prepare folder metadata
             folder_metadata = {
-                'name': folder_name,
-                'mimeType': 'application/vnd.google-apps.folder',
+                "name": folder_name,
+                "mimeType": "application/vnd.google-apps.folder",
             }
 
             # Add parent folder if specified
             if parent_id:
-                folder_metadata['parents'] = [parent_id]
+                folder_metadata["parents"] = [parent_id]
 
             # Create the folder
-            folder = self.drive_service.files().create(
-                body=folder_metadata,
-                fields='id, webViewLink'
-            ).execute()
+            try:
+                folder = (
+                    self.drive_service.files()
+                    .create(body=folder_metadata, fields="id, webViewLink")
+                    .execute()
+                )
+            except Exception as api_error:
+                raise QuackApiError(
+                    f"Failed to create folder in Google Drive: {str(api_error)}",
+                    service="Google Drive",
+                    api_method="files.create",
+                    original_error=api_error,
+                )
 
             # Set permissions
             if self.config.get("public_sharing", True):
-                self.set_file_permissions(folder['id'])
+                perm_result = self.set_file_permissions(folder["id"])
+                if not perm_result.success:
+                    self.logger.warning(
+                        f"Failed to set permissions: {perm_result.error}"
+                    )
 
             return IntegrationResult.success_result(
-                content=folder['id'],
-                message=f"Folder created successfully with ID: {folder['id']}"
+                content=folder["id"],
+                message=f"Folder created successfully with ID: {folder['id']}",
             )
 
+        except QuackApiError as e:
+            self.logger.error(f"API error during folder creation: {e}")
+            return IntegrationResult.error_result(f"API error: {str(e)}")
+        except QuackAuthenticationError as e:
+            self.logger.error(f"Authentication error during folder creation: {e}")
+            return IntegrationResult.error_result(f"Authentication error: {str(e)}")
         except Exception as e:
             self.logger.error(f"Failed to create folder: {e}")
             return IntegrationResult.error_result(
@@ -480,10 +577,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             )
 
     def set_file_permissions(
-            self,
-            file_id: str,
-            role: str | None = None,
-            type_: str = "anyone"
+        self, file_id: str, role: str | None = None, type_: str = "anyone"
     ) -> IntegrationResult[bool]:
         """
         Set permissions for a file or folder.
@@ -507,23 +601,34 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
 
             # Create permission
             permission = {
-                'type': type_,
-                'role': role,
-                'allowFileDiscovery': True,
+                "type": type_,
+                "role": role,
+                "allowFileDiscovery": True,
             }
 
             # Set permission
-            self.drive_service.permissions().create(
-                fileId=file_id,
-                body=permission,
-                fields='id'
-            ).execute()
+            try:
+                self.drive_service.permissions().create(
+                    fileId=file_id, body=permission, fields="id"
+                ).execute()
+            except Exception as api_error:
+                raise QuackApiError(
+                    f"Failed to set permissions in Google Drive: {str(api_error)}",
+                    service="Google Drive",
+                    api_method="permissions.create",
+                    original_error=api_error,
+                )
 
             return IntegrationResult.success_result(
-                content=True,
-                message=f"Permission set successfully: {role} for {type_}"
+                content=True, message=f"Permission set successfully: {role} for {type_}"
             )
 
+        except QuackApiError as e:
+            self.logger.error(f"API error during setting permissions: {e}")
+            return IntegrationResult.error_result(f"API error: {str(e)}")
+        except QuackAuthenticationError as e:
+            self.logger.error(f"Authentication error during setting permissions: {e}")
+            return IntegrationResult.error_result(f"Authentication error: {str(e)}")
         except Exception as e:
             self.logger.error(f"Failed to set permissions: {e}")
             return IntegrationResult.error_result(
@@ -546,32 +651,47 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
 
         try:
             # Get file metadata
-            file_metadata = self.drive_service.files().get(
-                fileId=file_id,
-                fields='webViewLink, webContentLink'
-            ).execute()
+            try:
+                file_metadata = (
+                    self.drive_service.files()
+                    .get(fileId=file_id, fields="webViewLink, webContentLink")
+                    .execute()
+                )
+            except Exception as api_error:
+                raise QuackApiError(
+                    f"Failed to get file metadata from Google Drive: {str(api_error)}",
+                    service="Google Drive",
+                    api_method="files.get",
+                    original_error=api_error,
+                )
 
             # Get link
-            if 'webViewLink' in file_metadata:
-                link = file_metadata['webViewLink']
-            elif 'webContentLink' in file_metadata:
-                link = file_metadata['webContentLink']
+            if "webViewLink" in file_metadata:
+                link = file_metadata["webViewLink"]
+            elif "webContentLink" in file_metadata:
+                link = file_metadata["webContentLink"]
             else:
                 link = f"https://drive.google.com/file/d/{file_id}/view"
 
             return IntegrationResult.success_result(
-                content=link,
-                message="Got sharing link successfully"
+                content=link, message="Got sharing link successfully"
             )
 
+        except QuackApiError as e:
+            self.logger.error(f"API error during getting sharing link: {e}")
+            return IntegrationResult.error_result(f"API error: {str(e)}")
+        except QuackAuthenticationError as e:
+            self.logger.error(f"Authentication error during getting sharing link: {e}")
+            return IntegrationResult.error_result(f"Authentication error: {str(e)}")
         except Exception as e:
             self.logger.error(f"Failed to get sharing link: {e}")
             return IntegrationResult.error_result(
                 f"Failed to get sharing link from Google Drive: {str(e)}"
             )
 
-    def delete_file(self, file_id: str, permanent: bool = False) -> IntegrationResult[
-        bool]:
+    def delete_file(
+        self, file_id: str, permanent: bool = False
+    ) -> IntegrationResult[bool]:
         """
         Delete a file from Google Drive.
 
@@ -587,21 +707,34 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             return init_error
 
         try:
-            if permanent:
-                # Permanently delete the file
-                self.drive_service.files().delete(fileId=file_id).execute()
-            else:
-                # Move to trash
-                self.drive_service.files().update(
-                    fileId=file_id,
-                    body={'trashed': True}
-                ).execute()
+            try:
+                if permanent:
+                    # Permanently delete the file
+                    self.drive_service.files().delete(fileId=file_id).execute()
+                else:
+                    # Move to trash
+                    self.drive_service.files().update(
+                        fileId=file_id, body={"trashed": True}
+                    ).execute()
+            except Exception as api_error:
+                api_method = "files.delete" if permanent else "files.update"
+                raise QuackApiError(
+                    f"Failed to delete file from Google Drive: {str(api_error)}",
+                    service="Google Drive",
+                    api_method=api_method,
+                    original_error=api_error,
+                )
 
             return IntegrationResult.success_result(
-                content=True,
-                message=f"File deleted successfully: {file_id}"
+                content=True, message=f"File deleted successfully: {file_id}"
             )
 
+        except QuackApiError as e:
+            self.logger.error(f"API error during file deletion: {e}")
+            return IntegrationResult.error_result(f"API error: {str(e)}")
+        except QuackAuthenticationError as e:
+            self.logger.error(f"Authentication error during file deletion: {e}")
+            return IntegrationResult.error_result(f"Authentication error: {str(e)}")
         except Exception as e:
             self.logger.error(f"Failed to delete file: {e}")
             return IntegrationResult.error_result(

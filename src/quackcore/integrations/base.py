@@ -27,13 +27,13 @@ from quackcore.integrations.results import (
 from quackcore.paths import resolver
 
 
-class BaseAuthProvider(ABC):
+class BaseAuthProvider(ABC, AuthProviderProtocol):
     """Base class for authentication providers."""
 
     def __init__(
-            self,
-            credentials_file: str | Path | None = None,
-            log_level: int = logging.INFO,
+        self,
+        credentials_file: str | Path | None = None,
+        log_level: int = logging.INFO,
     ) -> None:
         """
         Initialize the base authentication provider.
@@ -45,8 +45,9 @@ class BaseAuthProvider(ABC):
         self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
         self.logger.setLevel(log_level)
 
-        self.credentials_file = self._resolve_path(
-            credentials_file) if credentials_file else None
+        self.credentials_file = (
+            self._resolve_path(credentials_file) if credentials_file else None
+        )
         self.authenticated = False
 
     def _resolve_path(self, file_path: str | Path) -> Path:
@@ -139,12 +140,15 @@ class BaseAuthProvider(ABC):
             credentials_dir = Path(self.credentials_file).parent
             fs.create_directory(credentials_dir, exist_ok=True)
             return True
-        except (QuackIOError, Exception) as e:
+        except QuackIOError as e:
             self.logger.error(f"Failed to create credentials directory: {e}")
+            return False
+        except Exception as e:
+            self.logger.error(f"Unexpected error creating credentials directory: {e}")
             return False
 
 
-class BaseConfigProvider(ABC):
+class BaseConfigProvider(ABC, ConfigProviderProtocol):
     """Base class for configuration providers."""
 
     DEFAULT_CONFIG_LOCATIONS = [
@@ -193,27 +197,39 @@ class BaseConfigProvider(ABC):
             # Check if configuration file exists
             file_info = fs.get_file_info(path_obj)
             if not file_info.success or not file_info.exists:
-                self.logger.warning(f"Configuration file not found: {path_obj}")
-                return ConfigResult.error_result(
-                    f"Configuration file not found: {path_obj}"
+                config_error = QuackConfigurationError(
+                    f"Configuration file not found: {path_obj}",
+                    config_path=str(path_obj),
                 )
+                self.logger.warning(str(config_error))
+                return ConfigResult.error_result(str(config_error))
 
             # Read configuration file
             yaml_result = fs.read_yaml(path_obj)
             if not yaml_result.success:
-                return ConfigResult.error_result(
-                    f"Failed to read YAML configuration: {yaml_result.error}"
+                config_error = QuackConfigurationError(
+                    f"Failed to read YAML configuration: {yaml_result.error}",
+                    config_path=str(path_obj),
                 )
+                self.logger.error(str(config_error))
+                return ConfigResult.error_result(str(config_error))
 
             # Extract integration-specific configuration
             config_data = yaml_result.data
             integration_config = self._extract_config(config_data)
 
             # Validate configuration
-            if not self.validate_config(integration_config):
+            validation_result = self.validate_config(integration_config)
+            if not validation_result:
+                config_error = QuackConfigurationError(
+                    "Invalid configuration for integration",
+                    config_path=str(path_obj),
+                    config_key=self.name.lower(),
+                )
+                self.logger.error(str(config_error))
                 return ConfigResult.error_result(
-                    "Invalid configuration",
-                    validation_errors=["Configuration validation failed"]
+                    str(config_error),
+                    validation_errors=["Configuration validation failed"],
                 )
 
             return ConfigResult.success_result(
@@ -222,11 +238,17 @@ class BaseConfigProvider(ABC):
                 config_path=str(path_obj),
             )
 
+        except QuackConfigurationError as e:
+            self.logger.error(f"Configuration error: {e}")
+            return ConfigResult.error_result(str(e), validation_errors=[str(e)])
         except Exception as e:
-            self.logger.error(f"Failed to load configuration: {e}")
-            return ConfigResult.error_result(
-                f"Failed to load configuration: {str(e)}"
+            config_error = QuackConfigurationError(
+                f"Failed to load configuration: {str(e)}",
+                config_path=str(config_path) if config_path else None,
+                original_error=e,
             )
+            self.logger.error(str(config_error))
+            return ConfigResult.error_result(str(config_error))
 
     def _extract_config(self, config_data: dict) -> dict:
         """
@@ -314,15 +336,15 @@ class BaseConfigProvider(ABC):
         ...
 
 
-class BaseIntegrationService(ABC):
+class BaseIntegrationService(ABC, IntegrationProtocol):
     """Base class for integration services."""
 
     def __init__(
-            self,
-            config_provider: ConfigProviderProtocol | None = None,
-            auth_provider: AuthProviderProtocol | None = None,
-            config_path: str | Path | None = None,
-            log_level: int = logging.INFO,
+        self,
+        config_provider: ConfigProviderProtocol | None = None,
+        auth_provider: AuthProviderProtocol | None = None,
+        config_path: str | Path | None = None,
+        log_level: int = logging.INFO,
     ) -> None:
         """
         Initialize the base integration service.
@@ -369,28 +391,35 @@ class BaseIntegrationService(ABC):
             if not self.config and self.config_provider:
                 config_result = self.config_provider.load_config(self.config_path)
                 if not config_result.success:
-                    return IntegrationResult.error_result(
-                        f"Failed to load configuration: {config_result.error}"
+                    config_error = QuackConfigurationError(
+                        f"Failed to load configuration: {config_result.error}",
+                        config_path=str(self.config_path) if self.config_path else None,
                     )
+                    self.logger.error(str(config_error))
+                    return IntegrationResult.error_result(str(config_error))
                 self.config = config_result.content
 
             # Initialize authentication if not already initialized
-            if self.auth_provider and not getattr(self.auth_provider, "authenticated",
-                                                  False):
+            if self.auth_provider and not getattr(
+                self.auth_provider, "authenticated", False
+            ):
                 auth_result = self.auth_provider.authenticate()
                 if not auth_result.success:
                     return IntegrationResult.error_result(
-                        f"Failed to authenticate: {auth_result.error}"
+                        f"Failed to authenticate {self.name}: {auth_result.error}"
                     )
 
             self._initialized = True
             return IntegrationResult.success_result(
                 message=f"{self.name} integration initialized successfully"
             )
+        except QuackConfigurationError as e:
+            self.logger.error(f"Configuration error during initialization: {e}")
+            return IntegrationResult.error_result(str(e))
         except Exception as e:
             self.logger.error(f"Failed to initialize integration: {e}")
             return IntegrationResult.error_result(
-                f"Failed to initialize integration: {str(e)}"
+                f"Failed to initialize {self.name} integration: {str(e)}"
             )
 
     def is_available(self) -> bool:

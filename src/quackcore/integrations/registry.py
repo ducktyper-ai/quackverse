@@ -137,7 +137,8 @@ class IntegrationRegistry:
             for entry in integration_entries:
                 try:
                     self.logger.debug(
-                        f"Loading integration from entry point: {entry.name}")
+                        f"Loading integration from entry point: {entry.name}"
+                    )
                     factory = entry.load()
                     if callable(factory):
                         integration = factory()
@@ -150,7 +151,8 @@ class IntegrationRegistry:
                             )
                 except Exception as e:
                     self.logger.error(
-                        f"Failed to load integration from {entry.name}: {e}")
+                        f"Failed to load integration from {entry.name}: {e}"
+                    )
 
         except (ImportError, AttributeError) as e:
             self.logger.warning(f"Could not discover integrations: {e}")
@@ -196,10 +198,10 @@ class IntegrationRegistry:
 
                 attr = getattr(module, attr_name)
                 if (
-                        isinstance(attr, type)
-                        and issubclass(attr, IntegrationProtocol)
-                        and attr.__module__ == module.__name__
-                        and attr != IntegrationProtocol
+                    isinstance(attr, type)
+                    and issubclass(attr, IntegrationProtocol)
+                    and attr.__module__ == module.__name__
+                    and attr != IntegrationProtocol
                 ):
                     try:
                         integration = attr()
@@ -215,7 +217,8 @@ class IntegrationRegistry:
 
         except Exception as e:
             self.logger.error(
-                f"Failed to load integrations from module {module_path}: {e}")
+                f"Failed to load integrations from module {module_path}: {e}"
+            )
             raise QuackError(
                 f"Failed to load integrations from module {module_path}",
                 {"module_path": module_path, "error": str(e)},

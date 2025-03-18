@@ -7,11 +7,10 @@ credentials and authorization flows for secure API access.
 """
 
 import logging
-import os
 from pathlib import Path
 from typing import Any
 
-from quackcore.errors import QuackIntegrationError
+from quackcore.errors import QuackAuthenticationError, QuackIntegrationError
 from quackcore.fs import service as fs
 from quackcore.integrations.base import BaseAuthProvider
 from quackcore.integrations.results import AuthResult
@@ -21,11 +20,11 @@ class GoogleAuthProvider(BaseAuthProvider):
     """Authentication provider for Google integrations."""
 
     def __init__(
-            self,
-            client_secrets_file: str | Path,
-            credentials_file: str | Path | None = None,
-            scopes: list[str] | None = None,
-            log_level: int = logging.INFO,
+        self,
+        client_secrets_file: str | Path,
+        credentials_file: str | Path | None = None,
+        scopes: list[str] | None = None,
+        log_level: int = logging.INFO,
     ) -> None:
         """
         Initialize the Google authentication provider.
@@ -77,9 +76,6 @@ class GoogleAuthProvider(BaseAuthProvider):
 
         Returns:
             AuthResult: Result of authentication
-
-        Raises:
-            QuackIntegrationError: If authentication fails
         """
         try:
             # Lazy import to avoid dependency if not used
@@ -106,22 +102,27 @@ class GoogleAuthProvider(BaseAuthProvider):
                 self.auth = creds
                 self.authenticated = True
 
-                return AuthResult.success_result(
+                return AuthResult(
+                    success=True,
                     message="Successfully refreshed credentials",
                     token=creds.token if hasattr(creds, "token") else None,
-                    expiry=creds.expiry.timestamp() if hasattr(creds,
-                                                               "expiry") else None,
+                    expiry=int(creds.expiry.timestamp())
+                    if hasattr(creds, "expiry")
+                    else None,
                     credentials_path=str(self.credentials_file),
                 )
 
             # If no valid credentials, authenticate using flow
             if not creds or not creds.valid:
                 self.logger.info(
-                    "No valid credentials found, starting authentication flow")
+                    "No valid credentials found, starting authentication flow"
+                )
 
                 # Create the flow
+                # Convert Path to string for InstalledAppFlow.from_client_secrets_file
+                client_secrets_path = str(self.client_secrets_file)
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    self.client_secrets_file,
+                    client_secrets_path,
                     self.scopes,
                 )
 
@@ -134,17 +135,23 @@ class GoogleAuthProvider(BaseAuthProvider):
             self.auth = creds
             self.authenticated = True
 
-            return AuthResult.success_result(
+            return AuthResult(
+                success=True,
                 message="Successfully authenticated with Google",
                 token=creds.token if hasattr(creds, "token") else None,
-                expiry=creds.expiry.timestamp() if hasattr(creds, "expiry") else None,
+                expiry=int(creds.expiry.timestamp())
+                if hasattr(creds, "expiry")
+                else None,
                 credentials_path=str(self.credentials_file),
             )
 
         except Exception as e:
             self.logger.error(f"Authentication failed: {e}")
-            return AuthResult.error_result(
-                f"Failed to authenticate with Google: {str(e)}"
+            self.authenticated = False
+            return AuthResult(
+                success=False,
+                message=None,
+                error=f"Failed to authenticate with Google: {str(e)}",
             )
 
     def refresh_credentials(self) -> AuthResult:
@@ -165,28 +172,34 @@ class GoogleAuthProvider(BaseAuthProvider):
                 self.auth.refresh(Request())
                 self._save_credentials_to_file(self.auth)
 
-                return AuthResult.success_result(
+                return AuthResult(
+                    success=True,
                     message="Successfully refreshed credentials",
                     token=self.auth.token if hasattr(self.auth, "token") else None,
-                    expiry=self.auth.expiry.timestamp() if hasattr(self.auth,
-                                                                   "expiry") else None,
+                    expiry=int(self.auth.expiry.timestamp())
+                    if hasattr(self.auth, "expiry")
+                    else None,
                     credentials_path=str(self.credentials_file),
                 )
 
             # Credentials are still valid
-            return AuthResult.success_result(
+            return AuthResult(
+                success=True,
                 message="Credentials are valid, no refresh needed",
                 token=self.auth.token if hasattr(self.auth, "token") else None,
-                expiry=self.auth.expiry.timestamp() if hasattr(self.auth,
-                                                               "expiry") else None,
+                expiry=int(self.auth.expiry.timestamp())
+                if hasattr(self.auth, "expiry")
+                else None,
                 credentials_path=str(self.credentials_file),
             )
 
         except Exception as e:
             self.logger.error(f"Failed to refresh credentials: {e}")
             self.authenticated = False
-            return AuthResult.error_result(
-                f"Failed to refresh Google credentials: {str(e)}"
+            return AuthResult(
+                success=False,
+                message=None,
+                error=f"Failed to refresh Google credentials: {str(e)}",
             )
 
     def get_credentials(self) -> Any:
@@ -197,14 +210,18 @@ class GoogleAuthProvider(BaseAuthProvider):
             Any: The Google authentication credentials
 
         Raises:
-            QuackIntegrationError: If no valid credentials are available
+            QuackAuthenticationError: If no valid credentials are available
         """
         if self.auth is None or not self.authenticated:
             result = self.authenticate()
             if not result.success:
-                raise QuackIntegrationError(
+                raise QuackAuthenticationError(
                     "No valid Google credentials available",
-                    {"error": result.error},
+                    service="Google",
+                    credentials_path=str(self.credentials_file)
+                    if self.credentials_file
+                    else None,
+                    original_error=None,
                 )
 
         return self.auth

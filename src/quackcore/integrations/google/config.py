@@ -8,7 +8,6 @@ and service-specific configurations.
 """
 
 import logging
-import os
 from pathlib import Path
 from typing import Any
 
@@ -28,16 +27,16 @@ class GoogleBaseConfig(BaseModel):
         ..., description="Path where credentials should be stored"
     )
 
-    @field_validator("client_secrets_file")
     @classmethod
+    @field_validator("client_secrets_file")
     def validate_client_secrets_file(cls, v: str) -> str:
         """Validate that the client secrets path is not empty."""
         if not v or not v.strip():
             raise ValueError("Client secrets file path cannot be empty")
         return v
 
-    @field_validator("credentials_file")
     @classmethod
+    @field_validator("credentials_file")
     def validate_credentials_file(cls, v: str) -> str:
         """Validate that the credentials path is not empty."""
         if not v or not v.strip():
@@ -71,9 +70,7 @@ class GoogleMailConfig(GoogleBaseConfig):
     gmail_days_back: int = Field(
         default=7, description="Number of days to look back for emails"
     )
-    gmail_user_id: str = Field(
-        default="me", description="User ID to use for Gmail API"
-    )
+    gmail_user_id: str = Field(default="me", description="User ID to use for Gmail API")
 
 
 class GoogleConfigProvider(BaseConfigProvider):
@@ -129,8 +126,11 @@ class GoogleConfigProvider(BaseConfigProvider):
         # If service config exists as a subsection, merge it with google config
         if service_config and isinstance(service_config, dict):
             # Copy shared Google config
-            merged_config = {k: v for k, v in google_config.items()
-                             if k != self.service and k not in ["mail", "drive"]}
+            merged_config = {
+                k: v
+                for k, v in google_config.items()
+                if k != self.service and k not in ["mail", "drive"]
+            }
             # Override with service-specific config
             merged_config.update(service_config)
             return merged_config

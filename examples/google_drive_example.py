@@ -25,7 +25,8 @@ def main():
     # Check if required arguments are provided
     if len(sys.argv) < 2:
         print(
-            "Usage: python google_drive_example.py [client_secrets_file] [file_to_upload]")
+            "Usage: python google_drive_example.py [client_secrets_file] [file_to_upload]"
+        )
         return
 
     client_secrets_file = sys.argv[1]

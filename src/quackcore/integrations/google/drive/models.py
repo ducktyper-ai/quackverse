@@ -16,13 +16,16 @@ class DrivePermission(BaseModel):
     """Model for Google Drive file permissions."""
 
     id: str | None = Field(None, description="Permission ID")
-    type: str = Field("anyone",
-                      description="Type of the permission (anyone, user, etc.)")
+    type: str = Field(
+        "anyone", description="Type of the permission (anyone, user, etc.)"
+    )
     role: str = Field("reader", description="Role (reader, writer, etc.)")
-    email_address: str | None = Field(None,
-                                      description="Email address for user-specific permissions")
-    domain: str | None = Field(None,
-                               description="Domain for domain-specific permissions")
+    email_address: str | None = Field(
+        None, description="Email address for user-specific permissions"
+    )
+    domain: str | None = Field(
+        None, description="Domain for domain-specific permissions"
+    )
     allow_file_discovery: bool = Field(
         True, description="Whether the file can be discovered through search"
     )

@@ -1,4 +1,4 @@
-# src/quackcore/integrations/results.py
+# src/quackcore/integrations/results.py (update for AuthResult)
 """
 Result models for integration operations.
 
@@ -37,7 +37,9 @@ class IntegrationResult(BaseModel, Generic[T]):
     )
 
     @classmethod
-    def success_result(cls, content: T | None = None, message: str | None = None) -> "IntegrationResult[T]":
+    def success_result(
+        cls, content: T | None = None, message: str | None = None
+    ) -> "IntegrationResult[T]":
         """
         Create a successful result.
 
@@ -56,7 +58,9 @@ class IntegrationResult(BaseModel, Generic[T]):
         )
 
     @classmethod
-    def error_result(cls, error: str, message: str | None = None) -> "IntegrationResult[T]":
+    def error_result(
+        cls, error: str, message: str | None = None
+    ) -> "IntegrationResult[T]":
         """
         Create an error result.
 
@@ -75,8 +79,23 @@ class IntegrationResult(BaseModel, Generic[T]):
         )
 
 
-class AuthResult(IntegrationResult[dict]):
+class AuthResult(BaseModel):
     """Result for authentication operations."""
+
+    success: bool = Field(
+        default=True,
+        description="Whether the authentication was successful",
+    )
+
+    message: str | None = Field(
+        default=None,
+        description="Additional message about the authentication",
+    )
+
+    error: str | None = Field(
+        default=None,
+        description="Error message if authentication failed",
+    )
 
     token: str | None = Field(
         default=None,
@@ -93,36 +112,67 @@ class AuthResult(IntegrationResult[dict]):
         description="Path where credentials are stored",
     )
 
+    content: dict | None = Field(
+        default=None,
+        description="Additional authentication content or metadata",
+    )
+
     @classmethod
     def success_result(
         cls,
-        content: dict | None = None,
         message: str | None = None,
         token: str | None = None,
         expiry: int | None = None,
         credentials_path: str | None = None,
+        content: dict | None = None,
     ) -> "AuthResult":
         """
         Create a successful authentication result.
 
         Args:
-            content: Result content
             message: Optional success message
             token: Authentication token
             expiry: Token expiry timestamp
             credentials_path: Path where credentials are stored
+            content: Additional authentication content or metadata
 
         Returns:
             AuthResult: Successful authentication result
         """
         return cls(
             success=True,
-            content=content,
             message=message,
             error=None,
             token=token,
             expiry=expiry,
             credentials_path=credentials_path,
+            content=content,
+        )
+
+    @classmethod
+    def error_result(
+        cls,
+        error: str,
+        message: str | None = None,
+    ) -> "AuthResult":
+        """
+        Create an error authentication result.
+
+        Args:
+            error: Error message
+            message: Optional additional message
+
+        Returns:
+            AuthResult: Error authentication result
+        """
+        return cls(
+            success=False,
+            message=message,
+            error=error,
+            token=None,
+            expiry=None,
+            credentials_path=None,
+            content=None,
         )
 
 

@@ -185,7 +185,7 @@ def normalize_path(path: str | Path) -> Path:
             cwd = Path.cwd()
         except FileNotFoundError:
             cwd = Path.home()  # Fallback to the user's
-                                # home directory if cwd is missing.
+            # home directory if cwd is missing.
 
         # If the path is not absolute, make it absolute relative to cwd.
         if not path_obj.is_absolute():

@@ -12,12 +12,15 @@ from quackcore.errors import QuackPluginError
 from quackcore.plugins.discovery import PluginLoader
 from quackcore.plugins.protocols import QuackPluginProtocol
 
+
 # Mock plugin implementation for testing
 class MockPlugin(QuackPluginProtocol):
     """Mock plugin implementation for testing."""
+
     @property
     def name(self) -> str:
         return "mock_plugin"
+
 
 class TestPluginLoader:
     """Tests for the PluginLoader class."""
@@ -37,7 +40,9 @@ class TestPluginLoader:
         mock_ep1.value = "module:factory"
         mock_ep1.load.return_value = mock_factory
 
-        with patch("importlib.metadata.entry_points", return_value=[mock_ep1]) as mock_entry_points:
+        with patch(
+            "importlib.metadata.entry_points", return_value=[mock_ep1]
+        ) as mock_entry_points:
             plugins = loader.load_entry_points("test.plugins")
             assert len(plugins) == 1
             assert plugins[0] is mock_plugin
@@ -50,7 +55,9 @@ class TestPluginLoader:
             plugins = loader.load_entry_points("test.plugins")
             assert len(plugins) == 0
 
-        with patch("importlib.metadata.entry_points", side_effect=Exception("Test error")):
+        with patch(
+            "importlib.metadata.entry_points", side_effect=Exception("Test error")
+        ):
             plugins = loader.load_entry_points("test.plugins")
             assert len(plugins) == 0
 
@@ -71,6 +78,7 @@ class TestPluginLoader:
         # Test loading from module with plugin class.
         # Instead of using a MagicMock for the module, create a dummy module using ModuleType.
         import types
+
         mock_module = types.ModuleType("test.module")
         setattr(mock_module, "MockPlugin", MockPlugin)
         mock_module.MockPlugin.__module__ = "test.module"

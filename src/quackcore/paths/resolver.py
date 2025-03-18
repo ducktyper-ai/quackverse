@@ -294,8 +294,8 @@ class PathResolver:
 
     @wrap_io_errors
     def detect_project_context(
-            self,
-            start_dir: str | Path | None = None,
+        self,
+        start_dir: str | Path | None = None,
     ) -> ProjectContext:
         """
         Detect project context from a directory.
