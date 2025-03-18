@@ -10,7 +10,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from quackcore.errors import (
-    QuackAuthenticationError,
+    QuackBaseAuthError,
     QuackConfigurationError,
     QuackError,
     QuackFileExistsError,
@@ -152,7 +152,7 @@ class TestSpecificErrors:
 
     def test_authentication_error(self) -> None:
         """Test QuackAuthenticationError."""
-        error = QuackAuthenticationError(
+        error = QuackBaseAuthError(
             "Auth error", "Google Drive", "/path/to/credentials.json"
         )
 

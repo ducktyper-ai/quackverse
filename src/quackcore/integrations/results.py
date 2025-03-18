@@ -1,4 +1,4 @@
-# src/quackcore/integrations/results.py (update for AuthResult)
+# src/quackcore/integrations/results.py
 """
 Result models for integration operations.
 

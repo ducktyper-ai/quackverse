@@ -14,7 +14,6 @@ from typing import Any
 
 from quackcore.errors import QuackConfigurationError
 from quackcore.fs import service as fs
-from quackcore.paths import resolver
 from quackcore.integrations.protocols import (
     AuthProviderProtocol,
     ConfigProviderProtocol,
@@ -25,15 +24,16 @@ from quackcore.integrations.results import (
     ConfigResult,
     IntegrationResult,
 )
+from quackcore.paths import resolver
 
 
 class BaseAuthProvider(ABC, AuthProviderProtocol):
     """Base class for authentication providers."""
 
     def __init__(
-            self,
-            credentials_file: str | None = None,
-            log_level: int = logging.INFO,
+        self,
+        credentials_file: str | None = None,
+        log_level: int = logging.INFO,
     ) -> None:
         """
         Initialize the base authentication provider.
@@ -45,8 +45,9 @@ class BaseAuthProvider(ABC, AuthProviderProtocol):
         self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
         self.logger.setLevel(log_level)
 
-        self.credentials_file = self._resolve_path(
-            credentials_file) if credentials_file else None
+        self.credentials_file = (
+            self._resolve_path(credentials_file) if credentials_file else None
+        )
         self.authenticated = False
 
     def _resolve_path(self, file_path: str) -> str:
@@ -330,11 +331,11 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
     """Base class for integration services."""
 
     def __init__(
-            self,
-            config_provider: ConfigProviderProtocol | None = None,
-            auth_provider: AuthProviderProtocol | None = None,
-            config_path: str | None = None,
-            log_level: int = logging.INFO,
+        self,
+        config_provider: ConfigProviderProtocol | None = None,
+        auth_provider: AuthProviderProtocol | None = None,
+        config_path: str | None = None,
+        log_level: int = logging.INFO,
     ) -> None:
         """
         Initialize the base integration service.
@@ -401,7 +402,7 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
 
             # Initialize authentication if not already initialized
             if self.auth_provider and not getattr(
-                    self.auth_provider, "authenticated", False
+                self.auth_provider, "authenticated", False
             ):
                 auth_result = self.auth_provider.authenticate()
                 if not auth_result.success:
@@ -436,7 +437,8 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
         Ensure the integration is initialized.
 
         Returns:
-            IntegrationResult | None: Error result if initialization fails, None if initialized
+            IntegrationResult | None: Error result if initialization fails,
+                                        None if initialized
         """
         if not self._initialized:
             init_result = self.initialize()

@@ -6,8 +6,8 @@ This module provides custom exception classes for QuackCore, with helpful contex
 and error messages for better diagnostics and troubleshooting.
 """
 
-from quackcore.errors.base import QuackAuthenticationError as _BaseAuthError
 from quackcore.errors.base import (
+    QuackBaseAuthError,
     QuackConfigurationError,
     QuackError,
     QuackFileExistsError,
@@ -36,9 +36,10 @@ __all__ = [
     "QuackFormatError",
     "QuackConfigurationError",
     "QuackPluginError",
-    "QuackAuthenticationError",
+    "QuackBaseAuthError",
     "QuackIntegrationError",
     "QuackApiError",
     "QuackQuotaExceededError",
     "wrap_io_errors",
+    "QuackAuthenticationError",
 ]

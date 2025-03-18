@@ -7,7 +7,7 @@ ensuring consistent behavior across different services and platforms.
 """
 
 from collections.abc import Mapping
-from typing import Protocol, TypeVar, runtime_checkable, Any
+from typing import Any, Protocol, TypeVar, runtime_checkable
 
 from quackcore.integrations.results import AuthResult, ConfigResult, IntegrationResult
 

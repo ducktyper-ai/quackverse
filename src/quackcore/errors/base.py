@@ -256,7 +256,7 @@ class QuackPluginError(QuackError):
         self.plugin_path: str | None = str(plugin_path) if plugin_path else None
 
 
-class QuackAuthenticationError(QuackError):
+class QuackBaseAuthError(QuackError):
     """Raised when there's an authentication error."""
 
     def __init__(

@@ -1,4 +1,4 @@
-# src/quackcore/__init__.py (Updated)
+# src/quackcore/__init__.py
 """
 QuackCore: Core infrastructure for the Quack ecosystem of media production tools.
 
@@ -15,7 +15,7 @@ from quackcore.config.loader import load_config
 from quackcore.config.models import QuackConfig
 from quackcore.errors import (
     QuackApiError,
-    QuackAuthenticationError,
+    QuackBaseAuthError,
     QuackError,
     QuackIntegrationError,
     QuackQuotaExceededError,
@@ -49,7 +49,7 @@ __all__ = [
     "QuackError",
     "QuackIntegrationError",
     "QuackApiError",
-    "QuackAuthenticationError",
+    "QuackBaseAuthError",
     "QuackQuotaExceededError",
     "wrap_io_errors",
 ]

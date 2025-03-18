@@ -134,18 +134,22 @@ class IntegrationRegistry:
             from quackcore.plugins.discovery import loader as plugin_loader
         except ImportError:
             from quackcore.plugins.discovery import loader as plugin_loader
+
             self.logger.debug(
-                "QuackCore plugin discovery not available, using fallback method")
+                "QuackCore plugin discovery not available, using fallback method"
+            )
 
         try:
             from importlib.metadata import entry_points
+
             # Get entry points in the quackcore.integrations group
             integration_entries = entry_points(group="quackcore.integrations")
 
             for entry in integration_entries:
                 try:
                     self.logger.debug(
-                        f"Loading integration from entry point: {entry.name}")
+                        f"Loading integration from entry point: {entry.name}"
+                    )
 
                     # Try to use the plugin loader if available
                     if plugin_loader is not None:
@@ -157,7 +161,8 @@ class IntegrationRegistry:
                                 continue
                         except (ImportError, AttributeError) as e:
                             self.logger.debug(
-                                f"Plugin loader failed for {entry.name}: {e}, falling back")
+                                f"Plugin loader failed for {entry.name}: {e}, falling back"
+                            )
 
                     # Fall back to standard approach
                     factory = entry.load()
@@ -172,20 +177,25 @@ class IntegrationRegistry:
                             )
                 except (ImportError, AttributeError) as e:
                     self.logger.error(
-                        f"Failed to import integration from {entry.name}: {e}")
+                        f"Failed to import integration from {entry.name}: {e}"
+                    )
                 except TypeError as e:
                     self.logger.error(
-                        f"Type error loading integration from {entry.name}: {e}")
+                        f"Type error loading integration from {entry.name}: {e}"
+                    )
                 except ValueError as e:
                     self.logger.error(
-                        f"Value error loading integration from {entry.name}: {e}")
+                        f"Value error loading integration from {entry.name}: {e}"
+                    )
                 except Exception as e:
                     self.logger.error(
-                        f"Unexpected error loading integration from {entry.name}: {e}")
+                        f"Unexpected error loading integration from {entry.name}: {e}"
+                    )
 
         except (ImportError, AttributeError) as e:
             self.logger.warning(
-                f"Could not discover integrations using entry points: {e}")
+                f"Could not discover integrations using entry points: {e}"
+            )
 
         return discovered_integrations
 
@@ -216,11 +226,13 @@ class IntegrationRegistry:
                     return [plugin]
             except (ImportError, AttributeError) as e:
                 self.logger.debug(
-                    f"Could not load module {module_path} using plugin loader: {e}")
+                    f"Could not load module {module_path} using plugin loader: {e}"
+                )
             except (TypeError, ValueError) as e:
                 self.logger.debug(f"Plugin loader error for {module_path}: {e}")
         except ImportError:
             from quackcore.plugins.discovery import loader as plugin_loader
+
             self.logger.debug("QuackCore plugin discovery not available")
 
         # Fallback to manual module loading
@@ -243,10 +255,12 @@ class IntegrationRegistry:
                             return loaded_integrations
                     except (TypeError, ValueError) as e:
                         self.logger.error(
-                            f"Error calling create_integration in {module_path}: {e}")
+                            f"Error calling create_integration in {module_path}: {e}"
+                        )
                     except Exception as e:
                         self.logger.error(
-                            f"Unexpected error in create_integration for {module_path}: {e}")
+                            f"Unexpected error in create_integration for {module_path}: {e}"
+                        )
 
             # Look for integrations defined in the module
             for attr_name in dir(module):
@@ -255,10 +269,10 @@ class IntegrationRegistry:
 
                 attr = getattr(module, attr_name)
                 if (
-                        isinstance(attr, type)
-                        and issubclass(attr, IntegrationProtocol)
-                        and attr.__module__ == module.__name__
-                        and attr != IntegrationProtocol
+                    isinstance(attr, type)
+                    and issubclass(attr, IntegrationProtocol)
+                    and attr.__module__ == module.__name__
+                    and attr != IntegrationProtocol
                 ):
                     try:
                         integration = attr()
@@ -268,7 +282,8 @@ class IntegrationRegistry:
                         self.logger.error(f"Error instantiating {attr_name}: {e}")
                     except Exception as e:
                         self.logger.error(
-                            f"Unexpected error instantiating {attr_name}: {e}")
+                            f"Unexpected error instantiating {attr_name}: {e}"
+                        )
 
             if not loaded_integrations:
                 self.logger.warning(f"No integrations found in module {module_path}")
