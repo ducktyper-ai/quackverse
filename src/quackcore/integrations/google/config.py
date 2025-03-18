@@ -8,7 +8,6 @@ and service-specific configurations.
 """
 
 import logging
-from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
@@ -73,6 +72,8 @@ class GoogleMailConfig(GoogleBaseConfig):
     gmail_user_id: str = Field(default="me", description="User ID to use for Gmail API")
 
 
+# Updated GoogleConfigProvider Implementation
+
 class GoogleConfigProvider(BaseConfigProvider):
     """Configuration provider for Google integrations."""
 
@@ -112,7 +113,7 @@ class GoogleConfigProvider(BaseConfigProvider):
             config_data: Full configuration data
 
         Returns:
-            dict: Google service-specific configuration
+            dict[str, Any]: Google service-specific configuration
         """
         # Look for google_<service> section first
         service_key = f"google_{self.service}"
@@ -164,7 +165,7 @@ class GoogleConfigProvider(BaseConfigProvider):
         Get default configuration values for Google services.
 
         Returns:
-            dict: Default configuration values
+            dict[str, Any]: Default configuration values
         """
         base_config = {
             "client_secrets_file": "config/google_client_secret.json",
@@ -197,21 +198,19 @@ class GoogleConfigProvider(BaseConfigProvider):
             config: Configuration with potentially relative paths
 
         Returns:
-            dict: Configuration with resolved paths
+            dict[str, Any]: Configuration with resolved paths
         """
-        resolved_config = config.copy()
+        from quackcore.paths import resolver
 
-        try:
-            project_root = resolver.get_project_root()
-        except Exception as e:
-            self.logger.warning(f"Could not resolve project root: {e}")
-            project_root = Path.cwd()
+        resolved_config = config.copy()
 
         # Resolve paths
         for key in ["client_secrets_file", "credentials_file"]:
             if key in resolved_config and resolved_config[key]:
-                path_obj = Path(resolved_config[key])
-                if not path_obj.is_absolute():
-                    resolved_config[key] = str(project_root / path_obj)
+                try:
+                    resolved_path = resolver.resolve_project_path(resolved_config[key])
+                    resolved_config[key] = str(resolved_path)
+                except Exception as e:
+                    self.logger.warning(f"Could not resolve path for {key}: {e}")
 
         return resolved_config

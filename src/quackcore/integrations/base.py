@@ -11,9 +11,9 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Any
 
-from quackcore.errors import QuackConfigurationError, QuackIOError
-from quackcore.fs import service as fs
+from quackcore.errors import QuackConfigurationError
 from quackcore.integrations.protocols import (
     AuthProviderProtocol,
     ConfigProviderProtocol,
@@ -24,16 +24,17 @@ from quackcore.integrations.results import (
     ConfigResult,
     IntegrationResult,
 )
-from quackcore.paths import resolver
 
+
+# Updated BaseAuthProvider Implementation
 
 class BaseAuthProvider(ABC, AuthProviderProtocol):
     """Base class for authentication providers."""
 
     def __init__(
-        self,
-        credentials_file: str | Path | None = None,
-        log_level: int = logging.INFO,
+            self,
+            credentials_file: str | Path | None = None,
+            log_level: int = logging.INFO,
     ) -> None:
         """
         Initialize the base authentication provider.
@@ -60,20 +61,14 @@ class BaseAuthProvider(ABC, AuthProviderProtocol):
         Returns:
             Path: Resolved absolute path
         """
-        path_obj = Path(file_path)
+        from quackcore.paths import resolver
 
-        # If the path is already absolute, return it unchanged
-        if path_obj.is_absolute():
-            return path_obj
-
-        # Try to find the project root
         try:
-            project_root = resolver.get_project_root()
-            return resolver.resolve_project_path(path_obj, project_root)
+            return resolver.resolve_project_path(file_path)
         except Exception as e:
-            self.logger.warning(f"Could not resolve project root: {e}")
-            # Fall back to current directory
-            return Path.cwd() / path_obj
+            self.logger.warning(f"Could not resolve project path: {e}")
+            # Fall back to an absolute path
+            return Path(file_path).absolute()
 
     @property
     @abstractmethod
@@ -137,16 +132,18 @@ class BaseAuthProvider(ABC, AuthProviderProtocol):
             return False
 
         try:
+            # Use QuackCore's file system service
+            from quackcore.fs import service as fs
+
             credentials_dir = Path(self.credentials_file).parent
-            fs.create_directory(credentials_dir, exist_ok=True)
-            return True
-        except QuackIOError as e:
-            self.logger.error(f"Failed to create credentials directory: {e}")
-            return False
+            result = fs.create_directory(credentials_dir, exist_ok=True)
+            return result.success
         except Exception as e:
             self.logger.error(f"Unexpected error creating credentials directory: {e}")
             return False
 
+
+# Updated BaseConfigProvider Implementation
 
 class BaseConfigProvider(ABC, ConfigProviderProtocol):
     """Base class for configuration providers."""
@@ -184,6 +181,9 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
             ConfigResult: Result containing configuration data
         """
         try:
+            # Import necessary QuackCore services
+            from quackcore.fs import service as fs
+
             # Determine config path
             if not config_path:
                 config_path = self._find_config_file()
@@ -250,7 +250,7 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
             self.logger.error(str(config_error))
             return ConfigResult.error_result(str(config_error))
 
-    def _extract_config(self, config_data: dict) -> dict:
+    def _extract_config(self, config_data: dict[str, Any]) -> dict[str, Any]:
         """
         Extract integration-specific configuration from the full config data.
 
@@ -258,7 +258,7 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
             config_data: Full configuration data
 
         Returns:
-            dict: Integration-specific configuration
+            dict[str, Any]: Integration-specific configuration
         """
         # Default implementation - override in subclass
         # to extract integration-specific section
@@ -272,17 +272,21 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         Returns:
             Path | None: Path to the configuration file if found, None otherwise
         """
+        from quackcore.fs import service as fs
+
         # Check environment variable first
         env_var = f"QUACK_{self.name.upper()}_CONFIG"
         if config_path := os.environ.get(env_var):
             path = Path(config_path).expanduser()
-            if path.exists():
+            file_info = fs.get_file_info(path)
+            if file_info.success and file_info.exists:
                 return path
 
         # Check default locations
         for location in self.DEFAULT_CONFIG_LOCATIONS:
-            path = Path(location).expanduser()
-            if path.exists():
+            path = fs.expand_user_vars(location)
+            file_info = fs.get_file_info(path)
+            if file_info.success and file_info.exists:
                 return path
 
         return None
@@ -297,23 +301,18 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         Returns:
             Path: Resolved absolute path
         """
-        path_obj = Path(file_path)
+        from quackcore.paths import resolver
 
-        # If the path is already absolute, return it unchanged
-        if path_obj.is_absolute():
-            return path_obj
-
-        # Try to find the project root
         try:
-            project_root = resolver.get_project_root()
-            return resolver.resolve_project_path(path_obj, project_root)
+            return resolver.resolve_project_path(file_path)
         except Exception as e:
-            self.logger.warning(f"Could not resolve project root: {e}")
-            # Fall back to current directory
-            return Path.cwd() / path_obj
+            self.logger.warning(f"Could not resolve project path: {e}")
+            # Fall back to normalizing the path
+            from quackcore.fs import service as fs
+            return fs.normalize_path(file_path)
 
     @abstractmethod
-    def validate_config(self, config: dict) -> bool:
+    def validate_config(self, config: dict[str, Any]) -> bool:
         """
         Validate configuration data.
 
@@ -326,25 +325,24 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         ...
 
     @abstractmethod
-    def get_default_config(self) -> dict:
+    def get_default_config(self) -> dict[str, Any]:
         """
         Get default configuration values.
 
         Returns:
-            dict: Default configuration values
+            dict[str, Any]: Default configuration values
         """
         ...
-
 
 class BaseIntegrationService(ABC, IntegrationProtocol):
     """Base class for integration services."""
 
     def __init__(
-        self,
-        config_provider: ConfigProviderProtocol | None = None,
-        auth_provider: AuthProviderProtocol | None = None,
-        config_path: str | Path | None = None,
-        log_level: int = logging.INFO,
+            self,
+            config_provider: ConfigProviderProtocol | None = None,
+            auth_provider: AuthProviderProtocol | None = None,
+            config_path: str | Path | None = None,
+            log_level: int = logging.INFO,
     ) -> None:
         """
         Initialize the base integration service.
@@ -361,7 +359,18 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
 
         self.config_provider = config_provider
         self.auth_provider = auth_provider
-        self.config_path = config_path
+
+        # Use QuackCore's path resolver to normalize config path if provided
+        if config_path:
+            from quackcore.paths import resolver
+            try:
+                self.config_path = resolver.resolve_project_path(config_path)
+            except Exception as e:
+                self.logger.warning(f"Could not resolve config path: {e}")
+                self.config_path = Path(config_path)
+        else:
+            self.config_path = None
+
         self.config: dict | None = None
         self._initialized = False
 
@@ -401,7 +410,7 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
 
             # Initialize authentication if not already initialized
             if self.auth_provider and not getattr(
-                self.auth_provider, "authenticated", False
+                    self.auth_provider, "authenticated", False
             ):
                 auth_result = self.auth_provider.authenticate()
                 if not auth_result.success:

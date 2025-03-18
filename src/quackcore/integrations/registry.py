@@ -126,38 +126,86 @@ class IntegrationRegistry:
         Returns:
             list[IntegrationProtocol]: Discovered integrations
         """
-        discovered_integrations = []
-
+        # Use QuackCore's plugin discovery mechanism
         try:
-            from importlib.metadata import entry_points
+            from quackcore.plugins.discovery import loader as plugin_loader
 
-            # Get entry points in the quackcore.integrations group
-            integration_entries = entry_points(group="quackcore.integrations")
+            discovered_integrations = []
 
-            for entry in integration_entries:
-                try:
-                    self.logger.debug(
-                        f"Loading integration from entry point: {entry.name}"
-                    )
-                    factory = entry.load()
-                    if callable(factory):
-                        integration = factory()
-                        if isinstance(integration, IntegrationProtocol):
-                            self.register(integration)
-                            discovered_integrations.append(integration)
-                        else:
-                            self.logger.warning(
-                                f"Entry point {entry.name} did not return an IntegrationProtocol"
-                            )
-                except Exception as e:
-                    self.logger.error(
-                        f"Failed to load integration from {entry.name}: {e}"
-                    )
+            try:
+                from importlib.metadata import entry_points
 
-        except (ImportError, AttributeError) as e:
-            self.logger.warning(f"Could not discover integrations: {e}")
+                # Get entry points in the quackcore.integrations group
+                integration_entries = entry_points(group="quackcore.integrations")
 
-        return discovered_integrations
+                for entry in integration_entries:
+                    try:
+                        self.logger.debug(
+                            f"Loading integration from entry point: {entry.name}"
+                        )
+                        # Try to use the plugin loader first
+                        try:
+                            plugin = plugin_loader.load_plugin(entry.value)
+                            if isinstance(plugin, IntegrationProtocol):
+                                self.register(plugin)
+                                discovered_integrations.append(plugin)
+                                continue
+                        except Exception:
+                            # Fall back to standard approach
+                            factory = entry.load()
+                            if callable(factory):
+                                integration = factory()
+                                if isinstance(integration, IntegrationProtocol):
+                                    self.register(integration)
+                                    discovered_integrations.append(integration)
+                                else:
+                                    self.logger.warning(
+                                        f"Entry point {entry.name} did not return an IntegrationProtocol"
+                                    )
+                    except Exception as e:
+                        self.logger.error(
+                            f"Failed to load integration from {entry.name}: {e}"
+                        )
+
+            except (ImportError, AttributeError) as e:
+                self.logger.warning(f"Could not discover integrations: {e}")
+
+            return discovered_integrations
+
+        except ImportError:
+            # Fall back to original implementation if plugin discovery isn't available
+            discovered_integrations = []
+
+            try:
+                from importlib.metadata import entry_points
+
+                # Get entry points in the quackcore.integrations group
+                integration_entries = entry_points(group="quackcore.integrations")
+
+                for entry in integration_entries:
+                    try:
+                        self.logger.debug(
+                            f"Loading integration from entry point: {entry.name}"
+                        )
+                        factory = entry.load()
+                        if callable(factory):
+                            integration = factory()
+                            if isinstance(integration, IntegrationProtocol):
+                                self.register(integration)
+                                discovered_integrations.append(integration)
+                            else:
+                                self.logger.warning(
+                                    f"Entry point {entry.name} did not return an IntegrationProtocol"
+                                )
+                    except Exception as e:
+                        self.logger.error(
+                            f"Failed to load integration from {entry.name}: {e}"
+                        )
+
+            except (ImportError, AttributeError) as e:
+                self.logger.warning(f"Could not discover integrations: {e}")
+
+            return discovered_integrations
 
     def load_integration_module(self, module_path: str) -> list[IntegrationProtocol]:
         """
@@ -172,6 +220,22 @@ class IntegrationRegistry:
         Raises:
             QuackError: If module cannot be loaded or contains no integrations
         """
+        # Try to use QuackCore's plugin discovery first
+        try:
+            from quackcore.plugins.discovery import loader as plugin_loader
+
+            try:
+                plugin = plugin_loader.load_plugin(module_path)
+                if isinstance(plugin, IntegrationProtocol):
+                    self.register(plugin)
+                    return [plugin]
+            except Exception:
+                # Fall back to manual discovery
+                pass
+        except ImportError:
+            # Continue with original implementation
+            pass
+
         loaded_integrations = []
 
         try:
@@ -198,10 +262,10 @@ class IntegrationRegistry:
 
                 attr = getattr(module, attr_name)
                 if (
-                    isinstance(attr, type)
-                    and issubclass(attr, IntegrationProtocol)
-                    and attr.__module__ == module.__name__
-                    and attr != IntegrationProtocol
+                        isinstance(attr, type)
+                        and issubclass(attr, IntegrationProtocol)
+                        and attr.__module__ == module.__name__
+                        and attr != IntegrationProtocol
                 ):
                     try:
                         integration = attr()

@@ -7,24 +7,25 @@ credentials and authorization flows for secure API access.
 """
 
 import logging
-from pathlib import Path
+import json
 from typing import Any
 
-from quackcore.errors import QuackAuthenticationError, QuackIntegrationError
-from quackcore.fs import service as fs
+from quackcore.errors import QuackIntegrationError
 from quackcore.integrations.base import BaseAuthProvider
 from quackcore.integrations.results import AuthResult
+from quackcore.fs import service as fs
+from quackcore.paths import resolver
 
 
 class GoogleAuthProvider(BaseAuthProvider):
     """Authentication provider for Google integrations."""
 
     def __init__(
-        self,
-        client_secrets_file: str | Path,
-        credentials_file: str | Path | None = None,
-        scopes: list[str] | None = None,
-        log_level: int = logging.INFO,
+            self,
+            client_secrets_file: str,
+            credentials_file: str | None = None,
+            scopes: list[str] | None = None,
+            log_level: int = logging.INFO,
     ) -> None:
         """
         Initialize the Google authentication provider.
@@ -37,7 +38,7 @@ class GoogleAuthProvider(BaseAuthProvider):
         """
         super().__init__(credentials_file, log_level)
 
-        self.client_secrets_file = self._resolve_path(client_secrets_file)
+        self.client_secrets_file = resolver.resolve_project_path(client_secrets_file)
         self.scopes = scopes or []
 
         # Verify the client secrets file exists
@@ -86,14 +87,22 @@ class GoogleAuthProvider(BaseAuthProvider):
             creds = None
 
             # Try to load existing credentials
-            if self.credentials_file and Path(self.credentials_file).exists():
-                try:
-                    creds = Credentials.from_authorized_user_info(
-                        fs.read_json(self.credentials_file).data,
-                        self.scopes,
-                    )
-                except Exception as e:
-                    self.logger.warning(f"Failed to load credentials: {e}")
+            if self.credentials_file:
+                file_info = fs.get_file_info(self.credentials_file)
+                if file_info.exists:
+                    try:
+                        json_result = fs.read_json(self.credentials_file)
+                        if json_result.success:
+                            creds = Credentials.from_authorized_user_info(
+                                json_result.data,
+                                self.scopes,
+                            )
+                        else:
+                            self.logger.warning(
+                                f"Failed to load credentials: {json_result.error}"
+                            )
+                    except Exception as e:
+                        self.logger.warning(f"Failed to load credentials: {e}")
 
             # Refresh token if expired
             if creds and creds.expired and creds.refresh_token:
@@ -210,18 +219,19 @@ class GoogleAuthProvider(BaseAuthProvider):
             Any: The Google authentication credentials
 
         Raises:
-            QuackAuthenticationError: If no valid credentials are available
+            QuackIntegrationError: If no valid credentials are available
         """
         if self.auth is None or not self.authenticated:
             result = self.authenticate()
             if not result.success:
-                raise QuackAuthenticationError(
+                context = {
+                    "service": "Google",
+                    "credentials_path": str(
+                        self.credentials_file) if self.credentials_file else None
+                }
+                raise QuackIntegrationError(
                     "No valid Google credentials available",
-                    service="Google",
-                    credentials_path=str(self.credentials_file)
-                    if self.credentials_file
-                    else None,
-                    original_error=None,
+                    context=context
                 )
 
         return self.auth
@@ -232,23 +242,11 @@ class GoogleAuthProvider(BaseAuthProvider):
 
         Returns:
             bool: True if saving was successful
-
-        Raises:
-            QuackIntegrationError: If saving fails
         """
-        try:
-            if self.auth is None:
-                return False
+        if self.auth is None:
+            return False
 
-            return self._save_credentials_to_file(self.auth)
-
-        except Exception as e:
-            self.logger.error(f"Failed to save credentials: {e}")
-            raise QuackIntegrationError(
-                f"Failed to save Google credentials: {str(e)}",
-                {"path": str(self.credentials_file)},
-                original_error=e,
-            ) from e
+        return self._save_credentials_to_file(self.auth)
 
     def _save_credentials_to_file(self, credentials: Any) -> bool:
         """
@@ -265,11 +263,24 @@ class GoogleAuthProvider(BaseAuthProvider):
             return False
 
         # Ensure directory exists
-        self._ensure_credentials_directory()
+        directory_result = fs.create_directory(
+            fs.join_path(self.credentials_file).parent,
+            exist_ok=True
+        )
+
+        if not directory_result.success:
+            self.logger.error(
+                f"Failed to create credentials directory: {directory_result.error}")
+            return False
 
         # Get credentials data as JSON
         if hasattr(credentials, "to_json") and callable(credentials.to_json):
-            creds_data = credentials.to_json()
+            try:
+                # to_json() returns a JSON string, we need to parse it to a dict
+                creds_data = json.loads(credentials.to_json())
+            except (json.JSONDecodeError, TypeError) as e:
+                self.logger.error(f"Failed to parse credentials JSON: {e}")
+                return False
         else:
             # For older credential formats
             try:
