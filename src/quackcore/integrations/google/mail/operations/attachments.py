@@ -9,7 +9,7 @@ including downloading and saving attachments to disk.
 import base64
 import logging
 import os
-from typing import Any, TypeVar
+from typing import TypeVar
 
 from quackcore.integrations.google.mail.operations.email import clean_filename
 from quackcore.integrations.google.mail.protocols import GmailService
@@ -78,7 +78,7 @@ def process_message_parts(
 def handle_attachment(
     gmail_service: GmailService,
     user_id: str,
-    part: dict[str, Any],
+    part: dict,
     msg_id: str,
     storage_path: str,
     logger: logging.Logger,

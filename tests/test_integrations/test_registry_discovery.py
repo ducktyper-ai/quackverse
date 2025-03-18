@@ -86,20 +86,28 @@ class TestIntegrationRegistryDiscovery:
         """Test discovering integrations from entry points."""
         # Mock entry points
         mock_entry_points = [
-            MockEntryPoint("integration1", "quackcore.integrations.integration1",
-                           lambda: MockIntegration("Integration1")),
-            MockEntryPoint("integration2", "quackcore.integrations.integration2",
-                           lambda: MockIntegration("Integration2")),
+            MockEntryPoint(
+                "integration1",
+                "quackcore.integrations.integration1",
+                lambda: MockIntegration("Integration1"),
+            ),
+            MockEntryPoint(
+                "integration2",
+                "quackcore.integrations.integration2",
+                lambda: MockIntegration("Integration2"),
+            ),
         ]
 
         # Mock entry_points function
         with patch(
-                "quackcore.integrations.registry.IntegrationRegistry._get_entry_points") as mock_get_eps:
+            "quackcore.integrations.registry.IntegrationRegistry._get_entry_points"
+        ) as mock_get_eps:
             mock_get_eps.return_value = mock_entry_points
 
             # Test discovery with no plugin loader
             with patch(
-                    "quackcore.integrations.registry.IntegrationRegistry._get_plugin_loader") as mock_get_loader:
+                "quackcore.integrations.registry.IntegrationRegistry._get_plugin_loader"
+            ) as mock_get_loader:
                 mock_get_loader.return_value = None
 
                 discovered = registry.discover_integrations()
@@ -108,20 +116,24 @@ class TestIntegrationRegistryDiscovery:
                 assert registry.is_registered("Integration2")
 
         # Test discovery with plugin loader
-        mock_plugin_loader = MockPluginLoader({
-            "quackcore.integrations.integration3": MockIntegration("Integration3"),
-            "quackcore.integrations.integration4": MockIntegration("Integration4"),
-        })
+        mock_plugin_loader = MockPluginLoader(
+            {
+                "quackcore.integrations.integration3": MockIntegration("Integration3"),
+                "quackcore.integrations.integration4": MockIntegration("Integration4"),
+            }
+        )
 
         with patch(
-                "quackcore.integrations.registry.IntegrationRegistry._get_entry_points") as mock_get_eps:
+            "quackcore.integrations.registry.IntegrationRegistry._get_entry_points"
+        ) as mock_get_eps:
             mock_get_eps.return_value = [
                 MockEntryPoint("integration3", "quackcore.integrations.integration3"),
                 MockEntryPoint("integration4", "quackcore.integrations.integration4"),
             ]
 
             with patch(
-                    "quackcore.integrations.registry.IntegrationRegistry._get_plugin_loader") as mock_get_loader:
+                "quackcore.integrations.registry.IntegrationRegistry._get_plugin_loader"
+            ) as mock_get_loader:
                 mock_get_loader.return_value = mock_plugin_loader
 
                 registry = IntegrationRegistry()  # Create fresh registry
@@ -132,15 +144,20 @@ class TestIntegrationRegistryDiscovery:
 
         # Test with entry point loading errors
         with patch(
-                "quackcore.integrations.registry.IntegrationRegistry._get_entry_points") as mock_get_eps:
+            "quackcore.integrations.registry.IntegrationRegistry._get_entry_points"
+        ) as mock_get_eps:
             mock_get_eps.return_value = [
                 MockEntryPoint("bad_entry", "quackcore.integrations.bad_entry"),
-                MockEntryPoint("integration1", "quackcore.integrations.integration1",
-                               lambda: MockIntegration("Integration1")),
+                MockEntryPoint(
+                    "integration1",
+                    "quackcore.integrations.integration1",
+                    lambda: MockIntegration("Integration1"),
+                ),
             ]
 
             with patch(
-                    "quackcore.integrations.registry.IntegrationRegistry._get_plugin_loader") as mock_get_loader:
+                "quackcore.integrations.registry.IntegrationRegistry._get_plugin_loader"
+            ) as mock_get_loader:
                 mock_get_loader.return_value = None
 
                 registry = IntegrationRegistry()  # Create fresh registry
@@ -153,10 +170,16 @@ class TestIntegrationRegistryDiscovery:
         """Test retrieving entry points."""
         # Mock entry_points function
         mock_eps = [
-            EntryPoint(name="integration1", value="quackcore.integrations.integration1",
-                       group="quackcore.integrations"),
-            EntryPoint(name="integration2", value="quackcore.integrations.integration2",
-                       group="quackcore.integrations"),
+            EntryPoint(
+                name="integration1",
+                value="quackcore.integrations.integration1",
+                group="quackcore.integrations",
+            ),
+            EntryPoint(
+                name="integration2",
+                value="quackcore.integrations.integration2",
+                group="quackcore.integrations",
+            ),
         ]
 
         with patch("importlib.metadata.entry_points") as mock_entry_points:
@@ -179,8 +202,9 @@ class TestIntegrationRegistryDiscovery:
         # Test with available plugin loader
         mock_loader = MagicMock()
 
-        with patch.dict(sys.modules,
-                        {"quackcore.plugins.discovery": MagicMock(loader=mock_loader)}):
+        with patch.dict(
+            sys.modules, {"quackcore.plugins.discovery": MagicMock(loader=mock_loader)}
+        ):
             loader = registry._get_plugin_loader()
             assert loader is mock_loader
 
@@ -195,12 +219,15 @@ class TestIntegrationRegistryDiscovery:
     def test_load_integration_module(self, registry):
         """Test loading integrations from a module."""
         # Test with plugin loader
-        mock_plugin_loader = MockPluginLoader({
-            "test.module": MockIntegration("PluginIntegration"),
-        })
+        mock_plugin_loader = MockPluginLoader(
+            {
+                "test.module": MockIntegration("PluginIntegration"),
+            }
+        )
 
         with patch(
-                "quackcore.integrations.registry.IntegrationRegistry._get_plugin_loader") as mock_get_loader:
+            "quackcore.integrations.registry.IntegrationRegistry._get_plugin_loader"
+        ) as mock_get_loader:
             mock_get_loader.return_value = mock_plugin_loader
 
             loaded = registry.load_integration_module("test.module")

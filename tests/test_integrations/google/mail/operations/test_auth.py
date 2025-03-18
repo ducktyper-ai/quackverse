@@ -72,6 +72,7 @@ class TestGmailAuthOperations:
         # This is mostly for clarity in the test, as the code doesn't use isinstance
         # with runtime_checkable protocols directly
         from typing import cast
+
         protocol_creds = cast(GoogleCredentials, creds)
 
         # Mock build function
@@ -94,8 +95,9 @@ class TestGmailAuthOperations:
 
         # Use this approach to bypass type checking during testing
         # so we can explicitly test the runtime behavior with invalid credentials
-        with patch.object(auth, 'initialize_gmail_service',
-                          side_effect=auth.initialize_gmail_service) as patched_init:
+        with patch.object(
+            auth, "initialize_gmail_service", side_effect=auth.initialize_gmail_service
+        ) as patched_init:
             with patch("googleapiclient.discovery.build") as mock_build:
                 mock_build.side_effect = Exception("Missing credential attributes")
 

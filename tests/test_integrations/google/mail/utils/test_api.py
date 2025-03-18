@@ -40,8 +40,9 @@ class TestGmailApiUtils:
         # Test with HttpError
         resp = MagicMock()
         resp.status = 403
-        mock_request.execute.side_effect = HttpError(resp=resp,
-                                                     content=b"Permission denied")
+        mock_request.execute.side_effect = HttpError(
+            resp=resp, content=b"Permission denied"
+        )
 
         with pytest.raises(QuackApiError) as excinfo:
             execute_api_request(

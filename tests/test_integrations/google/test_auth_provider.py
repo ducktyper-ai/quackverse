@@ -140,8 +140,9 @@ class TestGoogleAuthProvider:
 
                     mock_creds_class.from_authorized_user_info.return_value = mock_creds
 
-                    with patch.object(provider,
-                                      "_save_credentials_to_file") as mock_save:
+                    with patch.object(
+                        provider, "_save_credentials_to_file"
+                    ) as mock_save:
                         mock_save.return_value = True
 
                         result = provider.authenticate()
@@ -167,9 +168,12 @@ class TestGoogleAuthProvider:
                     mock_creds_class.from_authorized_user_info.return_value = mock_creds
 
                     with patch(
-                            "google_auth_oauthlib.flow.InstalledAppFlow") as mock_flow_class:
+                        "google_auth_oauthlib.flow.InstalledAppFlow"
+                    ) as mock_flow_class:
                         mock_flow = MagicMock()
-                        mock_flow_class.from_client_secrets_file.return_value = mock_flow
+                        mock_flow_class.from_client_secrets_file.return_value = (
+                            mock_flow
+                        )
 
                         new_creds = MagicMock()
                         new_creds.token = "new_token"
@@ -178,8 +182,9 @@ class TestGoogleAuthProvider:
 
                         mock_flow.run_local_server.return_value = new_creds
 
-                        with patch.object(provider,
-                                          "_save_credentials_to_file") as mock_save:
+                        with patch.object(
+                            provider, "_save_credentials_to_file"
+                        ) as mock_save:
                             mock_save.return_value = True
 
                             result = provider.authenticate()
@@ -394,13 +399,16 @@ class TestGoogleAuthProvider:
                                 mock_read.return_value.data = {"token": "test_token"}
 
                                 with patch(
-                                        "quackcore.fs.service.delete") as mock_delete:
+                                    "quackcore.fs.service.delete"
+                                ) as mock_delete:
                                     with patch(
-                                            "quackcore.fs.service.write_json") as mock_write_json:
+                                        "quackcore.fs.service.write_json"
+                                    ) as mock_write_json:
                                         mock_write_json.return_value.success = True
 
                                         result = provider._save_credentials_to_file(
-                                            creds)
+                                            creds
+                                        )
                                         assert result is True
                                         mock_write_json.assert_called_once_with(
                                             "/path/to/credentials.json",
@@ -435,12 +443,15 @@ class TestGoogleAuthProvider:
                         creds_dict = mock_write_json.call_args[0][1]
                         assert creds_dict["token"] == "test_token"
                         assert creds_dict["refresh_token"] == "refresh_token"
-                        assert creds_dict[
-                                   "token_uri"] == "https://oauth2.googleapis.com/token"
+                        assert (
+                            creds_dict["token_uri"]
+                            == "https://oauth2.googleapis.com/token"
+                        )
                         assert creds_dict["client_id"] == "client_id"
                         assert creds_dict["client_secret"] == "client_secret"
                         assert creds_dict["scopes"] == [
-                            "https://www.googleapis.com/auth/drive.file"]
+                            "https://www.googleapis.com/auth/drive.file"
+                        ]
 
         # Test with attribute error
         creds = MagicMock()
@@ -483,11 +494,14 @@ class TestGoogleAuthProvider:
                                 mock_read.return_value.data = {"token": "test_token"}
 
                                 with patch(
-                                        "quackcore.fs.service.delete") as mock_delete:
+                                    "quackcore.fs.service.delete"
+                                ) as mock_delete:
                                     with patch(
-                                            "quackcore.fs.service.write_json") as mock_write_json:
+                                        "quackcore.fs.service.write_json"
+                                    ) as mock_write_json:
                                         mock_write_json.return_value.success = False
 
                                         result = provider._save_credentials_to_file(
-                                            creds)
+                                            creds
+                                        )
                                         assert result is False

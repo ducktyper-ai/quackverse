@@ -32,7 +32,7 @@ class TestGoogleDriveServiceList:
                     "id": "folder1",
                     "name": "Test Folder",
                     "mimeType": "application/vnd.google-apps.folder",
-                }
+                },
             ]
         }
 
@@ -49,14 +49,15 @@ class TestGoogleDriveServiceList:
             service.drive_service.files().list.assert_called_once_with(
                 q="query",
                 fields="files(id, name, mimeType, webViewLink, webContentLink, "
-                       "size, createdTime, modifiedTime, parents, shared, trashed)",
-                pageSize=100
+                "size, createdTime, modifiedTime, parents, shared, trashed)",
+                pageSize=100,
             )
             mock_query.assert_called_once_with("folder123", "*.txt")
 
         # Test API error
-        service.drive_service.files().list.side_effect = QuackApiError("API error",
-                                                                       service="drive")
+        service.drive_service.files().list.side_effect = QuackApiError(
+            "API error", service="drive"
+        )
         result = service.list_files()
         assert result.success is False
         assert "API error" in result.error

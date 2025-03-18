@@ -20,7 +20,7 @@ from quackcore.integrations.google.mail.protocols import (
     GmailMessagesResource,
     GmailRequest,
     GmailService,
-    GmailUsersResource
+    GmailUsersResource,
 )
 
 
@@ -47,7 +47,9 @@ class TestGmailEmailOperations:
                 self.last_message_id: Optional[str] = None
                 self.last_attachment_id: Optional[str] = None
 
-            def get(self, user_id: str, message_id: str, attachment_id: str) -> GmailRequest[Dict[str, Any]]:
+            def get(
+                self, user_id: str, message_id: str, attachment_id: str
+            ) -> GmailRequest[Dict[str, Any]]:
                 # Store the parameters for test assertions
                 self.last_user_id = user_id
                 self.last_message_id = message_id
@@ -66,14 +68,18 @@ class TestGmailEmailOperations:
                 self.last_message_id: Optional[str] = None
                 self.last_format: Optional[str] = None
 
-            def list(self, user_id: str, q: str, max_results: int) -> GmailRequest[Dict[str, Any]]:
+            def list(
+                self, user_id: str, q: str, max_results: int
+            ) -> GmailRequest[Dict[str, Any]]:
                 # Store parameters for test assertions
                 self.last_user_id = user_id
                 self.last_query = q
                 self.last_max_results = max_results
                 return MockRequest(self.list_return)
 
-            def get(self, user_id: str, message_id: str, message_format: str) -> GmailRequest[Dict[str, Any]]:
+            def get(
+                self, user_id: str, message_id: str, message_format: str
+            ) -> GmailRequest[Dict[str, Any]]:
                 # Store parameters for test assertions
                 self.last_user_id = user_id
                 self.last_message_id = message_id
@@ -103,7 +109,9 @@ class TestGmailEmailOperations:
     def test_build_query(self) -> None:
         """Test building Gmail search query."""
         # Test with days_back
-        with patch("quackcore.integrations.google.mail.operations.email.datetime") as mock_dt:
+        with patch(
+            "quackcore.integrations.google.mail.operations.email.datetime"
+        ) as mock_dt:
             mock_dt.now.return_value = datetime(2023, 1, 10)
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
 
@@ -187,7 +195,7 @@ class TestGmailEmailOperations:
         # Mock execute_api_request to return the response directly
         with patch(
             "quackcore.integrations.google.mail.operations.email.execute_api_request",
-            return_value={"messages": messages_list}
+            return_value={"messages": messages_list},
         ):
             # Test successful listing
             result = email.list_emails(mock_gmail_service, "me", "is:unread", logger)
@@ -199,7 +207,9 @@ class TestGmailEmailOperations:
         # Test with HttpError
         with patch(
             "quackcore.integrations.google.mail.operations.email.execute_api_request",
-            side_effect=HttpError(resp=MagicMock(status=403), content=b"Permission denied")
+            side_effect=HttpError(
+                resp=MagicMock(status=403), content=b"Permission denied"
+            ),
         ):
             result = email.list_emails(mock_gmail_service, "me", "is:unread", logger)
             assert result.success is False
@@ -208,7 +218,7 @@ class TestGmailEmailOperations:
         # Test with generic exception
         with patch(
             "quackcore.integrations.google.mail.operations.email.execute_api_request",
-            side_effect=Exception("Unexpected error")
+            side_effect=Exception("Unexpected error"),
         ):
             result = email.list_emails(mock_gmail_service, "me", "is:unread", logger)
             assert result.success is False
@@ -221,39 +231,65 @@ class TestGmailEmailOperations:
         # Mock execute_api_request to return a message
         with patch(
             "quackcore.integrations.google.mail.operations.email.execute_api_request",
-            return_value={"id": "msg1", "snippet": "Test email"}
+            return_value={"id": "msg1", "snippet": "Test email"},
         ):
-            message = email._get_message_with_retry(mock_gmail_service, "me", "msg1", 3, 0.1, 0.5, logger)
+            message = email._get_message_with_retry(
+                mock_gmail_service, "me", "msg1", 3, 0.1, 0.5, logger
+            )
             assert message is not None
             assert message["id"] == "msg1"
             assert message["snippet"] == "Test email"
 
         # Test with retry
-        mock_execute = MagicMock(side_effect=[
-            HttpError(resp=MagicMock(status=500), content=b"Server error"),
-            {"id": "msg1", "snippet": "Test email"},
-        ])
-        with patch("quackcore.integrations.google.mail.operations.email.execute_api_request", mock_execute):
-            with patch("quackcore.integrations.google.mail.operations.email.time.sleep") as mock_sleep:
-                message = email._get_message_with_retry(mock_gmail_service, "me", "msg1", 3, 0.1, 0.5, logger)
+        mock_execute = MagicMock(
+            side_effect=[
+                HttpError(resp=MagicMock(status=500), content=b"Server error"),
+                {"id": "msg1", "snippet": "Test email"},
+            ]
+        )
+        with patch(
+            "quackcore.integrations.google.mail.operations.email.execute_api_request",
+            mock_execute,
+        ):
+            with patch(
+                "quackcore.integrations.google.mail.operations.email.time.sleep"
+            ) as mock_sleep:
+                message = email._get_message_with_retry(
+                    mock_gmail_service, "me", "msg1", 3, 0.1, 0.5, logger
+                )
                 assert message is not None
                 assert message["id"] == "msg1"
                 assert mock_execute.call_count == 2
                 mock_sleep.assert_called_once_with(0.1)  # Initial delay
 
         # Test with max retries exceeded
-        mock_execute = MagicMock(side_effect=HttpError(resp=MagicMock(status=500), content=b"Server error"))
-        with patch("quackcore.integrations.google.mail.operations.email.execute_api_request", mock_execute):
-            with patch("quackcore.integrations.google.mail.operations.email.time.sleep") as mock_sleep:
-                message = email._get_message_with_retry(mock_gmail_service, "me", "msg1", 2, 0.1, 0.5, logger)
+        mock_execute = MagicMock(
+            side_effect=HttpError(resp=MagicMock(status=500), content=b"Server error")
+        )
+        with patch(
+            "quackcore.integrations.google.mail.operations.email.execute_api_request",
+            mock_execute,
+        ):
+            with patch(
+                "quackcore.integrations.google.mail.operations.email.time.sleep"
+            ) as mock_sleep:
+                message = email._get_message_with_retry(
+                    mock_gmail_service, "me", "msg1", 2, 0.1, 0.5, logger
+                )
                 assert message is None
                 assert mock_execute.call_count == 2
                 assert mock_sleep.call_count == 2
 
     @patch("quackcore.integrations.google.mail.operations.email.process_message_parts")
-    @patch("quackcore.integrations.google.mail.operations.email._get_message_with_retry")
-    def test_download_email(self, mock_get_message: MagicMock,
-                            mock_process_parts: MagicMock, mock_gmail_service) -> None:
+    @patch(
+        "quackcore.integrations.google.mail.operations.email._get_message_with_retry"
+    )
+    def test_download_email(
+        self,
+        mock_get_message: MagicMock,
+        mock_process_parts: MagicMock,
+        mock_gmail_service,
+    ) -> None:
         """Test downloading an email."""
         logger = logging.getLogger("test_gmail")
         storage_path = "/path/to/storage"
@@ -280,14 +316,27 @@ class TestGmailEmailOperations:
         mock_open_context = MagicMock().__enter__.return_value
         mock_open_context.write = MagicMock()
 
-        with patch("builtins.open", MagicMock(return_value=MagicMock(
-            __enter__=MagicMock(return_value=mock_open_context),
-            __exit__=MagicMock()
-        ))):
+        with patch(
+            "builtins.open",
+            MagicMock(
+                return_value=MagicMock(
+                    __enter__=MagicMock(return_value=mock_open_context),
+                    __exit__=MagicMock(),
+                )
+            ),
+        ):
             # Test successful download
             result = email.download_email(
-                mock_gmail_service, "me", "msg1", storage_path, True, True,
-                3, 0.1, 0.5, logger
+                mock_gmail_service,
+                "me",
+                "msg1",
+                storage_path,
+                True,
+                True,
+                3,
+                0.1,
+                0.5,
+                logger,
             )
             assert result.success is True
             assert "/path/to/storage/" in result.content
@@ -307,8 +356,16 @@ class TestGmailEmailOperations:
         # Test with missing message
         mock_get_message.return_value = None
         result = email.download_email(
-            mock_gmail_service, "me", "msg1", storage_path, False, False,
-            3, 0.1, 0.5, logger
+            mock_gmail_service,
+            "me",
+            "msg1",
+            storage_path,
+            False,
+            False,
+            3,
+            0.1,
+            0.5,
+            logger,
         )
         assert result.success is False
         assert "Message msg1 could not be retrieved" in result.error
@@ -323,8 +380,16 @@ class TestGmailEmailOperations:
         }
         mock_process_parts.return_value = (None, ["/path/to/storage/attachment.pdf"])
         result = email.download_email(
-            mock_gmail_service, "me", "msg1", storage_path, False, False,
-            3, 0.1, 0.5, logger
+            mock_gmail_service,
+            "me",
+            "msg1",
+            storage_path,
+            False,
+            False,
+            3,
+            0.1,
+            0.5,
+            logger,
         )
         assert result.success is False
         assert "No HTML content found in message msg1" in result.error
@@ -332,8 +397,16 @@ class TestGmailEmailOperations:
         # Test with exception
         mock_get_message.side_effect = Exception("Unexpected error")
         result = email.download_email(
-            mock_gmail_service, "me", "msg1", storage_path, False, False,
-            3, 0.1, 0.5, logger
+            mock_gmail_service,
+            "me",
+            "msg1",
+            storage_path,
+            False,
+            False,
+            3,
+            0.1,
+            0.5,
+            logger,
         )
         assert result.success is False
         assert "Failed to download email msg1" in result.error

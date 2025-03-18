@@ -87,11 +87,12 @@ class TestIntegrationResult:
         success=st.booleans(),
         message=st.one_of(st.none(), st.text()),
         error=st.one_of(st.none(), st.text()),
-        content=st.one_of(st.none(), st.integers(), st.text(),
-                          st.dictionaries(st.text(), st.text())),
+        content=st.one_of(
+            st.none(), st.integers(), st.text(), st.dictionaries(st.text(), st.text())
+        ),
     )
     def test_integration_result_properties(
-            self, success: bool, message: str | None, error: str | None, content: Any
+        self, success: bool, message: str | None, error: str | None, content: Any
     ) -> None:
         """Test IntegrationResult properties with hypothesis generated values."""
         if not success and error is None:
@@ -204,11 +205,11 @@ class TestAuthResult:
         content=st.one_of(st.none(), st.dictionaries(st.text(), st.text())),
     )
     def test_auth_result_properties(
-            self,
-            token: str | None,
-            expiry: int | None,
-            credentials_path: str | None,
-            content: dict | None,
+        self,
+        token: str | None,
+        expiry: int | None,
+        credentials_path: str | None,
+        content: dict | None,
     ) -> None:
         """Test AuthResult properties with hypothesis generated values."""
         result = AuthResult(
@@ -309,7 +310,7 @@ class TestConfigResult:
         validation_errors=st.one_of(st.none(), st.lists(st.text())),
     )
     def test_config_result_properties(
-            self, config_path: str | None, validation_errors: list[str] | None
+        self, config_path: str | None, validation_errors: list[str] | None
     ) -> None:
         """Test ConfigResult properties with hypothesis generated values."""
         result = ConfigResult(

@@ -31,7 +31,7 @@ class TestGoogleDriveServicePermissions:
         service.drive_service.permissions().create.assert_called_once_with(
             fileId="file123",
             body={"type": "user", "role": "writer", "allowFileDiscovery": True},
-            fields="id"
+            fields="id",
         )
 
         # Test with default parameters
@@ -44,12 +44,13 @@ class TestGoogleDriveServicePermissions:
         service.drive_service.permissions().create.assert_called_once_with(
             fileId="file123",
             body={"type": "anyone", "role": "commenter", "allowFileDiscovery": True},
-            fields="id"
+            fields="id",
         )
 
         # Test API error
         service.drive_service.permissions().create.side_effect = QuackApiError(
-            "API error", service="drive")
+            "API error", service="drive"
+        )
         result = service.set_file_permissions("file123")
         assert result.success is False
         assert "API error" in result.error
@@ -95,8 +96,9 @@ class TestGoogleDriveServicePermissions:
         assert result.content == "https://drive.google.com/file/d/file123/view"
 
         # Test API error
-        service.drive_service.files().get.side_effect = QuackApiError("API error",
-                                                                      service="drive")
+        service.drive_service.files().get.side_effect = QuackApiError(
+            "API error", service="drive"
+        )
         result = service.get_sharing_link("file123")
         assert result.success is False
         assert "API error" in result.error

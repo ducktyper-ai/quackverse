@@ -19,7 +19,7 @@ from quackcore.integrations.google.mail.protocols import (
     GmailMessagesResource,
     GmailRequest,
     GmailService,
-    GmailUsersResource
+    GmailUsersResource,
 )
 
 
@@ -46,8 +46,9 @@ class TestGmailAttachmentOperations:
                 self.last_message_id: str = ""
                 self.last_attachment_id: str = ""
 
-            def get(self, user_id: str, message_id: str, attachment_id: str) -> \
-                    GmailRequest[Dict[str, Any]]:
+            def get(
+                self, user_id: str, message_id: str, attachment_id: str
+            ) -> GmailRequest[Dict[str, Any]]:
                 # Store the parameters for test assertions
                 self.last_user_id = user_id
                 self.last_message_id = message_id
@@ -58,12 +59,14 @@ class TestGmailAttachmentOperations:
             def __init__(self):
                 self.attachments_resource = MockAttachmentsResource()
 
-            def list(self, user_id: str, q: str, max_results: int) -> GmailRequest[
-                Dict[str, Any]]:
+            def list(
+                self, user_id: str, q: str, max_results: int
+            ) -> GmailRequest[Dict[str, Any]]:
                 return MockRequest({})
 
-            def get(self, user_id: str, message_id: str, message_format: str) -> \
-                    GmailRequest[Dict[str, Any]]:
+            def get(
+                self, user_id: str, message_id: str, message_format: str
+            ) -> GmailRequest[Dict[str, Any]]:
                 return MockRequest({})
 
             def attachments(self) -> GmailAttachmentsResource:
@@ -99,10 +102,7 @@ class TestGmailAttachmentOperations:
         part = {
             "filename": "test.pdf",
             "mimeType": "application/pdf",
-            "body": {
-                "data": attachment_data,
-                "size": 11
-            }
+            "body": {"data": attachment_data, "size": 11},
         }
 
         # Use MagicMock for the file to properly handle method assertions
@@ -125,15 +125,14 @@ class TestGmailAttachmentOperations:
         part = {
             "filename": "test.pdf",
             "mimeType": "application/pdf",
-            "body": {
-                "attachmentId": "attachment1",
-                "size": 11
-            }
+            "body": {"attachmentId": "attachment1", "size": 11},
         }
 
         # Set up the return value for attachments.get
         attachment_response = {"data": attachment_data, "size": 11}
-        mock_gmail_service.users().messages().attachments().get_return = attachment_response
+        mock_gmail_service.users().messages().attachments().get_return = (
+            attachment_response
+        )
 
         # Use MagicMock for the file to properly handle method assertions
         mock_file = MagicMock()
@@ -142,8 +141,8 @@ class TestGmailAttachmentOperations:
         with patch("builtins.open", mock_open_func):
             with patch("os.path.exists", return_value=False):
                 with patch(
-                        "quackcore.integrations.google.mail.operations.attachments.execute_api_request",
-                        return_value=attachment_response
+                    "quackcore.integrations.google.mail.operations.attachments.execute_api_request",
+                    return_value=attachment_response,
                 ):
                     path = attachments.handle_attachment(
                         mock_gmail_service, "me", part, msg_id, storage_path, logger
@@ -174,10 +173,7 @@ class TestGmailAttachmentOperations:
         # Test with missing filename
         part = {
             "mimeType": "application/pdf",
-            "body": {
-                "data": attachment_data,
-                "size": 11
-            }
+            "body": {"data": attachment_data, "size": 11},
         }
 
         path = attachments.handle_attachment(
@@ -190,9 +186,7 @@ class TestGmailAttachmentOperations:
         part = {
             "filename": "test.pdf",
             "mimeType": "application/pdf",
-            "body": {
-                "size": 11
-            }
+            "body": {"size": 11},
         }
 
         path = attachments.handle_attachment(
@@ -205,10 +199,7 @@ class TestGmailAttachmentOperations:
         part = {
             "filename": "test.pdf",
             "mimeType": "application/pdf",
-            "body": {
-                "data": "invalid base64",
-                "size": 11
-            }
+            "body": {"data": "invalid base64", "size": 11},
         }
 
         path = attachments.handle_attachment(
@@ -221,10 +212,7 @@ class TestGmailAttachmentOperations:
         part = {
             "filename": "test.pdf",
             "mimeType": "application/pdf",
-            "body": {
-                "data": attachment_data,
-                "size": 11
-            }
+            "body": {"data": attachment_data, "size": 11},
         }
 
         mock_open_func = MagicMock(side_effect=IOError("Permission denied"))
@@ -248,23 +236,25 @@ class TestGmailAttachmentOperations:
                 "mimeType": "text/html",
                 "body": {
                     "data": base64.urlsafe_b64encode(
-                        b"<html><body>Test</body></html>").decode(),
-                    "size": 30
-                }
+                        b"<html><body>Test</body></html>"
+                    ).decode(),
+                    "size": 30,
+                },
             },
             {
                 "filename": "attachment.pdf",
                 "mimeType": "application/pdf",
                 "body": {
                     "data": base64.urlsafe_b64encode(b"PDF content").decode(),
-                    "size": 11
-                }
-            }
+                    "size": 11,
+                },
+            },
         ]
 
         with patch(
-                "quackcore.integrations.google.mail.operations.attachments.handle_attachment",
-                return_value="/path/to/storage/attachment.pdf"):
+            "quackcore.integrations.google.mail.operations.attachments.handle_attachment",
+            return_value="/path/to/storage/attachment.pdf",
+        ):
             html_content, attachments_list = attachments.process_message_parts(
                 mock_gmail_service, "me", parts, msg_id, storage_path, logger
             )
@@ -281,25 +271,27 @@ class TestGmailAttachmentOperations:
                         "mimeType": "text/html",
                         "body": {
                             "data": base64.urlsafe_b64encode(
-                                b"<html><body>Nested</body></html>").decode(),
-                            "size": 32
-                        }
+                                b"<html><body>Nested</body></html>"
+                            ).decode(),
+                            "size": 32,
+                        },
                     }
-                ]
+                ],
             },
             {
                 "filename": "attachment.pdf",
                 "mimeType": "application/pdf",
                 "body": {
                     "data": base64.urlsafe_b64encode(b"PDF content").decode(),
-                    "size": 11
-                }
-            }
+                    "size": 11,
+                },
+            },
         ]
 
         with patch(
-                "quackcore.integrations.google.mail.operations.attachments.handle_attachment",
-                return_value="/path/to/storage/attachment.pdf"):
+            "quackcore.integrations.google.mail.operations.attachments.handle_attachment",
+            return_value="/path/to/storage/attachment.pdf",
+        ):
             html_content, attachments_list = attachments.process_message_parts(
                 mock_gmail_service, "me", parts, msg_id, storage_path, logger
             )
@@ -313,8 +305,8 @@ class TestGmailAttachmentOperations:
                 "mimeType": "text/plain",
                 "body": {
                     "data": base64.urlsafe_b64encode(b"Plain text").decode(),
-                    "size": 10
-                }
+                    "size": 10,
+                },
             }
         ]
 
@@ -331,18 +323,20 @@ class TestGmailAttachmentOperations:
                 "mimeType": "text/html",
                 "body": {
                     "data": base64.urlsafe_b64encode(
-                        b"<html><body>First</body></html>").decode(),
-                    "size": 30
-                }
+                        b"<html><body>First</body></html>"
+                    ).decode(),
+                    "size": 30,
+                },
             },
             {
                 "mimeType": "text/html",
                 "body": {
                     "data": base64.urlsafe_b64encode(
-                        b"<html><body>Second</body></html>").decode(),
-                    "size": 31
-                }
-            }
+                        b"<html><body>Second</body></html>"
+                    ).decode(),
+                    "size": 31,
+                },
+            },
         ]
 
         html_content, attachments_list = attachments.process_message_parts(
@@ -358,24 +352,25 @@ class TestGmailAttachmentOperations:
                 "mimeType": "text/html",
                 "body": {
                     "data": base64.urlsafe_b64encode(
-                        b"<html><body>Test</body></html>").decode(),
-                    "size": 30
-                }
+                        b"<html><body>Test</body></html>"
+                    ).decode(),
+                    "size": 30,
+                },
             },
             {
                 "filename": "attachment.pdf",
                 "mimeType": "application/pdf",
                 "body": {
                     "data": base64.urlsafe_b64encode(b"PDF content").decode(),
-                    "size": 11
-                }
-            }
+                    "size": 11,
+                },
+            },
         ]
 
         with patch(
-                "quackcore.integrations.google.mail.operations.attachments.handle_attachment",
-                return_value=None):  # Attachment handling failed
-
+            "quackcore.integrations.google.mail.operations.attachments.handle_attachment",
+            return_value=None,
+        ):  # Attachment handling failed
             html_content, attachments_list = attachments.process_message_parts(
                 mock_gmail_service, "me", parts, msg_id, storage_path, logger
             )

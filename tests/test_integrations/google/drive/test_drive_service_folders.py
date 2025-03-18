@@ -41,7 +41,7 @@ class TestGoogleDriveServiceFolders:
                     "mimeType": "application/vnd.google-apps.folder",
                     "parents": ["parent_folder"],
                 },
-                fields="id, webViewLink"
+                fields="id, webViewLink",
             )
             mock_permissions.assert_called_once_with("new_folder")
 
@@ -55,12 +55,13 @@ class TestGoogleDriveServiceFolders:
                 "mimeType": "application/vnd.google-apps.folder",
                 "parents": ["shared_folder"],
             },
-            fields="id, webViewLink"
+            fields="id, webViewLink",
         )
 
         # Test API error
-        service.drive_service.files().create.side_effect = QuackApiError("API error",
-                                                                         service="drive")
+        service.drive_service.files().create.side_effect = QuackApiError(
+            "API error", service="drive"
+        )
         result = service.create_folder("Error Folder")
         assert result.success is False
         assert "API error" in result.error

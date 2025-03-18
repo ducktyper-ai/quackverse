@@ -15,13 +15,14 @@ from typing import Protocol, TypeVar, cast
 
 from googleapiclient.errors import HttpError
 
-from quackcore.integrations.google.mail.utils.api import APIRequest, execute_api_request
+from quackcore.integrations.google.mail.protocols import GmailRequest, GmailService
+from quackcore.integrations.google.mail.utils.api import execute_api_request
 from quackcore.integrations.results import IntegrationResult
 
-T = TypeVar("T")
+T = TypeVar("T")  # Generic type for result content
 
 
-class MessagesRequest(APIRequest, Protocol):
+class MessagesRequest(GmailRequest, Protocol):
     """Protocol for Gmail messages request object."""
 
     pass
@@ -66,14 +67,6 @@ class UsersResource(Protocol):
 
     def messages(self) -> MessagesResource:
         """Get messages resource."""
-        ...
-
-
-class GmailService(Protocol):
-    """Protocol for Gmail service object."""
-
-    def users(self) -> UsersResource:
-        """Get users resource."""
         ...
 
 

@@ -40,7 +40,8 @@ class TestBaseAuthProvider:
 
         # Test with relative path (mocking resolver)
         with patch(
-                "quackcore.integrations.base.resolver.resolve_project_path") as mock_resolve:
+            "quackcore.integrations.base.resolver.resolve_project_path"
+        ) as mock_resolve:
             mock_resolve.return_value = "/resolved/path"
             resolved = provider._resolve_path("relative/path")
             assert resolved == "/resolved/path"
@@ -48,7 +49,8 @@ class TestBaseAuthProvider:
 
         # Test with resolver exception
         with patch(
-                "quackcore.integrations.base.resolver.resolve_project_path") as mock_resolve:
+            "quackcore.integrations.base.resolver.resolve_project_path"
+        ) as mock_resolve:
             mock_resolve.side_effect = Exception("Test error")
             with patch("quackcore.fs.service.normalize_path") as mock_normalize:
                 mock_normalize.return_value = "/normalized/path"
@@ -60,6 +62,7 @@ class TestBaseAuthProvider:
         """Test that abstract methods must be implemented."""
         # Attempt to create a class without implementing the abstract methods
         with pytest.raises(TypeError):
+
             class InvalidProvider(BaseAuthProvider):
                 pass
 

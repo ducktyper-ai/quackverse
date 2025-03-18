@@ -7,7 +7,7 @@ with consistent error handling and logging.
 """
 
 from collections.abc import Callable
-from typing import TypeVar
+from typing import Protocol, TypeVar, runtime_checkable
 
 from googleapiclient.errors import HttpError
 
@@ -16,6 +16,21 @@ from quackcore.integrations.google.mail.protocols import GmailRequest
 
 T = TypeVar("T")  # Generic type for API response
 R = TypeVar("R")  # Generic type for request results
+
+
+# Add the missing APIRequest protocol that's imported in email.py
+@runtime_checkable
+class APIRequest(Protocol[R]):
+    """Protocol for Gmail API request objects."""
+
+    def execute(self) -> R:
+        """
+        Execute the request.
+
+        Returns:
+            R: The API response.
+        """
+        ...
 
 
 def execute_api_request(

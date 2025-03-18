@@ -141,8 +141,7 @@ class TestBaseIntegrationService:
         service._initialized = False
         with patch.object(service, "initialize") as mock_init:
             mock_init.return_value = IntegrationResult(
-                success=False,
-                error="Initialization failed"
+                success=False, error="Initialization failed"
             )
 
             result = service._ensure_initialized()

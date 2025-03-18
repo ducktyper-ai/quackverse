@@ -15,7 +15,8 @@ class TestGoogleDriveServiceUpload:
     """Tests for the GoogleDriveService upload operations."""
 
     @patch(
-        "quackcore.integrations.google.drive.service.GoogleDriveService._execute_upload")
+        "quackcore.integrations.google.drive.service.GoogleDriveService._execute_upload"
+    )
     def test_upload_file(self, mock_execute_upload: MagicMock, temp_dir: Path) -> None:
         """Test uploading a file."""
         service = GoogleDriveService(shared_folder_id="shared_folder")
@@ -54,15 +55,20 @@ class TestGoogleDriveServiceUpload:
                     with patch("quackcore.fs.service.read_binary") as mock_read:
                         mock_read.return_value = file_content_result
 
-                        with patch.object(service,
-                                          "set_file_permissions") as mock_permissions:
+                        with patch.object(
+                            service, "set_file_permissions"
+                        ) as mock_permissions:
                             mock_permissions.return_value = IntegrationResult(
-                                success=True)
+                                success=True
+                            )
 
                             result = service.upload_file(str(test_file))
 
                             assert result.success is True
-                            assert result.content == "https://drive.google.com/file/d/file123/view"
+                            assert (
+                                result.content
+                                == "https://drive.google.com/file/d/file123/view"
+                            )
                             mock_execute_upload.assert_called_once()
                             mock_permissions.assert_called_once_with("file123")
 
@@ -98,8 +104,9 @@ class TestGoogleDriveServiceUpload:
                     with patch("quackcore.fs.service.read_binary") as mock_read:
                         mock_read.return_value = file_content_result
 
-                        mock_execute_upload.side_effect = QuackApiError("API error",
-                                                                        service="drive")
+                        mock_execute_upload.side_effect = QuackApiError(
+                            "API error", service="drive"
+                        )
 
                         result = service.upload_file(str(test_file))
 

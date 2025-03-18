@@ -71,7 +71,8 @@ class TestGoogleDriveServiceInit:
         mock_load_config.return_value.success = False
 
         with patch(
-                "quackcore.integrations.google.config.GoogleConfigProvider.get_default_config") as mock_default:
+            "quackcore.integrations.google.config.GoogleConfigProvider.get_default_config"
+        ) as mock_default:
             mock_default.return_value = {
                 "client_secrets_file": "/default/secrets.json",
                 "credentials_file": "/default/credentials.json",
@@ -84,7 +85,7 @@ class TestGoogleDriveServiceInit:
     @patch("quackcore.integrations.google.auth.GoogleAuthProvider.get_credentials")
     @patch("googleapiclient.discovery.build")
     def test_initialize(
-            self, mock_build: MagicMock, mock_get_credentials: MagicMock
+        self, mock_build: MagicMock, mock_get_credentials: MagicMock
     ) -> None:
         """Test initializing the drive service."""
         service = GoogleDriveService(

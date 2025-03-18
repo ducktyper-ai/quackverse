@@ -95,22 +95,22 @@ class MinimalStorageIntegration:
         return True
 
     def upload_file(
-            self, file_path: str, remote_path: str | None = None
+        self, file_path: str, remote_path: str | None = None
     ) -> IntegrationResult[str]:
         return IntegrationResult.success_result("file_id")
 
     def download_file(
-            self, remote_id: str, local_path: str | None = None
+        self, remote_id: str, local_path: str | None = None
     ) -> IntegrationResult[str]:
         return IntegrationResult.success_result("local_path")
 
     def list_files(
-            self, remote_path: str | None = None, pattern: str | None = None
+        self, remote_path: str | None = None, pattern: str | None = None
     ) -> IntegrationResult[list[Mapping]]:
         return IntegrationResult.success_result([{"name": "test.txt"}])
 
     def create_folder(
-            self, folder_name: str, parent_path: str | None = None
+        self, folder_name: str, parent_path: str | None = None
     ) -> IntegrationResult[str]:
         return IntegrationResult.success_result("folder_id")
 
@@ -134,11 +134,11 @@ class CustomStorageIntegrationProtocol(Protocol):
     def is_available(self) -> bool: ...
 
     def upload_file(
-            self, file_path: str, remote_path: str | None = None
+        self, file_path: str, remote_path: str | None = None
     ) -> IntegrationResult[str]: ...
 
     def download_file(
-            self, remote_id: str, local_path: str | None = None
+        self, remote_id: str, local_path: str | None = None
     ) -> IntegrationResult[str]: ...
 
 
@@ -220,17 +220,17 @@ class TestProtocolInheritance:
         # Missing a single method
         class AlmostStorage(PartialStorage):
             def upload_file(
-                    self, file_path: str, remote_path: str | None = None
+                self, file_path: str, remote_path: str | None = None
             ) -> IntegrationResult[str]:
                 return IntegrationResult.success_result("file_id")
 
             def download_file(
-                    self, remote_id: str, local_path: str | None = None
+                self, remote_id: str, local_path: str | None = None
             ) -> IntegrationResult[str]:
                 return IntegrationResult.success_result("local_path")
 
             def list_files(
-                    self, remote_path: str | None = None, pattern: str | None = None
+                self, remote_path: str | None = None, pattern: str | None = None
             ) -> IntegrationResult[list[Mapping]]:
                 return IntegrationResult.success_result([{"name": "test.txt"}])
 
@@ -263,7 +263,7 @@ class TestProtocolInheritance:
                 return True
 
             def upload_file(
-                    self, file_path: str, remote_path: str | None = None
+                self, file_path: str, remote_path: str | None = None
             ) -> IntegrationResult[str]:
                 return IntegrationResult.success_result("file_id")
 
@@ -364,20 +364,24 @@ class TestProtocolInheritance:
             def is_available(self) -> bool:
                 return True
 
-            def upload_file(self, file_path: str, remote_path: str = None) -> \
-            IntegrationResult[str]:
+            def upload_file(
+                self, file_path: str, remote_path: str = None
+            ) -> IntegrationResult[str]:
                 return IntegrationResult.success_result("file_id")
 
-            def download_file(self, remote_id: str, local_path: str = None) -> \
-            IntegrationResult[str]:
+            def download_file(
+                self, remote_id: str, local_path: str = None
+            ) -> IntegrationResult[str]:
                 return IntegrationResult.success_result("local_path")
 
-            def list_files(self, remote_path: str = None, pattern: str = None) -> \
-            IntegrationResult[list]:
+            def list_files(
+                self, remote_path: str = None, pattern: str = None
+            ) -> IntegrationResult[list]:
                 return IntegrationResult.success_result([{"name": "test.txt"}])
 
-            def create_folder(self, folder_name: str,
-                              parent_path: str = None) -> IntegrationResult:
+            def create_folder(
+                self, folder_name: str, parent_path: str = None
+            ) -> IntegrationResult:
                 return IntegrationResult.success_result("folder_id")
 
         duck_storage = DuckTypedStorage()
@@ -427,10 +431,7 @@ class TestProtocolInheritance:
         assert isinstance(ab, ServiceB)
 
         # Test using runtime protocols in a registry-like scenario
-        registry = {
-            "service_a": [],
-            "service_b": []
-        }
+        registry = {"service_a": [], "service_b": []}
 
         for service in [a, b, ab]:
             if isinstance(service, ServiceA):

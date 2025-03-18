@@ -37,8 +37,10 @@ class TestGoogleDriveServiceFiles:
                     with patch("quackcore.fs.service.get_mime_type") as mock_mime:
                         mock_mime.return_value = "text/plain"
 
-                        path_obj, filename, folder_id, mime_type = service._resolve_file_details(
-                            "test_file.txt", None, "folder123"
+                        path_obj, filename, folder_id, mime_type = (
+                            service._resolve_file_details(
+                                "test_file.txt", None, "folder123"
+                            )
                         )
 
                         assert path_obj == str(test_file)
@@ -57,8 +59,10 @@ class TestGoogleDriveServiceFiles:
                 with patch("quackcore.fs.service.get_mime_type") as mock_mime:
                     mock_mime.return_value = "text/plain"
 
-                    path_obj, filename, folder_id, mime_type = service._resolve_file_details(
-                        "test_file.txt", "remote_name.txt", None
+                    path_obj, filename, folder_id, mime_type = (
+                        service._resolve_file_details(
+                            "test_file.txt", "remote_name.txt", None
+                        )
                     )
 
                     assert path_obj == str(test_file)
@@ -107,8 +111,9 @@ class TestGoogleDriveServiceFiles:
                 with patch("quackcore.fs.service.join_path") as mock_join:
                     mock_join.return_value = str(local_dir / "test_file.txt")
 
-                    result = service._resolve_download_path(file_metadata,
-                                                            str(local_dir))
+                    result = service._resolve_download_path(
+                        file_metadata, str(local_dir)
+                    )
                     assert result == str(local_dir / "test_file.txt")
 
         # Test with local path as specific file

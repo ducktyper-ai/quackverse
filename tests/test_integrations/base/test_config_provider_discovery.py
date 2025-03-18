@@ -38,7 +38,8 @@ class TestBaseConfigProviderDiscovery:
                             with patch("quackcore.fs.service.read_yaml") as mock_read:
                                 mock_read.return_value.success = True
                                 mock_read.return_value.data = {
-                                    "test_section": {"test_key": "env_value"}}
+                                    "test_section": {"test_key": "env_value"}
+                                }
 
                                 result = provider.load_config()
                                 assert result.success is True
@@ -56,7 +57,8 @@ class TestBaseConfigProviderDiscovery:
                 with patch("quackcore.fs.service.read_yaml") as mock_read:
                     mock_read.return_value.success = True
                     mock_read.return_value.data = {
-                        "test_section": {"test_key": "default_value"}}
+                        "test_section": {"test_key": "default_value"}
+                    }
 
                     result = provider.load_config()
                     assert result.success is True
@@ -92,10 +94,11 @@ class TestBaseConfigProviderDiscovery:
             with patch("quackcore.fs.service.expand_user_vars") as mock_expand:
                 mock_expand.side_effect = lambda path: "/default/" + Path(path).name
 
-                with patch.object(provider, "DEFAULT_CONFIG_LOCATIONS", [
-                    "config.yaml",
-                    "quack_config.yaml"
-                ]):
+                with patch.object(
+                    provider,
+                    "DEFAULT_CONFIG_LOCATIONS",
+                    ["config.yaml", "quack_config.yaml"],
+                ):
                     result = provider._find_config_file()
                     assert result == "/default/config.yaml"
 
@@ -104,7 +107,8 @@ class TestBaseConfigProviderDiscovery:
             mock_exists.return_value = False
 
             with patch(
-                    "quackcore.integrations.base.resolver.get_project_root") as mock_root:
+                "quackcore.integrations.base.resolver.get_project_root"
+            ) as mock_root:
                 mock_root.return_value = Path("/project")
 
                 with patch("os.path.join") as mock_join:
@@ -121,7 +125,8 @@ class TestBaseConfigProviderDiscovery:
             mock_exists.return_value = False
 
             with patch(
-                    "quackcore.integrations.base.resolver.get_project_root") as mock_root:
+                "quackcore.integrations.base.resolver.get_project_root"
+            ) as mock_root:
                 mock_root.side_effect = QuackFileNotFoundError("/nonexistent")
 
                 result = provider._find_config_file()
@@ -147,7 +152,8 @@ class TestBaseConfigProviderDiscovery:
 
         # Test with project root resolver
         with patch(
-                "quackcore.integrations.base.resolver.resolve_project_path") as mock_resolve:
+            "quackcore.integrations.base.resolver.resolve_project_path"
+        ) as mock_resolve:
             mock_resolve.return_value = "/resolved/path"
 
             result = provider._resolve_path("relative/path")
@@ -156,7 +162,8 @@ class TestBaseConfigProviderDiscovery:
 
         # Test with resolver exception
         with patch(
-                "quackcore.integrations.base.resolver.resolve_project_path") as mock_resolve:
+            "quackcore.integrations.base.resolver.resolve_project_path"
+        ) as mock_resolve:
             mock_resolve.side_effect = Exception("Test error")
 
             with patch("quackcore.fs.service.normalize_path") as mock_normalize:

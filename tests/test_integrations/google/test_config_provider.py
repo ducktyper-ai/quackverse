@@ -65,7 +65,7 @@ class TestGoogleConfigProvider:
                 "drive": {
                     "shared_folder_id": "folder123",
                     "team_drive_id": "team456",
-                }
+                },
             }
         }
 
@@ -97,7 +97,7 @@ class TestGoogleConfigProvider:
                 "mail": {
                     "gmail_labels": ["INBOX", "IMPORTANT"],
                     "gmail_days_back": 14,
-                }
+                },
             }
         }
 
@@ -153,7 +153,8 @@ class TestGoogleConfigProvider:
 
         # Test validation error
         with patch(
-                "quackcore.integrations.google.config.GoogleDriveConfig") as mock_config:
+            "quackcore.integrations.google.config.GoogleDriveConfig"
+        ) as mock_config:
             mock_config.side_effect = ValidationError(errors=[], model=MagicMock())
 
             provider = GoogleConfigProvider("drive")
@@ -161,7 +162,8 @@ class TestGoogleConfigProvider:
 
         # Test other error
         with patch(
-                "quackcore.integrations.google.config.GoogleDriveConfig") as mock_config:
+            "quackcore.integrations.google.config.GoogleDriveConfig"
+        ) as mock_config:
             mock_config.side_effect = Exception("Unexpected error")
 
             provider = GoogleConfigProvider("drive")
@@ -210,8 +212,10 @@ class TestGoogleConfigProvider:
         }
 
         with patch("quackcore.paths.resolver.resolve_project_path") as mock_resolve:
-            mock_resolve.side_effect = ["/project/config/secrets.json",
-                                        "/project/config/credentials.json"]
+            mock_resolve.side_effect = [
+                "/project/config/secrets.json",
+                "/project/config/credentials.json",
+            ]
 
             resolved = provider.resolve_config_paths(config)
 
@@ -227,8 +231,10 @@ class TestGoogleConfigProvider:
         }
 
         with patch("quackcore.paths.resolver.resolve_project_path") as mock_resolve:
-            mock_resolve.side_effect = ["/absolute/path/secrets.json",
-                                        "/absolute/path/credentials.json"]
+            mock_resolve.side_effect = [
+                "/absolute/path/secrets.json",
+                "/absolute/path/credentials.json",
+            ]
 
             resolved = provider.resolve_config_paths(config)
 
@@ -259,6 +265,7 @@ class TestGoogleConfigProvider:
 
         # Test should pass with valid values
         from quackcore.integrations.google.config import GoogleBaseConfig
+
         model = GoogleBaseConfig(**config)
         assert model.client_secrets_file == "/path/to/secrets.json"
         assert model.credentials_file == "/path/to/credentials.json"

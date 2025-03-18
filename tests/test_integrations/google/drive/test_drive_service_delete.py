@@ -49,15 +49,17 @@ class TestGoogleDriveServiceDelete:
         )
 
         # Test API error (delete)
-        service.drive_service.files().delete.side_effect = QuackApiError("API error",
-                                                                         service="drive")
+        service.drive_service.files().delete.side_effect = QuackApiError(
+            "API error", service="drive"
+        )
         result = service.delete_file("file123", permanent=True)
         assert result.success is False
         assert "API error" in result.error
 
         # Test API error (update)
-        service.drive_service.files().update.side_effect = QuackApiError("API error",
-                                                                         service="drive")
+        service.drive_service.files().update.side_effect = QuackApiError(
+            "API error", service="drive"
+        )
         result = service.delete_file("file123")
         assert result.success is False
         assert "API error" in result.error

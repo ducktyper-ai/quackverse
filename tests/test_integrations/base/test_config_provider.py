@@ -26,6 +26,7 @@ class TestBaseConfigProvider:
         """Test that abstract methods must be implemented."""
         # Attempt to create a class without implementing all abstract methods
         with pytest.raises(TypeError):
+
             class InvalidProvider(BaseConfigProvider):
                 @property
                 def name(self) -> str:

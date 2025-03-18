@@ -88,19 +88,19 @@ class MinimalStorageProtocol(Protocol):
     def is_available(self) -> bool: ...
 
     def upload_file(
-            self, file_path: str, remote_path: str | None = None
+        self, file_path: str, remote_path: str | None = None
     ) -> IntegrationResult[str]: ...
 
     def download_file(
-            self, remote_id: str, local_path: str | None = None
+        self, remote_id: str, local_path: str | None = None
     ) -> IntegrationResult[str]: ...
 
     def list_files(
-            self, remote_path: str | None = None, pattern: str | None = None
+        self, remote_path: str | None = None, pattern: str | None = None
     ) -> IntegrationResult[list[Mapping]]: ...
 
     def create_folder(
-            self, folder_name: str, parent_path: str | None = None
+        self, folder_name: str, parent_path: str | None = None
     ) -> IntegrationResult[str]: ...
 
 
@@ -122,22 +122,22 @@ class SampleStorageIntegration:
         return True
 
     def upload_file(
-            self, file_path: str, remote_path: str | None = None
+        self, file_path: str, remote_path: str | None = None
     ) -> IntegrationResult[str]:
         return IntegrationResult.success_result("remote_id")
 
     def download_file(
-            self, remote_id: str, local_path: str | None = None
+        self, remote_id: str, local_path: str | None = None
     ) -> IntegrationResult[str]:
         return IntegrationResult.success_result("/downloaded/file")
 
     def list_files(
-            self, remote_path: str | None = None, pattern: str | None = None
+        self, remote_path: str | None = None, pattern: str | None = None
     ) -> IntegrationResult[list[Mapping]]:
         return IntegrationResult.success_result([{"name": "file1"}, {"name": "file2"}])
 
     def create_folder(
-            self, folder_name: str, parent_path: str | None = None
+        self, folder_name: str, parent_path: str | None = None
     ) -> IntegrationResult[str]:
         return IntegrationResult.success_result("folder_id")
 
