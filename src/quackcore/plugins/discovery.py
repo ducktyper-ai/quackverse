@@ -90,14 +90,16 @@ class PluginLoader:
         try:
             module = importlib.import_module(module_path)
 
-            # Look for a create_plugin function only if explicitly defined in the module's __dict__
+            # Look for a create_plugin function only
+            # if explicitly defined in the module's __dict__
             if "create_plugin" in getattr(module, "__dict__", {}):
                 factory = module.create_plugin
                 if callable(factory):
                     plugin = factory()
                     if not hasattr(plugin, "name"):
                         raise QuackPluginError(
-                            f"Plugin from module {module_path} does not have a name attribute",
+                            f"Plugin from module "
+                            f"{module_path} does not have a name attribute",
                             plugin_path=module_path,
                         )
                     self.logger.info(
@@ -105,7 +107,8 @@ class PluginLoader:
                     )
                     return plugin
 
-            # If no create_plugin function, search for a class named "MockPlugin" (for tests)
+            # If no create_plugin function,
+            # search for a class named "MockPlugin" (for tests)
             for name, obj in inspect.getmembers(module):
                 if inspect.isclass(obj) and name == "MockPlugin":
                     try:

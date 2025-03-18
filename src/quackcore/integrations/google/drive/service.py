@@ -1,4 +1,3 @@
-# src/quackcore/integrations/google/drive/service.py
 """
 Google Drive integration service for QuackCore.
 
@@ -9,7 +8,7 @@ handling file operations, folder management, and permissions.
 import io
 import logging
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, TypeVar
 
 from quackcore.errors import (
     QuackApiError,
@@ -26,6 +25,7 @@ from quackcore.integrations.results import IntegrationResult
 from quackcore.paths import resolver
 
 NoneType = type(None)
+T = TypeVar("T")  # Generic type for result content
 
 
 class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
@@ -232,6 +232,34 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
                 query_parts.append(f"name = '{pattern}'")
         return " and ".join(query_parts)
 
+    def _execute_upload(
+        self, file_metadata: dict[str, Any], media: T
+    ) -> dict[str, Any]:
+        """
+        Execute the file upload to Google Drive.
+
+        Returns:
+            The API response as a dict.
+        """
+        try:
+            file = (
+                self.drive_service.files()
+                .create(
+                    body=file_metadata,
+                    media_body=media,
+                    fields="id, webViewLink, webContentLink",
+                )
+                .execute()
+            )
+            return file
+        except Exception as api_error:
+            raise QuackApiError(
+                f"Failed to upload file to Google Drive: {api_error}",
+                service="Google Drive",
+                api_method="files.create",
+                original_error=api_error,
+            ) from api_error
+
     # --- End of Helper Methods ---
 
     def upload_file(
@@ -278,27 +306,12 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             media = MediaInMemoryUpload(
                 media_content.content, mimetype=mime_type, resumable=True
             )
-            try:
-                file = (
-                    self.drive_service.files()
-                    .create(
-                        body=file_metadata,
-                        media_body=media,
-                        fields="id, webViewLink, webContentLink",
-                    )
-                    .execute()
-                )
-            except Exception as api_error:
-                raise QuackApiError(
-                    f"Failed to upload file to Google Drive: {api_error}",
-                    service="Google Drive",
-                    api_method="files.create",
-                    original_error=api_error,
-                ) from api_error
+            file = self._execute_upload(file_metadata, media)
 
             config_public = self.config.get("public_sharing", True)
             make_public = public if public is not None else config_public
             if make_public:
+                # file["id"] is expected to be a str here.
                 perm_result = self.set_file_permissions(file["id"])
                 if not perm_result.success:
                     self.logger.warning(
