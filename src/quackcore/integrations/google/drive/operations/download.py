@@ -22,7 +22,9 @@ from quackcore.paths import resolver
 T = TypeVar("T")  # Generic type for result content
 
 
-def resolve_download_path(file_metadata: dict[str, object], local_path: str | None) -> str:
+def resolve_download_path(
+    file_metadata: dict[str, object], local_path: str | None
+) -> str:
     """
     Resolve the local path for file download.
 

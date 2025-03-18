@@ -70,9 +70,7 @@ class DriveFilesResource(Protocol):
         """
         ...
 
-    def get(
-        self, file_id: str, fields: str = None
-    ) -> DriveRequest[dict[str, object]]:
+    def get(self, file_id: str, fields: str = None) -> DriveRequest[dict[str, object]]:
         """
         Get a file's metadata.
 

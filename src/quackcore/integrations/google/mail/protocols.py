@@ -13,6 +13,18 @@ R = TypeVar("R")  # Generic type for return values
 
 
 @runtime_checkable
+class GoogleCredentials(Protocol):
+    """Protocol for Google API credentials."""
+
+    token: str
+    refresh_token: str
+    token_uri: str
+    client_id: str
+    client_secret: str
+    scopes: list[str]
+
+
+@runtime_checkable
 class GmailRequest(Protocol[R]):
     """Protocol for Gmail request objects."""
 

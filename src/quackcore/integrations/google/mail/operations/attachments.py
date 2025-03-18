@@ -9,7 +9,7 @@ including downloading and saving attachments to disk.
 import base64
 import logging
 import os
-from typing import TypeVar, Any
+from typing import Any, TypeVar
 
 from quackcore.integrations.google.mail.operations.email import clean_filename
 from quackcore.integrations.google.mail.protocols import GmailService
@@ -19,12 +19,12 @@ T = TypeVar("T")  # Generic type for result content
 
 
 def process_message_parts(
-        gmail_service: GmailService,
-        user_id: str,
-        parts: list[dict],
-        msg_id: str,
-        storage_path: str,
-        logger: logging.Logger,
+    gmail_service: GmailService,
+    user_id: str,
+    parts: list[dict],
+    msg_id: str,
+    storage_path: str,
+    logger: logging.Logger,
 ) -> tuple[str | None, list[str]]:
     """
     Process message parts to extract HTML content and attachments.
@@ -61,9 +61,8 @@ def process_message_parts(
                 # Ensure data is a string before encoding
                 data_str = str(data)
                 html_content = base64.urlsafe_b64decode(
-                    data_str.encode("UTF-8")).decode(
-                    "UTF-8"
-                )
+                    data_str.encode("UTF-8")
+                ).decode("UTF-8")
 
         # Process attachments
         elif part.get("filename"):
@@ -77,12 +76,12 @@ def process_message_parts(
 
 
 def handle_attachment(
-        gmail_service: GmailService,
-        user_id: str,
-        part: dict[str, Any],
-        msg_id: str,
-        storage_path: str,
-        logger: logging.Logger,
+    gmail_service: GmailService,
+    user_id: str,
+    part: dict[str, Any],
+    msg_id: str,
+    storage_path: str,
+    logger: logging.Logger,
 ) -> str | None:
     """
     Download and save an attachment from a message part.

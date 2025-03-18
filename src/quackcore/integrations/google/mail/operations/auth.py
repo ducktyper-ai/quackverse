@@ -6,22 +6,8 @@ This module provides functions for authenticating with the Gmail API
 and initializing the service.
 """
 
-from typing import Protocol
-
 from quackcore.errors import QuackApiError
-from quackcore.integrations.google.mail.operations.email import GmailService
-
-
-class GoogleCredentials(Protocol):
-    """Protocol for Google API credentials."""
-
-    # Credentials must have these attributes used by the googleapiclient
-    token: str
-    refresh_token: str
-    token_uri: str
-    client_id: str
-    client_secret: str
-    scopes: list[str]
+from quackcore.integrations.google.mail.protocols import GmailService, GoogleCredentials
 
 
 def initialize_gmail_service(credentials: GoogleCredentials) -> GmailService:

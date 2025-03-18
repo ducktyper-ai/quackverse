@@ -41,21 +41,20 @@ def set_file_permissions(
         permission: dict[str, object] = {
             "type": type_,
             "role": role,
-            "allowFileDiscovery": True
+            "allowFileDiscovery": True,
         }
 
         # Execute permission creation
         execute_api_request(
-            drive_service.files().permissions().create(
-                file_id=file_id, body=permission, fields="id"
-            ),
+            drive_service.files()
+            .permissions()
+            .create(file_id=file_id, body=permission, fields="id"),
             "Failed to set permissions in Google Drive",
             "permissions.create",
         )
 
         return IntegrationResult.success_result(
-            content=True,
-            message=f"Permission set successfully: {role} for {type_}"
+            content=True, message=f"Permission set successfully: {role} for {type_}"
         )
 
     except QuackApiError as e:
@@ -105,8 +104,7 @@ def get_sharing_link(
 
         # Using the explicit type annotation
         return IntegrationResult.success_result(
-            content=link,
-            message="Got sharing link successfully"
+            content=link, message="Got sharing link successfully"
         )
 
     except QuackApiError as e:

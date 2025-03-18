@@ -16,7 +16,10 @@ from quackcore.fs import service as fs
 from quackcore.integrations.google.drive.operations.permissions import (
     set_file_permissions,
 )
-from quackcore.integrations.google.drive.protocols import DriveService, GoogleCredentials
+from quackcore.integrations.google.drive.protocols import (
+    DriveService,
+    GoogleCredentials,
+)
 from quackcore.integrations.google.drive.utils.api import execute_api_request
 from quackcore.integrations.results import IntegrationResult
 from quackcore.paths import resolver
@@ -151,9 +154,9 @@ def upload_file(
 
         # Extract link with explicit type annotation
         link: str = (
-                str(file.get("webViewLink", ""))
-                or str(file.get("webContentLink", ""))
-                or f"https://drive.google.com/file/d/{file['id']}/view"
+            str(file.get("webViewLink", ""))
+            or str(file.get("webContentLink", ""))
+            or f"https://drive.google.com/file/d/{file['id']}/view"
         )
 
         # Now the type checker knows link is a string

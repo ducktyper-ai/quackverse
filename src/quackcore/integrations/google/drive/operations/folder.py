@@ -18,11 +18,11 @@ from quackcore.integrations.results import IntegrationResult
 
 
 def create_folder(
-        drive_service: DriveService,
-        folder_name: str,
-        parent_id: str | None = None,
-        make_public: bool = True,
-        logger: logging.Logger | None = None,
+    drive_service: DriveService,
+    folder_name: str,
+    parent_id: str | None = None,
+    make_public: bool = True,
+    logger: logging.Logger | None = None,
 ) -> IntegrationResult[str]:
     """
     Create a folder in Google Drive.
@@ -81,10 +81,10 @@ def create_folder(
 
 
 def delete_file(
-        drive_service: DriveService,
-        file_id: str,
-        permanent: bool = False,
-        logger: logging.Logger | None = None,
+    drive_service: DriveService,
+    file_id: str,
+    permanent: bool = False,
+    logger: logging.Logger | None = None,
 ) -> IntegrationResult[bool]:
     """
     Delete a file or folder from Google Drive.

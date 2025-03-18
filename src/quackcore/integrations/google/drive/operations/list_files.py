@@ -18,10 +18,10 @@ from quackcore.integrations.results import IntegrationResult
 
 
 def list_files(
-        drive_service: DriveService,
-        folder_id: str | None = None,
-        pattern: str | None = None,
-        logger: logging.Logger | None = None,
+    drive_service: DriveService,
+    folder_id: str | None = None,
+    pattern: str | None = None,
+    logger: logging.Logger | None = None,
 ) -> IntegrationResult[list[Mapping]]:
     """
     List files in Google Drive.
