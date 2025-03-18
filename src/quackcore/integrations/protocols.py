@@ -7,8 +7,7 @@ ensuring consistent behavior across different services and platforms.
 """
 
 from collections.abc import Mapping
-from pathlib import Path
-from typing import Protocol, TypeVar, runtime_checkable
+from typing import Protocol, TypeVar, runtime_checkable, Any
 
 from quackcore.integrations.results import AuthResult, ConfigResult, IntegrationResult
 
@@ -71,7 +70,7 @@ class ConfigProviderProtocol(Protocol):
         """Name of the configuration provider."""
         ...
 
-    def load_config(self, config_path: str | Path | None = None) -> ConfigResult:
+    def load_config(self, config_path: str | None = None) -> ConfigResult:
         """
         Load configuration from a file.
 
@@ -83,7 +82,7 @@ class ConfigProviderProtocol(Protocol):
         """
         ...
 
-    def validate_config(self, config: dict) -> bool:
+    def validate_config(self, config: dict[str, Any]) -> bool:
         """
         Validate configuration data.
 
@@ -95,12 +94,12 @@ class ConfigProviderProtocol(Protocol):
         """
         ...
 
-    def get_default_config(self) -> dict:
+    def get_default_config(self) -> dict[str, Any]:
         """
         Get default configuration values.
 
         Returns:
-            dict: Default configuration values
+            dict[str, Any]: Default configuration values
         """
         ...
 
@@ -143,7 +142,7 @@ class StorageIntegrationProtocol(IntegrationProtocol, Protocol):
     """Protocol for storage integrations."""
 
     def upload_file(
-        self, file_path: str | Path, remote_path: str | None = None
+        self, file_path: str, remote_path: str | None = None
     ) -> IntegrationResult[str]:
         """
         Upload a file to the storage service.
@@ -158,8 +157,8 @@ class StorageIntegrationProtocol(IntegrationProtocol, Protocol):
         ...
 
     def download_file(
-        self, remote_id: str, local_path: str | Path | None = None
-    ) -> IntegrationResult[Path]:
+        self, remote_id: str, local_path: str | None = None
+    ) -> IntegrationResult[str]:
         """
         Download a file from the storage service.
 
@@ -168,7 +167,7 @@ class StorageIntegrationProtocol(IntegrationProtocol, Protocol):
             local_path: Optional local path to save the file
 
         Returns:
-            IntegrationResult[Path]: Result with the local file path
+            IntegrationResult[str]: Result with the local file path
         """
         ...
 

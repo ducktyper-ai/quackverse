@@ -13,7 +13,6 @@ from typing import Any
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from quackcore.integrations.base import BaseConfigProvider
-from quackcore.paths import resolver
 
 
 class GoogleBaseConfig(BaseModel):
@@ -71,8 +70,6 @@ class GoogleMailConfig(GoogleBaseConfig):
     )
     gmail_user_id: str = Field(default="me", description="User ID to use for Gmail API")
 
-
-# Updated GoogleConfigProvider Implementation
 
 class GoogleConfigProvider(BaseConfigProvider):
     """Configuration provider for Google integrations."""

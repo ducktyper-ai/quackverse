@@ -7,14 +7,12 @@ credentials and authorization flows for secure API access.
 """
 
 import logging
-import json
 from typing import Any
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.integrations.base import BaseAuthProvider
 from quackcore.integrations.results import AuthResult
 from quackcore.fs import service as fs
-from quackcore.paths import resolver
 
 
 class GoogleAuthProvider(BaseAuthProvider):
@@ -38,7 +36,7 @@ class GoogleAuthProvider(BaseAuthProvider):
         """
         super().__init__(credentials_file, log_level)
 
-        self.client_secrets_file = resolver.resolve_project_path(client_secrets_file)
+        self.client_secrets_file = self._resolve_path(client_secrets_file)
         self.scopes = scopes or []
 
         # Verify the client secrets file exists
@@ -128,10 +126,8 @@ class GoogleAuthProvider(BaseAuthProvider):
                 )
 
                 # Create the flow
-                # Convert Path to string for InstalledAppFlow.from_client_secrets_file
-                client_secrets_path = str(self.client_secrets_file)
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    client_secrets_path,
+                    self.client_secrets_file,
                     self.scopes,
                 )
 
@@ -226,12 +222,11 @@ class GoogleAuthProvider(BaseAuthProvider):
             if not result.success:
                 context = {
                     "service": "Google",
-                    "credentials_path": str(
-                        self.credentials_file) if self.credentials_file else None
+                    "credentials_path": self.credentials_file if self.credentials_file else None
                 }
                 raise QuackIntegrationError(
                     "No valid Google credentials available",
-                    context=context
+                    context
                 )
 
         return self.auth
@@ -263,27 +258,43 @@ class GoogleAuthProvider(BaseAuthProvider):
             return False
 
         # Ensure directory exists
-        directory_result = fs.create_directory(
-            fs.join_path(self.credentials_file).parent,
-            exist_ok=True
-        )
-
-        if not directory_result.success:
-            self.logger.error(
-                f"Failed to create credentials directory: {directory_result.error}")
-            return False
-
-        # Get credentials data as JSON
-        if hasattr(credentials, "to_json") and callable(credentials.to_json):
-            try:
-                # to_json() returns a JSON string, we need to parse it to a dict
-                creds_data = json.loads(credentials.to_json())
-            except (json.JSONDecodeError, TypeError) as e:
-                self.logger.error(f"Failed to parse credentials JSON: {e}")
+        parent_dir = fs.split_path(self.credentials_file)[:-1]
+        if parent_dir:  # Check if it's not empty (for root paths)
+            directory_path = fs.join_path(*parent_dir)
+            directory_result = fs.create_directory(directory_path, exist_ok=True)
+            if not directory_result.success:
+                self.logger.error(
+                    f"Failed to create credentials directory: {directory_result.error}")
                 return False
-        else:
-            # For older credential formats
-            try:
+
+        # Get credentials data
+        try:
+            if hasattr(credentials, "to_json") and callable(credentials.to_json):
+                # First, get the JSON string
+                json_str = credentials.to_json()
+
+                # Write the JSON string directly to a temporary file
+                temp_file = fs.create_temp_file(suffix=".json")
+                write_result = fs.write_text(temp_file, json_str)
+                if not write_result.success:
+                    self.logger.error(
+                        f"Failed to write temporary JSON: {write_result.error}")
+                    return False
+
+                # Read it back as a parsed JSON object
+                read_result = fs.read_json(temp_file)
+                if not read_result.success:
+                    self.logger.error(
+                        f"Failed to parse credentials JSON: {read_result.error}")
+                    return False
+
+                # Use the parsed data
+                creds_data = read_result.data
+
+                # Clean up temporary file
+                fs.delete(temp_file)
+            else:
+                # For older credential formats, create a direct dictionary
                 creds_data = {
                     "token": credentials.token,
                     "refresh_token": credentials.refresh_token,
@@ -292,9 +303,12 @@ class GoogleAuthProvider(BaseAuthProvider):
                     "client_secret": credentials.client_secret,
                     "scopes": credentials.scopes,
                 }
-            except AttributeError:
-                self.logger.error("Credentials object missing required attributes")
-                return False
+        except AttributeError:
+            self.logger.error("Credentials object missing required attributes")
+            return False
+        except Exception as e:
+            self.logger.error(f"Failed to process credentials: {e}")
+            return False
 
         # Save credentials
         result = fs.write_json(self.credentials_file, creds_data)
