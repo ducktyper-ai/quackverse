@@ -131,12 +131,10 @@ class BaseAuthProvider(ABC, AuthProviderProtocol):
             return False
 
         try:
-            # Get the parent directory path
-            parent_path = fs.split_path(self.credentials_file)[:-1]
-            parent_dir = fs.join_path(*parent_path)
-
-            # Create the directory
-            result = fs.create_directory(parent_dir, exist_ok=True)
+            from quackcore.fs.service import split_path, join_path, create_directory
+            parent_path = split_path(self.credentials_file)[:-1]
+            parent_dir = join_path(*parent_path)
+            result = create_directory(parent_dir, exist_ok=True)
             return result.success
         except Exception as e:
             self.logger.error(f"Unexpected error creating credentials directory: {e}")
@@ -173,77 +171,58 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         Load configuration from a file.
 
         Args:
-            config_path: Path to configuration file
+            config_path: Path to configuration file.
 
         Returns:
-            ConfigResult: Result containing configuration data
+            ConfigResult: Result containing configuration data.
+
+        Raises:
+            QuackConfigurationError: If the configuration file cannot be found or
+                                      if reading the YAML fails.
         """
-        try:
-            # Determine config path
+        # Determine config path.
+        if not config_path:
+            config_path = self._find_config_file()
             if not config_path:
-                config_path = self._find_config_file()
-                if not config_path:
-                    return ConfigResult.error_result(
-                        "Configuration file not found in default locations."
-                    )
-
-            path_obj = self._resolve_path(config_path)
-
-            # Check if configuration file exists
-            file_info = fs.get_file_info(path_obj)
-            if not file_info.success or not file_info.exists:
-                config_error = QuackConfigurationError(
-                    f"Configuration file not found: {path_obj}",
-                    config_path=str(path_obj),
-                )
-                self.logger.warning(str(config_error))
-                return ConfigResult.error_result(str(config_error))
-
-            # Read configuration file
-            yaml_result = fs.read_yaml(path_obj)
-            if not yaml_result.success:
-                config_error = QuackConfigurationError(
-                    f"Failed to read YAML configuration: {yaml_result.error}",
-                    config_path=str(path_obj),
-                )
-                self.logger.error(str(config_error))
-                return ConfigResult.error_result(str(config_error))
-
-            # Extract integration-specific configuration
-            config_data = yaml_result.data
-            integration_config = self._extract_config(config_data)
-
-            # Validate configuration
-            validation_result = self.validate_config(integration_config)
-            if not validation_result:
-                config_error = QuackConfigurationError(
-                    "Invalid configuration for integration",
-                    config_path=str(path_obj),
-                    config_key=self.name.lower(),
-                )
-                self.logger.error(str(config_error))
-                return ConfigResult.error_result(
-                    str(config_error),
-                    validation_errors=["Configuration validation failed"],
+                raise QuackConfigurationError(
+                    "Configuration file not found in default locations."
                 )
 
-            return ConfigResult.success_result(
-                content=integration_config,
-                message="Successfully loaded configuration",
+        path_obj = self._resolve_path(config_path)
+
+        # Import functions at runtime so that patches work.
+        from quackcore.fs.service import get_file_info, read_yaml
+
+        # Check if configuration file exists.
+        file_info = get_file_info(path_obj)
+        if not file_info.success or not file_info.exists:
+            raise QuackConfigurationError(
+                f"Configuration file not found: {path_obj}",
                 config_path=str(path_obj),
             )
 
-        except QuackConfigurationError as e:
-            self.logger.error(f"Configuration error: {e}")
-            return ConfigResult.error_result(str(e), validation_errors=[str(e)])
-        except Exception as e:
-            config_error = QuackConfigurationError(
-                f"Failed to load configuration: {str(e)}",
-                config_path=str(config_path) if config_path else None,
-                original_error=e,
+        # Read configuration file.
+        yaml_result = read_yaml(path_obj)
+        if not yaml_result.success:
+            raise QuackConfigurationError(
+                f"Failed to read YAML configuration: {yaml_result.error}",
+                config_path=str(path_obj),
             )
-            self.logger.error(str(config_error))
-            return ConfigResult.error_result(str(config_error))
+
+        # Extract integration-specific configuration.
+        config_data = yaml_result.data
+        integration_config = self._extract_config(config_data)
+
+        # Validate configuration.
+        if not self.validate_config(integration_config):
+            # Return an error result rather than raising.
+            return ConfigResult.error_result("Configuration validation failed")
+
+        return ConfigResult.success_result(
+            content=integration_config,
+            message="Successfully loaded configuration",
+            config_path=str(path_obj),
+        )
 
     def _extract_config(self, config_data: dict[str, Any]) -> dict[str, Any]:
         """
@@ -265,20 +244,23 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         Find a configuration file in standard locations.
 
         Returns:
-            str | None: Path to the configuration file if found, None otherwise
+            str | None: Path to the configuration file if found, None otherwise.
         """
-        # Check environment variable first
+        # Import at runtime so patches take effect.
+        from quackcore.fs.service import expand_user_vars, get_file_info
+
+        # Check environment variable first.
         env_var = f"QUACK_{self.name.upper()}_CONFIG"
         if config_path := os.environ.get(env_var):
-            expanded_path = fs.expand_user_vars(config_path)
-            file_info = fs.get_file_info(expanded_path)
+            expanded_path = str(expand_user_vars(config_path))
+            file_info = get_file_info(expanded_path)
             if file_info.success and file_info.exists:
                 return expanded_path
 
-        # Check default locations
+        # Check default locations.
         for location in self.DEFAULT_CONFIG_LOCATIONS:
-            expanded_path = fs.expand_user_vars(location)
-            file_info = fs.get_file_info(expanded_path)
+            expanded_path = str(expand_user_vars(location))
+            file_info = get_file_info(expanded_path)
             if file_info.success and file_info.exists:
                 return expanded_path
 
@@ -289,18 +271,19 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         Resolve a path relative to the project root if needed.
 
         Args:
-            file_path: Path to resolve
+            file_path: Path to resolve.
 
         Returns:
-            str: Resolved absolute path
+            str: Resolved absolute path.
         """
         try:
             resolved_path = resolver.resolve_project_path(file_path)
             return str(resolved_path)
         except Exception as e:
             self.logger.warning(f"Could not resolve project path: {e}")
-            # Fall back to normalizing the path
-            normalized_path = fs.normalize_path(file_path)
+            # Import normalize_path at runtime.
+            from quackcore.fs.service import normalize_path
+            normalized_path = normalize_path(file_path)
             return str(normalized_path)
 
     @abstractmethod

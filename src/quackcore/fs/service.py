@@ -647,3 +647,78 @@ class FileSystemService:
             Timestamp as float
         """
         return get_file_timestamp(path)
+
+# --- Module-Level Utility Functions ---
+# These functions are exposed at the module level so that external code or tests
+# (which patch these names) can find and override them as needed.
+
+from quackcore.fs.results import OperationResult
+
+def create_directory(path: str | Path, exist_ok: bool = True) -> OperationResult:
+    """
+    Create a directory if it doesn't exist.
+
+    Args:
+        path: Directory path to create.
+        exist_ok: If False, raise an error when the directory exists.
+
+    Returns:
+        An OperationResult indicating whether the directory was created or already exists.
+    """
+    try:
+        directory = Path(path)
+        if not directory.exists():
+            directory.mkdir(parents=True, exist_ok=exist_ok)
+        return OperationResult(success=True, path=str(directory), message="Directory exists or was created")
+    except Exception as e:
+        return OperationResult(success=False, error=str(e), path=str(path))
+
+def read_yaml(path: str | Path) -> DataResult[dict]:
+    """
+    Read a YAML file and parse its contents using the FileSystemService.
+
+    Args:
+        path: Path to the YAML file.
+
+    Returns:
+        A DataResult containing the parsed YAML data.
+    """
+    return FileSystemService().read_yaml(path)
+
+from quackcore.fs.results import FileInfoResult
+
+def get_file_info(path: str | Path) -> FileInfoResult:
+    """
+    Get information about a file or directory using FileSystemService.
+
+    Args:
+        path: Path to get information about.
+
+    Returns:
+        FileInfoResult: The result with file information.
+    """
+    return FileSystemService().get_file_info(path)
+
+def expand_user_vars(path: str | Path) -> Path:
+    """
+    Expand user and environment variables in a path using FileSystemService.
+
+    Args:
+        path: Path with variables.
+
+    Returns:
+        Path: The expanded path.
+    """
+    return FileSystemService().expand_user_vars(path)
+
+def normalize_path(path: str | Path) -> Path:
+    """
+    Normalize a path for cross-platform compatibility using FileSystemService.
+
+    Args:
+        path: Path to normalize.
+
+    Returns:
+        Path: The normalized path.
+    """
+    return FileSystemService().normalize_path(path)

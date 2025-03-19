@@ -101,12 +101,14 @@ class TestBaseAuthProvider:
         assert result.success is True
         assert "refreshed" in result.message
 
+    # In tests/test_integrations/base/test_auth_provider.py
     def test_ensure_credentials_directory(self, temp_dir: Path) -> None:
         """Test ensuring the credentials directory exists."""
         # Test with existing directory
         credentials_file = temp_dir / "creds" / "credentials.json"
         provider = MockAuthProvider(credentials_file=str(credentials_file))
 
+        # Now correctly patch the method
         with patch("quackcore.fs.service.create_directory") as mock_create:
             mock_create.return_value.success = True
             result = provider._ensure_credentials_directory()
@@ -126,9 +128,20 @@ class TestBaseAuthProvider:
 
     def test_base_save_credentials(self) -> None:
         """Test the default save_credentials implementation."""
-        provider = BaseAuthProvider.__new__(BaseAuthProvider)
+        # Instead of trying to instantiate BaseAuthProvider directly,
+        # create a concrete mock instance and replace its save_credentials method
+        provider = MockAuthProvider()
         provider.logger = MagicMock()
 
-        result = provider.save_credentials()
-        assert result is False
-        provider.logger.warning.assert_called_once()
+        # Replace the save_credentials method with the one from BaseAuthProvider
+        original_save = provider.save_credentials
+        provider.save_credentials = BaseAuthProvider.save_credentials.__get__(provider,
+                                                                              MockAuthProvider)
+
+        try:
+            result = provider.save_credentials()
+            assert result is False
+            provider.logger.warning.assert_called_once()
+        finally:
+            # Restore the original method
+            provider.save_credentials = original_save
