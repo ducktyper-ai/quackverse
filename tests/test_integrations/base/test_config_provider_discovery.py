@@ -5,7 +5,7 @@ Tests for the config discovery functionality in BaseConfigProvider.
 
 import os
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -78,29 +78,59 @@ class TestBaseConfigProviderDiscovery:
 
         # Test with environment variable
         with patch.dict(os.environ, {"QUACK_TEST_CONFIG_CONFIG": "/env/config.yaml"}):
-            with patch("os.path.exists") as mock_exists:
-                mock_exists.return_value = True
+            # Mock the expand_user_vars function
+            with patch(
+                    "quackcore.integrations.base.fs.expand_user_vars") as mock_expand:
+                mock_expand.return_value = "/env/config.yaml"
 
-                with patch("quackcore.fs.service.expand_user_vars") as mock_expand:
-                    mock_expand.return_value = "/env/config.yaml"
+                # Mock the get_file_info function
+                with patch(
+                        "quackcore.integrations.base.fs.get_file_info") as mock_get_file_info:
+                    # Create a mock FileInfoResult that indicates the file exists
+                    mock_result = MagicMock()
+                    mock_result.success = True
+                    mock_result.exists = True
+                    mock_get_file_info.return_value = mock_result
 
+                    # Call the function under test
                     result = provider._find_config_file()
+
+                    # Verify the result
                     assert result == "/env/config.yaml"
 
+                    # Verify the mocks were called correctly
+                    mock_expand.assert_called_once_with("/env/config.yaml")
+                    mock_get_file_info.assert_called_once_with("/env/config.yaml")
+
         # Test with default locations
-        with patch("os.path.exists") as mock_exists:
-            mock_exists.side_effect = lambda path: path == "/default/config.yaml"
+        with patch(
+                "quackcore.integrations.base.resolver.get_project_root") as mock_get_root:
+            # Mock resolver.get_project_root to avoid FileNotFoundError
+            mock_get_root.side_effect = QuackFileNotFoundError("mock error")
 
-            with patch("quackcore.fs.service.expand_user_vars") as mock_expand:
-                mock_expand.side_effect = lambda path: "/default/" + Path(path).name
+            with patch("quackcore.integrations.base.fs.get_file_info") as mock_get_info:
+                # Create responses for different paths
+                def get_info_side_effect(path: str) -> MagicMock:
+                    result = MagicMock()
+                    result.success = True
+                    result.exists = path == "/default/config.yaml"
+                    return result
 
-                with patch.object(
-                    provider,
-                    "DEFAULT_CONFIG_LOCATIONS",
-                    ["config.yaml", "quack_config.yaml"],
-                ):
-                    result = provider._find_config_file()
-                    assert result == "/default/config.yaml"
+                mock_get_info.side_effect = get_info_side_effect
+
+                with patch(
+                        "quackcore.integrations.base.fs.expand_user_vars") as mock_expand:
+                    mock_expand.side_effect = lambda path: "/default/" + Path(path).name
+
+                    with patch.object(
+                            provider,
+                            "DEFAULT_CONFIG_LOCATIONS",
+                            ["config.yaml", "quack_config.yaml"],
+                    ):
+                        result = provider._find_config_file()
+
+                        # Verify the result
+                        assert result == "/default/config.yaml"
 
         # Test with project root detection
         with patch("os.path.exists") as mock_exists:

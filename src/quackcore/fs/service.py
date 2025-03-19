@@ -22,10 +22,12 @@ from quackcore.fs.results import (
     WriteResult,
 )
 from quackcore.fs.utils import (
+    atomic_write,
+    compute_checksum,
     create_temp_directory,
     create_temp_file,
     ensure_directory,
-    expand_user_vars,
+    expand_user_vars,  # Make sure this is imported
     find_files_by_content,
     get_disk_usage,
     get_extension,
@@ -685,40 +687,53 @@ def read_yaml(path: str | Path) -> DataResult[dict]:
     """
     return FileSystemService().read_yaml(path)
 
+from pathlib import Path
 from quackcore.fs.results import FileInfoResult
+
 
 def get_file_info(path: str | Path) -> FileInfoResult:
     """
-    Get information about a file or directory using FileSystemService.
+    Get information about a file or directory.
 
     Args:
-        path: Path to get information about.
+        path: Path to get information about
 
     Returns:
-        FileInfoResult: The result with file information.
+        FileInfoResult with file information
     """
-    return FileSystemService().get_file_info(path)
+    p = Path(path)
+    try:
+        exists = p.exists()
+        is_file = exists and p.is_file()
+        is_dir = exists and p.is_dir()
 
-def expand_user_vars(path: str | Path) -> Path:
-    """
-    Expand user and environment variables in a path using FileSystemService.
+        size = None
+        modified = None
+        created = None
 
-    Args:
-        path: Path with variables.
+        if exists:
+            try:
+                if is_file:
+                    size = p.stat().st_size
+                modified = p.stat().st_mtime
+                created = p.stat().st_ctime
+            except OSError:
+                pass
 
-    Returns:
-        Path: The expanded path.
-    """
-    return FileSystemService().expand_user_vars(path)
-
-def normalize_path(path: str | Path) -> Path:
-    """
-    Normalize a path for cross-platform compatibility using FileSystemService.
-
-    Args:
-        path: Path to normalize.
-
-    Returns:
-        Path: The normalized path.
-    """
-    return FileSystemService().normalize_path(path)
+        return FileInfoResult(
+            success=True,
+            path=str(p),  # Convert to string to match the expected interface
+            exists=exists,
+            is_file=is_file,
+            is_dir=is_dir,
+            size=size,
+            modified=modified,
+            created=created,
+            message=f"Got file info for {p}"
+        )
+    except Exception as e:
+        return FileInfoResult(
+            success=False,
+            path=str(p),  # Convert to string to match the expected interface
+            error=str(e)
+        )

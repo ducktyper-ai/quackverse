@@ -65,7 +65,15 @@ def find_project_root(
         marker_files = marker_files or config.marker_files
         marker_dirs = marker_dirs or config.marker_dirs
 
-    current_dir: Path = Path(start_dir) if start_dir else Path.cwd()
+    # Safely get the current directory, with fallback to a known directory
+    try:
+        current_dir: Path = Path(start_dir) if start_dir else Path.cwd()
+    except (FileNotFoundError, OSError):
+        # Fallback to home directory if current directory doesn't exist
+        current_dir = Path.home()
+        logger.warning(
+            f"Current working directory not found, falling back to {current_dir}"
+        )
 
     for _ in range(max_levels):
         # Check for marker files in the current directory.
@@ -85,7 +93,7 @@ def find_project_root(
         current_dir = parent_dir
 
     raise QuackFileNotFoundError(
-        str(start_dir or Path.cwd()),
+        str(start_dir or "unknown"),
         "Could not find project root directory. Please specify it explicitly.",
     )
 
