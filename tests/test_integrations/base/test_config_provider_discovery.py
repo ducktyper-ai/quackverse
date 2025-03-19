@@ -22,29 +22,23 @@ class TestBaseConfigProviderDiscovery:
 
         # Test with environment variable
         with patch.dict(os.environ, {"QUACK_TEST_CONFIG_CONFIG": "/env/config.yaml"}):
-            with patch("os.path.exists") as mock_exists:
-                mock_exists.return_value = True
+            with patch.object(provider, "_find_config_file") as mock_find:
+                mock_find.return_value = "/env/config.yaml"
 
-                with patch("quackcore.fs.service.expand_user_vars") as mock_expand:
-                    mock_expand.return_value = "/env/config.yaml"
+                with patch("quackcore.fs.service.get_file_info") as mock_info:
+                    mock_info.return_value.success = True
+                    mock_info.return_value.exists = True
 
-                    with patch.object(provider, "_find_config_file") as mock_find:
-                        mock_find.return_value = "/env/config.yaml"
+                    with patch("quackcore.fs.service.read_yaml") as mock_read:
+                        mock_read.return_value.success = True
+                        mock_read.return_value.data = {
+                            "test_section": {"test_key": "env_value"}
+                        }
 
-                        with patch("quackcore.fs.service.get_file_info") as mock_info:
-                            mock_info.return_value.success = True
-                            mock_info.return_value.exists = True
-
-                            with patch("quackcore.fs.service.read_yaml") as mock_read:
-                                mock_read.return_value.success = True
-                                mock_read.return_value.data = {
-                                    "test_section": {"test_key": "env_value"}
-                                }
-
-                                result = provider.load_config()
-                                assert result.success is True
-                                assert result.content == {"test_key": "env_value"}
-                                assert result.config_path == "/env/config.yaml"
+                        result = provider.load_config()
+                        assert result.success is True
+                        assert result.content == {"test_key": "env_value"}
+                        assert result.config_path == "/env/config.yaml"
 
         # Test with default locations
         with patch.object(provider, "_find_config_file") as mock_find:
@@ -78,86 +72,68 @@ class TestBaseConfigProviderDiscovery:
 
         # Test with environment variable
         with patch.dict(os.environ, {"QUACK_TEST_CONFIG_CONFIG": "/env/config.yaml"}):
-            # Mock the expand_user_vars function
-            with patch(
-                    "quackcore.integrations.base.fs.expand_user_vars") as mock_expand:
-                mock_expand.return_value = "/env/config.yaml"
+            with patch("quackcore.fs.service.expand_user_vars") as mock_expand:
+                mock_expand.return_value = Path("/env/config.yaml")
 
-                # Mock the get_file_info function
-                with patch(
-                        "quackcore.integrations.base.fs.get_file_info") as mock_get_file_info:
-                    # Create a mock FileInfoResult that indicates the file exists
-                    mock_result = MagicMock()
-                    mock_result.success = True
-                    mock_result.exists = True
-                    mock_get_file_info.return_value = mock_result
+                with patch("quackcore.fs.service.get_file_info") as mock_file_info:
+                    mock_file_info.return_value.success = True
+                    mock_file_info.return_value.exists = True
 
-                    # Call the function under test
-                    result = provider._find_config_file()
-
-                    # Verify the result
-                    assert result == "/env/config.yaml"
-
-                    # Verify the mocks were called correctly
-                    mock_expand.assert_called_once_with("/env/config.yaml")
-                    mock_get_file_info.assert_called_once_with("/env/config.yaml")
+                    # Make sure to patch this call to avoid the error with logger
+                    with patch(
+                            "quackcore.paths.resolver.get_project_root") as mock_get_root:
+                        # Just ensure it doesn't get called here
+                        result = provider._find_config_file()
+                        assert result == "/env/config.yaml"
+                        mock_expand.assert_called_once_with("/env/config.yaml")
+                        mock_file_info.assert_called_once_with("/env/config.yaml")
+                        mock_get_root.assert_not_called()
 
         # Test with default locations
-        with patch(
-                "quackcore.integrations.base.resolver.get_project_root") as mock_get_root:
-            # Mock resolver.get_project_root to avoid FileNotFoundError
+        with patch("quackcore.paths.resolver.get_project_root") as mock_get_root:
             mock_get_root.side_effect = QuackFileNotFoundError("mock error")
 
-            with patch("quackcore.integrations.base.fs.get_file_info") as mock_get_info:
-                # Create responses for different paths
-                def get_info_side_effect(path: str) -> MagicMock:
-                    result = MagicMock()
-                    result.success = True
-                    result.exists = path == "/default/config.yaml"
-                    return result
+            with patch("quackcore.fs.service.get_file_info") as mock_file_info:
+                def side_effect(path):
+                    mock_result = MagicMock()
+                    mock_result.success = True
+                    mock_result.exists = str(path) == "/default/config.yaml"
+                    return mock_result
 
-                mock_get_info.side_effect = get_info_side_effect
+                mock_file_info.side_effect = side_effect
 
-                with patch(
-                        "quackcore.integrations.base.fs.expand_user_vars") as mock_expand:
-                    mock_expand.side_effect = lambda path: "/default/" + Path(path).name
+                with patch("quackcore.fs.service.expand_user_vars") as mock_expand:
+                    mock_expand.side_effect = lambda path: Path("/default") / Path(path).name
 
                     with patch.object(
-                            provider,
-                            "DEFAULT_CONFIG_LOCATIONS",
-                            ["config.yaml", "quack_config.yaml"],
+                        provider,
+                        "DEFAULT_CONFIG_LOCATIONS",
+                        ["config.yaml", "quack_config.yaml"],
                     ):
                         result = provider._find_config_file()
-
-                        # Verify the result
                         assert result == "/default/config.yaml"
 
         # Test with project root detection
-        with patch("os.path.exists") as mock_exists:
-            mock_exists.return_value = False
+        with patch("quackcore.paths.resolver.get_project_root") as mock_get_root:
+            mock_get_root.return_value = Path("/project")
 
-            with patch(
-                "quackcore.integrations.base.resolver.get_project_root"
-            ) as mock_root:
-                mock_root.return_value = Path("/project")
+            with patch("quackcore.fs.service.join_path") as mock_join:
+                mock_join.return_value = Path("/project/quack_config.yaml")
 
-                with patch("os.path.join") as mock_join:
-                    mock_join.return_value = "/project/quack_config.yaml"
+                with patch("quackcore.fs.service.get_file_info") as mock_file_info:
+                    mock_file_info.return_value.success = True
+                    mock_file_info.return_value.exists = True
 
-                    with patch("os.path.exists") as mock_exists2:
-                        mock_exists2.return_value = True
-
-                        result = provider._find_config_file()
-                        assert result == "/project/quack_config.yaml"
+                    result = provider._find_config_file()
+                    assert result == "/project/quack_config.yaml"
 
         # Test when no config file can be found
-        with patch("os.path.exists") as mock_exists:
-            mock_exists.return_value = False
+        with patch("quackcore.paths.resolver.get_project_root") as mock_get_root:
+            mock_get_root.side_effect = QuackFileNotFoundError("/nonexistent")
 
-            with patch(
-                "quackcore.integrations.base.resolver.get_project_root"
-            ) as mock_root:
-                mock_root.side_effect = QuackFileNotFoundError("/nonexistent")
+            with patch("quackcore.fs.service.get_file_info") as mock_file_info:
+                mock_file_info.return_value.success = True
+                mock_file_info.return_value.exists = False
 
                 result = provider._find_config_file()
                 assert result is None

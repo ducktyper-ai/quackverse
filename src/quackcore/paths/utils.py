@@ -71,7 +71,8 @@ def find_project_root(
     except (FileNotFoundError, OSError):
         # Fallback to home directory if current directory doesn't exist
         current_dir = Path.home()
-        logger.warning(
+        # Use the module-level logger that's defined at the top of the file
+        logging.getLogger(__name__).warning(
             f"Current working directory not found, falling back to {current_dir}"
         )
 

@@ -249,39 +249,49 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         # Check environment variable first.
         env_var = f"QUACK_{self.name.upper()}_CONFIG"
         if config_path := os.environ.get(env_var):
-            expanded_path = str(fs.expand_user_vars(config_path))
-            file_info = fs.get_file_info(expanded_path)
+            # Import these specifically at runtime to match the patching in tests
+            from quackcore.fs.service import expand_user_vars, get_file_info
+
+            expanded_path = expand_user_vars(config_path)
+            # Convert Path to string to match test expectation
+            file_info = get_file_info(str(expanded_path))
             if file_info.success and file_info.exists:
-                return expanded_path
+                return str(expanded_path)
 
         # Attempt to get the project root, with graceful error handling
         project_root = None
         try:
-            project_root = resolver.get_project_root()
+            from quackcore.paths.resolver import get_project_root
+            project_root = get_project_root()
         except (QuackFileNotFoundError, FileNotFoundError, OSError) as e:
             self.logger.debug(
                 f"Project root not found, checking only direct paths: {e}")
 
+        # Import these here to match patching in tests
+        from quackcore.fs.service import expand_user_vars, get_file_info, join_path
+
         # Check default locations.
         for location in self.DEFAULT_CONFIG_LOCATIONS:
-            expanded_location = str(fs.expand_user_vars(location))
+            expanded_location = expand_user_vars(location)
             # If the expanded location is relative and we have a project root, join them.
-            if not os.path.isabs(expanded_location) and project_root:
-                expanded_location = str(fs.join_path(project_root, expanded_location))
-            file_info = fs.get_file_info(expanded_location)
+            if not os.path.isabs(str(expanded_location)) and project_root:
+                expanded_location = join_path(project_root, expanded_location)
+            # Convert Path to string for consistency with tests
+            file_info = get_file_info(str(expanded_location))
             if file_info.success and file_info.exists:
-                return expanded_location
+                return str(expanded_location)
 
         # Fallback: try candidate in project root.
         if project_root:
-            candidate = str(fs.join_path(project_root, "quack_config.yaml"))
-            candidate = str(fs.expand_user_vars(candidate))
-            file_info = fs.get_file_info(candidate)
+            candidate = join_path(project_root, "quack_config.yaml")
+            candidate = expand_user_vars(candidate)
+            # Convert Path to string for consistency with tests
+            file_info = get_file_info(str(candidate))
             if file_info.success and file_info.exists:
-                return candidate
+                return str(candidate)
 
         return None
-
+    
     def _resolve_path(self, file_path: str) -> str:
         """
         Resolve a path relative to the project root if needed.
