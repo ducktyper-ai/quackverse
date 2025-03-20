@@ -1,4 +1,4 @@
-# tests/test_integrations/google/test_drive_service_delete.py
+# tests/test_integrations/google/drive/test_drive_service_delete.py
 """
 Tests for Google Drive service deletion operations.
 """
@@ -14,9 +14,13 @@ class TestGoogleDriveServiceDelete:
 
     def test_delete_file(self) -> None:
         """Test deleting a file."""
-        service = GoogleDriveService()
+        # Create a service manually without initialization
+        service = GoogleDriveService.__new__(GoogleDriveService)
+
+        # Set up required attributes manually
         service._initialized = True
         service.drive_service = MagicMock()
+        service.logger = MagicMock()
 
         # Mock API responses
         mock_delete = MagicMock()
@@ -32,7 +36,7 @@ class TestGoogleDriveServiceDelete:
 
         assert result.success is True
         assert result.content is True
-        service.drive_service.files().delete.assert_called_once_with(fileId="file123")
+        service.drive_service.files().delete.assert_called_once_with(file_id="file123")
         service.drive_service.files().update.assert_not_called()
 
         # Test moving to trash (default)
@@ -45,7 +49,7 @@ class TestGoogleDriveServiceDelete:
         assert result.content is True
         service.drive_service.files().delete.assert_not_called()
         service.drive_service.files().update.assert_called_once_with(
-            fileId="file123", body={"trashed": True}
+            file_id="file123", body={"trashed": True}
         )
 
         # Test API error (delete)

@@ -291,7 +291,7 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
                 return str(candidate)
 
         return None
-    
+
     def _resolve_path(self, file_path: str) -> str:
         """
         Resolve a path relative to the project root if needed.
