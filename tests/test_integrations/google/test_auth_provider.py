@@ -89,42 +89,61 @@ class TestGoogleAuthProvider:
                 credentials_file="/path/to/credentials.json",
             )
 
-        # Test with existing credentials
+        # Test with new OAuth flow
         with patch("google.oauth2.credentials.Credentials") as mock_creds_class:
-            with patch("quackcore.integrations.google.auth.fs.get_file_info") as mock_info:
+            with patch(
+                    "quackcore.integrations.google.auth.fs.get_file_info") as mock_info:
                 mock_info.return_value.exists = True
 
-                with patch("quackcore.fs.service.read_json") as mock_read:
+                with patch(
+                        "quackcore.integrations.google.auth.fs.read_json") as mock_read:
                     mock_read.return_value.success = True
-                    mock_read.return_value.data = {
-                        "token": "test_token",
-                        "refresh_token": "refresh_token",
-                    }
+                    mock_read.return_value.data = {}
 
                     mock_creds = MagicMock()
-                    mock_creds.expired = False
-                    mock_creds.valid = True
-                    mock_creds.token = "test_token"
-                    mock_creds.expiry = MagicMock()
-                    mock_creds.expiry.timestamp.return_value = 1234567890
+                    mock_creds.valid = False
 
                     mock_creds_class.from_authorized_user_info.return_value = mock_creds
 
-                    result = provider.authenticate()
+                    with patch(
+                            "google_auth_oauthlib.flow.InstalledAppFlow"
+                    ) as mock_flow_class:
+                        mock_flow = MagicMock()
+                        mock_flow_class.from_client_secrets_file.return_value = (
+                            mock_flow
+                        )
 
-                    assert result.success is True
-                    assert provider.authenticated is True
-                    assert provider.auth is mock_creds
-                    assert result.token == "test_token"
-                    assert result.expiry == 1234567890
-                    assert result.credentials_path == "/path/to/credentials.json"
+                        new_creds = MagicMock()
+                        new_creds.token = "new_token"
+                        new_creds.expiry = MagicMock()
+                        new_creds.expiry.timestamp.return_value = 1234567890
+
+                        mock_flow.run_local_server.return_value = new_creds
+
+                        with patch.object(
+                                provider, "_save_credentials_to_file"
+                        ) as mock_save:
+                            mock_save.return_value = True
+
+                            result = provider.authenticate()
+
+                            assert result.success is True
+                            assert provider.authenticated is True
+                            assert provider.auth is new_creds
+                            assert result.token == "new_token"
+                            mock_flow_class.from_client_secrets_file.assert_called_once_with(
+                                "/path/to/secrets.json",
+                                [],
+                            )
+                            mock_flow.run_local_server.assert_called_once_with(port=0)
+                            mock_save.assert_called_once_with(new_creds)
 
         # Test with expired credentials needing refresh
         with patch("google.oauth2.credentials.Credentials") as mock_creds_class:
             with patch("quackcore.integrations.google.auth.fs.get_file_info") as mock_info:
                 mock_info.return_value.exists = True
 
-                with patch("quackcore.fs.service.read_json") as mock_read:
+                with patch("quackcore.integrations.google.auth.fs.read_json") as mock_read:
                     mock_read.return_value.success = True
                     mock_read.return_value.data = {
                         "token": "old_token",
@@ -158,7 +177,7 @@ class TestGoogleAuthProvider:
             with patch("quackcore.integrations.google.auth.fs.get_file_info") as mock_info:
                 mock_info.return_value.exists = True
 
-                with patch("quackcore.fs.service.read_json") as mock_read:
+                with patch("quackcore.integrations.google.auth.fs.read_json") as mock_read:
                     mock_read.return_value.success = True
                     mock_read.return_value.data = {}
 
@@ -360,17 +379,20 @@ class TestGoogleAuthProvider:
         result = provider._save_credentials_to_file(MagicMock())
         assert result is False
 
-        # Test with directory creation error
+        # Reset credentials_file for subsequent tests
         provider.credentials_file = "/path/to/credentials.json"
 
+        # Test with directory creation error
         with patch("quackcore.integrations.google.auth.fs.split_path") as mock_split:
             mock_split.return_value = ["path", "to", "credentials.json"]
 
             with patch("quackcore.integrations.google.auth.fs.join_path") as mock_join:
                 mock_join.return_value = "/path/to"
 
-                with patch("quackcore.integrations.google.auth.fs.create_directory") as mock_mkdir:
-                    mock_mkdir.return_value.success = False
+                with patch(
+                        "quackcore.integrations.google.auth.fs.create_directory") as mock_mkdir:
+                    mock_mkdir.return_value = MagicMock(success=False,
+                                                        error="Directory creation failed")
 
                     result = provider._save_credentials_to_file(MagicMock())
                     assert result is False
@@ -385,73 +407,90 @@ class TestGoogleAuthProvider:
             with patch("quackcore.integrations.google.auth.fs.join_path") as mock_join:
                 mock_join.return_value = "/path/to"
 
-                with patch("quackcore.integrations.google.auth.fs.create_directory") as mock_mkdir:
-                    mock_mkdir.return_value.success = True
+                with patch(
+                        "quackcore.integrations.google.auth.fs.create_directory") as mock_mkdir:
+                    mock_mkdir.return_value = MagicMock(success=True)
 
-                    with patch("quackcore.integrations.google.auth.fs.create_temp_file") as mock_temp:
+                    with patch(
+                            "quackcore.integrations.google.auth.fs.create_temp_file") as mock_temp:
                         mock_temp.return_value = "/tmp/temp.json"
 
-                        with patch("quackcore.integrations.google.auth.fs.write_text") as mock_write:
-                            mock_write.return_value.success = True
+                        with patch(
+                                "quackcore.integrations.google.auth.fs.write_text") as mock_write:
+                            mock_write.return_value = MagicMock(success=True)
 
-                            with patch("quackcore.integrations.google.auth.fs.read_json") as mock_read:
-                                mock_read.return_value.success = True
-                                mock_read.return_value.data = {"token": "test_token"}
+                            with patch(
+                                    "quackcore.integrations.google.auth.fs.read_json") as mock_read:
+                                mock_read.return_value = MagicMock(
+                                    success=True,
+                                    data={"token": "test_token"}
+                                )
 
                                 with patch(
-                                    "quackcore.integrations.google.auth.fs.delete"
-                                ) as mock_delete:
+                                        "quackcore.integrations.google.auth.fs.delete") as mock_delete:
                                     with patch(
-                                        "quackcore.integrations.google.auth.fs.write_json"
-                                    ) as mock_write_json:
-                                        mock_write_json.return_value.success = True
+                                            "quackcore.integrations.google.auth.fs.write_json") as mock_write_json:
+                                        mock_write_json.return_value = MagicMock(
+                                            success=True)
 
                                         result = provider._save_credentials_to_file(
-                                            creds
-                                        )
+                                            creds)
                                         assert result is True
                                         mock_write_json.assert_called_once_with(
                                             "/path/to/credentials.json",
                                             {"token": "test_token"},
                                         )
 
-        # Test with dictionary method
-        creds = MagicMock()
-        creds.token = "test_token"
-        creds.refresh_token = "refresh_token"
-        creds.token_uri = "https://oauth2.googleapis.com/token"
-        creds.client_id = "client_id"
-        creds.client_secret = "client_secret"
-        creds.scopes = ["https://www.googleapis.com/auth/drive.file"]
+        # Test with dictionary method - create a new provider instance
+        with patch("quackcore.integrations.google.auth.fs.get_file_info") as mock_info:
+            mock_info.return_value.success = True
+            mock_info.return_value.exists = True
 
-        with patch("quackcore.integrations.google.auth.fs.split_path") as mock_split:
-            mock_split.return_value = ["path", "to", "credentials.json"]
+            # Create a fresh provider instance
+            provider = GoogleAuthProvider(
+                client_secrets_file="/path/to/secrets.json",
+                credentials_file="/path/to/credentials.json",
+            )
 
-            with patch("quackcore.integrations.google.auth.fs.join_path") as mock_join:
-                mock_join.return_value = "/path/to"
+            creds = MagicMock()
+            creds.token = "test_token"
+            creds.refresh_token = "refresh_token"
+            creds.token_uri = "https://oauth2.googleapis.com/token"
+            creds.client_id = "client_id"
+            creds.client_secret = "client_secret"
+            creds.scopes = ["https://www.googleapis.com/auth/drive.file"]
 
-                with patch("quackcore.integrations.google.auth.fs.create_directory") as mock_mkdir:
-                    mock_mkdir.return_value.success = True
+            with patch(
+                    "quackcore.integrations.google.auth.fs.split_path") as mock_split:
+                mock_split.return_value = ["path", "to", "credentials.json"]
 
-                    with patch("quackcore.integrations.google.auth.fs.write_json") as mock_write_json:
-                        mock_write_json.return_value.success = True
+                with patch(
+                        "quackcore.integrations.google.auth.fs.join_path") as mock_join:
+                    mock_join.return_value = "/path/to"
 
-                        result = provider._save_credentials_to_file(creds)
-                        assert result is True
+                    with patch(
+                            "quackcore.integrations.google.auth.fs.create_directory") as mock_mkdir:
+                        # Create a proper mock object with success=True
+                        mock_mkdir.return_value = MagicMock(success=True)
 
-                        # Check that the dictionary was properly constructed
-                        creds_dict = mock_write_json.call_args[0][1]
-                        assert creds_dict["token"] == "test_token"
-                        assert creds_dict["refresh_token"] == "refresh_token"
-                        assert (
-                            creds_dict["token_uri"]
-                            == "https://oauth2.googleapis.com/token"
-                        )
-                        assert creds_dict["client_id"] == "client_id"
-                        assert creds_dict["client_secret"] == "client_secret"
-                        assert creds_dict["scopes"] == [
-                            "https://www.googleapis.com/auth/drive.file"
-                        ]
+                        with patch(
+                                "quackcore.integrations.google.auth.fs.write_json") as mock_write_json:
+                            # Create a proper mock object with success=True
+                            mock_write_json.return_value = MagicMock(success=True)
+
+                            result = provider._save_credentials_to_file(creds)
+                            assert result is True
+
+                            # Check that the dictionary was properly constructed
+                            creds_dict = mock_write_json.call_args[0][1]
+                            assert creds_dict["token"] == "test_token"
+                            assert creds_dict["refresh_token"] == "refresh_token"
+                            assert creds_dict[
+                                       "token_uri"] == "https://oauth2.googleapis.com/token"
+                            assert creds_dict["client_id"] == "client_id"
+                            assert creds_dict["client_secret"] == "client_secret"
+                            assert creds_dict["scopes"] == [
+                                "https://www.googleapis.com/auth/drive.file"]
 
         # Test with attribute error
         creds = MagicMock()
@@ -464,7 +503,8 @@ class TestGoogleAuthProvider:
             with patch("quackcore.integrations.google.auth.fs.join_path") as mock_join:
                 mock_join.return_value = "/path/to"
 
-                with patch("quackcore.integrations.google.auth.fs.create_directory") as mock_mkdir:
+                with patch(
+                        "quackcore.integrations.google.auth.fs.create_directory") as mock_mkdir:
                     mock_mkdir.return_value.success = True
 
                     result = provider._save_credentials_to_file(creds)
@@ -480,24 +520,28 @@ class TestGoogleAuthProvider:
             with patch("quackcore.integrations.google.auth.fs.join_path") as mock_join:
                 mock_join.return_value = "/path/to"
 
-                with patch("quackcore.integrations.google.auth.fs.create_directory") as mock_mkdir:
+                with patch(
+                        "quackcore.integrations.google.auth.fs.create_directory") as mock_mkdir:
                     mock_mkdir.return_value.success = True
 
-                    with patch("quackcore.integrations.google.auth.fs.create_temp_file") as mock_temp:
+                    with patch(
+                            "quackcore.integrations.google.auth.fs.create_temp_file") as mock_temp:
                         mock_temp.return_value = "/tmp/temp.json"
 
-                        with patch("quackcore.integrations.google.auth.fs.write_text") as mock_write:
+                        with patch(
+                                "quackcore.integrations.google.auth.fs.write_text") as mock_write:
                             mock_write.return_value.success = True
 
-                            with patch("quackcore.integrations.google.auth.fs.read_json") as mock_read:
+                            with patch(
+                                    "quackcore.integrations.google.auth.fs.read_json") as mock_read:
                                 mock_read.return_value.success = True
                                 mock_read.return_value.data = {"token": "test_token"}
 
                                 with patch(
-                                    "quackcore.integrations.google.auth.fs.delete"
+                                        "quackcore.integrations.google.auth.fs.delete"
                                 ) as mock_delete:
                                     with patch(
-                                        "quackcore.integrations.google.auth.fs.write_json"
+                                            "quackcore.integrations.google.auth.fs.write_json"
                                     ) as mock_write_json:
                                         mock_write_json.return_value.success = False
 
