@@ -131,7 +131,7 @@ class GoogleAuthProvider(BaseAuthProvider):
                 )
 
                 try:
-                    # Create the flow - don't do file checking here as it should be mocked in tests
+                    # Create the flow using the client_secrets_file
                     flow = InstalledAppFlow.from_client_secrets_file(
                         self.client_secrets_file,
                         self.scopes,
@@ -142,9 +142,13 @@ class GoogleAuthProvider(BaseAuthProvider):
 
                     # Save the credentials
                     self._save_credentials_to_file(creds)
-                except FileNotFoundError as e:
-                    self.logger.error(f"Client secrets file not found: {e}")
-                    raise ValueError(f"Client secrets file not found: {e}")
+                except Exception as e:
+                    self.logger.error(f"Authentication flow failed: {e}")
+                    return AuthResult(
+                        success=False,
+                        message=None,
+                        error=f"Failed to authenticate with Google: {str(e)}",
+                    )
 
             self.auth = creds
             self.authenticated = True

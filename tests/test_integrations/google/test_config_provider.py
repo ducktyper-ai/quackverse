@@ -155,7 +155,16 @@ class TestGoogleConfigProvider:
         with patch(
             "quackcore.integrations.google.config.GoogleDriveConfig"
         ) as mock_config:
-            mock_config.side_effect = ValidationError(errors=[], model=MagicMock())
+            from pydantic import ValidationError
+
+            # Simple approach - create an actual validation error to use as a mock
+            try:
+                # Create a validation error by triggering one
+                from quackcore.integrations.google.config import GoogleBaseConfig
+                GoogleBaseConfig(client_secrets_file="", credentials_file="test")
+            except ValidationError as e:
+                # Use the actual error as the side effect
+                mock_config.side_effect = e
 
             provider = GoogleConfigProvider("drive")
             assert provider.validate_config(valid_config) is False

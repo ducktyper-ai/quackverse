@@ -25,16 +25,16 @@ class GoogleBaseConfig(BaseModel):
         ..., description="Path where credentials should be stored"
     )
 
-    @classmethod
     @field_validator("client_secrets_file")
+    @classmethod
     def validate_client_secrets_file(cls, v: str) -> str:
         """Validate that the client secrets path is not empty."""
         if not v or not v.strip():
             raise ValueError("Client secrets file path cannot be empty")
         return v
 
-    @classmethod
     @field_validator("credentials_file")
+    @classmethod
     def validate_credentials_file(cls, v: str) -> str:
         """Validate that the credentials path is not empty."""
         if not v or not v.strip():
@@ -148,6 +148,9 @@ class GoogleConfigProvider(BaseConfigProvider):
         """
         try:
             config_model = self._config_models.get(self.service, GoogleBaseConfig)
+
+            # Call the constructor with **config to expand it as keyword arguments
+            # This ensures the mock's side effect is triggered in tests
             config_model(**config)
             return True
         except ValidationError as e:
@@ -197,7 +200,7 @@ class GoogleConfigProvider(BaseConfigProvider):
         Returns:
             dict[str, Any]: Configuration with resolved paths
         """
-        from quackcore.paths import resolver
+        from quackcore.paths.resolver import resolve_project_path  # Direct import
 
         resolved_config = config.copy()
 
@@ -205,7 +208,8 @@ class GoogleConfigProvider(BaseConfigProvider):
         for key in ["client_secrets_file", "credentials_file"]:
             if key in resolved_config and resolved_config[key]:
                 try:
-                    resolved_path = resolver.resolve_project_path(resolved_config[key])
+                    resolved_path = resolve_project_path(
+                        resolved_config[key])  # Direct call
                     resolved_config[key] = str(resolved_path)
                 except Exception as e:
                     self.logger.warning(f"Could not resolve path for {key}: {e}")
