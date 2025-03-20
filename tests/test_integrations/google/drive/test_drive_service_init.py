@@ -1,4 +1,4 @@
-# tests/test_integrations/google/test_drive_service_init.py
+# tests/test_integrations/google/drive/test_drive_service_init.py
 """
 Tests for Google Drive service initialization.
 """

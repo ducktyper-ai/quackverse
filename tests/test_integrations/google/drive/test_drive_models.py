@@ -1,4 +1,4 @@
-# tests/test_integrations/google/test_drive_models.py
+# tests/test_integrations/google/drive/test_drive_models.py
 """
 Tests for Google Drive models.
 """

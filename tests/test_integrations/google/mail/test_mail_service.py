@@ -1,4 +1,4 @@
-# tests/test_integrations/google/test_mail_service.py
+# tests/test_integrations/google/mail/test_mail_service.py
 """
 Tests for Google Mail service.
 

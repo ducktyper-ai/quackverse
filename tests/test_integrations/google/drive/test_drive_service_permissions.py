@@ -1,4 +1,4 @@
-# tests/test_integrations/google/test_drive_service_permissions.py
+# tests/test_integrations/google/drive/test_drive_service_permissions.py
 """
 Tests for Google Drive service permissions operations.
 """

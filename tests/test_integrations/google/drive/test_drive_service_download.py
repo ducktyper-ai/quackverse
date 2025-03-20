@@ -1,3 +1,4 @@
+# tests/test_integrations/google/drive/test_drive_service_download.py
 """
 Tests for Google Drive service download operations.
 """
@@ -124,7 +125,7 @@ class TestGoogleDriveServiceDownload:
                                 file_id="file123", fields="name, mimeType"
                             )
                             drive_service.drive_service.files().get_media.assert_called_once_with(
-                                fileId="file123"
+                                file_id="file123"
                             )
                             mock_write.assert_called_once()
 

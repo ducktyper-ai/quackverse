@@ -1,4 +1,4 @@
-# tests/test_integrations/test_protocols.py
+# tests/test_integrations/base/test_protocols.py
 """
 Tests for integration protocol interfaces.
 """

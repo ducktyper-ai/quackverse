@@ -1,4 +1,4 @@
-# tests/test_integrations/google/test_drive_service_upload.py
+# tests/test_integrations/google/drive/test_drive_service_upload.py
 """
 Tests for Google Drive service upload operations.
 """

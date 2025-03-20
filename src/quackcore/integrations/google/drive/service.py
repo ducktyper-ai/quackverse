@@ -1,3 +1,4 @@
+# src/quackcore/integrations/google/drive/service.py
 """
 Google Drive integration service for QuackCore.
 
