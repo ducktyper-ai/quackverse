@@ -266,7 +266,7 @@ class TestGoogleAuthProvider:
             assert result.success is False
             assert "Failed to authenticate with Google" in result.error
             assert provider.authenticated is False
-            
+
     def test_refresh_credentials(self) -> None:
         """Test refreshing credentials."""
         # Mock file existence check
