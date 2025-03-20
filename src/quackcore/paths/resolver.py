@@ -213,10 +213,12 @@ class PathResolver:
                 "output", f"Could not find output directory in or near {current_dir}"
             ) from e
 
+    # Add resolve_project_path method to the PathResolver class in src/quackcore/paths/resolver.py
+
     def resolve_project_path(
-        self,
-        path: str | Path,
-        project_root: str | Path | None = None,
+            self,
+            path: str | Path,
+            project_root: str | Path | None = None,
     ) -> Path:
         """
         Resolve a path relative to the project root.
@@ -226,7 +228,7 @@ class PathResolver:
             project_root: Project root directory (default: auto-detected)
 
         Returns:
-            Resolved absolute path
+            Path: Resolved absolute path
         """
         path_obj = Path(path)
 
@@ -235,18 +237,17 @@ class PathResolver:
             return path_obj
 
         # If project root is not specified, try to find it
-        root_path = None
         if project_root is None:
             try:
-                root_path = self.get_project_root()
+                project_root = self.get_project_root()
             except QuackFileNotFoundError:
                 # If project root cannot be found, use current directory
-                root_path = Path.cwd()
+                project_root = Path.cwd()
         else:
-            root_path = Path(project_root)
+            project_root = Path(project_root)
 
         # Resolve path relative to project root
-        return root_path / path_obj
+        return project_root / path_obj
 
     def _infer_content_structure(
         self,
@@ -421,3 +422,24 @@ def get_project_root(
     This function instantiates a PathResolver and returns the project root.
     """
     return PathResolver().get_project_root(start_dir, marker_files, marker_dirs)
+
+# Add module-level resolve_project_path function to src/quackcore/paths/resolver.py
+
+def resolve_project_path(
+    path: str | Path,
+    project_root: str | Path | None = None,
+) -> Path:
+    """
+    Module-level function to resolve a path relative to the project root.
+
+    This function instantiates a PathResolver and delegates
+    to its resolve_project_path method.
+
+    Args:
+        path: Path to resolve
+        project_root: Project root directory (default: auto-detected)
+
+    Returns:
+        Path: Resolved absolute path
+    """
+    return PathResolver().resolve_project_path(path, project_root)

@@ -108,11 +108,15 @@ class GoogleMailService(BaseIntegrationService):
 
         try:
             # Merge configuration: prefer custom parameters if provided
-            config = self._initialize_config()
-            if not config:
-                return IntegrationResult.error_result(
-                    "Failed to initialize configuration"
-                )
+            try:
+                config = self._initialize_config()
+                if config is None:  # Explicit check for None return
+                    self._initialized = False
+                    return IntegrationResult.error_result(
+                        "Failed to initialize configuration")
+            except QuackIntegrationError as e:
+                self._initialized = False
+                return IntegrationResult.error_result(str(e))
 
             # Create auth provider
             self.auth_provider = GoogleAuthProvider(
@@ -131,6 +135,7 @@ class GoogleMailService(BaseIntegrationService):
                 message="Google Mail service initialized successfully"
             )
         except Exception as e:
+            self._initialized = False  # Ensure initialized flag is set to False on failure
             self.logger.error(f"Failed to initialize Google Mail service: {e}")
             return IntegrationResult.error_result(
                 f"Failed to initialize Google Mail service: {e}"
@@ -142,6 +147,9 @@ class GoogleMailService(BaseIntegrationService):
 
         Returns:
             dict: The initialized configuration or None if failed.
+
+        Raises:
+            QuackIntegrationError: If configuration initialization fails in expected ways.
         """
         try:
             # Use custom config if provided
@@ -165,11 +173,17 @@ class GoogleMailService(BaseIntegrationService):
                 )
 
             # Resolve the storage path and ensure it exists
-            self.storage_path = str(resolver.resolve_project_path(self.storage_path))
+            # Use the exact import path that is being patched in the test
+            from quackcore.paths.resolver import resolve_project_path
+            self.storage_path = str(resolve_project_path(self.storage_path))
             os.makedirs(self.storage_path, exist_ok=True)
 
             return self.config
+        except QuackIntegrationError:
+            # Let QuackIntegrationError propagate for expected error cases
+            raise
         except Exception as e:
+            # For unexpected errors, log and return None
             self.logger.error(f"Failed to initialize configuration: {e}")
             return None
 

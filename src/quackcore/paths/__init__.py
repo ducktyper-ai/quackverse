@@ -7,7 +7,7 @@ and inferring context from file locations in QuackCore projects.
 """
 
 from quackcore.paths.context import ContentContext, ProjectContext, ProjectDirectory
-from quackcore.paths.resolver import PathResolver
+from quackcore.paths.resolver import PathResolver, resolve_project_path
 from quackcore.paths.utils import (
     find_nearest_directory,
     find_project_root,
@@ -30,6 +30,7 @@ __all__ = [
     "ProjectDirectory",
     # Global instance
     "resolver",
+    "resolve_project_path",
     # Utility functions
     "find_project_root",
     "find_nearest_directory",
