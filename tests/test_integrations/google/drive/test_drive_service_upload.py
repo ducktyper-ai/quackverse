@@ -15,10 +15,21 @@ class TestGoogleDriveServiceUpload:
     """Tests for the GoogleDriveService upload operations."""
 
     @patch(
-        "quackcore.integrations.google.drive.service.GoogleDriveService._execute_upload"
-    )
-    def test_upload_file(self, mock_execute_upload: MagicMock, temp_dir: Path) -> None:
+        "quackcore.integrations.google.auth.GoogleAuthProvider._verify_client_secrets_file")
+    @patch.object(GoogleDriveService, "_initialize_config")
+    def test_upload_file(self, mock_init_config: MagicMock,
+                         mock_verify: MagicMock, temp_dir: Path) -> None:
         """Test uploading a file."""
+        # Bypass verification
+        mock_verify.return_value = None
+
+        # Mock configuration
+        mock_init_config.return_value = {
+            "client_secrets_file": "/path/to/secrets.json",
+            "credentials_file": "/path/to/credentials.json",
+            "shared_folder_id": "shared_folder"
+        }
+
         service = GoogleDriveService(shared_folder_id="shared_folder")
         service._initialized = True
 
@@ -36,82 +47,81 @@ class TestGoogleDriveServiceUpload:
         file_content_result.success = True
         file_content_result.content = b"test content"
 
-        # Mock API response
-        mock_execute_upload.return_value = {
-            "id": "file123",
-            "webViewLink": "https://drive.google.com/file/d/file123/view",
-        }
-
         # Test successful upload
-        with patch("quackcore.paths.resolver.resolve_project_path") as mock_resolve:
-            mock_resolve.return_value = str(test_file)
+        with patch.object(GoogleDriveService, "_resolve_file_details") as mock_resolve:
+            mock_resolve.return_value = (
+                Path(test_file), "test_file.txt", "shared_folder", "text/plain")
 
-            with patch("quackcore.fs.service.get_file_info") as mock_info:
-                mock_info.return_value = file_info_result
+            # Create a fresh mock for each test case to avoid shared state
+            mock_fs_service = MagicMock()
+            mock_fs_service.read_binary.return_value = file_content_result
 
-                with patch("quackcore.fs.service.get_mime_type") as mock_mime:
-                    mock_mime.return_value = "text/plain"
+            # Mock the execute_upload method
+            mock_execute_upload = MagicMock()
+            mock_execute_upload.return_value = {
+                "id": "file123",
+                "webViewLink": "https://drive.google.com/file/d/file123/view",
+            }
 
-                    with patch("quackcore.fs.service.read_binary") as mock_read:
-                        mock_read.return_value = file_content_result
-
-                        with patch.object(
-                            service, "set_file_permissions"
-                        ) as mock_permissions:
-                            mock_permissions.return_value = IntegrationResult(
-                                success=True
-                            )
-
-                            result = service.upload_file(str(test_file))
-
-                            assert result.success is True
-                            assert (
-                                result.content
-                                == "https://drive.google.com/file/d/file123/view"
-                            )
-                            mock_execute_upload.assert_called_once()
-                            mock_permissions.assert_called_once_with("file123")
-
-        # Test with file read error
-        with patch("quackcore.paths.resolver.resolve_project_path") as mock_resolve:
-            mock_resolve.return_value = str(test_file)
-
-            with patch("quackcore.fs.service.get_file_info") as mock_info:
-                mock_info.return_value = file_info_result
-
-                with patch("quackcore.fs.service.get_mime_type") as mock_mime:
-                    mock_mime.return_value = "text/plain"
-
-                    with patch("quackcore.fs.service.read_binary") as mock_read:
-                        mock_read.return_value.success = False
-                        mock_read.return_value.error = "Read error"
-
-                        result = service.upload_file(str(test_file))
-
-                        assert result.success is False
-                        assert "Read error" in result.error
-
-        # Test with upload error
-        with patch("quackcore.paths.resolver.resolve_project_path") as mock_resolve:
-            mock_resolve.return_value = str(test_file)
-
-            with patch("quackcore.fs.service.get_file_info") as mock_info:
-                mock_info.return_value = file_info_result
-
-                with patch("quackcore.fs.service.get_mime_type") as mock_mime:
-                    mock_mime.return_value = "text/plain"
-
-                    with patch("quackcore.fs.service.read_binary") as mock_read:
-                        mock_read.return_value = file_content_result
-
-                        mock_execute_upload.side_effect = QuackApiError(
-                            "API error", service="drive"
+            with patch("quackcore.integrations.google.drive.service.fs",
+                       mock_fs_service):
+                with patch.object(service, "_execute_upload", mock_execute_upload):
+                    with patch.object(service,
+                                      "set_file_permissions") as mock_permissions:
+                        mock_permissions.return_value = IntegrationResult(
+                            success=True
                         )
 
                         result = service.upload_file(str(test_file))
 
-                        assert result.success is False
-                        assert "API error" in result.error
+                        assert result.success is True
+                        assert result.content == "https://drive.google.com/file/d/file123/view"
+                        mock_execute_upload.assert_called_once()
+                        mock_permissions.assert_called_once_with("file123")
+                        mock_fs_service.read_binary.assert_called_once_with(
+                            Path(test_file))
+
+        # Test with file read error
+        with patch.object(GoogleDriveService, "_resolve_file_details") as mock_resolve:
+            mock_resolve.return_value = (
+                Path(test_file), "test_file.txt", "shared_folder", "text/plain")
+
+            # Create a new mock with error response
+            mock_fs_service = MagicMock()
+            mock_fs_service.read_binary.return_value.success = False
+            mock_fs_service.read_binary.return_value.error = "Read error"
+
+            with patch("quackcore.integrations.google.drive.service.fs",
+                       mock_fs_service):
+                result = service.upload_file(str(test_file))
+
+                assert result.success is False
+                assert "Read error" in result.error
+                mock_fs_service.read_binary.assert_called_once_with(Path(test_file))
+
+        # Test with upload error
+        with patch.object(GoogleDriveService, "_resolve_file_details") as mock_resolve:
+            mock_resolve.return_value = (
+                Path(test_file), "test_file.txt", "shared_folder", "text/plain")
+
+            # Create new mocks for this test case
+            mock_fs_service = MagicMock()
+            mock_fs_service.read_binary.return_value = file_content_result
+
+            mock_execute_upload = MagicMock()
+            mock_execute_upload.side_effect = QuackApiError(
+                "API error", service="drive"
+            )
+
+            with patch("quackcore.integrations.google.drive.service.fs",
+                       mock_fs_service):
+                with patch.object(service, "_execute_upload", mock_execute_upload):
+                    result = service.upload_file(str(test_file))
+
+                    assert result.success is False
+                    assert "API error" in result.error
+                    mock_resolve.assert_called_once_with(str(test_file), None, None)
+                    mock_execute_upload.assert_called_once()
 
         # Test not initialized
         service._initialized = False

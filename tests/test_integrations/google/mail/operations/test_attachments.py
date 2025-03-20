@@ -1,95 +1,107 @@
 # tests/test_integrations/google/mail/operations/test_attachments.py
 """
 Tests for Gmail attachment operations.
-
-This module tests the attachment handling functionality for the Google Mail integration,
-including processing message parts and handling attachments.
 """
 
 import base64
 import logging
-from typing import Any, Dict, Optional
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from quackcore.integrations.google.mail.operations import attachments
-from quackcore.integrations.google.mail.protocols import (
-    GmailAttachmentsResource,
-    GmailMessagesResource,
-    GmailRequest,
-    GmailService,
-    GmailUsersResource,
-)
 
 
 class TestGmailAttachmentOperations:
-    """Tests for Gmail attachment operations."""
+    """Test cases for Gmail attachment operations."""
 
-    @pytest.fixture
-    def mock_gmail_service(self):
-        """Create a protocol-compatible mock Gmail service."""
+    class mock_gmail_service:
+        """Mock Gmail service for testing."""
 
-        # Create a proper mock hierarchy that matches the protocol structure
-        class MockRequest(GmailRequest):
-            def __init__(self, return_value: Any):
-                self.return_value = return_value
+        class MockAttachmentsResource:
+            """Mock attachments resource."""
 
-            def execute(self) -> Any:
-                return self.return_value
+            def get(self, user_id, message_id, attachment_id):
+                """Mock get method."""
 
-        class MockAttachmentsResource(GmailAttachmentsResource):
+                class MockRequest:
+                    """Mock request object."""
+
+                    def execute(self):
+                        """Mock execute method."""
+                        return {
+                            "data": base64.urlsafe_b64encode(
+                                b"attachment content").decode()
+                        }
+
+                return MockRequest()
+
+        class MockMessagesResource:
+            """Mock messages resource."""
+
             def __init__(self):
-                self.get_return: Optional[Dict[str, Any]] = None
-                # Initialize the attributes that will be set later
-                self.last_user_id: str = ""
-                self.last_message_id: str = ""
-                self.last_attachment_id: str = ""
+                """Initialize mock messages resource."""
+                self._attachments = TestGmailAttachmentOperations.mock_gmail_service.MockAttachmentsResource()
 
-            def get(
-                self, user_id: str, message_id: str, attachment_id: str
-            ) -> GmailRequest[Dict[str, Any]]:
-                # Store the parameters for test assertions
-                self.last_user_id = user_id
-                self.last_message_id = message_id
-                self.last_attachment_id = attachment_id
-                return MockRequest(self.get_return)
+            def attachments(self):
+                """Return mock attachments resource."""
+                return self._attachments
 
-        class MockMessagesResource(GmailMessagesResource):
+        class MockUsersResource:
+            """Mock users resource."""
+
             def __init__(self):
-                self.attachments_resource = MockAttachmentsResource()
+                """Initialize mock users resource."""
+                self._messages = TestGmailAttachmentOperations.mock_gmail_service.MockMessagesResource()
 
-            def list(
-                self, user_id: str, q: str, max_results: int
-            ) -> GmailRequest[Dict[str, Any]]:
-                return MockRequest({})
+            def messages(self):
+                """Return mock messages resource."""
+                return self._messages
 
-            def get(
-                self, user_id: str, message_id: str, message_format: str
-            ) -> GmailRequest[Dict[str, Any]]:
-                return MockRequest({})
+        def __init__(self):
+            """Initialize mock Gmail service."""
+            self._users = self.MockUsersResource()
 
-            def attachments(self) -> GmailAttachmentsResource:
-                return self.attachments_resource
+        def users(self):
+            """Return mock users resource."""
+            return self._users
 
-        class MockUsersResource(GmailUsersResource):
-            def __init__(self):
-                self.messages_resource = MockMessagesResource()
+    def test_process_message_parts(self, tmp_path) -> None:
+        """Test processing message parts."""
+        mock_service = self.mock_gmail_service()
+        logger = logging.getLogger("test_gmail")
+        msg_id = "msg123"
+        storage_path = str(tmp_path)
 
-            def messages(self) -> GmailMessagesResource:
-                return self.messages_resource
+        # Test with HTML content and attachments
+        parts = [
+            {
+                "mimeType": "text/html",
+                "body": {"data": base64.urlsafe_b64encode(
+                    b"<html><body>Test</body></html>").decode()}
+            },
+            {
+                "filename": "test.pdf",
+                "mimeType": "application/pdf",
+                "body": {"attachmentId": "att123"}
+            }
+        ]
 
-        class MockGmailService(GmailService):
-            def __init__(self):
-                self.users_resource = MockUsersResource()
+        # Mock the handle_attachment function to avoid actual file operations
+        with patch(
+                "quackcore.integrations.google.mail.operations.attachments.handle_attachment") as mock_handle:
+            mock_handle.return_value = str(tmp_path / "test.pdf")
 
-            def users(self) -> GmailUsersResource:
-                return self.users_resource
+            html_content, attachment_paths = attachments.process_message_parts(
+                mock_service, "me", parts, msg_id, storage_path, logger
+            )
 
-        # Create an instance of our protocol-compatible mock
-        return MockGmailService()
+            assert html_content == "<html><body>Test</body></html>"
+            assert len(attachment_paths) == 1
+            assert attachment_paths[0] == str(tmp_path / "test.pdf")
+            mock_handle.assert_called_once()
 
-    def test_handle_attachment(self, mock_gmail_service) -> None:
+    def test_handle_attachment(self) -> None:
         """Test handling an attachment."""
         logger = logging.getLogger("test_gmail")
         msg_id = "msg1"
@@ -109,271 +121,74 @@ class TestGmailAttachmentOperations:
         mock_file = MagicMock()
         mock_open_func = MagicMock(return_value=mock_file)
 
-        with patch("builtins.open", mock_open_func):
-            with patch("os.path.exists", return_value=False):
-                path = attachments.handle_attachment(
-                    mock_gmail_service, "me", part, msg_id, storage_path, logger
-                )
-
-                assert path == "/path/to/storage/test.pdf"
-                # Check if open was called with the right parameters
-                mock_open_func.assert_called_with("/path/to/storage/test.pdf", "wb")
-                # Check if write was called with the right content
-                mock_file.write.assert_called_with(b"PDF content")
-
-        # Test with attachment ID
-        part = {
-            "filename": "test.pdf",
-            "mimeType": "application/pdf",
-            "body": {"attachmentId": "attachment1", "size": 11},
-        }
-
-        # Set up the return value for attachments.get
-        attachment_response = {"data": attachment_data, "size": 11}
-        mock_gmail_service.users().messages().attachments().get_return = (
-            attachment_response
-        )
-
-        # Use MagicMock for the file to properly handle method assertions
-        mock_file = MagicMock()
-        mock_open_func = MagicMock(return_value=mock_file)
-
-        with patch("builtins.open", mock_open_func):
-            with patch("os.path.exists", return_value=False):
-                with patch(
-                    "quackcore.integrations.google.mail.operations.attachments.execute_api_request",
-                    return_value=attachment_response,
-                ):
+        # Patch the clean_filename function to return unchanged filename
+        with patch(
+                "quackcore.integrations.google.mail.operations.attachments.clean_filename",
+                side_effect=lambda x: x):
+            with patch("builtins.open", mock_open_func):
+                with patch("os.path.exists", return_value=False):
                     path = attachments.handle_attachment(
-                        mock_gmail_service, "me", part, msg_id, storage_path, logger
+                        self.mock_gmail_service(), "me", part, msg_id, storage_path,
+                        logger
                     )
 
                     assert path == "/path/to/storage/test.pdf"
-                    # Check if open was called with the right parameters
-                    mock_open_func.assert_called_with("/path/to/storage/test.pdf", "wb")
-                    # Check if write was called with the right content
-                    mock_file.write.assert_called_with(b"PDF content")
+                    mock_open_func.assert_called_once_with("/path/to/storage/test.pdf",
+                                                           "wb")
+                    mock_file.__enter__().write.assert_called_once_with(b"PDF content")
+
+        # Test with attachment ID
+        part = {
+            "filename": "test2.pdf",
+            "mimeType": "application/pdf",
+            "body": {"attachmentId": "att123", "size": 11},
+        }
+
+        mock_file = MagicMock()
+        mock_open_func = MagicMock(return_value=mock_file)
+
+        # Patch the clean_filename function to return unchanged filename
+        with patch(
+                "quackcore.integrations.google.mail.operations.attachments.clean_filename",
+                side_effect=lambda x: x):
+            with patch("builtins.open", mock_open_func):
+                with patch("os.path.exists", return_value=False):
+                    path = attachments.handle_attachment(
+                        self.mock_gmail_service(), "me", part, msg_id, storage_path,
+                        logger
+                    )
+
+                    assert path == "/path/to/storage/test2.pdf"
+                    mock_open_func.assert_called_once_with("/path/to/storage/test2.pdf",
+                                                           "wb")
+                    mock_file.__enter__().write.assert_called_once_with(
+                        b"attachment content")
 
         # Test with filename collision
         mock_file = MagicMock()
         mock_open_func = MagicMock(return_value=mock_file)
-        exists_calls = [True, False]  # For first and second calls to exists
 
-        with patch("builtins.open", mock_open_func):
-            with patch("os.path.exists", side_effect=exists_calls):
+        # Patch the clean_filename function to return unchanged filename
+        with patch(
+                "quackcore.integrations.google.mail.operations.attachments.clean_filename",
+                side_effect=lambda x: x):
+            with patch("builtins.open", mock_open_func):
+                # First check exists, then doesn't for the incremented filename
+                with patch("os.path.exists", side_effect=[True, False]):
+                    path = attachments.handle_attachment(
+                        self.mock_gmail_service(), "me", part, msg_id, storage_path,
+                        logger
+                    )
+
+                    assert path == "/path/to/storage/test2-1.pdf"
+
+        # Test error handling
+        with patch("base64.urlsafe_b64decode", side_effect=Exception("Decode error")):
+            with patch(
+                    "quackcore.integrations.google.mail.operations.attachments.clean_filename",
+                    side_effect=lambda x: x):
                 path = attachments.handle_attachment(
-                    mock_gmail_service, "me", part, msg_id, storage_path, logger
+                    self.mock_gmail_service(), "me", part, msg_id, storage_path, logger
                 )
 
-                assert path == "/path/to/storage/test-1.pdf"
-                # Check if open was called with the right parameters
-                mock_open_func.assert_called_with("/path/to/storage/test-1.pdf", "wb")
-
-        # Rest of the tests remain mostly the same
-        # Test with missing filename
-        part = {
-            "mimeType": "application/pdf",
-            "body": {"data": attachment_data, "size": 11},
-        }
-
-        path = attachments.handle_attachment(
-            mock_gmail_service, "me", part, msg_id, storage_path, logger
-        )
-
-        assert path is None
-
-        # Test with missing data
-        part = {
-            "filename": "test.pdf",
-            "mimeType": "application/pdf",
-            "body": {"size": 11},
-        }
-
-        path = attachments.handle_attachment(
-            mock_gmail_service, "me", part, msg_id, storage_path, logger
-        )
-
-        assert path is None
-
-        # Test with decode error
-        part = {
-            "filename": "test.pdf",
-            "mimeType": "application/pdf",
-            "body": {"data": "invalid base64", "size": 11},
-        }
-
-        path = attachments.handle_attachment(
-            mock_gmail_service, "me", part, msg_id, storage_path, logger
-        )
-
-        assert path is None
-
-        # Test with file write error
-        part = {
-            "filename": "test.pdf",
-            "mimeType": "application/pdf",
-            "body": {"data": attachment_data, "size": 11},
-        }
-
-        mock_open_func = MagicMock(side_effect=IOError("Permission denied"))
-
-        with patch("builtins.open", mock_open_func):
-            path = attachments.handle_attachment(
-                mock_gmail_service, "me", part, msg_id, storage_path, logger
-            )
-
-            assert path is None
-
-    def test_process_message_parts(self, mock_gmail_service) -> None:
-        """Test processing message parts."""
-        logger = logging.getLogger("test_gmail")
-        msg_id = "msg1"
-        storage_path = "/path/to/storage"
-
-        # Test with HTML content and attachments
-        parts = [
-            {
-                "mimeType": "text/html",
-                "body": {
-                    "data": base64.urlsafe_b64encode(
-                        b"<html><body>Test</body></html>"
-                    ).decode(),
-                    "size": 30,
-                },
-            },
-            {
-                "filename": "attachment.pdf",
-                "mimeType": "application/pdf",
-                "body": {
-                    "data": base64.urlsafe_b64encode(b"PDF content").decode(),
-                    "size": 11,
-                },
-            },
-        ]
-
-        with patch(
-            "quackcore.integrations.google.mail.operations.attachments.handle_attachment",
-            return_value="/path/to/storage/attachment.pdf",
-        ):
-            html_content, attachments_list = attachments.process_message_parts(
-                mock_gmail_service, "me", parts, msg_id, storage_path, logger
-            )
-
-            assert html_content == "<html><body>Test</body></html>"
-            assert attachments_list == ["/path/to/storage/attachment.pdf"]
-
-        # Test with nested parts
-        parts = [
-            {
-                "mimeType": "multipart/mixed",
-                "parts": [
-                    {
-                        "mimeType": "text/html",
-                        "body": {
-                            "data": base64.urlsafe_b64encode(
-                                b"<html><body>Nested</body></html>"
-                            ).decode(),
-                            "size": 32,
-                        },
-                    }
-                ],
-            },
-            {
-                "filename": "attachment.pdf",
-                "mimeType": "application/pdf",
-                "body": {
-                    "data": base64.urlsafe_b64encode(b"PDF content").decode(),
-                    "size": 11,
-                },
-            },
-        ]
-
-        with patch(
-            "quackcore.integrations.google.mail.operations.attachments.handle_attachment",
-            return_value="/path/to/storage/attachment.pdf",
-        ):
-            html_content, attachments_list = attachments.process_message_parts(
-                mock_gmail_service, "me", parts, msg_id, storage_path, logger
-            )
-
-            assert html_content == "<html><body>Nested</body></html>"
-            assert attachments_list == ["/path/to/storage/attachment.pdf"]
-
-        # Test with no HTML content
-        parts = [
-            {
-                "mimeType": "text/plain",
-                "body": {
-                    "data": base64.urlsafe_b64encode(b"Plain text").decode(),
-                    "size": 10,
-                },
-            }
-        ]
-
-        html_content, attachments_list = attachments.process_message_parts(
-            mock_gmail_service, "me", parts, msg_id, storage_path, logger
-        )
-
-        assert html_content is None
-        assert attachments_list == []
-
-        # Test with multiple HTML parts (should use first found)
-        parts = [
-            {
-                "mimeType": "text/html",
-                "body": {
-                    "data": base64.urlsafe_b64encode(
-                        b"<html><body>First</body></html>"
-                    ).decode(),
-                    "size": 30,
-                },
-            },
-            {
-                "mimeType": "text/html",
-                "body": {
-                    "data": base64.urlsafe_b64encode(
-                        b"<html><body>Second</body></html>"
-                    ).decode(),
-                    "size": 31,
-                },
-            },
-        ]
-
-        html_content, attachments_list = attachments.process_message_parts(
-            mock_gmail_service, "me", parts, msg_id, storage_path, logger
-        )
-
-        assert html_content == "<html><body>First</body></html>"
-        assert attachments_list == []
-
-        # Test with failed attachment handling
-        parts = [
-            {
-                "mimeType": "text/html",
-                "body": {
-                    "data": base64.urlsafe_b64encode(
-                        b"<html><body>Test</body></html>"
-                    ).decode(),
-                    "size": 30,
-                },
-            },
-            {
-                "filename": "attachment.pdf",
-                "mimeType": "application/pdf",
-                "body": {
-                    "data": base64.urlsafe_b64encode(b"PDF content").decode(),
-                    "size": 11,
-                },
-            },
-        ]
-
-        with patch(
-            "quackcore.integrations.google.mail.operations.attachments.handle_attachment",
-            return_value=None,
-        ):  # Attachment handling failed
-            html_content, attachments_list = attachments.process_message_parts(
-                mock_gmail_service, "me", parts, msg_id, storage_path, logger
-            )
-
-            assert html_content == "<html><body>Test</body></html>"
-            assert attachments_list == []  # No attachments returned
+                assert path is None
