@@ -202,17 +202,18 @@ class TestIntegrationRegistryDiscovery:
         # Test with available plugin loader
         mock_loader = MagicMock()
 
-        with patch.dict(
-            sys.modules, {"quackcore.plugins.discovery": MagicMock(loader=mock_loader)}
-        ):
+        # Create a mock module with a loader attribute
+        mock_discovery = MagicMock()
+        mock_discovery.loader = mock_loader
+
+        # Patch sys.modules to include our mock
+        with patch.dict(sys.modules, {"quackcore.plugins.discovery": mock_discovery}):
             loader = registry._get_plugin_loader()
             assert loader is mock_loader
 
-        # Test with ImportError
-        with patch.dict(sys.modules, {}, clear=True):
-            with patch("importlib.import_module") as mock_import:
-                mock_import.side_effect = ImportError("Module not found")
-
+        # Test with ImportError - completely patch sys and importlib to ensure isolation
+        with patch.object(sys, "modules", {}):  # Empty modules dict
+            with patch("importlib.import_module", side_effect=ImportError("Module not found")):
                 loader = registry._get_plugin_loader()
                 assert loader is None
 
@@ -235,7 +236,7 @@ class TestIntegrationRegistryDiscovery:
             assert loaded[0].name == "PluginIntegration"
             assert registry.is_registered("PluginIntegration")
 
-        # Test with factory function
+        # Test with factory function - use a fresh registry and ensure _get_plugin_loader returns None
         registry = IntegrationRegistry()  # Create fresh registry
 
         class MockModule:
@@ -244,18 +245,23 @@ class TestIntegrationRegistryDiscovery:
 
         mock_module = MockModule()
 
-        with patch("importlib.import_module") as mock_import:
-            mock_import.return_value = mock_module
+        with patch(
+            "quackcore.integrations.registry.IntegrationRegistry._get_plugin_loader",
+            return_value=None
+        ):
+            with patch("importlib.import_module") as mock_import:
+                mock_import.return_value = mock_module
 
-            loaded = registry.load_integration_module("test.factory_module")
-            assert len(loaded) == 1
-            assert loaded[0].name == "FactoryIntegration"
-            assert registry.is_registered("FactoryIntegration")
+                loaded = registry.load_integration_module("test.factory_module")
+                assert len(loaded) == 1
+                assert loaded[0].name == "FactoryIntegration"
+                assert registry.is_registered("FactoryIntegration")
 
         # Test with integration classes in module
         registry = IntegrationRegistry()  # Create fresh registry
 
-        class TestIntegration(IntegrationProtocol):
+        # Define the test integration class that follows the protocol without inheritance
+        class TestIntegrationClass:
             @property
             def name(self) -> str:
                 return "ClassIntegration"
@@ -270,36 +276,50 @@ class TestIntegrationRegistryDiscovery:
             def is_available(self) -> bool:
                 return True
 
+        # Create mock module with the integration class - fixed to use the class defined above
         class MockClassModule:
             __name__ = "test.class_module"
-            TestIntegration = TestIntegration
+            # Add the class as an attribute
+            TestIntegration = TestIntegrationClass
 
         mock_module = MockClassModule()
 
-        with patch("importlib.import_module") as mock_import:
-            mock_import.return_value = mock_module
+        with patch(
+            "quackcore.integrations.registry.IntegrationRegistry._get_plugin_loader",
+            return_value=None
+        ):
+            with patch("importlib.import_module") as mock_import:
+                mock_import.return_value = mock_module
 
-            loaded = registry.load_integration_module("test.class_module")
-            assert len(loaded) == 1
-            assert loaded[0].name == "ClassIntegration"
-            assert registry.is_registered("ClassIntegration")
+                loaded = registry.load_integration_module("test.class_module")
+                assert len(loaded) == 1
+                assert loaded[0].name == "ClassIntegration"
+                assert registry.is_registered("ClassIntegration")
 
         # Test with import error
         registry = IntegrationRegistry()  # Create fresh registry
 
-        with patch("importlib.import_module") as mock_import:
-            mock_import.side_effect = ImportError("Module not found")
+        with patch(
+            "quackcore.integrations.registry.IntegrationRegistry._get_plugin_loader",
+            return_value=None
+        ):
+            with patch("importlib.import_module") as mock_import:
+                mock_import.side_effect = ImportError("Module not found")
 
-            with pytest.raises(QuackError) as excinfo:
-                registry.load_integration_module("nonexistent.module")
+                with pytest.raises(QuackError) as excinfo:
+                    registry.load_integration_module("nonexistent.module")
 
-            assert "Failed to import module" in str(excinfo.value)
+                assert "Failed to import module" in str(excinfo.value)
 
         # Test with no integrations found
         registry = IntegrationRegistry()  # Create fresh registry
 
-        with patch("importlib.import_module") as mock_import:
-            mock_import.return_value = MagicMock()
+        with patch(
+            "quackcore.integrations.registry.IntegrationRegistry._get_plugin_loader",
+            return_value=None
+        ):
+            with patch("importlib.import_module") as mock_import:
+                mock_import.return_value = MagicMock()
 
-            loaded = registry.load_integration_module("empty.module")
-            assert len(loaded) == 0
+                loaded = registry.load_integration_module("empty.module")
+                assert len(loaded) == 0
