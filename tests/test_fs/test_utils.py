@@ -647,10 +647,9 @@ class TestFileUtilities:
 
     @given(st.text(min_size=1, max_size=100))
     def test_hypothetical_path_operations(self, text: str) -> None:
-        """Test path operations with hypothesis-generated text."""
         # Create a valid filename from the text, handling special cases
-        if text == ".":
-            valid_filename = "dot"  # Handle special case
+        if text == "." or text.startswith("."):
+            valid_filename = "dot" + text[1:] if len(text) > 1 else "dot"
         else:
             valid_filename = "".join(c for c in text if c.isalnum() or c in " _-.")
             valid_filename = valid_filename.strip() or "default"
@@ -661,7 +660,7 @@ class TestFileUtilities:
 
         # Test path joining with the filename
         joined = join_path("dir1", valid_filename)
-        assert joined.parts[-1] == valid_filename
+        assert joined.name == valid_filename  # Use .name instead of parts[-1]
 
         # Test normalizing with an existing path to avoid file not found errors
         with tempfile.TemporaryDirectory() as tmp:

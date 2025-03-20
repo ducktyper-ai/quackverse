@@ -13,8 +13,22 @@ from quackcore.integrations.results import IntegrationResult
 class TestGoogleDriveServiceFolders:
     """Tests for the GoogleDriveService folder operations."""
 
-    def test_create_folder(self) -> None:
+    @patch(
+        "quackcore.integrations.google.auth.GoogleAuthProvider._verify_client_secrets_file")
+    @patch.object(GoogleDriveService, "_initialize_config")
+    def test_create_folder(self, mock_init_config, mock_verify) -> None:
         """Test creating a folder."""
+        # Bypass verification
+        mock_verify.return_value = None
+
+        # Set up mock config
+        mock_init_config.return_value = {
+            "client_secrets_file": "/path/to/secrets.json",
+            "credentials_file": "/path/to/credentials.json",
+            "shared_folder_id": "shared_folder"
+        }
+
+        # Create service with mocked dependencies
         service = GoogleDriveService(shared_folder_id="shared_folder")
         service._initialized = True
         service.drive_service = MagicMock()
@@ -63,5 +77,58 @@ class TestGoogleDriveServiceFolders:
             "API error", service="drive"
         )
         result = service.create_folder("Error Folder")
+        assert result.success is False
+        assert "API error" in result.error
+
+    @patch(
+        "quackcore.integrations.google.auth.GoogleAuthProvider._verify_client_secrets_file")
+    @patch.object(GoogleDriveService, "_initialize_config")
+    def test_delete_file(self, mock_init_config, mock_verify) -> None:
+        """Test deleting a file or folder."""
+        # Bypass verification
+        mock_verify.return_value = None
+
+        # Set up mock config
+        mock_init_config.return_value = {
+            "client_secrets_file": "/path/to/secrets.json",
+            "credentials_file": "/path/to/credentials.json",
+            "shared_folder_id": "shared_folder"
+        }
+
+        # Create service with mocked dependencies
+        service = GoogleDriveService()
+        service._initialized = True
+        service.drive_service = MagicMock()
+
+        # Mock API response for delete
+        mock_delete = MagicMock()
+        service.drive_service.files().delete.return_value = mock_delete
+        mock_delete.execute.return_value = None
+
+        # Mock API response for update (move to trash)
+        mock_update = MagicMock()
+        service.drive_service.files().update.return_value = mock_update
+        mock_update.execute.return_value = None
+
+        # Test permanent deletion
+        result = service.delete_file("file_id", permanent=True)
+        assert result.success is True
+        service.drive_service.files().delete.assert_called_once_with(
+            file_id="file_id"
+        )
+
+        # Test move to trash
+        service.drive_service.files().update.reset_mock()
+        result = service.delete_file("file_id", permanent=False)
+        assert result.success is True
+        service.drive_service.files().update.assert_called_once_with(
+            file_id="file_id", body={"trashed": True}
+        )
+
+        # Test API error
+        service.drive_service.files().update.side_effect = QuackApiError(
+            "API error", service="drive"
+        )
+        result = service.delete_file("error_file_id")
         assert result.success is False
         assert "API error" in result.error
