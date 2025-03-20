@@ -29,7 +29,7 @@ class TestGoogleDriveServicePermissions:
         assert result.success is True
         assert result.content is True
         service.drive_service.permissions().create.assert_called_once_with(
-            fileId="file123",
+            file_id="file123",
             body={"type": "user", "role": "writer", "allowFileDiscovery": True},
             fields="id",
         )
@@ -42,7 +42,7 @@ class TestGoogleDriveServicePermissions:
 
         assert result.success is True
         service.drive_service.permissions().create.assert_called_once_with(
-            fileId="file123",
+            file_id="file123",
             body={"type": "anyone", "role": "commenter", "allowFileDiscovery": True},
             fields="id",
         )
@@ -74,7 +74,7 @@ class TestGoogleDriveServicePermissions:
         assert result.success is True
         assert result.content == "https://drive.google.com/file/d/file123/view"
         service.drive_service.files().get.assert_called_once_with(
-            fileId="file123", fields="webViewLink, webContentLink"
+            file_id="file123", fields="webViewLink, webContentLink"
         )
 
         # Test with only content link
