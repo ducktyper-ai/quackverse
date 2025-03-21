@@ -26,10 +26,10 @@ logger = logging.getLogger(__name__)
 
 
 def convert_markdown_to_docx(
-        markdown_path: Path,
-        output_path: Path,
-        config: ConversionConfig,
-        metrics: ConversionMetrics | None = None,
+    markdown_path: Path,
+    output_path: Path,
+    config: ConversionConfig,
+    metrics: ConversionMetrics | None = None,
 ) -> ConversionResult:
     """
     Convert a Markdown file to DOCX.
@@ -53,7 +53,7 @@ def convert_markdown_to_docx(
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(
             f"Input file not found: {markdown_path}",
-            {"path": str(markdown_path), "format": "markdown"}
+            {"path": str(markdown_path), "format": "markdown"},
         )
 
     original_size = file_info.size or 0
@@ -64,8 +64,7 @@ def convert_markdown_to_docx(
         markdown_content = markdown_path.read_text(encoding="utf-8")
         if not markdown_content.strip():
             raise QuackIntegrationError(
-                f"Markdown file is empty: {markdown_path}",
-                {"path": str(markdown_path)}
+                f"Markdown file is empty: {markdown_path}", {"path": str(markdown_path)}
             )
     except Exception as e:
         if not isinstance(e, QuackIntegrationError):
@@ -102,7 +101,7 @@ def convert_markdown_to_docx(
             if not output_info.success:
                 raise QuackIntegrationError(
                     f"Failed to get info for converted file: {output_path}",
-                    {"path": str(output_path), "format": "docx"}
+                    {"path": str(output_path), "format": "docx"},
                 )
 
             output_size = output_info.size or 0
@@ -174,7 +173,8 @@ def convert_markdown_to_docx(
         except Exception as e:
             retry_count += 1
             logger.warning(
-                f"Markdown to DOCX conversion attempt {retry_count} failed: {str(e)}")
+                f"Markdown to DOCX conversion attempt {retry_count} failed: {str(e)}"
+            )
 
             if retry_count >= config.retry_mechanism.max_conversion_retries:
                 if metrics:
@@ -198,8 +198,7 @@ def convert_markdown_to_docx(
 
 
 def validate_conversion(
-        output_path: Path, input_path: Path, original_size: int,
-        config: ConversionConfig
+    output_path: Path, input_path: Path, original_size: int, config: ConversionConfig
 ) -> list[str]:
     """
     Validate the converted DOCX document.
@@ -273,23 +272,33 @@ def _check_docx_metadata(docx_path: Path, source_path: Path, check_links: bool) 
 
         # Check if core properties contain the original filename
         source_filename = source_path.name
-        if hasattr(doc, 'core_properties'):
+        if hasattr(doc, "core_properties"):
             source_found = False
 
             # Check in various metadata fields
-            if hasattr(doc.core_properties,
-                       'title') and doc.core_properties.title and source_filename in doc.core_properties.title:
+            if (
+                hasattr(doc.core_properties, "title")
+                and doc.core_properties.title
+                and source_filename in doc.core_properties.title
+            ):
                 source_found = True
-            elif hasattr(doc.core_properties,
-                         'comments') and doc.core_properties.comments and source_filename in doc.core_properties.comments:
+            elif (
+                hasattr(doc.core_properties, "comments")
+                and doc.core_properties.comments
+                and source_filename in doc.core_properties.comments
+            ):
                 source_found = True
-            elif hasattr(doc.core_properties,
-                         'subject') and doc.core_properties.subject and source_filename in doc.core_properties.subject:
+            elif (
+                hasattr(doc.core_properties, "subject")
+                and doc.core_properties.subject
+                and source_filename in doc.core_properties.subject
+            ):
                 source_found = True
 
             if not source_found and check_links:
                 # This is just a warning, not a validation error
                 logger.debug(
-                    f"Source file reference missing in document metadata: {source_filename}")
+                    f"Source file reference missing in document metadata: {source_filename}"
+                )
     except Exception as e:
         logger.debug(f"Could not check document metadata: {str(e)}")

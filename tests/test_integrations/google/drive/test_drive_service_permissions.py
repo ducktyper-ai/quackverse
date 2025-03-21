@@ -13,7 +13,8 @@ class TestGoogleDriveServicePermissions:
     """Tests for the GoogleDriveService permissions operations."""
 
     @patch(
-        "quackcore.integrations.google.auth.GoogleAuthProvider._verify_client_secrets_file")
+        "quackcore.integrations.google.auth.GoogleAuthProvider._verify_client_secrets_file"
+    )
     @patch.object(GoogleDriveService, "_initialize_config")
     def test_set_file_permissions(self, mock_init_config, mock_verify) -> None:
         """Test setting file permissions."""
@@ -24,7 +25,7 @@ class TestGoogleDriveServicePermissions:
         mock_init_config.return_value = {
             "client_secrets_file": "/path/to/secrets.json",
             "credentials_file": "/path/to/credentials.json",
-            "default_share_access": "commenter"
+            "default_share_access": "commenter",
         }
 
         # Create service with mocked dependencies
@@ -69,7 +70,8 @@ class TestGoogleDriveServicePermissions:
         assert "API error" in result.error
 
     @patch(
-        "quackcore.integrations.google.auth.GoogleAuthProvider._verify_client_secrets_file")
+        "quackcore.integrations.google.auth.GoogleAuthProvider._verify_client_secrets_file"
+    )
     @patch.object(GoogleDriveService, "_initialize_config")
     def test_get_sharing_link(self, mock_init_config, mock_verify) -> None:
         """Test getting a sharing link."""
@@ -79,7 +81,7 @@ class TestGoogleDriveServicePermissions:
         # Mock configuration
         mock_init_config.return_value = {
             "client_secrets_file": "/path/to/secrets.json",
-            "credentials_file": "/path/to/credentials.json"
+            "credentials_file": "/path/to/credentials.json",
         }
 
         # Create service with mocked dependencies

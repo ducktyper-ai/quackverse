@@ -13,7 +13,8 @@ class TestGoogleDriveServiceList:
     """Tests for the GoogleDriveService listing operations."""
 
     @patch(
-        "quackcore.integrations.google.auth.GoogleAuthProvider._verify_client_secrets_file")
+        "quackcore.integrations.google.auth.GoogleAuthProvider._verify_client_secrets_file"
+    )
     @patch.object(GoogleDriveService, "_initialize_config")
     def test_list_files(self, mock_init_config, mock_verify) -> None:
         """Test listing files."""
@@ -24,7 +25,7 @@ class TestGoogleDriveServiceList:
         mock_init_config.return_value = {
             "client_secrets_file": "/path/to/secrets.json",
             "credentials_file": "/path/to/credentials.json",
-            "shared_folder_id": "shared_folder"
+            "shared_folder_id": "shared_folder",
         }
 
         # Create service with mocked dependencies
@@ -63,7 +64,7 @@ class TestGoogleDriveServiceList:
             service.drive_service.files().list.assert_called_once_with(
                 q="query",
                 fields="files(id, name, mimeType, webViewLink, webContentLink, "
-                       "size, createdTime, modifiedTime, parents, shared, trashed)",
+                "size, createdTime, modifiedTime, parents, shared, trashed)",
                 page_size=100,
             )
             mock_query.assert_called_once_with("folder123", "*.txt")

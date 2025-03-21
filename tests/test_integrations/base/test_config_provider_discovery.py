@@ -5,7 +5,7 @@ Tests for the config discovery functionality in BaseConfigProvider.
 
 import os
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -81,7 +81,8 @@ class TestBaseConfigProviderDiscovery:
 
                     # Make sure to patch this call to avoid the error with logger
                     with patch(
-                            "quackcore.paths.resolver.get_project_root") as mock_get_root:
+                        "quackcore.paths.resolver.get_project_root"
+                    ) as mock_get_root:
                         # Just ensure it doesn't get called here
                         result = provider._find_config_file()
                         assert result == "/env/config.yaml"
@@ -94,6 +95,7 @@ class TestBaseConfigProviderDiscovery:
             mock_get_root.side_effect = QuackFileNotFoundError("mock error")
 
             with patch("quackcore.fs.service.get_file_info") as mock_file_info:
+
                 def side_effect(path):
                     mock_result = MagicMock()
                     mock_result.success = True
@@ -103,7 +105,9 @@ class TestBaseConfigProviderDiscovery:
                 mock_file_info.side_effect = side_effect
 
                 with patch("quackcore.fs.service.expand_user_vars") as mock_expand:
-                    mock_expand.side_effect = lambda path: Path("/default") / Path(path).name
+                    mock_expand.side_effect = (
+                        lambda path: Path("/default") / Path(path).name
+                    )
 
                     with patch.object(
                         provider,

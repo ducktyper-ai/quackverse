@@ -15,10 +15,12 @@ class TestGoogleDriveServiceUpload:
     """Tests for the GoogleDriveService upload operations."""
 
     @patch(
-        "quackcore.integrations.google.auth.GoogleAuthProvider._verify_client_secrets_file")
+        "quackcore.integrations.google.auth.GoogleAuthProvider._verify_client_secrets_file"
+    )
     @patch.object(GoogleDriveService, "_initialize_config")
-    def test_upload_file(self, mock_init_config: MagicMock,
-                         mock_verify: MagicMock, temp_dir: Path) -> None:
+    def test_upload_file(
+        self, mock_init_config: MagicMock, mock_verify: MagicMock, temp_dir: Path
+    ) -> None:
         """Test uploading a file."""
         # Bypass verification
         mock_verify.return_value = None
@@ -27,7 +29,7 @@ class TestGoogleDriveServiceUpload:
         mock_init_config.return_value = {
             "client_secrets_file": "/path/to/secrets.json",
             "credentials_file": "/path/to/credentials.json",
-            "shared_folder_id": "shared_folder"
+            "shared_folder_id": "shared_folder",
         }
 
         service = GoogleDriveService(shared_folder_id="shared_folder")
@@ -50,7 +52,11 @@ class TestGoogleDriveServiceUpload:
         # Test successful upload
         with patch.object(GoogleDriveService, "_resolve_file_details") as mock_resolve:
             mock_resolve.return_value = (
-                Path(test_file), "test_file.txt", "shared_folder", "text/plain")
+                Path(test_file),
+                "test_file.txt",
+                "shared_folder",
+                "text/plain",
+            )
 
             # Create a fresh mock for each test case to avoid shared state
             mock_fs_service = MagicMock()
@@ -63,36 +69,45 @@ class TestGoogleDriveServiceUpload:
                 "webViewLink": "https://drive.google.com/file/d/file123/view",
             }
 
-            with patch("quackcore.integrations.google.drive.service.fs",
-                       mock_fs_service):
+            with patch(
+                "quackcore.integrations.google.drive.service.fs", mock_fs_service
+            ):
                 with patch.object(service, "_execute_upload", mock_execute_upload):
-                    with patch.object(service,
-                                      "set_file_permissions") as mock_permissions:
-                        mock_permissions.return_value = IntegrationResult(
-                            success=True
-                        )
+                    with patch.object(
+                        service, "set_file_permissions"
+                    ) as mock_permissions:
+                        mock_permissions.return_value = IntegrationResult(success=True)
 
                         result = service.upload_file(str(test_file))
 
                         assert result.success is True
-                        assert result.content == "https://drive.google.com/file/d/file123/view"
+                        assert (
+                            result.content
+                            == "https://drive.google.com/file/d/file123/view"
+                        )
                         mock_execute_upload.assert_called_once()
                         mock_permissions.assert_called_once_with("file123")
                         mock_fs_service.read_binary.assert_called_once_with(
-                            Path(test_file))
+                            Path(test_file)
+                        )
 
         # Test with file read error
         with patch.object(GoogleDriveService, "_resolve_file_details") as mock_resolve:
             mock_resolve.return_value = (
-                Path(test_file), "test_file.txt", "shared_folder", "text/plain")
+                Path(test_file),
+                "test_file.txt",
+                "shared_folder",
+                "text/plain",
+            )
 
             # Create a new mock with error response
             mock_fs_service = MagicMock()
             mock_fs_service.read_binary.return_value.success = False
             mock_fs_service.read_binary.return_value.error = "Read error"
 
-            with patch("quackcore.integrations.google.drive.service.fs",
-                       mock_fs_service):
+            with patch(
+                "quackcore.integrations.google.drive.service.fs", mock_fs_service
+            ):
                 result = service.upload_file(str(test_file))
 
                 assert result.success is False
@@ -102,7 +117,11 @@ class TestGoogleDriveServiceUpload:
         # Test with upload error
         with patch.object(GoogleDriveService, "_resolve_file_details") as mock_resolve:
             mock_resolve.return_value = (
-                Path(test_file), "test_file.txt", "shared_folder", "text/plain")
+                Path(test_file),
+                "test_file.txt",
+                "shared_folder",
+                "text/plain",
+            )
 
             # Create new mocks for this test case
             mock_fs_service = MagicMock()
@@ -113,8 +132,9 @@ class TestGoogleDriveServiceUpload:
                 "API error", service="drive"
             )
 
-            with patch("quackcore.integrations.google.drive.service.fs",
-                       mock_fs_service):
+            with patch(
+                "quackcore.integrations.google.drive.service.fs", mock_fs_service
+            ):
                 with patch.object(service, "_execute_upload", mock_execute_upload):
                     result = service.upload_file(str(test_file))
 

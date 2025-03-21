@@ -6,7 +6,7 @@ This module provides standardized result classes for various integration
 operations, enhancing error handling and return values.
 """
 
-from typing import Generic, TypeVar, Any
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -117,7 +117,7 @@ class AuthResult(BaseModel):
         description="Additional authentication content or metadata",
     )
 
-    @field_validator('token')
+    @field_validator("token")
     def validate_token(cls, v: Any) -> str | None:
         """
         Validate that token is a string if provided.

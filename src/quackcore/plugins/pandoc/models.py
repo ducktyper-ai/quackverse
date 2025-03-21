@@ -12,7 +12,6 @@ from typing import TypeVar
 
 from pydantic import BaseModel, Field
 
-
 T = TypeVar("T")  # Generic type for result content
 
 
@@ -21,31 +20,25 @@ class ConversionMetrics(BaseModel):
 
     conversion_times: dict[str, dict[str, float]] = Field(
         default_factory=dict,
-        description="Dictionary of filename to conversion time details"
+        description="Dictionary of filename to conversion time details",
     )
     file_sizes: dict[str, dict[str, int | float]] = Field(
-        default_factory=dict,
-        description="Dictionary of filename to file size details"
+        default_factory=dict, description="Dictionary of filename to file size details"
     )
     errors: dict[str, str] = Field(
-        default_factory=dict,
-        description="Dictionary of filename to error messages"
+        default_factory=dict, description="Dictionary of filename to error messages"
     )
     start_time: datetime = Field(
-        default_factory=datetime.now,
-        description="Time when metrics collection started"
+        default_factory=datetime.now, description="Time when metrics collection started"
     )
     total_attempts: int = Field(
-        default=0,
-        description="Total number of conversion attempts"
+        default=0, description="Total number of conversion attempts"
     )
     successful_conversions: int = Field(
-        default=0,
-        description="Number of successful conversions"
+        default=0, description="Number of successful conversions"
     )
     failed_conversions: int = Field(
-        default=0,
-        description="Number of failed conversions"
+        default=0, description="Number of failed conversions"
     )
 
 
@@ -55,13 +48,9 @@ class FileInfo(BaseModel):
     path: Path = Field(..., description="Path to the file")
     format: str = Field(..., description="File format")
     size: int = Field(default=0, description="File size in bytes")
-    modified: float | None = Field(
-        default=None,
-        description="Last modified timestamp"
-    )
+    modified: float | None = Field(default=None, description="Last modified timestamp")
     extra_args: list[str] = Field(
-        default_factory=list,
-        description="Extra arguments for pandoc"
+        default_factory=list, description="Extra arguments for pandoc"
     )
 
 
@@ -70,54 +59,33 @@ class ConversionTask(BaseModel):
 
     source: FileInfo = Field(..., description="Source file info")
     target_format: str = Field(..., description="Target format")
-    output_path: Path | None = Field(
-        default=None,
-        description="Output path"
-    )
+    output_path: Path | None = Field(default=None, description="Output path")
 
 
 class ConversionResult(BaseModel):
     """Result of a document conversion operation."""
 
     success: bool = Field(
-        default=True,
-        description="Whether the conversion was successful"
+        default=True, description="Whether the conversion was successful"
     )
-    content: Path | None = Field(
-        default=None,
-        description="Path to the converted file"
-    )
-    source_format: str | None = Field(
-        default=None,
-        description="Source format"
-    )
-    target_format: str | None = Field(
-        default=None,
-        description="Target format"
-    )
+    content: Path | None = Field(default=None, description="Path to the converted file")
+    source_format: str | None = Field(default=None, description="Source format")
+    target_format: str | None = Field(default=None, description="Target format")
     conversion_time: float | None = Field(
-        default=None,
-        description="Conversion time in seconds"
+        default=None, description="Conversion time in seconds"
     )
     output_size: int | None = Field(
-        default=None,
-        description="Output file size in bytes"
+        default=None, description="Output file size in bytes"
     )
-    input_size: int | None = Field(
-        default=None,
-        description="Input file size in bytes"
-    )
+    input_size: int | None = Field(default=None, description="Input file size in bytes")
     validation_errors: list[str] = Field(
-        default_factory=list,
-        description="Document validation errors"
+        default_factory=list, description="Document validation errors"
     )
     message: str | None = Field(
-        default=None,
-        description="Additional message about the operation"
+        default=None, description="Additional message about the operation"
     )
     error: str | None = Field(
-        default=None,
-        description="Error message if conversion failed"
+        default=None, description="Error message if conversion failed"
     )
 
     @classmethod
@@ -194,32 +162,25 @@ class BatchConversionResult(BaseModel):
     """Result of a batch document conversion operation."""
 
     success: bool = Field(
-        default=True,
-        description="Whether the batch conversion was successful"
+        default=True, description="Whether the batch conversion was successful"
     )
     content: list[Path] = Field(
-        default_factory=list,
-        description="List of paths to converted files"
+        default_factory=list, description="List of paths to converted files"
     )
     successful_files: list[Path] = Field(
-        default_factory=list,
-        description="Successfully converted files"
+        default_factory=list, description="Successfully converted files"
     )
     failed_files: list[Path] = Field(
-        default_factory=list,
-        description="Files that failed to convert"
+        default_factory=list, description="Files that failed to convert"
     )
     metrics: ConversionMetrics | None = Field(
-        default=None,
-        description="Conversion metrics"
+        default=None, description="Conversion metrics"
     )
     message: str | None = Field(
-        default=None,
-        description="Additional message about the operation"
+        default=None, description="Additional message about the operation"
     )
     error: str | None = Field(
-        default=None,
-        description="Error message if batch conversion failed"
+        default=None, description="Error message if batch conversion failed"
     )
 
     @classmethod

@@ -161,6 +161,7 @@ class TestGoogleConfigProvider:
             try:
                 # Create a validation error by triggering one
                 from quackcore.integrations.google.config import GoogleBaseConfig
+
                 GoogleBaseConfig(client_secrets_file="", credentials_file="test")
             except ValidationError as e:
                 # Use the actual error as the side effect

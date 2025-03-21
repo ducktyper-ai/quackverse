@@ -209,7 +209,8 @@ class GoogleConfigProvider(BaseConfigProvider):
             if key in resolved_config and resolved_config[key]:
                 try:
                     resolved_path = resolve_project_path(
-                        resolved_config[key])  # Direct call
+                        resolved_config[key]
+                    )  # Direct call
                     resolved_config[key] = str(resolved_path)
                 except Exception as e:
                     self.logger.warning(f"Could not resolve path for {key}: {e}")

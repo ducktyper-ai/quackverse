@@ -664,8 +664,9 @@ class TestFileUtilities:
         if not sanitized_text or sanitized_text.isspace():
             valid_filename = "default"
         elif sanitized_text == "." or sanitized_text.startswith("."):
-            valid_filename = "dot" + sanitized_text[1:] if len(
-                sanitized_text) > 1 else "dot"
+            valid_filename = (
+                "dot" + sanitized_text[1:] if len(sanitized_text) > 1 else "dot"
+            )
         else:
             valid_filename = sanitized_text.strip()
 

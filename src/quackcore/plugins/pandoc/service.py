@@ -12,6 +12,7 @@ from pathlib import Path
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs import service as fs
+from quackcore.paths import resolver
 from quackcore.plugins.pandoc.config import ConversionConfig, PandocConfigProvider
 from quackcore.plugins.pandoc.converter import DocumentConverter
 from quackcore.plugins.pandoc.models import (
@@ -26,7 +27,6 @@ from quackcore.plugins.pandoc.operations import (
     verify_pandoc,
 )
 from quackcore.plugins.protocols import QuackPluginProtocol
-from quackcore.paths import resolver
 
 logger = logging.getLogger(__name__)
 
@@ -41,10 +41,10 @@ class PandocService(QuackPluginProtocol):
     """
 
     def __init__(
-            self,
-            config_path: str | Path | None = None,
-            output_dir: str | Path | None = None,
-            log_level: int = logging.INFO,
+        self,
+        config_path: str | Path | None = None,
+        output_dir: str | Path | None = None,
+        log_level: int = logging.INFO,
     ) -> None:
         """
         Initialize the pandoc service.
@@ -122,7 +122,8 @@ class PandocService(QuackPluginProtocol):
 
             self._initialized = True
             self.logger.info(
-                f"Pandoc plugin initialized successfully. Version: {self._pandoc_version}")
+                f"Pandoc plugin initialized successfully. Version: {self._pandoc_version}"
+            )
             return True
 
         except Exception as e:
@@ -130,7 +131,7 @@ class PandocService(QuackPluginProtocol):
             return False
 
     def html_to_markdown(
-            self, html_path: Path, output_path: Path | None = None
+        self, html_path: Path, output_path: Path | None = None
     ) -> ConversionResult:
         """
         Convert HTML to Markdown.
@@ -143,9 +144,7 @@ class PandocService(QuackPluginProtocol):
             ConversionResult: Result of the conversion
         """
         if not self._ensure_initialized():
-            return ConversionResult.error_result(
-                "Service not initialized"
-            )
+            return ConversionResult.error_result("Service not initialized")
 
         try:
             html_path = resolver.resolve_project_path(html_path)
@@ -164,9 +163,7 @@ class PandocService(QuackPluginProtocol):
             if self.converter:
                 return self.converter.convert_file(html_path, output_path, "markdown")
             else:
-                return ConversionResult.error_result(
-                    "Converter not initialized"
-                )
+                return ConversionResult.error_result("Converter not initialized")
 
         except Exception as e:
             self.logger.error(f"Error in HTML to Markdown conversion: {str(e)}")
@@ -177,7 +174,7 @@ class PandocService(QuackPluginProtocol):
             )
 
     def markdown_to_docx(
-            self, markdown_path: Path, output_path: Path | None = None
+        self, markdown_path: Path, output_path: Path | None = None
     ) -> ConversionResult:
         """
         Convert Markdown to DOCX.
@@ -190,16 +187,16 @@ class PandocService(QuackPluginProtocol):
             ConversionResult: Result of the conversion
         """
         if not self._ensure_initialized():
-            return ConversionResult.error_result(
-                "Service not initialized"
-            )
+            return ConversionResult.error_result("Service not initialized")
 
         try:
             markdown_path = resolver.resolve_project_path(markdown_path)
 
             # Determine output path if not provided
             if output_path is None and self.converter:
-                output_path = self.converter.config.output_dir / f"{markdown_path.stem}.docx"
+                output_path = (
+                    self.converter.config.output_dir / f"{markdown_path.stem}.docx"
+                )
             elif output_path:
                 output_path = resolver.resolve_project_path(output_path)
             else:
@@ -211,9 +208,7 @@ class PandocService(QuackPluginProtocol):
             if self.converter:
                 return self.converter.convert_file(markdown_path, output_path, "docx")
             else:
-                return ConversionResult.error_result(
-                    "Converter not initialized"
-                )
+                return ConversionResult.error_result("Converter not initialized")
 
         except Exception as e:
             self.logger.error(f"Error in Markdown to DOCX conversion: {str(e)}")
@@ -224,8 +219,12 @@ class PandocService(QuackPluginProtocol):
             )
 
     def convert_directory(
-            self, input_dir: Path, output_format: str, output_dir: Path | None = None,
-            file_pattern: str | None = None, recursive: bool = False
+        self,
+        input_dir: Path,
+        output_format: str,
+        output_dir: Path | None = None,
+        file_pattern: str | None = None,
+        recursive: bool = False,
     ) -> BatchConversionResult:
         """
         Convert all files in a directory.
@@ -241,9 +240,7 @@ class PandocService(QuackPluginProtocol):
             BatchConversionResult: Result of the conversion
         """
         if not self._ensure_initialized():
-            return BatchConversionResult.error_result(
-                "Service not initialized"
-            )
+            return BatchConversionResult.error_result("Service not initialized")
 
         try:
             input_dir = resolver.resolve_project_path(input_dir)
@@ -307,7 +304,7 @@ class PandocService(QuackPluginProtocol):
                     task = ConversionTask(
                         source=file_info,
                         target_format=output_format,
-                        output_path=output_file
+                        output_path=output_file,
                     )
                     tasks.append(task)
                 except Exception as e:
@@ -321,9 +318,7 @@ class PandocService(QuackPluginProtocol):
                     "No valid files found for conversion"
                 )
             else:
-                return BatchConversionResult.error_result(
-                    "Converter not initialized"
-                )
+                return BatchConversionResult.error_result("Converter not initialized")
 
         except Exception as e:
             self.logger.error(f"Error in directory conversion: {str(e)}")

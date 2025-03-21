@@ -113,7 +113,8 @@ class GoogleMailService(BaseIntegrationService):
                 if config is None:  # Explicit check for None return
                     self._initialized = False
                     return IntegrationResult.error_result(
-                        "Failed to initialize configuration")
+                        "Failed to initialize configuration"
+                    )
             except QuackIntegrationError as e:
                 self._initialized = False
                 return IntegrationResult.error_result(str(e))
@@ -135,7 +136,9 @@ class GoogleMailService(BaseIntegrationService):
                 message="Google Mail service initialized successfully"
             )
         except Exception as e:
-            self._initialized = False  # Ensure initialized flag is set to False on failure
+            self._initialized = (
+                False  # Ensure initialized flag is set to False on failure
+            )
             self.logger.error(f"Failed to initialize Google Mail service: {e}")
             return IntegrationResult.error_result(
                 f"Failed to initialize Google Mail service: {e}"
@@ -175,6 +178,7 @@ class GoogleMailService(BaseIntegrationService):
             # Resolve the storage path and ensure it exists
             # Use the exact import path that is being patched in the test
             from quackcore.paths.resolver import resolve_project_path
+
             self.storage_path = str(resolve_project_path(self.storage_path))
             os.makedirs(self.storage_path, exist_ok=True)
 

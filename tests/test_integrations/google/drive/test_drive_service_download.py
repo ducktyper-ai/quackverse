@@ -19,9 +19,13 @@ class TestGoogleDriveServiceDownload:
     @pytest.fixture
     def drive_service(self) -> GoogleDriveService:
         """Set up a Google Drive service with mocked dependencies."""
-        with patch("quackcore.integrations.google.drive.service.resolver") as mock_resolver:
+        with patch(
+            "quackcore.integrations.google.drive.service.resolver"
+        ) as mock_resolver:
             # Setup resolver mock to return predictable paths
-            mock_resolver.resolve_project_path.side_effect = lambda p, *args: Path(f"/fake/test/dir/{Path(p).name}")
+            mock_resolver.resolve_project_path.side_effect = lambda p, *args: Path(
+                f"/fake/test/dir/{Path(p).name}"
+            )
             with patch("quackcore.fs.service.get_file_info") as mock_file_info:
                 # All file info checks should return that files exist
                 file_info_result = FileInfoResult(
@@ -29,22 +33,28 @@ class TestGoogleDriveServiceDownload:
                     path="/fake/test/dir/mock_credentials.json",
                     exists=True,
                     is_file=True,
-                    message="File exists"
+                    message="File exists",
                 )
                 mock_file_info.return_value = file_info_result
 
                 with patch("quackcore.fs.service.normalize_path") as mock_normalize:
                     # Return predictable normalized paths
-                    mock_normalize.side_effect = lambda p: Path(f"/fake/test/dir/{Path(p).name}")
+                    mock_normalize.side_effect = lambda p: Path(
+                        f"/fake/test/dir/{Path(p).name}"
+                    )
 
                     # Create the service with a mocked configuration
-                    with patch.object(GoogleDriveService, "_initialize_config") as mock_init_config:
+                    with patch.object(
+                        GoogleDriveService, "_initialize_config"
+                    ) as mock_init_config:
                         mock_init_config.return_value = {
                             "client_secrets_file": "/fake/test/dir/mock_secrets.json",
                             "credentials_file": "/fake/test/dir/mock_credentials.json",
                         }
                         # Disable verification of the client secrets file
-                        with patch("quackcore.integrations.google.auth.GoogleAuthProvider._verify_client_secrets_file"):
+                        with patch(
+                            "quackcore.integrations.google.auth.GoogleAuthProvider._verify_client_secrets_file"
+                        ):
                             service = GoogleDriveService()
                             # Mark as initialized to skip the actual initialization logic
                             service._initialized = True
@@ -52,7 +62,9 @@ class TestGoogleDriveServiceDownload:
                             yield service
 
     @patch("googleapiclient.http.MediaIoBaseDownload")
-    def test_download_file(self, mock_download_class: MagicMock, drive_service: GoogleDriveService) -> None:
+    def test_download_file(
+        self, mock_download_class: MagicMock, drive_service: GoogleDriveService
+    ) -> None:
         """Test downloading a file."""
         # --- Setup for successful metadata retrieval ---
         mock_get = MagicMock()
@@ -73,7 +85,9 @@ class TestGoogleDriveServiceDownload:
             (MagicMock(progress=lambda: 0.5), False),
             (MagicMock(progress=lambda: 1.0), True),
         ]
-        with patch("quackcore.integrations.google.drive.service.io.BytesIO") as mock_bytesio:
+        with patch(
+            "quackcore.integrations.google.drive.service.io.BytesIO"
+        ) as mock_bytesio:
             mock_io = MagicMock()
             mock_bytesio.return_value = mock_io
             mock_io.read.return_value = b"file content"
@@ -83,21 +97,23 @@ class TestGoogleDriveServiceDownload:
                     mock_join.return_value = Path("/tmp/test_file.txt")
                     with patch("quackcore.fs.service.create_directory") as mock_mkdir:
                         mkdir_result = OperationResult(
-                            success=True,
-                            path="/tmp",
-                            message="Directory created"
+                            success=True, path="/tmp", message="Directory created"
                         )
                         mock_mkdir.return_value = mkdir_result
-                        with patch("quackcore.integrations.google.drive.service.fs.write_binary") as mock_write:
+                        with patch(
+                            "quackcore.integrations.google.drive.service.fs.write_binary"
+                        ) as mock_write:
                             write_result = WriteResult(
                                 success=True,
                                 path="/tmp/test_file.txt",
                                 bytes_written=len(b"file content"),
-                                message="File written"
+                                message="File written",
                             )
                             mock_write.return_value = write_result
 
-                            result = drive_service.download_file("file123", "/tmp/test_file.txt")
+                            result = drive_service.download_file(
+                                "file123", "/tmp/test_file.txt"
+                            )
                             assert result.success is True
                             assert result.content == "/tmp/test_file.txt"
                             drive_service.drive_service.files().get.assert_called_once_with(
@@ -109,7 +125,9 @@ class TestGoogleDriveServiceDownload:
                             mock_write.assert_called_once()
 
         # --- Test API error during metadata retrieval ---
-        drive_service.drive_service.files().get.side_effect = QuackApiError("API error", service="drive")
+        drive_service.drive_service.files().get.side_effect = QuackApiError(
+            "API error", service="drive"
+        )
         result = drive_service.download_file("file123")
         assert result.success is False
         assert "API error" in result.error
@@ -136,17 +154,17 @@ class TestGoogleDriveServiceDownload:
                 mock_join.return_value = Path("/tmp/test_file.txt")
                 with patch("quackcore.fs.service.create_directory") as mock_mkdir:
                     mkdir_result = OperationResult(
-                        success=True,
-                        path="/tmp",
-                        message="Directory created"
+                        success=True, path="/tmp", message="Directory created"
                     )
                     mock_mkdir.return_value = mkdir_result
-                    with patch("quackcore.integrations.google.drive.service.fs.write_binary") as mock_write:
+                    with patch(
+                        "quackcore.integrations.google.drive.service.fs.write_binary"
+                    ) as mock_write:
                         # Simulate a write error
                         write_result = WriteResult(
                             success=False,
                             path="/tmp/test_file.txt",
-                            error="Write error"
+                            error="Write error",
                         )
                         mock_write.return_value = write_result
 

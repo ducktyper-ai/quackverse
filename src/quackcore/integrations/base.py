@@ -131,7 +131,8 @@ class BaseAuthProvider(ABC, AuthProviderProtocol):
             return False
 
         try:
-            from quackcore.fs.service import split_path, join_path, create_directory
+            from quackcore.fs.service import create_directory, join_path, split_path
+
             parent_path = split_path(self.credentials_file)[:-1]
             parent_dir = join_path(*parent_path)
             result = create_directory(parent_dir, exist_ok=True)
@@ -262,10 +263,12 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         project_root = None
         try:
             from quackcore.paths.resolver import get_project_root
+
             project_root = get_project_root()
         except (QuackFileNotFoundError, FileNotFoundError, OSError) as e:
             self.logger.debug(
-                f"Project root not found, checking only direct paths: {e}")
+                f"Project root not found, checking only direct paths: {e}"
+            )
 
         # Import these here to match patching in tests
         from quackcore.fs.service import expand_user_vars, get_file_info, join_path
@@ -309,6 +312,7 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
             self.logger.warning(f"Could not resolve project path: {e}")
             # Import normalize_path at runtime.
             from quackcore.fs.service import normalize_path
+
             normalized_path = normalize_path(file_path)
             return str(normalized_path)
 

@@ -216,9 +216,9 @@ class PathResolver:
     # Add resolve_project_path method to the PathResolver class in src/quackcore/paths/resolver.py
 
     def resolve_project_path(
-            self,
-            path: str | Path,
-            project_root: str | Path | None = None,
+        self,
+        path: str | Path,
+        project_root: str | Path | None = None,
     ) -> Path:
         """
         Resolve a path relative to the project root.
@@ -423,7 +423,9 @@ def get_project_root(
     """
     return PathResolver().get_project_root(start_dir, marker_files, marker_dirs)
 
+
 # Add module-level resolve_project_path function to src/quackcore/paths/resolver.py
+
 
 def resolve_project_path(
     path: str | Path,

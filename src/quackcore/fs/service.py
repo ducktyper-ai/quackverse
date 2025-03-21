@@ -21,13 +21,13 @@ from quackcore.fs.results import (
     ReadResult,
     WriteResult,
 )
+from quackcore.fs.utils import expand_user_vars  # Make sure this is imported
 from quackcore.fs.utils import (
     atomic_write,
     compute_checksum,
     create_temp_directory,
     create_temp_file,
     ensure_directory,
-    expand_user_vars,  # Make sure this is imported
     find_files_by_content,
     get_disk_usage,
     get_extension,
@@ -650,11 +650,13 @@ class FileSystemService:
         """
         return get_file_timestamp(path)
 
+
 # --- Module-Level Utility Functions ---
 # These functions are exposed at the module level so that external code or tests
 # (which patch these names) can find and override them as needed.
 
 from quackcore.fs.results import OperationResult
+
 
 def create_directory(path: str | Path, exist_ok: bool = True) -> OperationResult:
     """
@@ -671,9 +673,12 @@ def create_directory(path: str | Path, exist_ok: bool = True) -> OperationResult
         directory = Path(path)
         if not directory.exists():
             directory.mkdir(parents=True, exist_ok=exist_ok)
-        return OperationResult(success=True, path=str(directory), message="Directory exists or was created")
+        return OperationResult(
+            success=True, path=str(directory), message="Directory exists or was created"
+        )
     except Exception as e:
         return OperationResult(success=False, error=str(e), path=str(path))
+
 
 def read_yaml(path: str | Path) -> DataResult[dict]:
     """
@@ -687,7 +692,9 @@ def read_yaml(path: str | Path) -> DataResult[dict]:
     """
     return FileSystemService().read_yaml(path)
 
+
 from pathlib import Path
+
 from quackcore.fs.results import FileInfoResult
 
 
@@ -729,11 +736,11 @@ def get_file_info(path: str | Path) -> FileInfoResult:
             size=size,
             modified=modified,
             created=created,
-            message=f"Got file info for {p}"
+            message=f"Got file info for {p}",
         )
     except Exception as e:
         return FileInfoResult(
             success=False,
             path=str(p),  # Convert to string to match the expected interface
-            error=str(e)
+            error=str(e),
         )

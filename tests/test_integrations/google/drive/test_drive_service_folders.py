@@ -14,7 +14,8 @@ class TestGoogleDriveServiceFolders:
     """Tests for the GoogleDriveService folder operations."""
 
     @patch(
-        "quackcore.integrations.google.auth.GoogleAuthProvider._verify_client_secrets_file")
+        "quackcore.integrations.google.auth.GoogleAuthProvider._verify_client_secrets_file"
+    )
     @patch.object(GoogleDriveService, "_initialize_config")
     def test_create_folder(self, mock_init_config, mock_verify) -> None:
         """Test creating a folder."""
@@ -25,7 +26,7 @@ class TestGoogleDriveServiceFolders:
         mock_init_config.return_value = {
             "client_secrets_file": "/path/to/secrets.json",
             "credentials_file": "/path/to/credentials.json",
-            "shared_folder_id": "shared_folder"
+            "shared_folder_id": "shared_folder",
         }
 
         # Create service with mocked dependencies
@@ -81,7 +82,8 @@ class TestGoogleDriveServiceFolders:
         assert "API error" in result.error
 
     @patch(
-        "quackcore.integrations.google.auth.GoogleAuthProvider._verify_client_secrets_file")
+        "quackcore.integrations.google.auth.GoogleAuthProvider._verify_client_secrets_file"
+    )
     @patch.object(GoogleDriveService, "_initialize_config")
     def test_delete_file(self, mock_init_config, mock_verify) -> None:
         """Test deleting a file or folder."""
@@ -92,7 +94,7 @@ class TestGoogleDriveServiceFolders:
         mock_init_config.return_value = {
             "client_secrets_file": "/path/to/secrets.json",
             "credentials_file": "/path/to/credentials.json",
-            "shared_folder_id": "shared_folder"
+            "shared_folder_id": "shared_folder",
         }
 
         # Create service with mocked dependencies
@@ -113,9 +115,7 @@ class TestGoogleDriveServiceFolders:
         # Test permanent deletion
         result = service.delete_file("file_id", permanent=True)
         assert result.success is True
-        service.drive_service.files().delete.assert_called_once_with(
-            file_id="file_id"
-        )
+        service.drive_service.files().delete.assert_called_once_with(file_id="file_id")
 
         # Test move to trash
         service.drive_service.files().update.reset_mock()

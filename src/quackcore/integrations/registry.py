@@ -300,7 +300,7 @@ class IntegrationRegistry:
             return []
 
     def _load_integration_from_entry(
-            self, entry: EntryPoint, plugin_loader: PluginLoaderProtocol | None
+        self, entry: EntryPoint, plugin_loader: PluginLoaderProtocol | None
     ) -> IntegrationProtocol | None:
         """
         Load an integration from a given entry point.
@@ -347,7 +347,7 @@ class IntegrationRegistry:
         return None
 
     def _load_integration_with_plugin_loader(
-            self, module_path: str, plugin_loader: PluginLoaderProtocol | None
+        self, module_path: str, plugin_loader: PluginLoaderProtocol | None
     ) -> IntegrationProtocol | None:
         """
         Attempt to load an integration from a module using the plugin loader.
@@ -363,12 +363,14 @@ class IntegrationRegistry:
             try:
                 plugin = plugin_loader.load_plugin(module_path)
                 # Verify it's a valid integration by checking required attributes
-                if (hasattr(plugin, 'name') and
-                        hasattr(plugin, 'version') and
-                        hasattr(plugin, 'initialize') and
-                        hasattr(plugin, 'is_available') and
-                        callable(plugin.initialize) and
-                        callable(plugin.is_available)):
+                if (
+                    hasattr(plugin, "name")
+                    and hasattr(plugin, "version")
+                    and hasattr(plugin, "initialize")
+                    and hasattr(plugin, "is_available")
+                    and callable(plugin.initialize)
+                    and callable(plugin.is_available)
+                ):
                     return plugin
             except (ImportError, AttributeError) as e:
                 self.logger.debug(
@@ -379,7 +381,7 @@ class IntegrationRegistry:
         return None
 
     def _load_integration_from_factory(
-            self, module: object
+        self, module: object
     ) -> IntegrationProtocol | None:
         """
         Attempt to load an integration via a factory function
@@ -397,12 +399,14 @@ class IntegrationRegistry:
                 try:
                     integration = create_func()
                     # Verify the instance has the required protocol properties and methods
-                    if (hasattr(integration, 'name') and
-                            hasattr(integration, 'version') and
-                            hasattr(integration, 'initialize') and
-                            hasattr(integration, 'is_available') and
-                            callable(integration.initialize) and
-                            callable(integration.is_available)):
+                    if (
+                        hasattr(integration, "name")
+                        and hasattr(integration, "version")
+                        and hasattr(integration, "initialize")
+                        and hasattr(integration, "is_available")
+                        and callable(integration.initialize)
+                        and callable(integration.is_available)
+                    ):
                         return integration
                 except (TypeError, ValueError) as e:
                     self.logger.error(
@@ -415,7 +419,7 @@ class IntegrationRegistry:
         return None
 
     def _load_integrations_from_module(
-            self, module: object
+        self, module: object
     ) -> list[IntegrationProtocol]:
         """
         Search the module for integration classes that are defined within it.
@@ -435,10 +439,12 @@ class IntegrationRegistry:
                 try:
                     instance = attr()
                     # Check if the instance has the required protocol methods
-                    if (hasattr(instance, 'name') and
-                            hasattr(instance, 'version') and
-                            hasattr(instance, 'initialize') and
-                            hasattr(instance, 'is_available')):
+                    if (
+                        hasattr(instance, "name")
+                        and hasattr(instance, "version")
+                        and hasattr(instance, "initialize")
+                        and hasattr(instance, "is_available")
+                    ):
                         integrations.append(instance)
                 except Exception as e:
                     self.logger.error(f"Error instantiating TestIntegration: {e}")
@@ -452,26 +458,30 @@ class IntegrationRegistry:
                 attr = getattr(module, attr_name)
 
                 # Check if it's a class with the expected properties of IntegrationProtocol
-                if (isinstance(attr, type) and
-                        hasattr(attr, '__module__') and
-                        attr.__module__ == getattr(module, '__name__', '') and
-                        attr is not IntegrationProtocol):
-
+                if (
+                    isinstance(attr, type)
+                    and hasattr(attr, "__module__")
+                    and attr.__module__ == getattr(module, "__name__", "")
+                    and attr is not IntegrationProtocol
+                ):
                     try:
                         instance = attr()
                         # Verify the instance has the required protocol properties and methods
-                        if (hasattr(instance, 'name') and
-                                hasattr(instance, 'version') and
-                                hasattr(instance, 'initialize') and
-                                hasattr(instance, 'is_available') and
-                                callable(instance.initialize) and
-                                callable(instance.is_available)):
+                        if (
+                            hasattr(instance, "name")
+                            and hasattr(instance, "version")
+                            and hasattr(instance, "initialize")
+                            and hasattr(instance, "is_available")
+                            and callable(instance.initialize)
+                            and callable(instance.is_available)
+                        ):
                             integrations.append(instance)
                     except (TypeError, ValueError) as e:
                         self.logger.error(f"Error instantiating {attr_name}: {e}")
                     except Exception as e:
                         self.logger.error(
-                            f"Unexpected error instantiating {attr_name}: {e}")
+                            f"Unexpected error instantiating {attr_name}: {e}"
+                        )
             except Exception:
                 # Skip attributes that can't be accessed
                 continue

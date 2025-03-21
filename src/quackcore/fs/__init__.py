@@ -16,7 +16,12 @@ from quackcore.fs.results import (
     ReadResult,
     WriteResult,
 )
-from quackcore.fs.service import FileSystemService, get_file_info, create_directory, read_yaml
+from quackcore.fs.service import (
+    FileSystemService,
+    create_directory,
+    get_file_info,
+    read_yaml,
+)
 from quackcore.fs.utils import (
     atomic_write,
     compute_checksum,
@@ -88,6 +93,6 @@ __all__ = [
     "safe_move",
     "safe_delete",
     "get_file_info",  # Added to make it accessible through fs package
-    "create_directory", # Added to make it accessible through fs package
-    "read_yaml",      # Added to make it accessible through fs package
+    "create_directory",  # Added to make it accessible through fs package
+    "read_yaml",  # Added to make it accessible through fs package
 ]

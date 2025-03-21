@@ -24,11 +24,11 @@ class GoogleAuthProvider(BaseAuthProvider):
     """Authentication provider for Google integrations."""
 
     def __init__(
-            self,
-            client_secrets_file: str,
-            credentials_file: str | None = None,
-            scopes: list[str] | Sequence[str] | None = None,
-            log_level: int = logging.INFO,
+        self,
+        client_secrets_file: str,
+        credentials_file: str | None = None,
+        scopes: list[str] | Sequence[str] | None = None,
+        log_level: int = logging.INFO,
     ) -> None:
         """
         Initialize the Google authentication provider.
@@ -97,9 +97,7 @@ class GoogleAuthProvider(BaseAuthProvider):
                                     self.scopes,
                                 )
                             except ValueError as e:
-                                self.logger.warning(
-                                    f"Failed to load credentials: {e}"
-                                )
+                                self.logger.warning(f"Failed to load credentials: {e}")
                         else:
                             self.logger.warning(
                                 f"Failed to load credentials: {json_result.error}"
@@ -108,7 +106,7 @@ class GoogleAuthProvider(BaseAuthProvider):
                         self.logger.warning(f"Failed to load credentials: {e}")
 
             # Refresh token if expired
-            if creds and hasattr(creds, 'expired') and hasattr(creds, 'refresh_token'):
+            if creds and hasattr(creds, "expired") and hasattr(creds, "refresh_token"):
                 if creds.expired and creds.refresh_token:
                     creds.refresh(Request())
                     self._save_credentials_to_file(creds)
@@ -126,7 +124,7 @@ class GoogleAuthProvider(BaseAuthProvider):
                     )
 
             # If no valid credentials, authenticate using flow
-            if not creds or not hasattr(creds, 'valid') or not creds.valid:
+            if not creds or not hasattr(creds, "valid") or not creds.valid:
                 self.logger.info(
                     "No valid credentials found, starting authentication flow"
                 )
@@ -284,7 +282,9 @@ class GoogleAuthProvider(BaseAuthProvider):
         # Get credentials data
         try:
             # Check if the credentials object has to_json method
-            if hasattr(credentials, "to_json") and callable(getattr(credentials, "to_json")):
+            if hasattr(credentials, "to_json") and callable(
+                getattr(credentials, "to_json")
+            ):
                 # Get JSON data - handle MagicMock objects specially
                 if hasattr(credentials, "_mock_name") and credentials._mock_name:
                     # This is a MagicMock - return value should already be set up
@@ -307,6 +307,7 @@ class GoogleAuthProvider(BaseAuthProvider):
                     else:
                         # Parse the JSON string into a dictionary
                         import json
+
                         try:
                             creds_data = json.loads(json_str)
                         except (ValueError, TypeError):
@@ -315,6 +316,7 @@ class GoogleAuthProvider(BaseAuthProvider):
                 else:
                     # For real Credentials objects
                     import json
+
                     try:
                         json_str = credentials.to_json()
                         creds_data = json.loads(json_str)
@@ -366,7 +368,10 @@ class GoogleAuthProvider(BaseAuthProvider):
         if hasattr(credentials, "refresh_token"):
             refresh_token = credentials.refresh_token
             # Check if it's a mock object
-            if isinstance(refresh_token, object) and refresh_token.__class__.__name__ == "MagicMock":
+            if (
+                isinstance(refresh_token, object)
+                and refresh_token.__class__.__name__ == "MagicMock"
+            ):
                 creds_data["refresh_token"] = "mock_refresh_token"
             else:
                 creds_data["refresh_token"] = refresh_token
@@ -377,7 +382,10 @@ class GoogleAuthProvider(BaseAuthProvider):
         if hasattr(credentials, "token_uri"):
             token_uri = credentials.token_uri
             # Check if it's a mock object
-            if isinstance(token_uri, object) and token_uri.__class__.__name__ == "MagicMock":
+            if (
+                isinstance(token_uri, object)
+                and token_uri.__class__.__name__ == "MagicMock"
+            ):
                 creds_data["token_uri"] = "https://oauth2.googleapis.com/token"
             else:
                 creds_data["token_uri"] = token_uri
@@ -388,7 +396,10 @@ class GoogleAuthProvider(BaseAuthProvider):
         if hasattr(credentials, "client_id"):
             client_id = credentials.client_id
             # Check if it's a mock object
-            if isinstance(client_id, object) and client_id.__class__.__name__ == "MagicMock":
+            if (
+                isinstance(client_id, object)
+                and client_id.__class__.__name__ == "MagicMock"
+            ):
                 creds_data["client_id"] = "mock_client_id"
             else:
                 creds_data["client_id"] = client_id
@@ -399,7 +410,10 @@ class GoogleAuthProvider(BaseAuthProvider):
         if hasattr(credentials, "client_secret"):
             client_secret = credentials.client_secret
             # Check if it's a mock object
-            if isinstance(client_secret, object) and client_secret.__class__.__name__ == "MagicMock":
+            if (
+                isinstance(client_secret, object)
+                and client_secret.__class__.__name__ == "MagicMock"
+            ):
                 creds_data["client_secret"] = "mock_client_secret"
             else:
                 creds_data["client_secret"] = client_secret
@@ -426,7 +440,11 @@ class GoogleAuthProvider(BaseAuthProvider):
                     timestamp = expiry.timestamp()
                     # Check if timestamp result is likely a mock with return value
                     # Use isinstance and class name check instead of protected attribute
-                    if isinstance(timestamp, object) and hasattr(timestamp, "__class__") and timestamp.__class__.__name__ == "MagicMock":
+                    if (
+                        isinstance(timestamp, object)
+                        and hasattr(timestamp, "__class__")
+                        and timestamp.__class__.__name__ == "MagicMock"
+                    ):
                         # Try to get the return value in a safer way
                         if hasattr(timestamp, "return_value"):
                             timestamp_value = timestamp.return_value
@@ -438,6 +456,7 @@ class GoogleAuthProvider(BaseAuthProvider):
 
                     # Format as ISO string
                     from datetime import datetime
+
                     try:
                         dt = datetime.fromtimestamp(timestamp_value)
                         creds_data["expiry"] = dt.isoformat() + "Z"

@@ -6,8 +6,8 @@ This module provides functions for converting HTML documents to Markdown
 using pandoc with optimized settings.
 """
 
-import re
 import logging
+import re
 import time
 from pathlib import Path
 
@@ -27,10 +27,10 @@ logger = logging.getLogger(__name__)
 
 
 def convert_html_to_markdown(
-        html_path: Path,
-        output_path: Path,
-        config: ConversionConfig,
-        metrics: ConversionMetrics | None = None,
+    html_path: Path,
+    output_path: Path,
+    config: ConversionConfig,
+    metrics: ConversionMetrics | None = None,
 ) -> ConversionResult:
     """
     Convert an HTML file to Markdown.
@@ -184,7 +184,8 @@ def convert_html_to_markdown(
         except Exception as e:
             retry_count += 1
             logger.warning(
-                f"HTML to Markdown conversion attempt {retry_count} failed: {str(e)}")
+                f"HTML to Markdown conversion attempt {retry_count} failed: {str(e)}"
+            )
 
             if retry_count >= config.retry_mechanism.max_conversion_retries:
                 if metrics:
@@ -218,29 +219,28 @@ def post_process_markdown(markdown_content: str) -> str:
         str: Cleaned markdown content
     """
     # Remove all class/style attributes
-    cleaned = re.sub(r'{[^}]*}', '', markdown_content)
+    cleaned = re.sub(r"{[^}]*}", "", markdown_content)
 
     # Remove div containers
-    cleaned = re.sub(r':::+\s*[^\n]*\n', '', cleaned)
+    cleaned = re.sub(r":::+\s*[^\n]*\n", "", cleaned)
 
     # Remove div tags
-    cleaned = re.sub(r'<div[^>]*>|</div>', '', cleaned)
+    cleaned = re.sub(r"<div[^>]*>|</div>", "", cleaned)
 
     # Normalize whitespace
-    cleaned = re.sub(r'\n\s*\n\s*\n+', '\n\n', cleaned)
+    cleaned = re.sub(r"\n\s*\n\s*\n+", "\n\n", cleaned)
 
     # Remove HTML comments
-    cleaned = re.sub(r'<!--[^>]*-->', '', cleaned)
+    cleaned = re.sub(r"<!--[^>]*-->", "", cleaned)
 
     # Fix bullet lists that might have been affected by div removal
-    cleaned = re.sub(r'\n\s*\n-', '\n-', cleaned)
+    cleaned = re.sub(r"\n\s*\n-", "\n-", cleaned)
 
     return cleaned
 
 
 def validate_conversion(
-        output_path: Path, input_path: Path, original_size: int,
-        config: ConversionConfig
+    output_path: Path, input_path: Path, original_size: int, config: ConversionConfig
 ) -> list[str]:
     """
     Validate the converted markdown document.
@@ -301,7 +301,8 @@ def validate_conversion(
             if validation.check_links and source_file_name not in content:
                 # This is a soft check - we only log it
                 logger.debug(
-                    f"Source file reference missing in markdown output: {source_file_name}")
+                    f"Source file reference missing in markdown output: {source_file_name}"
+                )
 
         except Exception as e:
             validation_errors.append(f"Error reading output file: {str(e)}")

@@ -13,12 +13,11 @@ from pathlib import Path
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs import service as fs
 from quackcore.plugins.pandoc.config import ConversionConfig
-from quackcore.plugins.pandoc.models import (
+from quackcore.plugins.pandoc.models import (  # FileInfo is not used in this file, so it's removed
     BatchConversionResult,
     ConversionMetrics,
     ConversionResult,
     ConversionTask,
-    # FileInfo is not used in this file, so it's removed
 )
 from quackcore.plugins.pandoc.operations import (
     convert_html_to_markdown,
@@ -58,7 +57,7 @@ class DocumentConverter:
         return self._pandoc_version
 
     def convert_file(
-            self, input_path: Path, output_path: Path, output_format: str
+        self, input_path: Path, output_path: Path, output_format: str
     ) -> ConversionResult:
         """
         Convert a file from one format to another.
@@ -116,7 +115,7 @@ class DocumentConverter:
             )
 
     def convert_batch(
-            self, tasks: list[ConversionTask], output_dir: Path | None = None
+        self, tasks: list[ConversionTask], output_dir: Path | None = None
     ) -> BatchConversionResult:
         """
         Convert a batch of files.
@@ -145,7 +144,11 @@ class DocumentConverter:
                 # Determine output path if not specified in the task
                 output_path = task.output_path
                 if not output_path or output_dir:
-                    extension = ".md" if task.target_format == "markdown" else f".{task.target_format}"
+                    extension = (
+                        ".md"
+                        if task.target_format == "markdown"
+                        else f".{task.target_format}"
+                    )
                     filename = task.source.path.stem + extension
                     output_path = output_directory / filename
 
@@ -224,9 +227,11 @@ class DocumentConverter:
             input_size = input_info.size or 0
             output_size = output_info.size or 0
             size_change_percentage = (
-                        output_size / input_size * 100) if input_size > 0 else 0
+                (output_size / input_size * 100) if input_size > 0 else 0
+            )
             logger.debug(
-                f"Conversion size change: {input_size} → {output_size} bytes ({size_change_percentage:.1f}%)")
+                f"Conversion size change: {input_size} → {output_size} bytes ({size_change_percentage:.1f}%)"
+            )
 
             # Validate based on file format
             extension = output_path.suffix.lower()
@@ -240,8 +245,10 @@ class DocumentConverter:
                     logger.error(f"Failed to read markdown file: {e}")
                     return False
             elif extension == ".docx":
-                from quackcore.plugins.pandoc.operations.utils import \
-                    validate_docx_structure
+                from quackcore.plugins.pandoc.operations.utils import (
+                    validate_docx_structure,
+                )
+
                 is_valid, _ = validate_docx_structure(
                     output_path, self.config.validation.check_links
                 )

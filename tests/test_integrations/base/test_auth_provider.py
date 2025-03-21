@@ -135,8 +135,9 @@ class TestBaseAuthProvider:
 
         # Replace the save_credentials method with the one from BaseAuthProvider
         original_save = provider.save_credentials
-        provider.save_credentials = BaseAuthProvider.save_credentials.__get__(provider,
-                                                                              MockAuthProvider)
+        provider.save_credentials = BaseAuthProvider.save_credentials.__get__(
+            provider, MockAuthProvider
+        )
 
         try:
             result = provider.save_credentials()

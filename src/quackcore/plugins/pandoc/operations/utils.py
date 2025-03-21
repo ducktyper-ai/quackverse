@@ -49,10 +49,10 @@ def verify_pandoc() -> str:
 
 
 def prepare_pandoc_args(
-        config: ConversionConfig,
-        source_format: str,
-        target_format: str,
-        extra_args: list[str] | None = None,
+    config: ConversionConfig,
+    source_format: str,
+    target_format: str,
+    extra_args: list[str] | None = None,
 ) -> list[str]:
     """
     Prepare pandoc conversion arguments.
@@ -93,7 +93,9 @@ def prepare_pandoc_args(
     return [arg for arg in args if arg is not None]
 
 
-def validate_html_structure(content: str, check_links: bool = False) -> tuple[bool, list[str]]:
+def validate_html_structure(
+    content: str, check_links: bool = False
+) -> tuple[bool, list[str]]:
     """
     Validate HTML document structure.
 
@@ -135,7 +137,9 @@ def validate_html_structure(content: str, check_links: bool = False) -> tuple[bo
         return False, errors
 
 
-def validate_docx_structure(docx_path: Path, check_links: bool = False) -> tuple[bool, list[str]]:
+def validate_docx_structure(
+    docx_path: Path, check_links: bool = False
+) -> tuple[bool, list[str]]:
     """
     Validate DOCX document structure.
 
@@ -161,7 +165,7 @@ def validate_docx_structure(docx_path: Path, check_links: bool = False) -> tuple
         # Validate links if configured
         if check_links:
             # In python-docx, hyperlinks are part of the relationships
-            if not hasattr(doc, 'part') or doc.part is None:
+            if not hasattr(doc, "part") or doc.part is None:
                 errors.append("Document structure appears incomplete")
                 return False, errors
 
@@ -176,12 +180,12 @@ def validate_docx_structure(docx_path: Path, check_links: bool = False) -> tuple
 
 
 def track_metrics(
-        filename: str,
-        start_time: float,
-        original_size: int,
-        converted_size: int,
-        metrics: ConversionMetrics,
-        config: ConversionConfig,
+    filename: str,
+    start_time: float,
+    original_size: int,
+    converted_size: int,
+    metrics: ConversionMetrics,
+    config: ConversionConfig,
 ) -> None:
     """
     Track conversion metrics.
@@ -261,7 +265,7 @@ def get_file_info(path: Path, format_hint: str | None = None) -> FileInfo:
 
 
 def check_file_size(
-        converted_size: int, validation_min_size: int
+    converted_size: int, validation_min_size: int
 ) -> tuple[bool, list[str]]:
     """
     Check if the converted file meets the minimum file size.
@@ -287,7 +291,7 @@ def check_file_size(
 
 
 def check_conversion_ratio(
-        converted_size: int, original_size: int, threshold: float
+    converted_size: int, original_size: int, threshold: float
 ) -> tuple[bool, list[str]]:
     """
     Check if the converted file size is not drastically smaller than the original.
