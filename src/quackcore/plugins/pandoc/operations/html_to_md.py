@@ -84,7 +84,13 @@ def convert_html_to_markdown(
             fs.create_directory(output_path.parent, exist_ok=True)
 
             # Write output
-            fs.write_text(output_path, cleaned, encoding="utf-8")
+            write_result = fs.write_text(output_path, cleaned, encoding="utf-8")
+            if not write_result.success:
+                return ConversionResult.error_result(
+                    f"Failed to write output file: {write_result.error}",
+                    source_format="html",
+                    target_format="markdown",
+                )
 
             # Calculate elapsed time
             conversion_time = time.time() - start_time
@@ -217,7 +223,7 @@ def validate_conversion(
     Returns:
         list[str]: List of validation error messages (empty if valid)
     """
-    validation_errors = []
+    validation_errors: list[str] = []
     validation = config.validation
 
     # Check if the output file exists

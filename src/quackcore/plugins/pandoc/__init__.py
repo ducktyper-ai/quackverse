@@ -7,7 +7,7 @@ including HTML to Markdown and Markdown to DOCX conversion.
 """
 
 from quackcore.plugins.pandoc.config import ConversionConfig, PandocConfigProvider
-from quackcore.plugins.pandoc.converter import DocumentConverter
+from quackcore.plugins.pandoc.converter import DocumentConverter, create_converter
 from quackcore.plugins.pandoc.models import (
     BatchConversionResult,
     ConversionMetrics,
@@ -26,6 +26,7 @@ __all__ = [
     "PandocConfigProvider",
     # Core converter
     "DocumentConverter",
+    "create_converter",
     # Models
     "BatchConversionResult",
     "ConversionMetrics",

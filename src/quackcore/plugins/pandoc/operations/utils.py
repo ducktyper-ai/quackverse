@@ -93,8 +93,7 @@ def prepare_pandoc_args(
     return [arg for arg in args if arg is not None]
 
 
-def validate_html_structure(content: str, check_links: bool = False) -> tuple[
-    bool, list[str]]:
+def validate_html_structure(content: str, check_links: bool = False) -> tuple[bool, list[str]]:
     """
     Validate HTML document structure.
 
@@ -105,7 +104,7 @@ def validate_html_structure(content: str, check_links: bool = False) -> tuple[
     Returns:
         tuple: (is_valid, list of error messages)
     """
-    errors = []
+    errors: list[str] = []
 
     try:
         from bs4 import BeautifulSoup
@@ -136,8 +135,7 @@ def validate_html_structure(content: str, check_links: bool = False) -> tuple[
         return False, errors
 
 
-def validate_docx_structure(docx_path: Path, check_links: bool = False) -> tuple[
-    bool, list[str]]:
+def validate_docx_structure(docx_path: Path, check_links: bool = False) -> tuple[bool, list[str]]:
     """
     Validate DOCX document structure.
 
@@ -148,7 +146,7 @@ def validate_docx_structure(docx_path: Path, check_links: bool = False) -> tuple
     Returns:
         tuple: (is_valid, list of error messages)
     """
-    errors = []
+    errors: list[str] = []
 
     try:
         from docx import Document
@@ -163,7 +161,7 @@ def validate_docx_structure(docx_path: Path, check_links: bool = False) -> tuple
         # Validate links if configured
         if check_links:
             # In python-docx, hyperlinks are part of the relationships
-            if not doc.part:
+            if not hasattr(doc, 'part') or doc.part is None:
                 errors.append("Document structure appears incomplete")
                 return False, errors
 
@@ -275,7 +273,7 @@ def check_file_size(
     Returns:
         tuple: (is_valid, list of error messages)
     """
-    errors = []
+    errors: list[str] = []
 
     if validation_min_size > 0 and converted_size < validation_min_size:
         errors.append(
@@ -302,7 +300,7 @@ def check_conversion_ratio(
     Returns:
         tuple: (is_valid, list of error messages)
     """
-    errors = []
+    errors: list[str] = []
 
     if original_size > 0:
         conversion_ratio = converted_size / original_size

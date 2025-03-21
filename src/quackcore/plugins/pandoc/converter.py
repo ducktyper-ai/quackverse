@@ -74,6 +74,9 @@ class DocumentConverter:
         Raises:
             QuackIntegrationError: If the input file does not exist
         """
+        # Initialize input_info to None so it's always defined
+        input_info = None
+
         try:
             # Get file info and determine source format
             input_info = get_file_info(input_path)
@@ -101,14 +104,14 @@ class DocumentConverter:
             logger.error(f"Integration error during conversion: {str(e)}")
             return ConversionResult.error_result(
                 str(e),
-                source_format=getattr(input_info, "format", None),
+                source_format=input_info.format if input_info else None,
                 target_format=output_format,
             )
         except Exception as e:
             logger.error(f"Unexpected error during conversion: {str(e)}")
             return ConversionResult.error_result(
                 f"Conversion error: {str(e)}",
-                source_format=getattr(input_info, "format", None),
+                source_format=input_info.format if input_info else None,
                 target_format=output_format,
             )
 
@@ -128,8 +131,8 @@ class DocumentConverter:
         output_directory = output_dir or self.config.output_dir
         fs.create_directory(output_directory, exist_ok=True)
 
-        successful_files = []
-        failed_files = []
+        successful_files: list[Path] = []
+        failed_files: list[Path] = []
 
         # Reset metrics for this batch
         self.metrics = ConversionMetrics(
@@ -152,7 +155,8 @@ class DocumentConverter:
                 )
 
                 if result.success:
-                    successful_files.append(output_path)
+                    if result.content is not None:
+                        successful_files.append(result.content)
                 else:
                     failed_files.append(task.source.path)
                     logger.error(
@@ -214,14 +218,16 @@ class DocumentConverter:
             # Validate based on file format
             extension = output_path.suffix.lower()
 
-            if extension == ".md" or extension == ".markdown":
+            if extension in (".md", ".markdown"):
                 # For markdown, we can read the content and validate
-                content = output_path.read_text(encoding="utf-8")
-                is_valid, _ = fs.get_file_info(output_path)
-                return is_valid.success
+                try:
+                    content = output_path.read_text(encoding="utf-8")
+                    return len(content.strip()) > 0
+                except Exception as e:
+                    logger.error(f"Failed to read markdown file: {e}")
+                    return False
             elif extension == ".docx":
-                from quackcore.integrations.pandoc.operations.utils import \
-                    validate_docx_structure
+                from quackcore.plugins.pandoc.operations.utils import validate_docx_structure
                 is_valid, _ = validate_docx_structure(
                     output_path, self.config.validation.check_links
                 )

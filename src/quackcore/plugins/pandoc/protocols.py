@@ -7,15 +7,13 @@ ensuring proper typing throughout the codebase.
 """
 
 from pathlib import Path
-from typing import Protocol, TypeVar, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from quackcore.plugins.pandoc.models import (
     BatchConversionResult,
     ConversionResult,
     ConversionTask,
 )
-
-T = TypeVar("T")  # Generic type for result content
 
 
 @runtime_checkable

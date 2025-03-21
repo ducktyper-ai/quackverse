@@ -61,7 +61,7 @@ class PandocService(QuackPluginProtocol):
         # Initialize configuration
         self.config_path = config_path
         self.config_provider = PandocConfigProvider(log_level)
-        self.config = None
+        self.config: ConversionConfig | None = None
 
         # Initialize custom attributes
         self.output_dir = output_dir
@@ -151,13 +151,22 @@ class PandocService(QuackPluginProtocol):
             html_path = resolver.resolve_project_path(html_path)
 
             # Determine output path if not provided
-            if output_path is None:
+            if output_path is None and self.converter:
                 output_path = self.converter.config.output_dir / f"{html_path.stem}.md"
-            else:
+            elif output_path:
                 output_path = resolver.resolve_project_path(output_path)
+            else:
+                return ConversionResult.error_result(
+                    "Cannot determine output path, converter not initialized"
+                )
 
             # Perform conversion
-            return self.converter.convert_file(html_path, output_path, "markdown")
+            if self.converter:
+                return self.converter.convert_file(html_path, output_path, "markdown")
+            else:
+                return ConversionResult.error_result(
+                    "Converter not initialized"
+                )
 
         except Exception as e:
             self.logger.error(f"Error in HTML to Markdown conversion: {str(e)}")
@@ -189,13 +198,22 @@ class PandocService(QuackPluginProtocol):
             markdown_path = resolver.resolve_project_path(markdown_path)
 
             # Determine output path if not provided
-            if output_path is None:
+            if output_path is None and self.converter:
                 output_path = self.converter.config.output_dir / f"{markdown_path.stem}.docx"
-            else:
+            elif output_path:
                 output_path = resolver.resolve_project_path(output_path)
+            else:
+                return ConversionResult.error_result(
+                    "Cannot determine output path, converter not initialized"
+                )
 
             # Perform conversion
-            return self.converter.convert_file(markdown_path, output_path, "docx")
+            if self.converter:
+                return self.converter.convert_file(markdown_path, output_path, "docx")
+            else:
+                return ConversionResult.error_result(
+                    "Converter not initialized"
+                )
 
         except Exception as e:
             self.logger.error(f"Error in Markdown to DOCX conversion: {str(e)}")
@@ -231,10 +249,14 @@ class PandocService(QuackPluginProtocol):
             input_dir = resolver.resolve_project_path(input_dir)
 
             # Determine output directory
-            if output_dir is None:
+            if output_dir is None and self.converter:
                 output_dir = self.converter.config.output_dir
-            else:
+            elif output_dir:
                 output_dir = resolver.resolve_project_path(output_dir)
+            else:
+                return BatchConversionResult.error_result(
+                    "Cannot determine output directory, converter not initialized"
+                )
 
             # Ensure directories exist
             if not input_dir.exists() or not input_dir.is_dir():
@@ -291,11 +313,15 @@ class PandocService(QuackPluginProtocol):
                     self.logger.warning(f"Skipping file {file_path}: {str(e)}")
 
             # Perform batch conversion
-            if tasks:
+            if tasks and self.converter:
                 return self.converter.convert_batch(tasks, output_dir)
-            else:
+            elif not tasks:
                 return BatchConversionResult.error_result(
                     "No valid files found for conversion"
+                )
+            else:
+                return BatchConversionResult.error_result(
+                    "Converter not initialized"
                 )
 
         except Exception as e:

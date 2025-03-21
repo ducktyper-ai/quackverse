@@ -180,7 +180,7 @@ def validate_conversion(
     Returns:
         list[str]: List of validation error messages (empty if valid)
     """
-    validation_errors = []
+    validation_errors: list[str] = []
     validation = config.validation
 
     # Check if the output file exists

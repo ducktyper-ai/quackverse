@@ -5,8 +5,9 @@ Configuration models for Pandoc plugin.
 This module provides Pydantic models for the pandoc plugin configuration.
 """
 
+import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -134,16 +135,16 @@ class ConversionConfig(BaseModel):
 class PandocConfigProvider:
     """Configuration provider for Pandoc plugin."""
 
-    DEFAULT_CONFIG_LOCATIONS = [
+    DEFAULT_CONFIG_LOCATIONS: ClassVar[list[str]] = [
         "./config/pandoc_config.yaml",
         "./config/quack_config.yaml",
         "./quack_config.yaml",
         "~/.quack/pandoc_config.yaml",
     ]
 
-    ENV_PREFIX = "QUACK_PANDOC_"
+    ENV_PREFIX: ClassVar[str] = "QUACK_PANDOC_"
 
-    def __init__(self, log_level: int = logging.INFO):
+    def __init__(self, log_level: int = logging.INFO) -> None:
         """
         Initialize the Pandoc configuration provider.
 
@@ -158,7 +159,7 @@ class PandocConfigProvider:
         """Get the name of the configuration provider."""
         return "PandocConfig"
 
-    def load_config(self, config_path: str | Path | None = None) -> ConversionConfig:
+    def load_config(self, config_path: str | Path | None = None) -> Any:
         """
         Load configuration from a file.
 
