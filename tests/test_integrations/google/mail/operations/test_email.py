@@ -300,10 +300,10 @@ class TestGmailEmailOperations:
 @patch("quackcore.integrations.google.mail.operations.email.process_message_parts")
 @patch("quackcore.integrations.google.mail.operations.email._get_message_with_retry")
 def test_download_email(
-        self,
-        mock_get_message: MagicMock,
-        mock_process_parts: MagicMock,
-        mock_gmail_service,
+    self,
+    mock_get_message: MagicMock,
+    mock_process_parts: MagicMock,
+    mock_gmail_service,
 ) -> None:
     """Test downloading an email."""
     logger = logging.getLogger("test_gmail")
@@ -328,14 +328,18 @@ def test_download_email(
     )
 
     # Patch the filesystem write operation to avoid real filesystem access
-    with patch(
-            "quackcore.integrations.google.mail.operations.email.datetime") as mock_dt, \
-            patch(
-                "quackcore.integrations.google.mail.operations.email.clean_filename") as mock_clean, \
-            patch("quackcore.integrations.google.mail.operations.email.fs") as mock_fs, \
-            patch("quackcore.integrations.google.mail.operations.email.open",
-                  create=True) as mock_open:
-
+    with (
+        patch(
+            "quackcore.integrations.google.mail.operations.email.datetime"
+        ) as mock_dt,
+        patch(
+            "quackcore.integrations.google.mail.operations.email.clean_filename"
+        ) as mock_clean,
+        patch("quackcore.integrations.google.mail.operations.email.fs") as mock_fs,
+        patch(
+            "quackcore.integrations.google.mail.operations.email.open", create=True
+        ) as mock_open,
+    ):
         # Set up date/time to ensure consistent filename generation
         mock_dt.now.return_value = datetime(2023, 1, 15, 10, 30, 0)
         mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
@@ -346,7 +350,9 @@ def test_download_email(
         # Configure fs operation results
         write_result = MagicMock()
         write_result.success = True
-        write_result.content = "/path/to/storage/2023-01-15-103000-sender-example-com.html"
+        write_result.content = (
+            "/path/to/storage/2023-01-15-103000-sender-example-com.html"
+        )
         mock_fs.write_text.return_value = write_result
 
         # Mock the open context for verification

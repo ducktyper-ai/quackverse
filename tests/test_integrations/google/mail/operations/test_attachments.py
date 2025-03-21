@@ -8,8 +8,8 @@ import logging
 import os
 from unittest.mock import MagicMock, patch
 
+from quackcore.fs.results import FileInfoResult, OperationResult, WriteResult
 from quackcore.integrations.google.mail.operations import attachments
-from quackcore.fs.results import WriteResult, OperationResult, FileInfoResult
 from tests.test_integrations.google.mail.mocks import create_mock_gmail_service
 
 
@@ -44,7 +44,7 @@ class TestGmailAttachmentOperations:
 
         # Mock the handle_attachment function to avoid actual file operations
         with patch(
-                "quackcore.integrations.google.mail.operations.attachments.handle_attachment"
+            "quackcore.integrations.google.mail.operations.attachments.handle_attachment"
         ) as mock_handle:
             mock_handle.return_value = str(tmp_path / "test.pdf")
 
@@ -91,15 +91,20 @@ class TestGmailAttachmentOperations:
         # Looking at the error, we need to ensure that all filesystem operations are properly mocked
 
         # Mock the entire module to prevent any real filesystem operations
-        with patch.dict(os.environ, {"TESTING": "True"}), \
-                patch(
-                    "quackcore.integrations.google.mail.operations.attachments.clean_filename",
-                    side_effect=lambda x: x), \
-                patch(
-                    "quackcore.integrations.google.mail.operations.attachments.fs") as mock_fs, \
-                patch(
-                    "quackcore.integrations.google.mail.operations.attachments.base64") as mock_base64, \
-                patch("pathlib.Path") as mock_path:
+        with (
+            patch.dict(os.environ, {"TESTING": "True"}),
+            patch(
+                "quackcore.integrations.google.mail.operations.attachments.clean_filename",
+                side_effect=lambda x: x,
+            ),
+            patch(
+                "quackcore.integrations.google.mail.operations.attachments.fs"
+            ) as mock_fs,
+            patch(
+                "quackcore.integrations.google.mail.operations.attachments.base64"
+            ) as mock_base64,
+            patch("pathlib.Path") as mock_path,
+        ):
             # Configure all the filesystem mocks
             mock_fs.create_directory.return_value = mock_dir_result
             mock_fs.get_file_info.return_value = mock_file_info
@@ -166,17 +171,23 @@ class TestGmailAttachmentOperations:
         mock_file_info.success = True
 
         # Mock the necessary modules and functions
-        with patch.dict(os.environ, {"TESTING": "True"}), \
-                patch(
-                    "quackcore.integrations.google.mail.operations.attachments.clean_filename",
-                    side_effect=lambda x: x), \
-                patch(
-                    "quackcore.integrations.google.mail.operations.attachments.fs") as mock_fs, \
-                patch(
-                    "quackcore.integrations.google.mail.operations.attachments.base64") as mock_base64, \
-                patch("pathlib.Path") as mock_path, \
-                patch(
-                    "quackcore.integrations.google.mail.operations.attachments.execute_api_request") as mock_execute:
+        with (
+            patch.dict(os.environ, {"TESTING": "True"}),
+            patch(
+                "quackcore.integrations.google.mail.operations.attachments.clean_filename",
+                side_effect=lambda x: x,
+            ),
+            patch(
+                "quackcore.integrations.google.mail.operations.attachments.fs"
+            ) as mock_fs,
+            patch(
+                "quackcore.integrations.google.mail.operations.attachments.base64"
+            ) as mock_base64,
+            patch("pathlib.Path") as mock_path,
+            patch(
+                "quackcore.integrations.google.mail.operations.attachments.execute_api_request"
+            ) as mock_execute,
+        ):
             # Configure filesystem mocks
             mock_fs.create_directory.return_value = mock_dir_result
             mock_fs.get_file_info.return_value = mock_file_info
@@ -196,7 +207,8 @@ class TestGmailAttachmentOperations:
 
             # Configure API request mock for attachment retrieval
             mock_execute.return_value = {
-                "data": base64.urlsafe_b64encode(b"PDF content").decode()}
+                "data": base64.urlsafe_b64encode(b"PDF content").decode()
+            }
 
             # Configure base64 mock for decoding attachment data
             mock_base64.urlsafe_b64decode.return_value = b"PDF content"
@@ -252,23 +264,33 @@ class TestGmailAttachmentOperations:
         mock_file_info_no_collision.success = True
 
         # Mock the necessary modules and functions
-        with patch.dict(os.environ, {"TESTING": "True"}), \
-                patch(
-                    "quackcore.integrations.google.mail.operations.attachments.clean_filename",
-                    side_effect=lambda x: x), \
-                patch(
-                    "quackcore.integrations.google.mail.operations.attachments.fs") as mock_fs, \
-                patch(
-                    "quackcore.integrations.google.mail.operations.attachments.base64") as mock_base64, \
-                patch("pathlib.Path") as mock_path, \
-                patch(
-                    "quackcore.integrations.google.mail.operations.attachments.execute_api_request") as mock_execute:
+        with (
+            patch.dict(os.environ, {"TESTING": "True"}),
+            patch(
+                "quackcore.integrations.google.mail.operations.attachments.clean_filename",
+                side_effect=lambda x: x,
+            ),
+            patch(
+                "quackcore.integrations.google.mail.operations.attachments.fs"
+            ) as mock_fs,
+            patch(
+                "quackcore.integrations.google.mail.operations.attachments.base64"
+            ) as mock_base64,
+            patch("pathlib.Path") as mock_path,
+            patch(
+                "quackcore.integrations.google.mail.operations.attachments.execute_api_request"
+            ) as mock_execute,
+        ):
             # Configure filesystem mocks with collision handling
             mock_fs.create_directory.return_value = mock_dir_result
-            mock_fs.get_file_info.side_effect = [mock_file_info_collision,
-                                                 mock_file_info_no_collision]
-            mock_fs.join_path.side_effect = ["/path/to/storage/test2.pdf",
-                                             "/path/to/storage/test2-1.pdf"]
+            mock_fs.get_file_info.side_effect = [
+                mock_file_info_collision,
+                mock_file_info_no_collision,
+            ]
+            mock_fs.join_path.side_effect = [
+                "/path/to/storage/test2.pdf",
+                "/path/to/storage/test2-1.pdf",
+            ]
             mock_fs.split_path.return_value = ["path", "to", "storage", "test2.pdf"]
 
             # Configure filesystem service
@@ -284,7 +306,8 @@ class TestGmailAttachmentOperations:
 
             # Configure API request mock for attachment retrieval
             mock_execute.return_value = {
-                "data": base64.urlsafe_b64encode(b"PDF content").decode()}
+                "data": base64.urlsafe_b64encode(b"PDF content").decode()
+            }
 
             # Configure base64 mock for decoding attachment data
             mock_base64.urlsafe_b64decode.return_value = b"PDF content"
@@ -325,20 +348,19 @@ class TestGmailAttachmentOperations:
         }
 
         # Mock the necessary functions
-        with patch(
+        with (
+            patch(
                 "quackcore.integrations.google.mail.operations.attachments.clean_filename",
-                side_effect=lambda x: x), \
-                patch(
-                    "quackcore.integrations.google.mail.operations.attachments.base64.urlsafe_b64decode",
-                    side_effect=Exception("Decode error")):
+                side_effect=lambda x: x,
+            ),
+            patch(
+                "quackcore.integrations.google.mail.operations.attachments.base64.urlsafe_b64decode",
+                side_effect=Exception("Decode error"),
+            ),
+        ):
             # Execute the function under test - should handle the error gracefully
             path = attachments.handle_attachment(
-                gmail_service,
-                "me",
-                part,
-                msg_id,
-                storage_path,
-                logger
+                gmail_service, "me", part, msg_id, storage_path, logger
             )
 
             # Assert the result - should return None on error

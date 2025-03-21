@@ -1,6 +1,6 @@
 # src/quackcore/integrations/google/mail/service.py
 import logging
-from collections.abc import Mapping, Sequence, Iterable
+from collections.abc import Iterable, Mapping, Sequence
 from types import NoneType
 from typing import Any, cast
 
@@ -20,18 +20,18 @@ class GoogleMailService(BaseIntegrationService):
     """Integration service for Google Mail (Gmail)."""
 
     def __init__(
-            self,
-            client_secrets_file: str | None = None,
-            credentials_file: str | None = None,
-            config_path: str | None = None,
-            storage_path: str | None = None,
-            oauth_scope: list[str] | Sequence[str] | None = None,
-            max_retries: int = 5,
-            initial_delay: float = 1.0,
-            max_delay: float = 30.0,
-            include_subject: bool = False,
-            include_sender: bool = False,
-            log_level: int = logging.INFO,
+        self,
+        client_secrets_file: str | None = None,
+        credentials_file: str | None = None,
+        config_path: str | None = None,
+        storage_path: str | None = None,
+        oauth_scope: list[str] | Sequence[str] | None = None,
+        max_retries: int = 5,
+        initial_delay: float = 1.0,
+        max_delay: float = 30.0,
+        include_subject: bool = False,
+        include_sender: bool = False,
+        log_level: int = logging.INFO,
     ) -> None:
         """
         Initialize the Google Mail integration service.
@@ -71,7 +71,8 @@ class GoogleMailService(BaseIntegrationService):
         # Save additional settings to instance variables.
         self.storage_path: str | None = storage_path
         self.oauth_scope: list[str] = (
-            list(oauth_scope) if oauth_scope is not None
+            list(oauth_scope)
+            if oauth_scope is not None
             else ["https://www.googleapis.com/auth/gmail.readonly"]
         )
         self.max_retries: int = max_retries
@@ -121,8 +122,11 @@ class GoogleMailService(BaseIntegrationService):
             # Create auth provider with proper type casting
             client_secrets_file = str(config["client_secrets_file"])
             credentials_file_value = config.get("credentials_file")
-            credentials_file = str(
-                credentials_file_value) if credentials_file_value is not None else None
+            credentials_file = (
+                str(credentials_file_value)
+                if credentials_file_value is not None
+                else None
+            )
 
             self.auth_provider = GoogleAuthProvider(
                 client_secrets_file=client_secrets_file,
@@ -135,14 +139,17 @@ class GoogleMailService(BaseIntegrationService):
             credentials = self.auth_provider.get_credentials()
             # Use type cast to satisfy the type checker
             self.gmail_service = auth.initialize_gmail_service(
-                cast(GoogleCredentials, credentials))
+                cast(GoogleCredentials, credentials)
+            )
 
             self._initialized = True
             return IntegrationResult.success_result(
                 message="Google Mail service initialized successfully"
             )
         except Exception as e:
-            self._initialized = False  # Ensure initialized flag is set to False on failure
+            self._initialized = (
+                False  # Ensure initialized flag is set to False on failure
+            )
             self.logger.error(f"Failed to initialize Google Mail service: {e}")
             return IntegrationResult.error_result(
                 f"Failed to initialize Google Mail service: {e}"
@@ -244,7 +251,8 @@ class GoogleMailService(BaseIntegrationService):
 
             if self.gmail_service is None:
                 return IntegrationResult.error_result(
-                    "Gmail service is not initialized")
+                    "Gmail service is not initialized"
+                )
 
             return email.list_emails(self.gmail_service, user_id, query, self.logger)
         except Exception as e:
@@ -269,20 +277,23 @@ class GoogleMailService(BaseIntegrationService):
             user_id_value = self.config.get("gmail_user_id", "me")
             user_id = str(user_id_value) if user_id_value is not None else "me"
 
-            include_subject_value = self.config.get("include_subject",
-                                                    self.include_subject)
+            include_subject_value = self.config.get(
+                "include_subject", self.include_subject
+            )
             include_subject = bool(include_subject_value)
 
-            include_sender_value = self.config.get("include_sender",
-                                                   self.include_sender)
+            include_sender_value = self.config.get(
+                "include_sender", self.include_sender
+            )
             include_sender = bool(include_sender_value)
 
             max_retries_value = self.config.get("max_retries", self.max_retries)
             max_retries = self._safe_cast_int(max_retries_value, self.max_retries)
 
             initial_delay_value = self.config.get("initial_delay", self.initial_delay)
-            initial_delay = self._safe_cast_float(initial_delay_value,
-                                                  self.initial_delay)
+            initial_delay = self._safe_cast_float(
+                initial_delay_value, self.initial_delay
+            )
 
             max_delay_value = self.config.get("max_delay", self.max_delay)
             max_delay = self._safe_cast_float(max_delay_value, self.max_delay)

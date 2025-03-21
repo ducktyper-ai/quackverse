@@ -47,7 +47,7 @@ class MessagesResource(Protocol):
         ...
 
     def get(
-            self, user_id: str, message_id: str, message_format: str
+        self, user_id: str, message_id: str, message_format: str
     ) -> MessagesRequest:
         """
         Get a message.
@@ -101,10 +101,10 @@ def build_query(days_back: int = 7, labels: list[str] | None = None) -> str:
 
 
 def list_emails(
-        gmail_service: GmailService,
-        user_id: str = "me",
-        query: str = "",
-        logger: logging.Logger | None = None,
+    gmail_service: GmailService,
+    user_id: str = "me",
+    query: str = "",
+    logger: logging.Logger | None = None,
 ) -> IntegrationResult[list[Mapping]]:
     """
     List emails matching the provided query.
@@ -149,16 +149,16 @@ def list_emails(
 
 
 def download_email(
-        gmail_service: GmailService,
-        user_id: str,
-        msg_id: str,
-        storage_path: str,
-        include_subject: bool = False,
-        include_sender: bool = False,
-        max_retries: int = 5,
-        initial_delay: float = 1.0,
-        max_delay: float = 30.0,
-        logger: logging.Logger | None = None,
+    gmail_service: GmailService,
+    user_id: str,
+    msg_id: str,
+    storage_path: str,
+    include_subject: bool = False,
+    include_sender: bool = False,
+    max_retries: int = 5,
+    initial_delay: float = 1.0,
+    max_delay: float = 30.0,
+    logger: logging.Logger | None = None,
 ) -> IntegrationResult[str]:
     """
     Download a Gmail message and save it as an HTML file.
@@ -244,7 +244,7 @@ def download_email(
 
         return IntegrationResult.success_result(
             content=str(file_path),
-            message=f"Email downloaded successfully to {file_path}"
+            message=f"Email downloaded successfully to {file_path}",
         )
 
     except Exception as e:
@@ -253,13 +253,13 @@ def download_email(
 
 
 def _get_message_with_retry(
-        gmail_service: GmailService,
-        user_id: str,
-        msg_id: str,
-        max_retries: int,
-        initial_delay: float,
-        max_delay: float,
-        logger: logging.Logger,
+    gmail_service: GmailService,
+    user_id: str,
+    msg_id: str,
+    max_retries: int,
+    initial_delay: float,
+    max_delay: float,
+    logger: logging.Logger,
 ) -> Mapping | None:
     """
     Get a Gmail message with retry logic.
@@ -342,12 +342,12 @@ def clean_filename(text: str) -> str:
 
 
 def process_message_parts(
-        gmail_service: GmailService,
-        user_id: str,
-        parts: list[Mapping],
-        msg_id: str,
-        storage_path: str,
-        logger: logging.Logger,
+    gmail_service: GmailService,
+    user_id: str,
+    parts: list[Mapping],
+    msg_id: str,
+    storage_path: str,
+    logger: logging.Logger,
 ) -> tuple[str | None, list[str]]:
     """
     Process message parts to extract HTML content and attachments.

@@ -10,12 +10,12 @@ from quackcore.integrations.google.mail.utils.api import execute_api_request
 
 
 def process_message_parts(
-        gmail_service: GmailService,
-        user_id: str,
-        parts: list[dict],
-        msg_id: str,
-        storage_path: str,
-        logger: logging.Logger,
+    gmail_service: GmailService,
+    user_id: str,
+    parts: list[dict],
+    msg_id: str,
+    storage_path: str,
+    logger: logging.Logger,
 ) -> tuple[str | None, list[str]]:
     """
     Process message parts to extract HTML content and attachments.
@@ -67,12 +67,12 @@ def process_message_parts(
 
 
 def handle_attachment(
-        gmail_service: GmailService,
-        user_id: str,
-        part: dict,
-        msg_id: str,
-        storage_path: str,
-        logger: logging.Logger,
+    gmail_service: GmailService,
+    user_id: str,
+    part: dict,
+    msg_id: str,
+    storage_path: str,
+    logger: logging.Logger,
 ) -> str | None:
     """
     Download and save an attachment from a message part.

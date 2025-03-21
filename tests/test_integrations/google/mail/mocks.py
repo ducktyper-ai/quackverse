@@ -46,7 +46,9 @@ class MockGmailRequest(GmailRequest[dict[str, T]]):
 class MockGmailAttachmentsResource(GmailAttachmentsResource):
     """Mock attachments resource with configurable behavior."""
 
-    def __init__(self, attachment_data: str | None = None, error: Exception | None = None):
+    def __init__(
+        self, attachment_data: str | None = None, error: Exception | None = None
+    ):
         """
         Initialize mock attachments resource.
 
@@ -54,9 +56,9 @@ class MockGmailAttachmentsResource(GmailAttachmentsResource):
             attachment_data: Base64-encoded attachment data to return
             error: Exception to raise on API calls, if any
         """
-        self.attachment_data = attachment_data or base64.urlsafe_b64encode(
-            b"attachment content"
-        ).decode()
+        self.attachment_data = (
+            attachment_data or base64.urlsafe_b64encode(b"attachment content").decode()
+        )
         self.error = error
 
         # Tracking attributes for assertions
@@ -84,7 +86,7 @@ class MockGmailAttachmentsResource(GmailAttachmentsResource):
 
         return cast(
             GmailRequest[dict[str, object]],
-            MockGmailRequest({"data": self.attachment_data}, self.error)
+            MockGmailRequest({"data": self.attachment_data}, self.error),
         )
 
 
@@ -97,7 +99,7 @@ class MockGmailMessagesResource(GmailMessagesResource):
         message_data: dict[str, T] | None = None,
         attachments_resource: GmailAttachmentsResource | None = None,
         list_error: Exception | None = None,
-        get_error: Exception | None = None
+        get_error: Exception | None = None,
     ):
         """
         Initialize mock messages resource.
@@ -130,7 +132,7 @@ class MockGmailMessagesResource(GmailMessagesResource):
         return self._attachments
 
     def get(
-        self, user_id: str, message_id: str, message_format: str = 'full'
+        self, user_id: str, message_id: str, message_format: str = "full"
     ) -> GmailRequest[dict[str, object]]:
         """
         Mock get method for retrieving a message.
@@ -179,7 +181,7 @@ class MockGmailMessagesResource(GmailMessagesResource):
 
         return cast(
             GmailRequest[dict[str, object]],
-            MockGmailRequest(message_data, self.get_error)
+            MockGmailRequest(message_data, self.get_error),
         )
 
     def list(
@@ -208,7 +210,7 @@ class MockGmailMessagesResource(GmailMessagesResource):
 
         return cast(
             GmailRequest[dict[str, list[dict[str, object]]]],
-            MockGmailRequest(response, self.list_error)
+            MockGmailRequest(response, self.list_error),
         )
 
 
@@ -256,7 +258,7 @@ class MockGoogleCredentials(GoogleCredentials):
         token_uri: str = "https://oauth2.googleapis.com/token",
         client_id: str = "client_id",
         client_secret: str = "client_secret",
-        scopes: list[str] | None = None
+        scopes: list[str] | None = None,
     ):
         """
         Initialize mock Google credentials.
@@ -280,7 +282,7 @@ class MockGoogleCredentials(GoogleCredentials):
 def create_mock_gmail_service(
     attachment_data: str | None = None,
     message_data: dict[str, T] | None = None,
-    list_messages: list[dict[str, T]] | None = None
+    list_messages: list[dict[str, T]] | None = None,
 ) -> GmailService:
     """
     Create and return a configurable mock Gmail service.
@@ -297,7 +299,7 @@ def create_mock_gmail_service(
     messages_resource = MockGmailMessagesResource(
         list_messages=list_messages,
         message_data=message_data,
-        attachments_resource=attachments_resource
+        attachments_resource=attachments_resource,
     )
     users_resource = MockGmailUsersResource(messages_resource)
     return MockGmailService(users_resource)
@@ -306,7 +308,7 @@ def create_mock_gmail_service(
 def create_error_gmail_service(
     list_error: Exception | None = None,
     get_error: Exception | None = None,
-    attachment_error: Exception | None = None
+    attachment_error: Exception | None = None,
 ) -> GmailService:
     """
     Create a Gmail service mock that raises configurable exceptions.
@@ -330,7 +332,7 @@ def create_error_gmail_service(
     messages_resource = MockGmailMessagesResource(
         attachments_resource=attachments_resource,
         list_error=list_error,
-        get_error=get_error
+        get_error=get_error,
     )
     users_resource = MockGmailUsersResource(messages_resource)
     return MockGmailService(users_resource)
@@ -344,6 +346,7 @@ def create_credentials() -> GoogleCredentials:
         Mock credentials that conform to the GoogleCredentials protocol
     """
     return MockGoogleCredentials()
+
 
 class MockRequest(GmailRequest[R]):
     """
@@ -360,8 +363,9 @@ class MockRequest(GmailRequest[R]):
         error_request = MockRequest(side_effect=ValueError("Test error"))
     """
 
-    def __init__(self, return_value: R | None = None,
-                 side_effect: Exception | None = None):
+    def __init__(
+        self, return_value: R | None = None, side_effect: Exception | None = None
+    ):
         """
         Initialize a mock request with a return value or error.
 
