@@ -344,3 +344,50 @@ def create_credentials() -> GoogleCredentials:
         Mock credentials that conform to the GoogleCredentials protocol
     """
     return MockGoogleCredentials()
+
+class MockRequest(GmailRequest[R]):
+    """
+    A reusable implementation of GmailRequest protocol for testing API functions.
+
+    This class can be used to create mock request objects that conform to the
+    GmailRequest protocol and track their invocations.
+
+    Example:
+        # Create a request that returns a dictionary
+        request = MockRequest({"id": "msg1", "payload": {}})
+
+        # Create a request that raises an exception
+        error_request = MockRequest(side_effect=ValueError("Test error"))
+    """
+
+    def __init__(self, return_value: R | None = None,
+                 side_effect: Exception | None = None):
+        """
+        Initialize a mock request with a return value or error.
+
+        Args:
+            return_value: Value to return on execute()
+            side_effect: Exception to raise on execute(), if any
+        """
+        self.return_value = return_value
+        self.side_effect = side_effect
+        self.call_count = 0
+
+    def execute(self) -> R:
+        """
+        Execute the request and return the result or raise the configured error.
+
+        This method tracks the number of times it's called for assertion purposes.
+
+        Returns:
+            The configured return value
+
+        Raises:
+            Exception: The configured side effect, if any
+        """
+        self.call_count += 1
+        if self.side_effect:
+            raise self.side_effect
+        if self.return_value is None:
+            raise ValueError("Return value not specified for MockRequest.execute()")
+        return self.return_value

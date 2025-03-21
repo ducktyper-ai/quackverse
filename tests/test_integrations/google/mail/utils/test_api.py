@@ -6,16 +6,20 @@ This module tests the API utilities for the Google Mail integration,
 including request execution and exponential backoff.
 """
 
+from typing import TypeVar
 from unittest.mock import MagicMock, patch
 
 import pytest
 from googleapiclient.errors import HttpError
 
 from quackcore.errors import QuackApiError
+from quackcore.integrations.google.mail.protocols import GmailRequest
 from quackcore.integrations.google.mail.utils.api import (
     execute_api_request,
     with_exponential_backoff,
 )
+
+R = TypeVar("R")  # Generic type for return values
 
 
 class TestGmailApiUtils:
@@ -23,11 +27,23 @@ class TestGmailApiUtils:
 
     def test_execute_api_request(self) -> None:
         """Test executing a Gmail API request."""
-        # Mock request object
-        mock_request = MagicMock()
-        mock_request.execute.return_value = {"id": "msg1", "payload": {}}
+
+        # Create a mock that conforms to the GmailRequest protocol
+        class MockGmailRequest(GmailRequest[dict[str, object]]):
+            def __init__(self, return_value=None, side_effect=None):
+                self.return_value = return_value
+                self.side_effect = side_effect
+                self.call_count = 0
+
+            def execute(self) -> dict[str, object]:
+                self.call_count += 1
+                if self.side_effect:
+                    raise self.side_effect
+                return self.return_value
 
         # Test successful execution
+        mock_request = MockGmailRequest(return_value={"id": "msg1", "payload": {}})
+
         result = execute_api_request(
             mock_request,
             "Failed to get message",
@@ -35,14 +51,14 @@ class TestGmailApiUtils:
         )
 
         assert result == {"id": "msg1", "payload": {}}
-        mock_request.execute.assert_called_once()
+        assert mock_request.call_count == 1
 
         # Test with HttpError
         resp = MagicMock()
         resp.status = 403
-        mock_request.execute.side_effect = HttpError(
-            resp=resp, content=b"Permission denied"
-        )
+        http_error = HttpError(resp=resp, content=b"Permission denied")
+
+        mock_request = MockGmailRequest(side_effect=http_error)
 
         with pytest.raises(QuackApiError) as excinfo:
             execute_api_request(
@@ -56,7 +72,8 @@ class TestGmailApiUtils:
         assert excinfo.value.api_method == "users.messages.get"
 
         # Test with generic exception
-        mock_request.execute.side_effect = Exception("Unexpected error")
+        generic_error = Exception("Unexpected error")
+        mock_request = MockGmailRequest(side_effect=generic_error)
 
         with pytest.raises(QuackApiError) as excinfo:
             execute_api_request(
