@@ -1,4 +1,4 @@
-# src/quackcore/integrations/pandoc/operations/md_to_docx.py
+# src/quackcore/plugins/pandoc/operations/md_to_docx.py
 """
 Markdown to DOCX conversion operations.
 

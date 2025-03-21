@@ -1,4 +1,4 @@
-# src/quackcore/integrations/pandoc/operations/__init__.py
+# src/quackcore/plugins/pandoc/operations/__init__.py
 """
 Operations package for pandoc integration.
 

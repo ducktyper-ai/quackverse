@@ -1,4 +1,4 @@
-# src/quackcore/integrations/pandoc/converter.py
+# src/quackcore/plugins/pandoc/converter.py
 """
 Core converter implementation for pandoc integration.
 
@@ -12,15 +12,15 @@ from pathlib import Path
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs import service as fs
-from quackcore.integrations.pandoc.config import ConversionConfig
-from quackcore.integrations.pandoc.models import (
+from quackcore.plugins.pandoc.config import ConversionConfig
+from quackcore.plugins.pandoc.models import (
     BatchConversionResult,
     ConversionMetrics,
     ConversionResult,
     ConversionTask,
     FileInfo,
 )
-from quackcore.integrations.pandoc.operations import (
+from quackcore.plugins.pandoc.operations import (
     convert_html_to_markdown,
     convert_markdown_to_docx,
     get_file_info,

@@ -1,4 +1,4 @@
-# src/quackcore/integrations/pandoc/operations/utils.py
+# src/quackcore/plugins/pandoc/operations/utils.py
 """
 Utility functions for pandoc operations.
 

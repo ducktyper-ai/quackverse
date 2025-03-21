@@ -1,4 +1,4 @@
-# src/quackcore/integrations/pandoc/operations/html_to_md.py
+# src/quackcore/plugins/pandoc/operations/html_to_md.py
 """
 HTML to Markdown conversion operations.
 
