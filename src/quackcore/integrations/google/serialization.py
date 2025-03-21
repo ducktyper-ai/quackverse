@@ -1,4 +1,4 @@
-# quackcore/integrations/google/serialization.py
+# src/quackcore/integrations/google/serialization.py
 
 from typing import Any
 

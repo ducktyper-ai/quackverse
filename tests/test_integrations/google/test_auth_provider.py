@@ -1,3 +1,4 @@
+# tests/test_integrations/google/test_auth_provider.py
 """
 Tests for Google authentication provider.
 
