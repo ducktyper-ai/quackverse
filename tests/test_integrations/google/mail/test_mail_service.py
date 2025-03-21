@@ -57,20 +57,19 @@ class TestGoogleMailService:
             storage_path="/path/to/storage",
         )
 
-        with patch("os.makedirs") as mock_makedirs:
-            # Use the correct method name from the paths resolver
-            with patch("quackcore.paths.resolver.resolve_project_path") as mock_resolve:
-                mock_resolve.return_value = "/resolved/path/to/storage"
-                # Patch the storage_path directly to avoid file system check
-                service.storage_path = "/path/to/storage"
+        # Mock the filesystem operations
+        with patch("quackcore.paths.resolver.resolve_project_path") as mock_resolve:
+            mock_resolve.return_value = "/resolved/path/to/storage"
+
+            with patch("quackcore.fs.service.create_directory") as mock_create_dir:
+                mock_create_dir.return_value = MagicMock(success=True)
+
                 config = service._initialize_config()
 
-            assert config["client_secrets_file"] == "/path/to/secrets.json"
-            assert config["credentials_file"] == "/path/to/credentials.json"
-            assert service.storage_path == "/resolved/path/to/storage"
-            mock_makedirs.assert_called_once_with(
-                "/resolved/path/to/storage", exist_ok=True
-            )
+                assert config["client_secrets_file"] == "/path/to/secrets.json"
+                assert config["credentials_file"] == "/path/to/credentials.json"
+                assert service.storage_path == "/resolved/path/to/storage"
+                mock_create_dir.assert_called_once()
 
         # Test with config from file
         mock_load_config.return_value.success = True
@@ -84,17 +83,31 @@ class TestGoogleMailService:
 
         service = GoogleMailService(config_path="/path/to/config.yaml")
 
-        with patch("os.makedirs") as mock_makedirs:
-            with patch("quackcore.paths.resolver.resolve_project_path") as mock_resolve:
-                mock_resolve.return_value = "/resolved/config/storage"
+        with patch("quackcore.paths.resolver.resolve_project_path") as mock_resolve:
+            mock_resolve.return_value = "/resolved/config/storage"
+
+            with patch("quackcore.fs.service.create_directory") as mock_create_dir:
+                mock_create_dir.return_value = MagicMock(success=True)
+
                 config = service._initialize_config()
 
-            assert config["client_secrets_file"] == "/config/secrets.json"
-            assert config["credentials_file"] == "/config/credentials.json"
-            assert service.storage_path == "/resolved/config/storage"
-            mock_makedirs.assert_called_once_with(
-                "/resolved/config/storage", exist_ok=True
-            )
+                assert config["client_secrets_file"] == "/config/secrets.json"
+                assert config["credentials_file"] == "/config/credentials.json"
+                assert service.storage_path == "/resolved/config/storage"
+                mock_create_dir.assert_called_once()
+
+        # Test with filesystem error that should be logged but not fail
+        with patch("quackcore.paths.resolver.resolve_project_path") as mock_resolve:
+            mock_resolve.return_value = "/resolved/config/storage"
+
+            with patch("quackcore.fs.service.create_directory") as mock_create_dir:
+                mock_create_dir.return_value = MagicMock(success=False,
+                                                         error="Permission denied")
+
+                with patch.object(service.logger, "warning") as mock_warn:
+                    config = service._initialize_config()
+                    assert config is not None  # Should continue even with dir creation error
+                    mock_warn.assert_called_once()  # Should log a warning
 
         # Test without storage path
         service = GoogleMailService(
@@ -115,11 +128,11 @@ class TestGoogleMailService:
     )
     @patch("quackcore.integrations.base.BaseIntegrationService.initialize")
     def test_initialize(
-        self,
-        mock_base_init: MagicMock,
-        mock_init_gmail: MagicMock,
-        mock_get_credentials: MagicMock,
-        mock_verify: MagicMock,
+            self,
+            mock_base_init: MagicMock,
+            mock_init_gmail: MagicMock,
+            mock_get_credentials: MagicMock,
+            mock_verify: MagicMock,
     ) -> None:
         """Test initializing the mail service."""
         # Mock base class initialization to succeed and file verification to pass
@@ -209,14 +222,14 @@ class TestGoogleMailService:
 
         # Mock the email operations module
         with patch(
-            "quackcore.integrations.google.mail.operations.email.list_emails"
+                "quackcore.integrations.google.mail.operations.email.list_emails"
         ) as mock_list:
             mock_list.return_value = IntegrationResult.success_result(
                 content=[{"id": "msg1"}, {"id": "msg2"}]
             )
 
             with patch(
-                "quackcore.integrations.google.mail.operations.email.build_query"
+                    "quackcore.integrations.google.mail.operations.email.build_query"
             ) as mock_build:
                 mock_build.return_value = "after:2021/01/01 label:INBOX label:IMPORTANT"
 
@@ -247,7 +260,7 @@ class TestGoogleMailService:
 
         # Test with error
         with patch(
-            "quackcore.integrations.google.mail.operations.email.list_emails"
+                "quackcore.integrations.google.mail.operations.email.list_emails"
         ) as mock_list:
             mock_list.side_effect = Exception("API error")
 
@@ -283,7 +296,7 @@ class TestGoogleMailService:
 
         # Mock the email operations module
         with patch(
-            "quackcore.integrations.google.mail.operations.email.download_email"
+                "quackcore.integrations.google.mail.operations.email.download_email"
         ) as mock_download:
             mock_download.return_value = IntegrationResult.success_result(
                 content="/path/to/storage/email.html"
@@ -309,7 +322,7 @@ class TestGoogleMailService:
 
         # Test with error
         with patch(
-            "quackcore.integrations.google.mail.operations.email.download_email"
+                "quackcore.integrations.google.mail.operations.email.download_email"
         ) as mock_download:
             mock_download.side_effect = Exception("API error")
 

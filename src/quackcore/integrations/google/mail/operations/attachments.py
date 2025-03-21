@@ -1,28 +1,18 @@
 # src/quackcore/integrations/google/mail/operations/attachments.py
-"""
-Attachment operations for Google Mail integration.
-
-This module provides functions for handling email attachments,
-including downloading and saving attachments to disk.
-"""
-
 import base64
 import logging
-from collections.abc import Mapping
-from typing import TypeVar
+from pathlib import Path
 
 from quackcore.fs import service as fs
 from quackcore.integrations.google.mail.operations.email import clean_filename
 from quackcore.integrations.google.mail.protocols import GmailService
 from quackcore.integrations.google.mail.utils.api import execute_api_request
 
-T = TypeVar("T")  # Generic type for result content
-
 
 def process_message_parts(
         gmail_service: GmailService,
         user_id: str,
-        parts: list[Mapping],
+        parts: list[dict],
         msg_id: str,
         storage_path: str,
         logger: logging.Logger,
@@ -79,7 +69,7 @@ def process_message_parts(
 def handle_attachment(
         gmail_service: GmailService,
         user_id: str,
-        part: Mapping,
+        part: dict,
         msg_id: str,
         storage_path: str,
         logger: logging.Logger,
@@ -155,8 +145,16 @@ def handle_attachment(
             file_info = fs.get_file_info(file_path)
             counter += 1
 
-        # Use fs service to write binary content
-        write_result = fs.write_binary(file_path, content)
+        # First, ensure the directory exists
+        dir_path = Path(file_path).parent
+        dir_result = fs.create_directory(dir_path, exist_ok=True)
+        if not dir_result.success:
+            logger.error(f"Failed to create directory: {dir_result.error}")
+            return None
+
+        # Use the FileSystemService instance to write binary content
+        # Note: The service has a 'write_binary' method, not the module directly
+        write_result = fs.service.write_binary(file_path, content)
         if not write_result.success:
             logger.error(f"Failed to write attachment: {write_result.error}")
             return None

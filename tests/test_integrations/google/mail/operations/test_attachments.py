@@ -7,15 +7,14 @@ import base64
 import logging
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from quackcore.integrations.google.mail.operations import attachments
+from quackcore.integrations.google.mail.protocols import GmailService
 
 
 class TestGmailAttachmentOperations:
     """Test cases for Gmail attachment operations."""
 
-    class mock_gmail_service:
+    class MockGmailService:
         """Mock Gmail service for testing."""
 
         class MockAttachmentsResource:
@@ -42,7 +41,7 @@ class TestGmailAttachmentOperations:
 
             def __init__(self):
                 """Initialize mock messages resource."""
-                self._attachments = TestGmailAttachmentOperations.mock_gmail_service.MockAttachmentsResource()
+                self._attachments = TestGmailAttachmentOperations.MockGmailService.MockAttachmentsResource()
 
             def attachments(self):
                 """Return mock attachments resource."""
@@ -53,7 +52,7 @@ class TestGmailAttachmentOperations:
 
             def __init__(self):
                 """Initialize mock users resource."""
-                self._messages = TestGmailAttachmentOperations.mock_gmail_service.MockMessagesResource()
+                self._messages = TestGmailAttachmentOperations.MockGmailService.MockMessagesResource()
 
             def messages(self):
                 """Return mock messages resource."""
@@ -69,7 +68,10 @@ class TestGmailAttachmentOperations:
 
     def test_process_message_parts(self, tmp_path) -> None:
         """Test processing message parts."""
-        mock_service = self.mock_gmail_service()
+        # Type cast our mock to GmailService type for proper type checking
+        mock_service = self.MockGmailService()
+        gmail_service: GmailService = mock_service  # type: ignore
+
         logger = logging.getLogger("test_gmail")
         msg_id = "msg123"
         storage_path = str(tmp_path)
@@ -93,12 +95,12 @@ class TestGmailAttachmentOperations:
 
         # Mock the handle_attachment function to avoid actual file operations
         with patch(
-            "quackcore.integrations.google.mail.operations.attachments.handle_attachment"
+                "quackcore.integrations.google.mail.operations.attachments.handle_attachment"
         ) as mock_handle:
             mock_handle.return_value = str(tmp_path / "test.pdf")
 
             html_content, attachment_paths = attachments.process_message_parts(
-                mock_service, "me", parts, msg_id, storage_path, logger
+                gmail_service, "me", parts, msg_id, storage_path, logger
             )
 
             assert html_content == "<html><body>Test</body></html>"
@@ -108,6 +110,9 @@ class TestGmailAttachmentOperations:
 
     def test_handle_attachment(self) -> None:
         """Test handling an attachment."""
+        # Type cast our mock to GmailService type for proper type checking
+        gmail_service: GmailService = self.MockGmailService()  # type: ignore
+
         logger = logging.getLogger("test_gmail")
         msg_id = "msg1"
         storage_path = "/path/to/storage"
@@ -128,13 +133,13 @@ class TestGmailAttachmentOperations:
 
         # Patch the clean_filename function to return unchanged filename
         with patch(
-            "quackcore.integrations.google.mail.operations.attachments.clean_filename",
-            side_effect=lambda x: x,
+                "quackcore.integrations.google.mail.operations.attachments.clean_filename",
+                side_effect=lambda x: x,
         ):
             with patch("builtins.open", mock_open_func):
                 with patch("os.path.exists", return_value=False):
                     path = attachments.handle_attachment(
-                        self.mock_gmail_service(),
+                        gmail_service,
                         "me",
                         part,
                         msg_id,
@@ -160,13 +165,13 @@ class TestGmailAttachmentOperations:
 
         # Patch the clean_filename function to return unchanged filename
         with patch(
-            "quackcore.integrations.google.mail.operations.attachments.clean_filename",
-            side_effect=lambda x: x,
+                "quackcore.integrations.google.mail.operations.attachments.clean_filename",
+                side_effect=lambda x: x,
         ):
             with patch("builtins.open", mock_open_func):
                 with patch("os.path.exists", return_value=False):
                     path = attachments.handle_attachment(
-                        self.mock_gmail_service(),
+                        gmail_service,
                         "me",
                         part,
                         msg_id,
@@ -188,14 +193,14 @@ class TestGmailAttachmentOperations:
 
         # Patch the clean_filename function to return unchanged filename
         with patch(
-            "quackcore.integrations.google.mail.operations.attachments.clean_filename",
-            side_effect=lambda x: x,
+                "quackcore.integrations.google.mail.operations.attachments.clean_filename",
+                side_effect=lambda x: x,
         ):
             with patch("builtins.open", mock_open_func):
                 # First check exists, then doesn't for the incremented filename
                 with patch("os.path.exists", side_effect=[True, False]):
                     path = attachments.handle_attachment(
-                        self.mock_gmail_service(),
+                        gmail_service,
                         "me",
                         part,
                         msg_id,
@@ -208,11 +213,11 @@ class TestGmailAttachmentOperations:
         # Test error handling
         with patch("base64.urlsafe_b64decode", side_effect=Exception("Decode error")):
             with patch(
-                "quackcore.integrations.google.mail.operations.attachments.clean_filename",
-                side_effect=lambda x: x,
+                    "quackcore.integrations.google.mail.operations.attachments.clean_filename",
+                    side_effect=lambda x: x,
             ):
                 path = attachments.handle_attachment(
-                    self.mock_gmail_service(), "me", part, msg_id, storage_path, logger
+                    gmail_service, "me", part, msg_id, storage_path, logger
                 )
 
                 assert path is None
