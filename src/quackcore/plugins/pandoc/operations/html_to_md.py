@@ -165,7 +165,8 @@ def convert_html_to_markdown(
             # We specifically handle QuackIntegrationError here
             retry_count += 1
             logger.warning(
-                f"HTML to Markdown conversion attempt {retry_count} failed (integration error): {str(e)}"
+                f"HTML to Markdown conversion attempt {retry_count} "
+                f"failed (integration error): {str(e)}"
             )
 
             if retry_count >= config.retry_mechanism.max_conversion_retries:
@@ -301,7 +302,8 @@ def validate_conversion(
             if validation.check_links and source_file_name not in content:
                 # This is a soft check - we only log it
                 logger.debug(
-                    f"Source file reference missing in markdown output: {source_file_name}"
+                    f"Source file reference missing "
+                    f"in markdown output: {source_file_name}"
                 )
 
         except Exception as e:

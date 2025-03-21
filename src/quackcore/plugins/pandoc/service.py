@@ -122,7 +122,8 @@ class PandocService(QuackPluginProtocol):
 
             self._initialized = True
             self.logger.info(
-                f"Pandoc plugin initialized successfully. Version: {self._pandoc_version}"
+                f"Pandoc plugin initialized successfully. "
+                f"Version: {self._pandoc_version}"
             )
             return True
 

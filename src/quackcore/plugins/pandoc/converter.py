@@ -163,7 +163,8 @@ class DocumentConverter:
                 else:
                     failed_files.append(task.source.path)
                     logger.error(
-                        f"Failed to convert {task.source.path} to {task.target_format}: {result.error}"
+                        f"Failed to convert {task.source.path} "
+                        f"to {task.target_format}: {result.error}"
                     )
             except Exception as e:
                 failed_files.append(task.source.path)
@@ -187,7 +188,8 @@ class DocumentConverter:
                 successful_files,
                 failed_files,
                 self.metrics,
-                f"Partially successful: converted {len(successful_files)} files, "
+                f"Partially successful: "
+                f"converted {len(successful_files)} files, "
                 f"failed to convert {len(failed_files)} files",
             )
         else:
@@ -230,7 +232,8 @@ class DocumentConverter:
                 (output_size / input_size * 100) if input_size > 0 else 0
             )
             logger.debug(
-                f"Conversion size change: {input_size} → {output_size} bytes ({size_change_percentage:.1f}%)"
+                f"Conversion size change: {input_size} → {output_size} "
+                f"bytes ({size_change_percentage:.1f}%)"
             )
 
             # Validate based on file format

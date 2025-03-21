@@ -276,7 +276,8 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         # Check default locations.
         for location in self.DEFAULT_CONFIG_LOCATIONS:
             expanded_location = expand_user_vars(location)
-            # If the expanded location is relative and we have a project root, join them.
+            # If the expanded location is relative
+            # and we have a project root, join them.
             if not os.path.isabs(str(expanded_location)) and project_root:
                 expanded_location = join_path(project_root, expanded_location)
             # Convert Path to string for consistency with tests

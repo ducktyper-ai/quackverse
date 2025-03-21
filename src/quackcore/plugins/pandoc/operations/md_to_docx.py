@@ -154,7 +154,8 @@ def convert_markdown_to_docx(
             # We specifically handle QuackIntegrationError here
             retry_count += 1
             logger.warning(
-                f"Markdown to DOCX conversion attempt {retry_count} failed (integration error): {str(e)}"
+                f"Markdown to DOCX conversion attempt {retry_count} "
+                f"failed (integration error): {str(e)}"
             )
 
             if retry_count >= config.retry_mechanism.max_conversion_retries:
@@ -298,7 +299,8 @@ def _check_docx_metadata(docx_path: Path, source_path: Path, check_links: bool) 
             if not source_found and check_links:
                 # This is just a warning, not a validation error
                 logger.debug(
-                    f"Source file reference missing in document metadata: {source_filename}"
+                    f"Source file reference missing "
+                    f"in document metadata: {source_filename}"
                 )
     except Exception as e:
         logger.debug(f"Could not check document metadata: {str(e)}")

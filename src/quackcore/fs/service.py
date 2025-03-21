@@ -21,13 +21,13 @@ from quackcore.fs.results import (
     ReadResult,
     WriteResult,
 )
-from quackcore.fs.utils import expand_user_vars  # Make sure this is imported
 from quackcore.fs.utils import (
     atomic_write,
     compute_checksum,
     create_temp_directory,
     create_temp_file,
     ensure_directory,
+    expand_user_vars,
     find_files_by_content,
     get_disk_usage,
     get_extension,
@@ -650,12 +650,44 @@ class FileSystemService:
         """
         return get_file_timestamp(path)
 
+    def compute_checksum(self, path: str | Path, algorithm: str = "sha256") -> str:
+        """
+        Compute the checksum of a file.
+
+        Args:
+            path: Path to the file.
+            algorithm: Hash algorithm to use (default: "sha256").
+
+        Returns:
+            Hexadecimal string representing the checksum.
+
+        Raises:
+            QuackFileNotFoundError: If the file doesn't exist.
+            QuackIOError: For any IO-related issue during checksum computation.
+        """
+        return compute_checksum(path, algorithm)
+
+    def atomic_write(self, path: str | Path, content: str | bytes) -> Path:
+        """
+        Write content to a file atomically using a temporary file.
+
+        Args:
+            path: Destination file path.
+            content: Content to write. Can be either string or bytes.
+
+        Returns:
+            Path object pointing to the written file.
+
+        Raises:
+            QuackPermissionError: If writing is not permitted.
+            QuackIOError: For any IO-related issue during write.
+        """
+        return atomic_write(path, content)
+
 
 # --- Module-Level Utility Functions ---
 # These functions are exposed at the module level so that external code or tests
 # (which patch these names) can find and override them as needed.
-
-from quackcore.fs.results import OperationResult
 
 
 def create_directory(path: str | Path, exist_ok: bool = True) -> OperationResult:
@@ -667,7 +699,8 @@ def create_directory(path: str | Path, exist_ok: bool = True) -> OperationResult
         exist_ok: If False, raise an error when the directory exists.
 
     Returns:
-        An OperationResult indicating whether the directory was created or already exists.
+        An OperationResult indicating whether the directory
+        was created or already exists.
     """
     try:
         directory = Path(path)
@@ -691,11 +724,6 @@ def read_yaml(path: str | Path) -> DataResult[dict]:
         A DataResult containing the parsed YAML data.
     """
     return FileSystemService().read_yaml(path)
-
-
-from pathlib import Path
-
-from quackcore.fs.results import FileInfoResult
 
 
 def get_file_info(path: str | Path) -> FileInfoResult:
