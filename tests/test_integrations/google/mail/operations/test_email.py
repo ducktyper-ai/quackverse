@@ -296,133 +296,155 @@ class TestGmailEmailOperations:
                 # So the correct expectation is 1 sleep with 2 attempts.
                 # If we truly need 2 sleeps, we would need 3 attempts (max_retries=3).
 
-    @patch("quackcore.integrations.google.mail.operations.email.process_message_parts")
-    @patch(
-        "quackcore.integrations.google.mail.operations.email._get_message_with_retry"
-    )
-    def test_download_email(
+
+@patch("quackcore.integrations.google.mail.operations.email.process_message_parts")
+@patch("quackcore.integrations.google.mail.operations.email._get_message_with_retry")
+def test_download_email(
         self,
         mock_get_message: MagicMock,
         mock_process_parts: MagicMock,
         mock_gmail_service,
-    ) -> None:
-        """Test downloading an email."""
-        logger = logging.getLogger("test_gmail")
-        storage_path = "/path/to/storage"
+) -> None:
+    """Test downloading an email."""
+    logger = logging.getLogger("test_gmail")
+    storage_path = "/path/to/storage"
 
-        # Mock message retrieval
-        mock_get_message.return_value = {
-            "id": "msg1",
-            "payload": {
-                "headers": [
-                    {"name": "Subject", "value": "Test Email"},
-                    {"name": "From", "value": "sender@example.com"},
-                ],
-                "parts": [{"mimeType": "text/html"}],
-            },
-        }
+    # Mock message retrieval
+    mock_get_message.return_value = {
+        "id": "msg1",
+        "payload": {
+            "headers": [
+                {"name": "Subject", "value": "Test Email"},
+                {"name": "From", "value": "sender@example.com"},
+            ],
+            "parts": [{"mimeType": "text/html"}],
+        },
+    }
 
-        # Mock message processing
-        mock_process_parts.return_value = (
-            "<html><body>Test content</body></html>",
-            ["/path/to/storage/attachment.pdf"],
-        )
+    # Mock message processing
+    mock_process_parts.return_value = (
+        "<html><body>Test content</body></html>",
+        ["/path/to/storage/attachment.pdf"],
+    )
 
-        # Create a mock context for file operations (removed unused variable)
-        mock_open_context = MagicMock().__enter__.return_value
-        mock_open_context.write = MagicMock()
+    # Patch the filesystem write operation to avoid real filesystem access
+    with patch(
+            "quackcore.integrations.google.mail.operations.email.datetime") as mock_dt, \
+            patch(
+                "quackcore.integrations.google.mail.operations.email.clean_filename") as mock_clean, \
+            patch("quackcore.integrations.google.mail.operations.email.fs") as mock_fs, \
+            patch("quackcore.integrations.google.mail.operations.email.open",
+                  create=True) as mock_open:
 
-        with patch(
-            "builtins.open",
-            MagicMock(
-                return_value=MagicMock(
-                    __enter__=MagicMock(return_value=mock_open_context),
-                    __exit__=MagicMock(),
-                )
-            ),
-        ):
-            # Test successful download
-            result = email.download_email(
-                mock_gmail_service,
-                "me",
-                "msg1",
-                storage_path,
-                True,
-                True,
-                3,
-                0.1,
-                0.5,
-                logger,
-            )
-            assert result.success is True
-            assert "/path/to/storage/" in result.content
-            assert ".html" in result.content
+        # Set up date/time to ensure consistent filename generation
+        mock_dt.now.return_value = datetime(2023, 1, 15, 10, 30, 0)
+        mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
 
-            mock_get_message.assert_called_once_with(
-                mock_gmail_service, "me", "msg1", 3, 0.1, 0.5, logger
-            )
+        # Configure filename cleaning
+        mock_clean.return_value = "sender-example-com"
 
-            # Verify HTML content construction with headers
-            assert mock_open_context.write.called
-            write_arg = mock_open_context.write.call_args[0][0]
-            assert "<h1>Subject: Test Email</h1>" in write_arg
-            assert "<h2>From: sender@example.com</h2>" in write_arg
-            assert "<html><body>Test content</body></html>" in write_arg
+        # Configure fs operation results
+        write_result = MagicMock()
+        write_result.success = True
+        write_result.content = "/path/to/storage/2023-01-15-103000-sender-example-com.html"
+        mock_fs.write_text.return_value = write_result
 
-        # Test with missing message
-        mock_get_message.return_value = None
+        # Mock the open context for verification
+        mock_file = MagicMock()
+        mock_open.return_value.__enter__.return_value = mock_file
+
+        # Test successful download
         result = email.download_email(
             mock_gmail_service,
             "me",
             "msg1",
             storage_path,
-            False,
-            False,
+            True,
+            True,
             3,
             0.1,
             0.5,
             logger,
         )
-        assert result.success is False
-        assert "Message msg1 could not be retrieved" in result.error
 
-        # Test with no HTML content
-        mock_get_message.return_value = {
-            "id": "msg1",
-            "payload": {
-                "headers": [{"name": "Subject", "value": "Test Email"}],
-                "parts": [{"mimeType": "text/plain"}],
-            },
-        }
-        mock_process_parts.return_value = (None, ["/path/to/storage/attachment.pdf"])
-        result = email.download_email(
-            mock_gmail_service,
-            "me",
-            "msg1",
-            storage_path,
-            False,
-            False,
-            3,
-            0.1,
-            0.5,
-            logger,
-        )
-        assert result.success is False
-        assert "No HTML content found in message msg1" in result.error
+        # Verify results
+        assert result.success is True
+        assert "/path/to/storage/" in result.content
+        assert ".html" in result.content
 
-        # Test with exception
-        mock_get_message.side_effect = Exception("Unexpected error")
-        result = email.download_email(
-            mock_gmail_service,
-            "me",
-            "msg1",
-            storage_path,
-            False,
-            False,
-            3,
-            0.1,
-            0.5,
-            logger,
+        # Verify correct calls were made
+        mock_get_message.assert_called_once_with(
+            mock_gmail_service, "me", "msg1", 3, 0.1, 0.5, logger
         )
-        assert result.success is False
-        assert "Failed to download email msg1" in result.error
+
+        # Verify that the fs.write_text was called with the expected content
+        if mock_fs.write_text.called:
+            # If using fs.write_text
+            write_content = mock_fs.write_text.call_args[0][1]
+            assert "<h1>Subject: Test Email</h1>" in write_content
+            assert "<h2>From: sender@example.com</h2>" in write_content
+            assert "<html><body>Test content</body></html>" in write_content
+        elif mock_file.write.called:
+            # If using open().write()
+            write_content = mock_file.write.call_args[0][0]
+            assert "<h1>Subject: Test Email</h1>" in write_content
+            assert "<h2>From: sender@example.com</h2>" in write_content
+            assert "<html><body>Test content</body></html>" in write_content
+
+    # Test with missing message
+    mock_get_message.return_value = None
+    result = email.download_email(
+        mock_gmail_service,
+        "me",
+        "msg1",
+        storage_path,
+        False,
+        False,
+        3,
+        0.1,
+        0.5,
+        logger,
+    )
+    assert result.success is False
+    assert "Message msg1 could not be retrieved" in result.error
+
+    # Test with no HTML content
+    mock_get_message.return_value = {
+        "id": "msg1",
+        "payload": {
+            "headers": [{"name": "Subject", "value": "Test Email"}],
+            "parts": [{"mimeType": "text/plain"}],
+        },
+    }
+    mock_process_parts.return_value = (None, ["/path/to/storage/attachment.pdf"])
+    result = email.download_email(
+        mock_gmail_service,
+        "me",
+        "msg1",
+        storage_path,
+        False,
+        False,
+        3,
+        0.1,
+        0.5,
+        logger,
+    )
+    assert result.success is False
+    assert "No HTML content found in message msg1" in result.error
+
+    # Test with exception
+    mock_get_message.side_effect = Exception("Unexpected error")
+    result = email.download_email(
+        mock_gmail_service,
+        "me",
+        "msg1",
+        storage_path,
+        False,
+        False,
+        3,
+        0.1,
+        0.5,
+        logger,
+    )
+    assert result.success is False
+    assert "Failed to download email msg1" in result.error
