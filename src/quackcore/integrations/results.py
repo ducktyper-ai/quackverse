@@ -6,11 +6,12 @@ This module provides standardized result classes for various integration
 operations, enhancing error handling and return values.
 """
 
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel, Field, field_validator
 
 T = TypeVar("T")  # Generic type for result content
+R = TypeVar("R")  # Generic type for result content
 
 
 class IntegrationResult(BaseModel, Generic[T]):
@@ -117,12 +118,15 @@ class AuthResult(BaseModel):
         description="Additional authentication content or metadata",
     )
 
+    @classmethod
     @field_validator("token")
-    def validate_token(cls, v: Any) -> str | None:
+    def validate_token(cls, v: T) -> str | None:
         """
         Validate that token is a string if provided.
 
-        This prevents MagicMock objects or other non-string types from being used as tokens.
+        This prevents MagicMock objects or other non-string
+
+        types from being used as tokens.
         """
         if v is not None:
             return str(v)

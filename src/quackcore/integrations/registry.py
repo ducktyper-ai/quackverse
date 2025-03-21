@@ -1,4 +1,3 @@
-# src/quackcore/integrations/registry.py
 """
 Registry for QuackCore integrations.
 
@@ -15,7 +14,8 @@ import logging
 import sys
 from collections.abc import Iterable
 from importlib.metadata import EntryPoint  # type: ignore
-from typing import Protocol, TypeVar
+from types import ModuleType
+from typing import Protocol, TypeVar, cast
 
 from quackcore.errors import QuackError
 from quackcore.integrations.protocols import IntegrationProtocol
@@ -39,7 +39,7 @@ class IntegrationRegistry:
         Initialize the integration registry.
 
         Args:
-            log_level: Logging level
+            log_level: Logging level.
         """
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(log_level)
@@ -50,10 +50,10 @@ class IntegrationRegistry:
         Register an integration with the registry.
 
         Args:
-            integration: Integration to register
+            integration: Integration to register.
 
         Raises:
-            QuackError: If the integration is already registered
+            QuackError: If the integration is already registered.
         """
         integration_name = integration.name
         if integration_name in self._integrations:
@@ -69,10 +69,10 @@ class IntegrationRegistry:
         Unregister an integration from the registry.
 
         Args:
-            name: Name of the integration to unregister
+            name: Name of the integration to unregister.
 
         Returns:
-            bool: True if the integration was unregistered, False if not found
+            bool: True if the integration was unregistered, False if not found.
         """
         if name in self._integrations:
             del self._integrations[name]
@@ -87,10 +87,10 @@ class IntegrationRegistry:
         Get an integration by name.
 
         Args:
-            name: Name of the integration to get
+            name: Name of the integration.
 
         Returns:
-            IntegrationProtocol | None: The integration if found, else None
+            IntegrationProtocol | None: The integration if found, else None.
         """
         return self._integrations.get(name)
 
@@ -99,10 +99,10 @@ class IntegrationRegistry:
         Get all integrations of a specific type.
 
         Args:
-            integration_type: Type of integrations to get
+            integration_type: Type of integrations to get.
 
         Returns:
-            Iterable[T]: Integrations of the specified type
+            Iterable[T]: Integrations of the specified type.
         """
         for integration in self._integrations.values():
             if isinstance(integration, integration_type):
@@ -113,7 +113,7 @@ class IntegrationRegistry:
         Get a list of all registered integration names.
 
         Returns:
-            list[str]: List of integration names
+            list[str]: List of integration names.
         """
         return list(self._integrations.keys())
 
@@ -122,10 +122,10 @@ class IntegrationRegistry:
         Check if an integration is registered.
 
         Args:
-            name: Name of the integration
+            name: Name of the integration.
 
         Returns:
-            bool: True if the integration is registered
+            bool: True if the integration is registered.
         """
         return name in self._integrations
 
@@ -134,7 +134,7 @@ class IntegrationRegistry:
         Discover integrations from entry points.
 
         Returns:
-            list[IntegrationProtocol]: Discovered integrations
+            list[IntegrationProtocol]: Discovered integrations.
         """
         discovered_integrations: list[IntegrationProtocol] = []
         plugin_loader: PluginLoaderProtocol | None = self._get_plugin_loader()
@@ -160,18 +160,18 @@ class IntegrationRegistry:
         Load integrations from a module.
 
         Args:
-            module_path: Path to the module
+            module_path: Path to the module.
 
         Returns:
-            list[IntegrationProtocol]: Loaded integrations
+            list[IntegrationProtocol]: Loaded integrations.
 
         Raises:
-            QuackError: If module cannot be loaded or contains no integrations
+            QuackError: If module cannot be loaded or contains no integrations.
         """
         loaded_integrations: list[IntegrationProtocol] = []
         plugin_loader: PluginLoaderProtocol | None = self._get_plugin_loader()
 
-        # Try to load using the plugin loader first
+        # Try to load using the plugin loader first.
         if plugin_loader is not None:
             integration = self._load_integration_with_plugin_loader(
                 module_path, plugin_loader
@@ -186,35 +186,8 @@ class IntegrationRegistry:
                         f"Error registering integration from plugin loader: {err}"
                     )
 
-        # Fallback to manual module loading
-        module = None
-        try:
-            # First check if module is already loaded
-            modules_dict = getattr(sys, "modules", {})
-            if module_path in modules_dict:
-                module = modules_dict[module_path]
-            else:
-                # If not, try importing it
-                try:
-                    module = importlib.import_module(module_path)
-                except ImportError as e:
-                    error_msg = f"Failed to import module {module_path}: {e}"
-                    self.logger.error(error_msg)
-                    raise QuackError(
-                        error_msg,
-                        {"module_path": module_path, "error": str(e)},
-                        original_error=e,
-                    ) from e
-        except Exception as e:
-            error_msg = f"Error accessing module {module_path}: {e}"
-            self.logger.error(error_msg)
-            raise QuackError(
-                error_msg,
-                {"module_path": module_path, "error": str(e)},
-                original_error=e,
-            ) from e
-
-        # Try to load using a factory function
+        # Fallback to manual module loading.
+        module = self._import_module(module_path)
         integration = self._load_integration_from_factory(module)
         if integration is not None:
             try:
@@ -226,7 +199,7 @@ class IntegrationRegistry:
                     f"Error registering integration from create_integration: {err}"
                 )
 
-        # Otherwise, search for integration classes defined in the module
+        # Otherwise, search for integration classes defined in the module.
         integrations_from_module = self._load_integrations_from_module(module)
         for integ in integrations_from_module:
             try:
@@ -240,7 +213,40 @@ class IntegrationRegistry:
 
         return loaded_integrations
 
-    # Helper methods to reduce complexity
+    def _import_module(self, module_path: str) -> ModuleType:
+        """
+        Import a module given its module path.
+
+        Args:
+            module_path: Path to the module.
+
+        Returns:
+            The imported module object.
+
+        Raises:
+            QuackError: If the module cannot be imported.
+        """
+        try:
+            modules_dict = sys.modules
+            if module_path in modules_dict:
+                return modules_dict[module_path]  # type: ignore
+            return importlib.import_module(module_path)
+        except ImportError as e:
+            error_msg = f"Failed to import module {module_path}: {e}"
+            self.logger.error(error_msg)
+            raise QuackError(
+                error_msg,
+                {"module_path": module_path, "error": str(e)},
+                original_error=e,
+            ) from e
+        except Exception as e:
+            error_msg = f"Error accessing module {module_path}: {e}"
+            self.logger.error(error_msg)
+            raise QuackError(
+                error_msg,
+                {"module_path": module_path, "error": str(e)},
+                original_error=e,
+            ) from e
 
     def _get_plugin_loader(self) -> PluginLoaderProtocol | None:
         """
@@ -249,14 +255,10 @@ class IntegrationRegistry:
         Returns:
             PluginLoaderProtocol or None if not available.
         """
-        # First try accessing it from sys.modules directly without importing
         module_name = "quackcore.plugins.discovery"
-
-        # Get a reference to sys.modules safely
         try:
             modules_dict = sys.modules
         except AttributeError:
-            # Handle case where sys.modules is patched or not available in testing
             return None
 
         if module_name in modules_dict:
@@ -264,16 +266,14 @@ class IntegrationRegistry:
             if hasattr(discovery_module, "loader"):
                 return discovery_module.loader  # type: ignore
 
-        # If not found in sys.modules, try importing (but safely handle patched cases)
         try:
             discovery_module = importlib.import_module(module_name)
             if hasattr(discovery_module, "loader"):
                 return discovery_module.loader  # type: ignore
         except (ImportError, AttributeError, ModuleNotFoundError):
-            # Explicitly handle common import errors
             return None
-        except Exception:
-            # Handle any other unexpected errors
+        except Exception as e:
+            self.logger.error(f"Unexpected error loading plugin loader: {e}")
             return None
 
         return None
@@ -283,10 +283,10 @@ class IntegrationRegistry:
         Retrieve entry points for a given group.
 
         Args:
-            group: The entry point group to search
+            group: The entry point group to search.
 
         Returns:
-            list[EntryPoint]: A list of entry point objects
+            list[EntryPoint]: A list of entry point objects.
         """
         try:
             from importlib.metadata import entry_points
@@ -306,8 +306,8 @@ class IntegrationRegistry:
         Load an integration from a given entry point.
 
         Args:
-            entry: The entry point object
-            plugin_loader: The plugin loader to use (if any)
+            entry: The entry point object.
+            plugin_loader: The plugin loader to use (if any).
 
         Returns:
             IntegrationProtocol instance if loaded successfully, else None.
@@ -323,7 +323,6 @@ class IntegrationRegistry:
                     self.logger.debug(
                         f"Plugin loader failed for {entry.name}: {e}, falling back"
                     )
-            # Fall back to standard approach
             factory = entry.load()
             if callable(factory):
                 integration = factory()
@@ -334,12 +333,8 @@ class IntegrationRegistry:
                 )
             else:
                 self.logger.warning(f"Entry point {entry.name} factory is not callable")
-        except (ImportError, AttributeError) as e:
+        except (ImportError, AttributeError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to import integration from {entry.name}: {e}")
-        except TypeError as e:
-            self.logger.error(f"Type error loading integration from {entry.name}: {e}")
-        except ValueError as e:
-            self.logger.error(f"Value error loading integration from {entry.name}: {e}")
         except Exception as e:
             self.logger.error(
                 f"Unexpected error loading integration from {entry.name}: {e}"
@@ -353,8 +348,8 @@ class IntegrationRegistry:
         Attempt to load an integration from a module using the plugin loader.
 
         Args:
-            module_path: The module path to load
-            plugin_loader: The plugin loader to use
+            module_path: The module path to load.
+            plugin_loader: The plugin loader to use.
 
         Returns:
             IntegrationProtocol instance if successful, else None.
@@ -362,7 +357,6 @@ class IntegrationRegistry:
         if plugin_loader is not None:
             try:
                 plugin = plugin_loader.load_plugin(module_path)
-                # Verify it's a valid integration by checking required attributes
                 if (
                     hasattr(plugin, "name")
                     and hasattr(plugin, "version")
@@ -371,119 +365,140 @@ class IntegrationRegistry:
                     and callable(plugin.initialize)
                     and callable(plugin.is_available)
                 ):
-                    return plugin
-            except (ImportError, AttributeError) as e:
+                    return cast(IntegrationProtocol, plugin)
+            except (ImportError, AttributeError, TypeError, ValueError) as e:
                 self.logger.debug(
                     f"Could not load module {module_path} using plugin loader: {e}"
                 )
-            except (TypeError, ValueError) as e:
-                self.logger.debug(f"Plugin loader error for {module_path}: {e}")
         return None
 
     def _load_integration_from_factory(
-        self, module: object
+        self, module: ModuleType
     ) -> IntegrationProtocol | None:
         """
         Attempt to load an integration via a factory function
         named 'create_integration' in the module.
 
         Args:
-            module: The module object
+            module: The module object.
 
         Returns:
             IntegrationProtocol instance if successful, else None.
         """
-        if hasattr(module, "create_integration"):
-            create_func = getattr(module, "create_integration")
-            if callable(create_func):
-                try:
-                    integration = create_func()
-                    # Verify the instance has the required protocol properties and methods
-                    if (
-                        hasattr(integration, "name")
-                        and hasattr(integration, "version")
-                        and hasattr(integration, "initialize")
-                        and hasattr(integration, "is_available")
-                        and callable(integration.initialize)
-                        and callable(integration.is_available)
-                    ):
-                        return integration
-                except (TypeError, ValueError) as e:
-                    self.logger.error(
-                        f"Error calling create_integration in {getattr(module, '__name__', '<unknown>')}: {e}"
-                    )
-                except Exception as e:
-                    self.logger.error(
-                        f"Unexpected error in create_integration for {getattr(module, '__name__', '<unknown>')}: {e}"
-                    )
+        try:
+            create_func = module.create_integration  # Direct attribute access.
+        except AttributeError:
+            return None
+
+        if callable(create_func):
+            try:
+                integration = create_func()
+                if (
+                    hasattr(integration, "name")
+                    and hasattr(integration, "version")
+                    and hasattr(integration, "initialize")
+                    and hasattr(integration, "is_available")
+                    and callable(integration.initialize)
+                    and callable(integration.is_available)
+                ):
+                    return integration
+            except (TypeError, ValueError) as e:
+                self.logger.error(
+                    f"Error calling create_integration in {module.__name__}: {e}"
+                )
+            except Exception as e:
+                self.logger.error(
+                    f"Unexpected error in create_integration for {module.__name__}: {e}"
+                )
+        return None
+
+    def _is_valid_integration(self, instance: object) -> bool:
+        """
+        Check whether an instance satisfies the minimal
+        requirements for an IntegrationProtocol.
+
+        Args:
+            instance: The instance to validate.
+
+        Returns:
+            bool: True if valid, else False.
+        """
+        required_attrs = ("name", "version", "initialize", "is_available")
+        for attr in required_attrs:
+            if not hasattr(instance, attr):
+                return False
+        # Now that we know the attributes exist, cast instance to IntegrationProtocol.
+        integration_instance = cast(IntegrationProtocol, instance)
+        return callable(integration_instance.initialize) and callable(
+            integration_instance.is_available
+        )
+
+    def _try_instantiate_integration(
+        self, integration_cls: type, attr_name: str | None = None
+    ) -> IntegrationProtocol | None:
+        """
+        Try to instantiate an integration class and validate the resulting instance.
+
+        Args:
+            integration_cls: The integration class to instantiate.
+            attr_name: Optional attribute name to use in error logging.
+
+        Returns:
+            IntegrationProtocol instance if successful and valid, else None.
+        """
+        name_to_log = attr_name if attr_name is not None else integration_cls.__name__
+        try:
+            instance = integration_cls()
+            if self._is_valid_integration(instance):
+                return instance
+        except (TypeError, ValueError) as e:
+            self.logger.error(f"Error instantiating {name_to_log}: {e}")
+        except Exception as e:
+            self.logger.error(f"Unexpected error instantiating {name_to_log}: {e}")
         return None
 
     def _load_integrations_from_module(
-        self, module: object
+        self, module: ModuleType
     ) -> list[IntegrationProtocol]:
         """
         Search the module for integration classes that are defined within it.
 
         Args:
-            module: The module object
+            module: The module object.
 
         Returns:
-            list[IntegrationProtocol]: List of instantiated integrations
+            list[IntegrationProtocol]: List of instantiated integrations.
         """
         integrations: list[IntegrationProtocol] = []
 
-        # First, check if there's a TestIntegration class attribute (special case for tests)
-        if hasattr(module, "TestIntegration"):
-            attr = getattr(module, "TestIntegration")
-            if isinstance(attr, type):
-                try:
-                    instance = attr()
-                    # Check if the instance has the required protocol methods
-                    if (
-                        hasattr(instance, "name")
-                        and hasattr(instance, "version")
-                        and hasattr(instance, "initialize")
-                        and hasattr(instance, "is_available")
-                    ):
-                        integrations.append(instance)
-                except Exception as e:
-                    self.logger.error(f"Error instantiating TestIntegration: {e}")
+        # Handle special test integration case.
+        try:
+            test_integration = module.TestIntegration  # Direct attribute access.
+            if isinstance(test_integration, type):
+                instance = self._try_instantiate_integration(
+                    test_integration, "TestIntegration"
+                )
+                if instance is not None:
+                    integrations.append(instance)
+        except AttributeError:
+            pass
 
-        # Then check other module attributes
+        # Search through all attributes of the module.
         for attr_name in dir(module):
             if attr_name.startswith("_") or attr_name == "TestIntegration":
                 continue
-
             try:
                 attr = getattr(module, attr_name)
-
-                # Check if it's a class with the expected properties of IntegrationProtocol
                 if (
                     isinstance(attr, type)
-                    and hasattr(attr, "__module__")
-                    and attr.__module__ == getattr(module, "__name__", "")
+                    and attr.__module__ == module.__name__
                     and attr is not IntegrationProtocol
                 ):
-                    try:
-                        instance = attr()
-                        # Verify the instance has the required protocol properties and methods
-                        if (
-                            hasattr(instance, "name")
-                            and hasattr(instance, "version")
-                            and hasattr(instance, "initialize")
-                            and hasattr(instance, "is_available")
-                            and callable(instance.initialize)
-                            and callable(instance.is_available)
-                        ):
-                            integrations.append(instance)
-                    except (TypeError, ValueError) as e:
-                        self.logger.error(f"Error instantiating {attr_name}: {e}")
-                    except Exception as e:
-                        self.logger.error(
-                            f"Unexpected error instantiating {attr_name}: {e}"
-                        )
-            except Exception:
-                # Skip attributes that can't be accessed
+                    instance = self._try_instantiate_integration(attr, attr_name)
+                    if instance is not None:
+                        integrations.append(instance)
+            except Exception as e:
+                self.logger.error(f"Error accessing attribute {attr_name}: {e}")
                 continue
 
         return integrations

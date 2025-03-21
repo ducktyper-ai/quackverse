@@ -213,7 +213,8 @@ class PathResolver:
                 "output", f"Could not find output directory in or near {current_dir}"
             ) from e
 
-    # Add resolve_project_path method to the PathResolver class in src/quackcore/paths/resolver.py
+    # Add resolve_project_path method to the
+    # PathResolver class in src/quackcore/paths/resolver.py
 
     def resolve_project_path(
         self,
