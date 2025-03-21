@@ -1,6 +1,6 @@
-# src/quackcore/integrations/pandoc/models.py
+# src/quackcore/plugins/pandoc/models.py
 """
-Data models for pandoc integration.
+Data models for pandoc plugin.
 
 This module provides data models for representing conversion operations,
 metrics, and results.
@@ -8,11 +8,10 @@ metrics, and results.
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any, TypeVar, Generic
+from typing import TypeVar
 
 from pydantic import BaseModel, Field
 
-from quackcore.integrations.results import IntegrationResult
 
 T = TypeVar("T")  # Generic type for result content
 
@@ -77,9 +76,17 @@ class ConversionTask(BaseModel):
     )
 
 
-class ConversionResult(IntegrationResult[Path]):
+class ConversionResult(BaseModel):
     """Result of a document conversion operation."""
 
+    success: bool = Field(
+        default=True,
+        description="Whether the conversion was successful"
+    )
+    content: Path | None = Field(
+        default=None,
+        description="Path to the converted file"
+    )
     source_format: str | None = Field(
         default=None,
         description="Source format"
@@ -103,6 +110,14 @@ class ConversionResult(IntegrationResult[Path]):
     validation_errors: list[str] = Field(
         default_factory=list,
         description="Document validation errors"
+    )
+    message: str | None = Field(
+        default=None,
+        description="Additional message about the operation"
+    )
+    error: str | None = Field(
+        default=None,
+        description="Error message if conversion failed"
     )
 
     @classmethod
@@ -175,9 +190,17 @@ class ConversionResult(IntegrationResult[Path]):
         )
 
 
-class BatchConversionResult(IntegrationResult[list[Path]]):
+class BatchConversionResult(BaseModel):
     """Result of a batch document conversion operation."""
 
+    success: bool = Field(
+        default=True,
+        description="Whether the batch conversion was successful"
+    )
+    content: list[Path] = Field(
+        default_factory=list,
+        description="List of paths to converted files"
+    )
     successful_files: list[Path] = Field(
         default_factory=list,
         description="Successfully converted files"
@@ -189,6 +212,14 @@ class BatchConversionResult(IntegrationResult[list[Path]]):
     metrics: ConversionMetrics | None = Field(
         default=None,
         description="Conversion metrics"
+    )
+    message: str | None = Field(
+        default=None,
+        description="Additional message about the operation"
+    )
+    error: str | None = Field(
+        default=None,
+        description="Error message if batch conversion failed"
     )
 
     @classmethod

@@ -6,9 +6,9 @@ This package contains specialized modules for different pandoc operations,
 such as HTML to Markdown and Markdown to DOCX conversion.
 """
 
-from quackcore.integrations.pandoc.operations.html_to_md import convert_html_to_markdown
-from quackcore.integrations.pandoc.operations.md_to_docx import convert_markdown_to_docx
-from quackcore.integrations.pandoc.operations.utils import (
+from quackcore.plugins.pandoc.operations.html_to_md import convert_html_to_markdown
+from quackcore.plugins.pandoc.operations.md_to_docx import convert_markdown_to_docx
+from quackcore.plugins.pandoc.operations.utils import (
     check_conversion_ratio,
     check_file_size,
     get_file_info,

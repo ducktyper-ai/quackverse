@@ -50,8 +50,11 @@ install: ## Install quackcore package
 	uv pip install -e .
 
 .PHONY: install-all
-install-all: install install-dev ## Install all
-	@echo "${GREEN}Both packages installed successfully${RESET}"
+install-all: ## Install package with all optional dependencies
+	@echo "${BLUE}Installing quackcore package with all optional dependencies but not dev tools...${RESET}"
+	uv pip install -e ".[gmail,notion,google,drive,pandoc]"
+	@echo "${GREEN}All packages installed successfully${RESET}"
+
 
 .PHONY: install-dev
 install-dev: ## Install both packages with development dependencies
@@ -73,7 +76,7 @@ setup: ## Create environment and install full development dependencies
 .PHONY: update
 update: ## Update all dependencies
 	@echo "${BLUE}Updating dependencies...${RESET}"
-	make install-dev
+	make install-all
 
 .PHONY: test
 test: install-dev ## Run tests with coverage

@@ -12,9 +12,9 @@ from pathlib import Path
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs import service as fs
-from quackcore.integrations.pandoc.config import ConversionConfig
-from quackcore.integrations.pandoc.models import ConversionMetrics, ConversionResult
-from quackcore.integrations.pandoc.operations.utils import (
+from quackcore.plugins.pandoc.config import ConversionConfig
+from quackcore.plugins.pandoc.models import ConversionMetrics, ConversionResult
+from quackcore.plugins.pandoc.operations.utils import (
     check_conversion_ratio,
     check_file_size,
     prepare_pandoc_args,

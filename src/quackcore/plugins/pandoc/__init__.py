@@ -1,22 +1,22 @@
-# src/quackcore/integrations/pandoc/__init__.py
+# src/quackcore/plugins/pandoc/__init__.py
 """
-Pandoc integration for QuackCore.
+Pandoc plugin for QuackCore.
 
-This package provides integration with pandoc for document conversion,
+This package provides a plugin for document conversion using Pandoc,
 including HTML to Markdown and Markdown to DOCX conversion.
 """
 
-from quackcore.integrations.pandoc.config import ConversionConfig, PandocConfigProvider
-from quackcore.integrations.pandoc.converter import DocumentConverter
-from quackcore.integrations.pandoc.models import (
+from quackcore.plugins.pandoc.config import ConversionConfig, PandocConfigProvider
+from quackcore.plugins.pandoc.converter import DocumentConverter
+from quackcore.plugins.pandoc.models import (
     BatchConversionResult,
     ConversionMetrics,
     ConversionResult,
     ConversionTask,
     FileInfo,
 )
-from quackcore.integrations.pandoc.service import PandocService
-from quackcore.integrations.protocols import IntegrationProtocol
+from quackcore.plugins.pandoc.service import PandocService
+from quackcore.plugins.protocols import QuackPluginProtocol
 
 __all__ = [
     # Main service class
@@ -32,18 +32,18 @@ __all__ = [
     "ConversionResult",
     "ConversionTask",
     "FileInfo",
-    # Factory function for integration discovery
-    "create_integration",
+    # Factory function for plugin discovery
+    "create_plugin",
 ]
 
 
-def create_integration() -> IntegrationProtocol:
+def create_plugin() -> QuackPluginProtocol:
     """
-    Create and initialize a pandoc integration.
+    Create and return a Pandoc plugin instance.
 
-    This function is used as an entry point for automatic integration discovery.
+    This function is used as an entry point for automatic plugin discovery.
 
     Returns:
-        IntegrationProtocol: Configured pandoc service
+        QuackPluginProtocol: Configured Pandoc service
     """
     return PandocService()

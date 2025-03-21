@@ -1,8 +1,8 @@
-# src/quackcore/integrations/pandoc/config.py
+# src/quackcore/plugins/pandoc/config.py
 """
-Configuration models for Pandoc integration.
+Configuration models for Pandoc plugin.
 
-This module provides Pydantic models for the pandoc integration configuration.
+This module provides Pydantic models for the pandoc plugin configuration.
 """
 
 from pathlib import Path
@@ -10,7 +10,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
-from quackcore.integrations.base import BaseConfigProvider
+from quackcore.config.models import LoggingConfig
 
 
 class PandocOptions(BaseModel):
@@ -116,6 +116,10 @@ class ConversionConfig(BaseModel):
         default=Path("./output"),
         description="Output directory for converted files"
     )
+    logging: LoggingConfig = Field(
+        default_factory=LoggingConfig,
+        description="Logging configuration"
+    )
 
     @field_validator("output_dir")
     @classmethod
@@ -127,8 +131,8 @@ class ConversionConfig(BaseModel):
         return v
 
 
-class PandocConfigProvider(BaseConfigProvider):
-    """Configuration provider for Pandoc integration."""
+class PandocConfigProvider:
+    """Configuration provider for Pandoc plugin."""
 
     DEFAULT_CONFIG_LOCATIONS = [
         "./config/pandoc_config.yaml",
@@ -139,10 +143,88 @@ class PandocConfigProvider(BaseConfigProvider):
 
     ENV_PREFIX = "QUACK_PANDOC_"
 
+    def __init__(self, log_level: int = logging.INFO):
+        """
+        Initialize the Pandoc configuration provider.
+
+        Args:
+            log_level: Logging level
+        """
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(log_level)
+
     @property
     def name(self) -> str:
         """Get the name of the configuration provider."""
         return "PandocConfig"
+
+    def load_config(self, config_path: str | Path | None = None) -> ConversionConfig:
+        """
+        Load configuration from a file.
+
+        Args:
+            config_path: Path to the configuration file
+
+        Returns:
+            ConfigResult: Result containing configuration data
+        """
+        from quackcore.config.loader import load_config
+        from quackcore.fs.results import DataResult
+
+        try:
+            # Try to load from the specified path
+            if config_path:
+                from quackcore.fs import service as fs
+                yaml_result = fs.read_yaml(config_path)
+                if not yaml_result.success:
+                    self.logger.error(
+                        f"Failed to load config from {config_path}: {yaml_result.error}")
+                    return DataResult(
+                        success=False,
+                        path=str(config_path),
+                        data={},
+                        format="yaml",
+                        error=yaml_result.error
+                    )
+                config_data = yaml_result.data
+            else:
+                # Try to load from the QuackCore configuration system
+                config = load_config()
+                config_data = config.custom.get("pandoc", {})
+                if not config_data:
+                    # Use default configuration as fallback
+                    config_data = self.get_default_config()
+
+            # Extract pandoc-specific configuration
+            pandoc_config = self._extract_config(config_data)
+
+            # Validate the configuration
+            if not self.validate_config(pandoc_config):
+                return DataResult(
+                    success=False,
+                    path=str(config_path) if config_path else "default_config",
+                    data={},
+                    format="yaml",
+                    error="Invalid configuration"
+                )
+
+            return DataResult(
+                success=True,
+                path=str(config_path) if config_path else "default_config",
+                data=pandoc_config,
+                format="yaml",
+                message="Successfully loaded configuration"
+            )
+
+        except Exception as e:
+            self.logger.error(f"Error loading configuration: {str(e)}")
+            return DataResult(
+                success=False,
+                path=str(config_path) if config_path else "default_config",
+                data={},
+                format="yaml",
+                error=f"Error loading configuration: {str(e)}"
+            )
 
     def _extract_config(self, config_data: dict[str, Any]) -> dict[str, Any]:
         """

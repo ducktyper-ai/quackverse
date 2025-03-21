@@ -1,8 +1,8 @@
-# src/quackcore/integrations/pandoc/service.py
+# src/quackcore/plugins/pandoc/service.py
 """
-Pandoc integration service for QuackCore.
+Pandoc service for QuackCore.
 
-This module provides the main service class for pandoc integration,
+This module provides the main service class for the pandoc plugin,
 handling document conversion between various formats.
 """
 
@@ -13,29 +13,28 @@ from typing import Any, NoneType
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs import service as fs
-from quackcore.integrations.base import BaseIntegrationService
-from quackcore.integrations.pandoc.config import ConversionConfig, PandocConfigProvider
-from quackcore.integrations.pandoc.converter import DocumentConverter
-from quackcore.integrations.pandoc.models import (
+from quackcore.plugins.pandoc.config import ConversionConfig, PandocConfigProvider
+from quackcore.plugins.pandoc.converter import DocumentConverter
+from quackcore.plugins.pandoc.models import (
     BatchConversionResult,
     ConversionMetrics,
     ConversionResult,
     ConversionTask,
     FileInfo,
 )
-from quackcore.integrations.pandoc.operations import (
+from quackcore.plugins.pandoc.operations import (
     get_file_info,
     verify_pandoc,
 )
-from quackcore.integrations.results import IntegrationResult
+from quackcore.plugins.protocols import QuackPluginProtocol
 from quackcore.paths import resolver
 
 logger = logging.getLogger(__name__)
 
 
-class PandocService(BaseIntegrationService):
+class PandocService(QuackPluginProtocol):
     """
-    Integration service for pandoc document conversion.
+    Plugin service for pandoc document conversion.
 
     This service provides functionality for converting documents between
     various formats using pandoc, with a focus on HTML to Markdown and
@@ -49,95 +48,87 @@ class PandocService(BaseIntegrationService):
             log_level: int = logging.INFO,
     ) -> None:
         """
-        Initialize the pandoc integration service.
+        Initialize the pandoc service.
 
         Args:
             config_path: Path to the configuration file
             output_dir: Directory to save converted files
             log_level: Logging level
         """
-        # Create a configuration provider
-        config_provider = PandocConfigProvider(log_level)
-        super().__init__(config_provider, None, config_path, log_level)
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(log_level)
+        self.log_level = log_level
+
+        # Initialize configuration
+        self.config_path = config_path
+        self.config_provider = PandocConfigProvider(log_level)
+        self.config = None
 
         # Initialize custom attributes
         self.output_dir = output_dir
         self.metrics = ConversionMetrics(start_time=datetime.now())
         self.converter: DocumentConverter | None = None
         self._pandoc_version: str | None = None
+        self._initialized = False
 
     @property
     def name(self) -> str:
-        """Get the name of the integration."""
+        """Get the name of the plugin."""
         return "Pandoc"
 
-    @property
-    def version(self) -> str:
-        """Get the version of the integration."""
-        return "1.0.0"
-
-    def initialize(self) -> IntegrationResult[NoneType]:
+    def initialize(self) -> bool:
         """
-        Initialize the pandoc service.
+        Initialize the pandoc plugin.
 
         This method verifies pandoc availability and loads configuration.
 
         Returns:
-            IntegrationResult: Result of initialization
+            bool: True if initialization was successful, False otherwise
         """
         try:
-            # Call the parent initialization to load configuration
-            init_result = super().initialize()
-            if not init_result.success:
-                return init_result
-
-            # Ensure configuration is loaded
-            if not hasattr(self, "config") or not self.config:
-                return IntegrationResult.error_result(
-                    "Failed to load configuration",
-                    message="Configuration not available"
-                )
+            # Load configuration
+            config_result = self.config_provider.load_config(self.config_path)
+            if not config_result.success or not config_result.content:
+                self.logger.error("Failed to load configuration")
+                return False
 
             # Load and validate configuration
-            config_dict = self.config
+            config_dict = config_result.content
 
             try:
                 conversion_config = ConversionConfig(**config_dict)
             except Exception as e:
-                return IntegrationResult.error_result(
-                    f"Invalid configuration: {str(e)}",
-                    message="Configuration validation failed"
-                )
+                self.logger.error(f"Invalid configuration: {str(e)}")
+                return False
+
+            # Store the configuration
+            self.config = conversion_config
 
             # Override output directory if specified
             if self.output_dir:
-                conversion_config.output_dir = Path(self.output_dir)
+                self.config.output_dir = Path(self.output_dir)
 
             # Verify pandoc installation
             try:
                 self._pandoc_version = verify_pandoc()
             except QuackIntegrationError as e:
-                return IntegrationResult.error_result(
-                    str(e),
-                    message="Pandoc verification failed"
-                )
+                self.logger.error(f"Pandoc verification failed: {str(e)}")
+                return False
 
             # Initialize converter
-            self.converter = DocumentConverter(conversion_config)
+            self.converter = DocumentConverter(self.config)
 
             # Ensure output directory exists
-            fs.create_directory(conversion_config.output_dir, exist_ok=True)
+            fs.create_directory(self.config.output_dir, exist_ok=True)
 
             self._initialized = True
-            return IntegrationResult.success_result(
-                message=f"Pandoc service initialized successfully. Version: {self._pandoc_version}"
-            )
+            self.logger.info(
+                f"Pandoc plugin initialized successfully. Version: {self._pandoc_version}")
+            return True
 
         except Exception as e:
-            logger.error(f"Failed to initialize pandoc service: {str(e)}")
-            return IntegrationResult.error_result(
-                f"Failed to initialize pandoc service: {str(e)}"
-            )
+            self.logger.error(f"Failed to initialize pandoc plugin: {str(e)}")
+            return False
 
     def html_to_markdown(
             self, html_path: Path, output_path: Path | None = None
@@ -152,9 +143,9 @@ class PandocService(BaseIntegrationService):
         Returns:
             ConversionResult: Result of the conversion
         """
-        if init_error := self._ensure_initialized():
+        if not self._ensure_initialized():
             return ConversionResult.error_result(
-                f"Service not initialized: {init_error.error}"
+                "Service not initialized"
             )
 
         try:
@@ -170,7 +161,7 @@ class PandocService(BaseIntegrationService):
             return self.converter.convert_file(html_path, output_path, "markdown")
 
         except Exception as e:
-            logger.error(f"Error in HTML to Markdown conversion: {str(e)}")
+            self.logger.error(f"Error in HTML to Markdown conversion: {str(e)}")
             return ConversionResult.error_result(
                 f"Error in HTML to Markdown conversion: {str(e)}",
                 source_format="html",
@@ -190,9 +181,9 @@ class PandocService(BaseIntegrationService):
         Returns:
             ConversionResult: Result of the conversion
         """
-        if init_error := self._ensure_initialized():
+        if not self._ensure_initialized():
             return ConversionResult.error_result(
-                f"Service not initialized: {init_error.error}"
+                "Service not initialized"
             )
 
         try:
@@ -208,7 +199,7 @@ class PandocService(BaseIntegrationService):
             return self.converter.convert_file(markdown_path, output_path, "docx")
 
         except Exception as e:
-            logger.error(f"Error in Markdown to DOCX conversion: {str(e)}")
+            self.logger.error(f"Error in Markdown to DOCX conversion: {str(e)}")
             return ConversionResult.error_result(
                 f"Error in Markdown to DOCX conversion: {str(e)}",
                 source_format="markdown",
@@ -232,9 +223,9 @@ class PandocService(BaseIntegrationService):
         Returns:
             BatchConversionResult: Result of the conversion
         """
-        if init_error := self._ensure_initialized():
+        if not self._ensure_initialized():
             return BatchConversionResult.error_result(
-                f"Service not initialized: {init_error.error}"
+                "Service not initialized"
             )
 
         try:
@@ -298,7 +289,7 @@ class PandocService(BaseIntegrationService):
                     )
                     tasks.append(task)
                 except Exception as e:
-                    logger.warning(f"Skipping file {file_path}: {str(e)}")
+                    self.logger.warning(f"Skipping file {file_path}: {str(e)}")
 
             # Perform batch conversion
             if tasks:
@@ -309,7 +300,7 @@ class PandocService(BaseIntegrationService):
                 )
 
         except Exception as e:
-            logger.error(f"Error in directory conversion: {str(e)}")
+            self.logger.error(f"Error in directory conversion: {str(e)}")
             return BatchConversionResult.error_result(
                 f"Error in directory conversion: {str(e)}"
             )
@@ -353,3 +344,17 @@ class PandocService(BaseIntegrationService):
         if self.converter:
             return self.converter.metrics
         return self.metrics
+
+    def _ensure_initialized(self) -> bool:
+        """
+        Ensure that the plugin is initialized.
+
+        Returns:
+            bool: True if the plugin is initialized, False otherwise
+        """
+        if not self._initialized:
+            success = self.initialize()
+            if not success:
+                self.logger.error("Plugin not initialized properly")
+                return False
+        return True

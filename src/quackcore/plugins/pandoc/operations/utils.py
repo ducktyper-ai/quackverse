@@ -12,8 +12,8 @@ from pathlib import Path
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs import service as fs
-from quackcore.integrations.pandoc.config import ConversionConfig
-from quackcore.integrations.pandoc.models import ConversionMetrics, FileInfo
+from quackcore.plugins.pandoc.config import ConversionConfig
+from quackcore.plugins.pandoc.models import ConversionMetrics, FileInfo
 
 logger = logging.getLogger(__name__)
 

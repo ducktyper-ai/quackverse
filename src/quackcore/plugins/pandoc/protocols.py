@@ -1,6 +1,6 @@
-# src/quackcore/integrations/pandoc/protocols.py
+# src/quackcore/plugins/pandoc/protocols.py
 """
-Protocol definitions for pandoc integration.
+Protocol definitions for pandoc plugin.
 
 This module defines protocol classes for pandoc conversion services,
 ensuring proper typing throughout the codebase.
@@ -9,7 +9,7 @@ ensuring proper typing throughout the codebase.
 from pathlib import Path
 from typing import Protocol, TypeVar, runtime_checkable
 
-from quackcore.integrations.pandoc.models import (
+from quackcore.plugins.pandoc.models import (
     BatchConversionResult,
     ConversionResult,
     ConversionTask,
