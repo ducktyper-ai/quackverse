@@ -13,6 +13,8 @@ import pytest
 from quackcore.errors import QuackIntegrationError
 from quackcore.integrations.google.mail.service import GoogleMailService
 from quackcore.integrations.results import IntegrationResult
+from tests.test_integrations.google.mail.mocks import create_mock_gmail_service, \
+    create_error_gmail_service
 
 
 class TestGoogleMailService:
@@ -150,8 +152,8 @@ class TestGoogleMailService:
         mock_credentials = MagicMock()
         mock_get_credentials.return_value = mock_credentials
 
-        # Mock the Gmail service
-        mock_gmail_service = MagicMock()
+        # Use our mock Gmail service
+        mock_gmail_service = create_mock_gmail_service()
         mock_init_gmail.return_value = mock_gmail_service
 
         # Patch the _initialize_config method
@@ -213,7 +215,7 @@ class TestGoogleMailService:
         """Test listing emails."""
         service = GoogleMailService(storage_path="/path/to/storage")
         service._initialized = True
-        service.gmail_service = MagicMock()
+        service.gmail_service = create_mock_gmail_service()
         service.config = {
             "gmail_days_back": 10,
             "gmail_labels": ["INBOX", "IMPORTANT"],
@@ -259,6 +261,7 @@ class TestGoogleMailService:
             )
 
         # Test with error
+        service.gmail_service = create_error_gmail_service()
         with patch(
                 "quackcore.integrations.google.mail.operations.email.list_emails"
         ) as mock_list:
@@ -284,7 +287,7 @@ class TestGoogleMailService:
         """Test downloading an email."""
         service = GoogleMailService(storage_path="/path/to/storage")
         service._initialized = True
-        service.gmail_service = MagicMock()
+        service.gmail_service = create_mock_gmail_service()
         service.config = {
             "gmail_user_id": "test@example.com",
             "include_subject": True,
@@ -321,6 +324,7 @@ class TestGoogleMailService:
             )
 
         # Test with error
+        service.gmail_service = create_error_gmail_service()
         with patch(
                 "quackcore.integrations.google.mail.operations.email.download_email"
         ) as mock_download:

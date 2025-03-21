@@ -8,69 +8,16 @@ import logging
 from unittest.mock import MagicMock, patch
 
 from quackcore.integrations.google.mail.operations import attachments
-from quackcore.integrations.google.mail.protocols import GmailService
+from tests.test_integrations.google.mail.mocks import create_mock_gmail_service
 
 
 class TestGmailAttachmentOperations:
     """Test cases for Gmail attachment operations."""
 
-    class MockGmailService:
-        """Mock Gmail service for testing."""
-
-        class MockAttachmentsResource:
-            """Mock attachments resource."""
-
-            def get(self, user_id, message_id, attachment_id):
-                """Mock get method."""
-
-                class MockRequest:
-                    """Mock request object."""
-
-                    def execute(self):
-                        """Mock execute method."""
-                        return {
-                            "data": base64.urlsafe_b64encode(
-                                b"attachment content"
-                            ).decode()
-                        }
-
-                return MockRequest()
-
-        class MockMessagesResource:
-            """Mock messages resource."""
-
-            def __init__(self):
-                """Initialize mock messages resource."""
-                self._attachments = TestGmailAttachmentOperations.MockGmailService.MockAttachmentsResource()
-
-            def attachments(self):
-                """Return mock attachments resource."""
-                return self._attachments
-
-        class MockUsersResource:
-            """Mock users resource."""
-
-            def __init__(self):
-                """Initialize mock users resource."""
-                self._messages = TestGmailAttachmentOperations.MockGmailService.MockMessagesResource()
-
-            def messages(self):
-                """Return mock messages resource."""
-                return self._messages
-
-        def __init__(self):
-            """Initialize mock Gmail service."""
-            self._users = self.MockUsersResource()
-
-        def users(self):
-            """Return mock users resource."""
-            return self._users
-
     def test_process_message_parts(self, tmp_path) -> None:
         """Test processing message parts."""
-        # Type cast our mock to GmailService type for proper type checking
-        mock_service = self.MockGmailService()
-        gmail_service: GmailService = mock_service  # type: ignore
+        # Get mock Gmail service
+        gmail_service = create_mock_gmail_service()
 
         logger = logging.getLogger("test_gmail")
         msg_id = "msg123"
@@ -110,8 +57,8 @@ class TestGmailAttachmentOperations:
 
     def test_handle_attachment(self) -> None:
         """Test handling an attachment."""
-        # Type cast our mock to GmailService type for proper type checking
-        gmail_service: GmailService = self.MockGmailService()  # type: ignore
+        # Get mock Gmail service
+        gmail_service = create_mock_gmail_service()
 
         logger = logging.getLogger("test_gmail")
         msg_id = "msg1"
