@@ -1,6 +1,6 @@
 # tests/test_integrations/google/mocks.py
-from unittest.mock import MagicMock
 import json
+from unittest.mock import MagicMock
 
 
 def mock_credentials(
@@ -13,7 +13,7 @@ def mock_credentials(
     expired=False,
     valid=True,
     expiry_timestamp=1893456000,  # 2030-01-01
-    **kwargs
+    **kwargs,
 ):
     creds = MagicMock()
 
@@ -33,14 +33,16 @@ def mock_credentials(
     creds.expiry = expiry
 
     # to_json return value should resemble a real Credentials JSON string
-    creds.to_json.return_value = json.dumps({
-        "token": token,
-        "refresh_token": refresh_token,
-        "client_id": client_id,
-        "client_secret": client_secret,
-        "token_uri": token_uri,
-        "scopes": creds.scopes,
-        "expiry": expiry_timestamp,
-    })
+    creds.to_json.return_value = json.dumps(
+        {
+            "token": token,
+            "refresh_token": refresh_token,
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "token_uri": token_uri,
+            "scopes": creds.scopes,
+            "expiry": expiry_timestamp,
+        }
+    )
 
     return creds

@@ -102,7 +102,8 @@ class TestGoogleAuthProvider:
             patch("quackcore.integrations.google.auth.Request"),
             patch.object(provider, "_save_credentials_to_file") as mock_save,
             patch(
-                "quackcore.integrations.google.auth.InstalledAppFlow") as mock_flow_class,
+                "quackcore.integrations.google.auth.InstalledAppFlow"
+            ) as mock_flow_class,
         ):
             mock_read.return_value.success = True
             mock_read.return_value.data = {}  # Simulate empty credentials file
@@ -122,7 +123,6 @@ class TestGoogleAuthProvider:
             assert result.success
             assert result.token == "refreshed_token"
             assert provider.auth == refreshed_creds
-
 
     def test_refresh_credentials(self) -> None:
         with patch("quackcore.integrations.google.auth.fs.get_file_info") as mock_info:

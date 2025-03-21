@@ -8,9 +8,10 @@ including downloading and saving attachments to disk.
 
 import base64
 import logging
-import os
+from collections.abc import Mapping
 from typing import TypeVar
 
+from quackcore.fs import service as fs
 from quackcore.integrations.google.mail.operations.email import clean_filename
 from quackcore.integrations.google.mail.protocols import GmailService
 from quackcore.integrations.google.mail.utils.api import execute_api_request
@@ -19,12 +20,12 @@ T = TypeVar("T")  # Generic type for result content
 
 
 def process_message_parts(
-    gmail_service: GmailService,
-    user_id: str,
-    parts: list[dict],
-    msg_id: str,
-    storage_path: str,
-    logger: logging.Logger,
+        gmail_service: GmailService,
+        user_id: str,
+        parts: list[Mapping],
+        msg_id: str,
+        storage_path: str,
+        logger: logging.Logger,
 ) -> tuple[str | None, list[str]]:
     """
     Process message parts to extract HTML content and attachments.
@@ -76,12 +77,12 @@ def process_message_parts(
 
 
 def handle_attachment(
-    gmail_service: GmailService,
-    user_id: str,
-    part: dict,
-    msg_id: str,
-    storage_path: str,
-    logger: logging.Logger,
+        gmail_service: GmailService,
+        user_id: str,
+        part: Mapping,
+        msg_id: str,
+        storage_path: str,
+        logger: logging.Logger,
 ) -> str | None:
     """
     Download and save an attachment from a message part.
@@ -125,7 +126,7 @@ def handle_attachment(
         # Ensure data is a string before decoding
         data_str = str(data)
 
-        # Decode and save content
+        # Decode content
         try:
             content = base64.urlsafe_b64decode(data_str)
         except Exception as e:
@@ -134,20 +135,33 @@ def handle_attachment(
 
         # Process filename and path
         clean_name = clean_filename(filename)
-        file_path = os.path.join(storage_path, clean_name)
 
-        # Handle filename collisions
+        # Use fs service to join paths
+        file_path = fs.join_path(storage_path, clean_name)
+
+        # Handle filename collisions using our fs service
         counter = 1
-        base_file, ext = os.path.splitext(file_path)
-        while os.path.exists(file_path):
-            file_path = f"{base_file}-{counter}{ext}"
+        file_info = fs.get_file_info(file_path)
+
+        while file_info.exists:
+            # Use fs service to split the path and create a new filename
+            path_parts = fs.split_path(file_path)
+            filename_parts = path_parts[-1].rsplit(".", 1)
+            base_name = filename_parts[0]
+            ext = f".{filename_parts[1]}" if len(filename_parts) > 1 else ""
+
+            new_filename = f"{base_name}-{counter}{ext}"
+            file_path = fs.join_path(storage_path, new_filename)
+            file_info = fs.get_file_info(file_path)
             counter += 1
 
-        # Write to file
-        with open(file_path, "wb") as f:
-            f.write(content)
+        # Use fs service to write binary content
+        write_result = fs.write_binary(file_path, content)
+        if not write_result.success:
+            logger.error(f"Failed to write attachment: {write_result.error}")
+            return None
 
-        return file_path
+        return str(file_path)
 
     except Exception as e:
         logger.error(f"Error handling attachment: {e}")

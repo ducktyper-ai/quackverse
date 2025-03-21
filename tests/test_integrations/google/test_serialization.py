@@ -12,7 +12,7 @@ def mock_credentials(
     expired=False,
     valid=True,
     expiry_timestamp=1893456000,  # 2030-01-01
-    **kwargs
+    **kwargs,
 ):
     creds = MagicMock()
     creds.token = token
