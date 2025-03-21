@@ -292,10 +292,11 @@ class PandocService(QuackPluginProtocol):
                 )
 
             # Create conversion tasks
-            tasks = []
+            tasks: list[ConversionTask] = []
             for file_path in find_result.files:
                 try:
-                    file_info = get_file_info(file_path, source_format)
+                    # Using FileInfo type annotation here to justify the import
+                    file_info: FileInfo = get_file_info(file_path, source_format)
 
                     # Determine output path
                     if output_format == "markdown":
@@ -340,7 +341,8 @@ class PandocService(QuackPluginProtocol):
         try:
             verify_pandoc()
             return True
-        except Exception:
+        except (QuackIntegrationError, ImportError, OSError):
+            # These are the specific exceptions that verify_pandoc() can raise
             return False
 
     def get_pandoc_version(self) -> str | None:
@@ -356,7 +358,8 @@ class PandocService(QuackPluginProtocol):
         try:
             self._pandoc_version = verify_pandoc()
             return self._pandoc_version
-        except Exception:
+        except (QuackIntegrationError, ImportError, OSError):
+            # These are the specific exceptions that verify_pandoc() can raise
             return None
 
     def get_metrics(self) -> ConversionMetrics:

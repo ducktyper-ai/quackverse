@@ -18,7 +18,7 @@ from quackcore.plugins.pandoc.models import (
     ConversionMetrics,
     ConversionResult,
     ConversionTask,
-    FileInfo,
+    # FileInfo is not used in this file, so it's removed
 )
 from quackcore.plugins.pandoc.operations import (
     convert_html_to_markdown,
@@ -207,13 +207,26 @@ class DocumentConverter:
             bool: True if validation passed, False otherwise
         """
         try:
-            # Get file info
+            # Get file info - actually use input_info for validation
             input_info = fs.get_file_info(input_path)
             output_info = fs.get_file_info(output_path)
 
             if not output_info.success or not output_info.exists:
                 logger.error(f"Output file does not exist: {output_path}")
                 return False
+
+            # Make sure the input file exists
+            if not input_info.success or not input_info.exists:
+                logger.error(f"Input file does not exist: {input_path}")
+                return False
+
+            # Calculate size difference for logging
+            input_size = input_info.size or 0
+            output_size = output_info.size or 0
+            size_change_percentage = (
+                        output_size / input_size * 100) if input_size > 0 else 0
+            logger.debug(
+                f"Conversion size change: {input_size} → {output_size} bytes ({size_change_percentage:.1f}%)")
 
             # Validate based on file format
             extension = output_path.suffix.lower()
@@ -227,14 +240,14 @@ class DocumentConverter:
                     logger.error(f"Failed to read markdown file: {e}")
                     return False
             elif extension == ".docx":
-                from quackcore.plugins.pandoc.operations.utils import validate_docx_structure
+                from quackcore.plugins.pandoc.operations.utils import \
+                    validate_docx_structure
                 is_valid, _ = validate_docx_structure(
                     output_path, self.config.validation.check_links
                 )
                 return is_valid
             else:
                 # For other formats, just check if the file exists with reasonable size
-                output_size = output_info.size or 0
                 return output_size > self.config.validation.min_file_size
 
         except Exception as e:

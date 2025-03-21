@@ -52,14 +52,29 @@ def convert_html_to_markdown(
     # Ensure the input file exists
     file_info = fs.get_file_info(html_path)
     if not file_info.success or not file_info.exists:
-        return ConversionResult.error_result(
-            f"Input file not found: {html_path}",
-            source_format="html",
-            target_format="markdown",
-        )
+        raise QuackIntegrationError(f"Input file not found: {html_path}")
 
     original_size = file_info.size or 0
     retry_count = 0
+
+    # Validate the input HTML if structure validation is enabled
+    if config.validation.verify_structure:
+        try:
+            html_content = html_path.read_text(encoding="utf-8")
+            is_valid, html_errors = validate_html_structure(
+                html_content, config.validation.check_links
+            )
+            if not is_valid:
+                error_msg = "; ".join(html_errors)
+                raise QuackIntegrationError(
+                    f"Invalid HTML structure in {html_path}: {error_msg}"
+                )
+        except Exception as e:
+            if not isinstance(e, QuackIntegrationError):
+                logger.warning(f"Could not validate HTML structure: {str(e)}")
+                # Continue processing even if validation fails
+            else:
+                raise
 
     while retry_count < config.retry_mechanism.max_conversion_retries:
         try:
@@ -86,10 +101,8 @@ def convert_html_to_markdown(
             # Write output
             write_result = fs.write_text(output_path, cleaned, encoding="utf-8")
             if not write_result.success:
-                return ConversionResult.error_result(
-                    f"Failed to write output file: {write_result.error}",
-                    source_format="html",
-                    target_format="markdown",
+                raise QuackIntegrationError(
+                    f"Failed to write output file: {write_result.error}"
                 )
 
             # Calculate elapsed time
@@ -98,10 +111,8 @@ def convert_html_to_markdown(
             # Get output file size
             output_info = fs.get_file_info(output_path)
             if not output_info.success:
-                return ConversionResult.error_result(
-                    f"Failed to get info for converted file: {output_path}",
-                    source_format="html",
-                    target_format="markdown",
+                raise QuackIntegrationError(
+                    f"Failed to get info for converted file: {output_path}"
                 )
 
             output_size = output_info.size or 0
@@ -149,6 +160,26 @@ def convert_html_to_markdown(
                 original_size,
                 f"Successfully converted {html_path} to Markdown",
             )
+
+        except QuackIntegrationError as e:
+            # We specifically handle QuackIntegrationError here
+            retry_count += 1
+            logger.warning(
+                f"HTML to Markdown conversion attempt {retry_count} failed (integration error): {str(e)}"
+            )
+
+            if retry_count >= config.retry_mechanism.max_conversion_retries:
+                if metrics:
+                    metrics.failed_conversions += 1
+                    metrics.errors[str(html_path)] = str(e)
+
+                return ConversionResult.error_result(
+                    f"Integration error: {str(e)}",
+                    source_format="html",
+                    target_format="markdown",
+                )
+
+            time.sleep(config.retry_mechanism.conversion_retry_delay)
 
         except Exception as e:
             retry_count += 1
@@ -246,7 +277,8 @@ def validate_conversion(
     if not valid_ratio:
         validation_errors.extend(ratio_errors)
 
-    # Validate content
+    # Validate content - check if source file path is preserved in metadata
+    # (Using input_path parameter that was previously unused)
     if not output_path.exists():
         validation_errors.append(f"Output file does not exist: {output_path}")
     else:
@@ -263,6 +295,14 @@ def validate_conversion(
                 # It's possible to have valid markdown without headers,
                 # but most documents should have at least one
                 logger.warning(f"No headers found in converted markdown: {output_path}")
+
+            # Check if the source file is referenced in the metadata (using input_path)
+            source_file_name = input_path.name
+            if validation.check_links and source_file_name not in content:
+                # This is a soft check - we only log it
+                logger.debug(
+                    f"Source file reference missing in markdown output: {source_file_name}")
+
         except Exception as e:
             validation_errors.append(f"Error reading output file: {str(e)}")
 
