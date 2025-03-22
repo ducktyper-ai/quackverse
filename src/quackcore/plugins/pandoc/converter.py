@@ -13,7 +13,7 @@ from pathlib import Path
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs import service as fs
 from quackcore.plugins.pandoc.config import ConversionConfig
-from quackcore.plugins.pandoc.models import (  # FileInfo is not used in this file, so it's removed
+from quackcore.plugins.pandoc.models import (
     BatchConversionResult,
     ConversionMetrics,
     ConversionResult,
@@ -257,7 +257,8 @@ class DocumentConverter:
                 )
                 return is_valid
             else:
-                # For other formats, just check if the file exists with reasonable size
+                # For other formats, just check
+                # if the file exists with reasonable size
                 return output_size > self.config.validation.min_file_size
 
         except Exception as e:

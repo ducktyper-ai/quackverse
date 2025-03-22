@@ -34,18 +34,18 @@ def verify_pandoc() -> str:
         version = pypandoc.get_pandoc_version()
         logger.info(f"Found pandoc version: {version}")
         return version
-    except ImportError:
+    except ImportError as err:
         msg = "pypandoc module is not installed"
         logger.error(msg)
-        raise QuackIntegrationError(msg, {"module": "pypandoc"})
+        raise QuackIntegrationError(msg, {"module": "pypandoc"}) from err
     except OSError as err:
         msg = "Pandoc is not installed. Please install pandoc first."
         logger.error(msg)
-        raise QuackIntegrationError(msg, {"original_error": str(err)})
+        raise QuackIntegrationError(msg, {"original_error": str(err)}) from err
     except Exception as e:
         msg = f"Error checking pandoc: {str(e)}"
         logger.error(msg)
-        raise QuackIntegrationError(msg, {"original_error": str(e)})
+        raise QuackIntegrationError(msg, {"original_error": str(e)}) from e
 
 
 def prepare_pandoc_args(

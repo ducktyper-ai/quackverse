@@ -26,6 +26,124 @@ from quackcore.plugins.pandoc.operations.utils import (
 logger = logging.getLogger(__name__)
 
 
+def _validate_input(html_path: Path, config: ConversionConfig) -> int:
+    """
+    Validate the input HTML file and return its size.
+
+    Args:
+        html_path: Path to the HTML file.
+        config: Conversion configuration.
+
+    Returns:
+        int: Size of the input HTML file.
+
+    Raises:
+        QuackIntegrationError: If the input file is missing or has invalid structure.
+    """
+    file_info = fs.get_file_info(html_path)
+    if not file_info.success or not file_info.exists:
+        raise QuackIntegrationError(f"Input file not found: {html_path}")
+
+    original_size: int = file_info.size or 0
+
+    if config.validation.verify_structure:
+        try:
+            html_content: str = html_path.read_text(encoding="utf-8")
+            is_valid, html_errors = validate_html_structure(
+                html_content, config.validation.check_links
+            )
+            if not is_valid:
+                error_msg: str = "; ".join(html_errors)
+                raise QuackIntegrationError(
+                    f"Invalid HTML structure in {html_path}: {error_msg}"
+                )
+        except Exception as e:
+            if not isinstance(e, QuackIntegrationError):
+                logger.warning(f"Could not validate HTML structure: {str(e)}")
+            else:
+                raise
+    return original_size
+
+
+def _attempt_conversion(html_path: Path, config: ConversionConfig) -> str:
+    """
+    Perform a single attempt to convert an HTML file to Markdown using pandoc.
+
+    Args:
+        html_path: Path to the HTML file.
+        config: Conversion configuration.
+
+    Returns:
+        str: Cleaned Markdown content.
+
+    Raises:
+        QuackIntegrationError: If the pandoc conversion fails.
+    """
+    import pypandoc
+
+    extra_args: list[str] = prepare_pandoc_args(
+        config, "html", "markdown", config.html_to_md_extra_args
+    )
+    logger.debug(f"Converting {html_path} to Markdown with args: {extra_args}")
+    try:
+        output: str = pypandoc.convert_file(
+            str(html_path),
+            "markdown",
+            format="html",
+            extra_args=extra_args,
+        )
+    except Exception as e:
+        raise QuackIntegrationError(f"Pandoc conversion failed: {str(e)}") from e
+
+    return post_process_markdown(output)
+
+
+def _write_and_validate_output(
+    cleaned_markdown: str,
+    output_path: Path,
+    input_path: Path,
+    original_size: int,
+    config: ConversionConfig,
+    attempt_start: float,
+) -> tuple[float, int, list[str]]:
+    """
+    Write the converted markdown to the output file and validate the conversion.
+
+    Args:
+        cleaned_markdown: The cleaned markdown content.
+        output_path: Path to save the Markdown file.
+        input_path: Path to the original HTML file.
+        original_size: Size of the original HTML file.
+        config: Conversion configuration.
+        attempt_start: Timestamp when the attempt started.
+
+    Returns:
+        tuple: (conversion_time, output_size, validation_errors)
+    """
+    fs.create_directory(output_path.parent, exist_ok=True)
+
+    write_result = fs.write_text(output_path, cleaned_markdown, encoding="utf-8")
+    if not write_result.success:
+        raise QuackIntegrationError(
+            f"Failed to write output file: {write_result.error}"
+        )
+
+    conversion_time: float = time.time() - attempt_start
+
+    output_info = fs.get_file_info(output_path)
+    if not output_info.success:
+        raise QuackIntegrationError(
+            f"Failed to get info for converted file: {output_path}"
+        )
+    output_size: int = output_info.size or 0
+
+    validation_errors: list[str] = validate_conversion(
+        output_path, input_path, original_size, config
+    )
+
+    return conversion_time, output_size, validation_errors
+
+
 def convert_html_to_markdown(
     html_path: Path,
     output_path: Path,
@@ -36,118 +154,56 @@ def convert_html_to_markdown(
     Convert an HTML file to Markdown.
 
     Args:
-        html_path: Path to the HTML file
-        output_path: Path to save the Markdown file
-        config: Conversion configuration
-        metrics: Optional metrics tracker
+        html_path: Path to the HTML file.
+        output_path: Path to save the Markdown file.
+        config: Conversion configuration.
+        metrics: Optional metrics tracker.
 
     Returns:
-        ConversionResult: Result of the conversion
+        ConversionResult: Result of the conversion.
     """
-    import pypandoc
+    filename: str = html_path.name
 
-    filename = html_path.name
-    start_time = time.time()
+    # Validate input file and get its size.
+    original_size: int = _validate_input(html_path, config)
 
-    # Ensure the input file exists
-    file_info = fs.get_file_info(html_path)
-    if not file_info.success or not file_info.exists:
-        raise QuackIntegrationError(f"Input file not found: {html_path}")
-
-    original_size = file_info.size or 0
-    retry_count = 0
-
-    # Validate the input HTML if structure validation is enabled
-    if config.validation.verify_structure:
+    max_retries: int = config.retry_mechanism.max_conversion_retries
+    for attempt in range(1, max_retries + 1):
+        attempt_start: float = time.time()
         try:
-            html_content = html_path.read_text(encoding="utf-8")
-            is_valid, html_errors = validate_html_structure(
-                html_content, config.validation.check_links
-            )
-            if not is_valid:
-                error_msg = "; ".join(html_errors)
-                raise QuackIntegrationError(
-                    f"Invalid HTML structure in {html_path}: {error_msg}"
+            cleaned_markdown: str = _attempt_conversion(html_path, config)
+            conversion_time, output_size, validation_errors = (
+                _write_and_validate_output(
+                    cleaned_markdown,
+                    output_path,
+                    html_path,
+                    original_size,
+                    config,
+                    attempt_start,
                 )
-        except Exception as e:
-            if not isinstance(e, QuackIntegrationError):
-                logger.warning(f"Could not validate HTML structure: {str(e)}")
-                # Continue processing even if validation fails
-            else:
-                raise
-
-    while retry_count < config.retry_mechanism.max_conversion_retries:
-        try:
-            # Prepare pandoc arguments
-            extra_args = prepare_pandoc_args(
-                config, "html", "markdown", config.html_to_md_extra_args
-            )
-
-            # Perform conversion
-            logger.debug(f"Converting {html_path} to Markdown with args: {extra_args}")
-            output = pypandoc.convert_file(
-                str(html_path),
-                "markdown",
-                format="html",
-                extra_args=extra_args,
-            )
-
-            # Post-process cleanup
-            cleaned = post_process_markdown(output)
-
-            # Ensure output directory exists
-            fs.create_directory(output_path.parent, exist_ok=True)
-
-            # Write output
-            write_result = fs.write_text(output_path, cleaned, encoding="utf-8")
-            if not write_result.success:
-                raise QuackIntegrationError(
-                    f"Failed to write output file: {write_result.error}"
-                )
-
-            # Calculate elapsed time
-            conversion_time = time.time() - start_time
-
-            # Get output file size
-            output_info = fs.get_file_info(output_path)
-            if not output_info.success:
-                raise QuackIntegrationError(
-                    f"Failed to get info for converted file: {output_path}"
-                )
-
-            output_size = output_info.size or 0
-
-            # Validate conversion
-            validation_errors = validate_conversion(
-                output_path, html_path, original_size, config
             )
 
             if validation_errors:
-                error_str = "; ".join(validation_errors)
-                logger.error(f"Conversion validation failed: {error_str}")
-
-                retry_count += 1
-                if retry_count >= config.retry_mechanism.max_conversion_retries:
+                error_str: str = "; ".join(validation_errors)
+                logger.error(
+                    f"Conversion validation failed on attempt {attempt}: {error_str}"
+                )
+                if attempt == max_retries:
+                    if metrics:
+                        metrics.failed_conversions += 1
+                        metrics.errors[str(html_path)] = error_str
                     return ConversionResult.error_result(
                         "Conversion validation failed after maximum retries",
                         validation_errors,
                         "html",
                         "markdown",
                     )
-
-                # Retry after delay
                 time.sleep(config.retry_mechanism.conversion_retry_delay)
                 continue
 
-            # Track metrics if provided
             if metrics:
                 track_metrics(
-                    filename,
-                    start_time,
-                    original_size,
-                    output_size,
-                    metrics,
-                    config,
+                    filename, attempt_start, original_size, output_size, metrics, config
                 )
                 metrics.successful_conversions += 1
 
@@ -161,47 +217,26 @@ def convert_html_to_markdown(
                 f"Successfully converted {html_path} to Markdown",
             )
 
-        except QuackIntegrationError as e:
-            # We specifically handle QuackIntegrationError here
-            retry_count += 1
-            logger.warning(
-                f"HTML to Markdown conversion attempt {retry_count} "
-                f"failed (integration error): {str(e)}"
-            )
-
-            if retry_count >= config.retry_mechanism.max_conversion_retries:
-                if metrics:
-                    metrics.failed_conversions += 1
-                    metrics.errors[str(html_path)] = str(e)
-
-                return ConversionResult.error_result(
-                    f"Integration error: {str(e)}",
-                    source_format="html",
-                    target_format="markdown",
-                )
-
-            time.sleep(config.retry_mechanism.conversion_retry_delay)
-
         except Exception as e:
-            retry_count += 1
-            logger.warning(
-                f"HTML to Markdown conversion attempt {retry_count} failed: {str(e)}"
+            error_msg: str = (
+                f"Integration error: {str(e)}"
+                if isinstance(e, QuackIntegrationError)
+                else f"Failed to convert HTML to Markdown: {str(e)}"
             )
-
-            if retry_count >= config.retry_mechanism.max_conversion_retries:
+            logger.warning(
+                f"HTML to Markdown conversion attempt {attempt} failed: {str(e)}"
+            )
+            if attempt == max_retries:
                 if metrics:
                     metrics.failed_conversions += 1
                     metrics.errors[str(html_path)] = str(e)
-
                 return ConversionResult.error_result(
-                    f"Failed to convert HTML to Markdown: {str(e)}",
+                    error_msg,
                     source_format="html",
                     target_format="markdown",
                 )
-
             time.sleep(config.retry_mechanism.conversion_retry_delay)
 
-    # This should not happen, but just in case
     return ConversionResult.error_result(
         "Conversion failed after maximum retries",
         source_format="html",
@@ -214,99 +249,74 @@ def post_process_markdown(markdown_content: str) -> str:
     Post-process markdown content for cleaner output.
 
     Args:
-        markdown_content: Raw markdown content from pandoc
+        markdown_content: Raw markdown content from pandoc.
 
     Returns:
-        str: Cleaned markdown content
+        str: Cleaned markdown content.
     """
-    # Remove all class/style attributes
-    cleaned = re.sub(r"{[^}]*}", "", markdown_content)
-
-    # Remove div containers
+    cleaned: str = re.sub(r"{[^}]*}", "", markdown_content)
     cleaned = re.sub(r":::+\s*[^\n]*\n", "", cleaned)
-
-    # Remove div tags
     cleaned = re.sub(r"<div[^>]*>|</div>", "", cleaned)
-
-    # Normalize whitespace
     cleaned = re.sub(r"\n\s*\n\s*\n+", "\n\n", cleaned)
-
-    # Remove HTML comments
     cleaned = re.sub(r"<!--[^>]*-->", "", cleaned)
-
-    # Fix bullet lists that might have been affected by div removal
     cleaned = re.sub(r"\n\s*\n-", "\n-", cleaned)
-
     return cleaned
 
 
 def validate_conversion(
-    output_path: Path, input_path: Path, original_size: int, config: ConversionConfig
+    output_path: Path,
+    input_path: Path,
+    original_size: int,
+    config: ConversionConfig,
 ) -> list[str]:
     """
     Validate the converted markdown document.
 
     Args:
-        output_path: Path to the output markdown file
-        input_path: Path to the input HTML file
-        original_size: Size of the original file
-        config: Conversion configuration
+        output_path: Path to the output markdown file.
+        input_path: Path to the input HTML file.
+        original_size: Size of the original file.
+        config: Conversion configuration.
 
     Returns:
-        list[str]: List of validation error messages (empty if valid)
+        list[str]: List of validation error messages (empty if valid).
     """
     validation_errors: list[str] = []
-    validation = config.validation
-
-    # Check if the output file exists
     output_info = fs.get_file_info(output_path)
     if not output_info.success or not output_info.exists:
         validation_errors.append(f"Output file does not exist: {output_path}")
         return validation_errors
 
-    output_size = output_info.size or 0
+    output_size: int = output_info.size or 0
 
-    # Check file size
-    valid_size, size_errors = check_file_size(output_size, validation.min_file_size)
+    valid_size, size_errors = check_file_size(
+        output_size, config.validation.min_file_size
+    )
     if not valid_size:
         validation_errors.extend(size_errors)
 
-    # Check conversion ratio
     valid_ratio, ratio_errors = check_conversion_ratio(
-        output_size, original_size, validation.conversion_ratio_threshold
+        output_size, original_size, config.validation.conversion_ratio_threshold
     )
     if not valid_ratio:
         validation_errors.extend(ratio_errors)
 
-    # Validate content - check if source file path is preserved in metadata
-    # (Using input_path parameter that was previously unused)
-    if not output_path.exists():
-        validation_errors.append(f"Output file does not exist: {output_path}")
-    else:
-        # Check if the file contains actual markdown content
-        try:
-            content = output_path.read_text(encoding="utf-8")
-            if not content.strip():
-                validation_errors.append("Output file is empty")
-            elif len(content.strip()) < 10:  # Arbitrary small content check
-                validation_errors.append("Output file contains minimal content")
+    try:
+        content: str = output_path.read_text(encoding="utf-8")
+        if not content.strip():
+            validation_errors.append("Output file is empty")
+        elif len(content.strip()) < 10:
+            validation_errors.append("Output file contains minimal content")
 
-            # Check for basic markdown features (headers, paragraphs)
-            if "# " not in content and "## " not in content:
-                # It's possible to have valid markdown without headers,
-                # but most documents should have at least one
-                logger.warning(f"No headers found in converted markdown: {output_path}")
+        if "# " not in content and "## " not in content:
+            logger.warning(f"No headers found in converted markdown: {output_path}")
 
-            # Check if the source file is referenced in the metadata (using input_path)
-            source_file_name = input_path.name
-            if validation.check_links and source_file_name not in content:
-                # This is a soft check - we only log it
-                logger.debug(
-                    f"Source file reference missing "
-                    f"in markdown output: {source_file_name}"
-                )
-
-        except Exception as e:
-            validation_errors.append(f"Error reading output file: {str(e)}")
+        source_file_name: str = input_path.name
+        if config.validation.check_links and source_file_name not in content:
+            logger.debug(
+                f"Source file reference missing in markdown output: {source_file_name}"
+            )
+    except Exception as e:
+        validation_errors.append(f"Error reading output file: {str(e)}")
 
     return validation_errors

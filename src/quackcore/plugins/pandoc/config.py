@@ -7,11 +7,14 @@ This module provides Pydantic models for the pandoc plugin configuration.
 
 import logging
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import ClassVar, TypeVar
 
 from pydantic import BaseModel, Field, field_validator
 
 from quackcore.config.models import LoggingConfig
+
+T = TypeVar("T")  # Generic type for flexible typing
+R = TypeVar("R")  # Generic type for flexible typing
 
 
 class PandocOptions(BaseModel):
@@ -138,7 +141,7 @@ class PandocConfigProvider:
         """Get the name of the configuration provider."""
         return "PandocConfig"
 
-    def load_config(self, config_path: str | Path | None = None) -> Any:
+    def load_config(self, config_path: str | Path | None = None) -> R:
         """
         Load configuration from a file.
 
@@ -208,7 +211,7 @@ class PandocConfigProvider:
                 error=f"Error loading configuration: {str(e)}",
             )
 
-    def _extract_config(self, config_data: dict[str, Any]) -> dict[str, Any]:
+    def _extract_config(self, config_data: dict[str, T]) -> dict[str, R]:
         """
         Extract pandoc-specific configuration from the full config data.
 
@@ -229,7 +232,7 @@ class PandocConfigProvider:
         # Otherwise, return the original data for further processing
         return config_data
 
-    def validate_config(self, config: dict[str, Any]) -> bool:
+    def validate_config(self, config: dict[str, T]) -> bool:
         """
         Validate configuration data.
 
@@ -246,7 +249,7 @@ class PandocConfigProvider:
             self.logger.error(f"Configuration validation failed: {e}")
             return False
 
-    def get_default_config(self) -> dict[str, Any]:
+    def get_default_config(self) -> dict[str, R]:
         """
         Get default configuration values.
 

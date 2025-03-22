@@ -93,7 +93,6 @@ class PandocService(QuackPluginProtocol):
 
             # Load and validate configuration
             config_dict = config_result.content
-
             try:
                 conversion_config = ConversionConfig(**config_dict)
             except Exception as e:
@@ -245,87 +244,120 @@ class PandocService(QuackPluginProtocol):
 
         try:
             input_dir = resolver.resolve_project_path(input_dir)
-
-            # Determine output directory
-            if output_dir is None and self.converter:
-                output_dir = self.converter.config.output_dir
-            elif output_dir:
-                output_dir = resolver.resolve_project_path(output_dir)
-            else:
-                return BatchConversionResult.error_result(
-                    "Cannot determine output directory, converter not initialized"
-                )
-
-            # Ensure directories exist
-            if not input_dir.exists() or not input_dir.is_dir():
+            if not (input_dir.exists() and input_dir.is_dir()):
                 return BatchConversionResult.error_result(
                     f"Input directory does not exist or is not a directory: {input_dir}"
                 )
 
+            # Resolve output directory in one expression.
+            output_dir = (
+                resolver.resolve_project_path(output_dir)
+                if output_dir
+                else (self.converter.config.output_dir if self.converter else None)
+            )
+            if output_dir is None:
+                return BatchConversionResult.error_result(
+                    "Cannot determine output directory, converter not initialized"
+                )
             fs.create_directory(output_dir, exist_ok=True)
 
-            # Determine source format based on target format
-            source_format = None
-            if output_format == "markdown":
-                source_format = "html"
-                extension_pattern = file_pattern or "*.html"
-            elif output_format == "docx":
-                source_format = "markdown"
-                extension_pattern = file_pattern or "*.md"
-            else:
+            # Determine source format and file extension pattern based on output_format.
+            params = self._determine_conversion_params(output_format, file_pattern)
+            if params is None:
                 return BatchConversionResult.error_result(
                     f"Unsupported output format: {output_format}"
                 )
+            source_format, extension_pattern = params
 
-            # Find files to convert
+            # Find files to convert; combine conditions to reduce branches.
             find_result = fs.find_files(input_dir, extension_pattern, recursive)
-            if not find_result.success:
-                return BatchConversionResult.error_result(
-                    f"Failed to find files: {find_result.error}"
-                )
-
-            if not find_result.files:
-                return BatchConversionResult.error_result(
+            if not find_result.success or not find_result.files:
+                msg = (
                     f"No matching files found in {input_dir}"
+                    if find_result.success
+                    else f"Failed to find files: {find_result.error}"
                 )
+                return BatchConversionResult.error_result(msg)
 
-            # Create conversion tasks
-            tasks: list[ConversionTask] = []
-            for file_path in find_result.files:
-                try:
-                    # Using FileInfo type annotation here to justify the import
-                    file_info: FileInfo = get_file_info(file_path, source_format)
-
-                    # Determine output path
-                    if output_format == "markdown":
-                        output_file = output_dir / f"{file_path.stem}.md"
-                    else:  # docx
-                        output_file = output_dir / f"{file_path.stem}.docx"
-
-                    task = ConversionTask(
-                        source=file_info,
-                        target_format=output_format,
-                        output_path=output_file,
-                    )
-                    tasks.append(task)
-                except Exception as e:
-                    self.logger.warning(f"Skipping file {file_path}: {str(e)}")
-
-            # Perform batch conversion
-            if tasks and self.converter:
-                return self.converter.convert_batch(tasks, output_dir)
-            elif not tasks:
+            # Create conversion tasks.
+            tasks = self._create_conversion_tasks(
+                find_result.files, source_format, output_format, output_dir
+            )
+            if not tasks:
                 return BatchConversionResult.error_result(
                     "No valid files found for conversion"
                 )
-            else:
-                return BatchConversionResult.error_result("Converter not initialized")
+
+            return (
+                self.converter.convert_batch(tasks, output_dir)
+                if self.converter
+                else BatchConversionResult.error_result("Converter not initialized")
+            )
 
         except Exception as e:
             self.logger.error(f"Error in directory conversion: {str(e)}")
             return BatchConversionResult.error_result(
                 f"Error in directory conversion: {str(e)}"
             )
+
+    def _determine_conversion_params(
+        self, output_format: str, file_pattern: str | None
+    ) -> tuple[str, str] | None:
+        """
+        Determine the source format and file extension pattern
+        based on the target output format.
+
+        Args:
+            output_format: Desired target format ("markdown" or "docx")
+            file_pattern: Optional file pattern override
+
+        Returns:
+            tuple: (source_format, extension_pattern) or
+                    None if output_format is unsupported.
+        """
+        if output_format == "markdown":
+            return "html", file_pattern or "*.html"
+        elif output_format == "docx":
+            return "markdown", file_pattern or "*.md"
+        return None
+
+    def _create_conversion_tasks(
+        self,
+        files: list[Path],
+        source_format: str,
+        output_format: str,
+        output_dir: Path,
+    ) -> list[ConversionTask]:
+        """
+        Create a list of conversion tasks from the found files.
+
+        Args:
+            files: List of file paths found
+            source_format: Source format (e.g., "html" or "markdown")
+            output_format: Target format (e.g., "markdown" or "docx")
+            output_dir: Directory to save converted files
+
+        Returns:
+            list[ConversionTask]: List of conversion tasks.
+        """
+        tasks: list[ConversionTask] = []
+        for file_path in files:
+            try:
+                file_info: FileInfo = get_file_info(file_path, source_format)
+                output_file = (
+                    output_dir / f"{file_path.stem}.md"
+                    if output_format == "markdown"
+                    else output_dir / f"{file_path.stem}.docx"
+                )
+                task = ConversionTask(
+                    source=file_info,
+                    target_format=output_format,
+                    output_path=output_file,
+                )
+                tasks.append(task)
+            except Exception as e:
+                self.logger.warning(f"Skipping file {file_path}: {str(e)}")
+        return tasks
 
     def is_pandoc_available(self) -> bool:
         """
@@ -338,7 +370,6 @@ class PandocService(QuackPluginProtocol):
             verify_pandoc()
             return True
         except (QuackIntegrationError, ImportError, OSError):
-            # These are the specific exceptions that verify_pandoc() can raise
             return False
 
     def get_pandoc_version(self) -> str | None:
@@ -355,7 +386,6 @@ class PandocService(QuackPluginProtocol):
             self._pandoc_version = verify_pandoc()
             return self._pandoc_version
         except (QuackIntegrationError, ImportError, OSError):
-            # These are the specific exceptions that verify_pandoc() can raise
             return None
 
     def get_metrics(self) -> ConversionMetrics:

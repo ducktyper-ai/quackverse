@@ -6,6 +6,7 @@ This module provides functions for listing and downloading emails from Gmail,
 including handling message formats and content extraction.
 """
 
+import base64
 import logging
 import re
 import time
@@ -209,7 +210,10 @@ def download_email(
         filename = f"{timestamp}-{clean_sender_name}.html"
 
         # Use fs service to join paths
-        file_path = fs.join_path(storage_path, filename)
+        filepath_obj = fs.join_path(storage_path, filename)
+        filepath = str(
+            filepath_obj
+        )  # Ensure we get a string, not a Path or other object
 
         # Process message parts
         html_content, attachments = process_message_parts(
@@ -235,7 +239,7 @@ def download_email(
             content = f"{''.join(header_parts)}<hr/>{content}"
 
         # Use fs service to write content
-        write_result = fs.write_text(file_path, content, encoding="utf-8")
+        write_result = fs.write_text(filepath, content, encoding="utf-8")
         if not write_result.success:
             logger.error(f"Failed to write email content: {write_result.error}")
             return IntegrationResult.error_result(
@@ -243,8 +247,8 @@ def download_email(
             )
 
         return IntegrationResult.success_result(
-            content=str(file_path),
-            message=f"Email downloaded successfully to {file_path}",
+            content=filepath,  # Use the string representation of the path
+            message=f"Email downloaded successfully to {filepath}",
         )
 
     except Exception as e:
@@ -363,8 +367,139 @@ def process_message_parts(
     Returns:
         tuple: HTML content (or None) and list of attachment paths.
     """
-    from quackcore.integrations.google.mail.operations.attachments import (
-        process_message_parts as process_parts,
-    )
+    html_content = None
+    attachments = []
+    parts_stack = list(parts)
 
-    return process_parts(gmail_service, user_id, parts, msg_id, storage_path, logger)
+    while parts_stack:
+        part = parts_stack.pop()
+
+        # Process nested parts
+        if "parts" in part:
+            parts_stack.extend(part["parts"])
+            continue
+
+        mime_type = part.get("mimeType", "")
+
+        # Extract HTML content
+        if mime_type == "text/html" and html_content is None:
+            data = part.get("body", {}).get("data")
+            if data is not None:
+                # Ensure data is a string before encoding
+                data_str = str(data)
+                html_content = base64.urlsafe_b64decode(
+                    data_str.encode("UTF-8")
+                ).decode("UTF-8")
+
+        # Process attachments
+        elif part.get("filename"):
+            attachment_path = handle_attachment(
+                gmail_service, user_id, part, msg_id, storage_path, logger
+            )
+            if attachment_path:
+                attachments.append(attachment_path)
+
+    return html_content, attachments
+
+
+def handle_attachment(
+    gmail_service: GmailService,
+    user_id: str,
+    part: Mapping,
+    msg_id: str,
+    storage_path: str,
+    logger: logging.Logger,
+) -> str | None:
+    """
+    Download and save an attachment from a message part.
+
+    Args:
+        gmail_service: Gmail API service object.
+        user_id: Gmail user ID.
+        part: Message part dictionary containing attachment data.
+        msg_id: The Gmail message ID.
+        storage_path: Path to save the attachment.
+        logger: Logger instance.
+
+    Returns:
+        str | None: Path to the saved attachment or None if failed.
+    """
+    try:
+        filename = part.get("filename")
+        if not filename:
+            return None
+
+        # Get attachment data
+        body = part.get("body", {})
+        data = body.get("data")
+
+        # Check if we need to fetch the attachment separately
+        if data is None and "attachmentId" in body:
+            attachment_id = body["attachmentId"]
+            attachment = execute_api_request(
+                gmail_service.users()
+                .messages()
+                .attachments()
+                .get(user_id=user_id, message_id=msg_id, attachment_id=attachment_id),
+                "Failed to get attachment from Gmail",
+                "users.messages.attachments.get",
+            )
+            data = attachment.get("data")
+
+        if data is None:
+            return None
+
+        # Ensure data is a string before decoding
+        data_str = str(data)
+
+        # Decode content
+        try:
+            content = base64.urlsafe_b64decode(data_str)
+        except Exception as e:
+            logger.error(f"Failed to decode attachment data: {e}")
+            return None
+
+        # Process filename and path
+        clean_name = clean_filename(filename)
+
+        # Use fs service to join paths
+        file_path_obj = fs.join_path(storage_path, clean_name)
+        file_path = str(file_path_obj)
+
+        # Handle filename collisions using our fs service
+        counter = 1
+        file_info = fs.get_file_info(file_path)
+
+        while file_info.exists:
+            # Use fs service to split the path and create a new filename
+            path_parts = fs.split_path(file_path)
+            filename_parts = path_parts[-1].rsplit(".", 1)
+            base_name = filename_parts[0]
+            ext = f".{filename_parts[1]}" if len(filename_parts) > 1 else ""
+
+            new_filename = f"{base_name}-{counter}{ext}"
+            new_file_path_obj = fs.join_path(storage_path, new_filename)
+            file_path = str(new_file_path_obj)
+            file_info = fs.get_file_info(file_path)
+            counter += 1
+
+        # First, ensure the directory exists
+        from pathlib import Path
+
+        dir_path = Path(file_path).parent
+        dir_result = fs.create_directory(dir_path, exist_ok=True)
+        if not dir_result.success:
+            logger.error(f"Failed to create directory: {dir_result.error}")
+            return None
+
+        # Use the FileSystemService instance to write binary content
+        write_result = fs.write_binary(file_path, content)
+        if not write_result.success:
+            logger.error(f"Failed to write attachment: {write_result.error}")
+            return None
+
+        return file_path
+
+    except Exception as e:
+        logger.error(f"Error handling attachment: {e}")
+        return None
