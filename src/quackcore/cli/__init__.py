@@ -6,52 +6,105 @@ This package provides utilities for building command-line interfaces
 for QuackVerse tools with consistent behavior and user experience.
 """
 
-from quackcore.cli.boostrap import (
-    CliOptions,
-    QuackContext,
+# Bootstrap and core functionality
+from quackcore.cli.boostrap import (from_cli_options, init_cli_env)
+from quackcore.cli.config import (
+    find_project_root,
+    load_config,
+)
+from quackcore.cli.context import QuackContext
+from quackcore.cli.error import (
     ensure_single_instance,
     format_cli_error,
-    init_cli_env,
-    load_config,
-    resolve_cli_args,
-    setup_logging,
+    get_cli_info,
+    handle_errors,
 )
-from quackcore.cli.utils import (
-    ask,
+from quackcore.cli.logging import LoggerFactory, setup_logging
+from quackcore.cli.options import CliOptions, resolve_cli_args
+
+# Text formatting and display
+from quackcore.cli.formatting import (
     colorize,
-    confirm,
-    get_terminal_size,
+    dict_to_table,
+    print_debug,
     print_error,
     print_info,
     print_success,
     print_warning,
-    show_progress,
-    supports_color,
     table,
+)
+
+# User interaction
+from quackcore.cli.interaction import (
+    ask,
+    ask_choice,
+    confirm,
+    with_spinner,
+)
+
+# Progress tracking
+from quackcore.cli.progress import (
+    ProgressCallback,
+    ProgressReporter,
+    SimpleProgress,
+    show_progress,
+)
+
+# Terminal utilities
+from quackcore.cli.terminal import (
+    get_terminal_size,
+    supports_color,
     truncate_text,
 )
 
 __all__ = [
-    # Bootstrap module exports
+    # Context and Initialization
     "QuackContext",
     "CliOptions",
     "init_cli_env",
-    "setup_logging",
+    "from_cli_options",
+
+    # Configuration
     "load_config",
-    "resolve_cli_args",
+    "find_project_root",
+
+    # Logging
+    "setup_logging",
+    "LoggerFactory",
+
+    # Error handling
     "format_cli_error",
+    "handle_errors",
     "ensure_single_instance",
-    # Utils module exports
+    "get_cli_info",
+
+    # CLI arguments
+    "resolve_cli_args",
+
+    # Formatting and display
     "colorize",
     "print_error",
     "print_warning",
     "print_success",
     "print_info",
-    "confirm",
+    "print_debug",
+    "table",
+    "dict_to_table",
+
+    # User interaction
     "ask",
+    "ask_choice",
+    "confirm",
+    "with_spinner",
+
+    # Progress tracking
     "show_progress",
+    "ProgressReporter",
+    "SimpleProgress",
+    "ProgressCallback",
+
+    # Terminal utilities
     "get_terminal_size",
     "truncate_text",
-    "table",
     "supports_color",
 ]
