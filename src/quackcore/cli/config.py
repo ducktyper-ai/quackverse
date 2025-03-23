@@ -18,7 +18,7 @@ from quackcore.errors import QuackConfigurationError
 
 
 def _merge_cli_overrides(
-        config: QuackConfig, cli_overrides: Mapping[str, Any]
+    config: QuackConfig, cli_overrides: Mapping[str, Any]
 ) -> QuackConfig:
     """
     Merge CLI overrides into the configuration.
@@ -54,9 +54,9 @@ def _merge_cli_overrides(
 
 @lru_cache(maxsize=1)
 def load_config(
-        config_path: str | Path | None = None,
-        cli_overrides: Mapping[str, Any] | None = None,
-        environment: str | None = None,
+    config_path: str | Path | None = None,
+    cli_overrides: Mapping[str, Any] | None = None,
+    environment: str | None = None,
 ) -> QuackConfig:
     """
     Load configuration with standard precedence:

@@ -6,11 +6,12 @@ This module provides functions for handling and formatting errors
 in CLI applications, with proper output formatting and consistent
 error messaging.
 """
+
 import os
 import sys
 from collections.abc import Callable
 from pathlib import Path
-from typing import TypeVar, Any
+from typing import Any, TypeVar
 
 from quackcore.errors import QuackError
 
@@ -36,8 +37,11 @@ def format_cli_error(error: Exception) -> str:
             for key, value in error.context.items():
                 parts.append(f"  {key}: {value}")
 
-        if hasattr(error,
-                   "original_error") and error.original_error and error.original_error is not error:
+        if (
+            hasattr(error, "original_error")
+            and error.original_error
+            and error.original_error is not error
+        ):
             parts.append(f"\nOriginal error: {error.original_error}")
 
         return "\n".join(parts)
@@ -46,10 +50,10 @@ def format_cli_error(error: Exception) -> str:
 
 
 def handle_errors(
-        error_types: type[Exception] | tuple[type[Exception], ...] = Exception,
-        title: str | None = None,
-        show_traceback: bool = False,
-        exit_code: int | None = None,
+    error_types: type[Exception] | tuple[type[Exception], ...] = Exception,
+    title: str | None = None,
+    show_traceback: bool = False,
+    exit_code: int | None = None,
 ) -> Callable[[Callable[..., T]], Callable[..., T | None]]:
     """
     Decorator to handle errors in a function.
@@ -75,6 +79,7 @@ def handle_errors(
 
                 if show_traceback:
                     import traceback
+
                     traceback.print_exc()
 
                 if exit_code is not None:

@@ -11,7 +11,7 @@ from collections.abc import Mapping
 from enum import Enum
 from typing import Literal
 
-from quackcore.cli.terminal import supports_color, truncate_text, get_terminal_size
+from quackcore.cli.terminal import get_terminal_size, supports_color, truncate_text
 
 
 class Color(str, Enum):
@@ -53,19 +53,21 @@ class Color(str, Enum):
 
 
 def colorize(
-        text: str,
-        fg: Literal[
-                "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white", "reset"
-            ] | None = None,
-        bg: Literal[
-                "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white", "reset"
-            ] | None = None,
-        bold: bool = False,
-        dim: bool = False,
-        underline: bool = False,
-        italic: bool = False,
-        blink: bool = False,
-        force: bool = False,
+    text: str,
+    fg: Literal[
+        "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white", "reset"
+    ]
+    | None = None,
+    bg: Literal[
+        "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white", "reset"
+    ]
+    | None = None,
+    bold: bool = False,
+    dim: bool = False,
+    underline: bool = False,
+    italic: bool = False,
+    blink: bool = False,
+    force: bool = False,
 ) -> str:
     """
     Add ANSI color and style to text.
@@ -194,11 +196,11 @@ def print_debug(message: str) -> None:
 
 
 def table(
-        headers: list[str],
-        rows: list[list[str]],
-        max_width: int | None = None,
-        title: str | None = None,
-        footer: str | None = None,
+    headers: list[str],
+    rows: list[list[str]],
+    max_width: int | None = None,
+    title: str | None = None,
+    footer: str | None = None,
 ) -> str:
     """
     Format data as a text table.
@@ -240,11 +242,11 @@ def table(
         result.append(separator)
 
     header_row = (
-            "|"
-            + "|".join(
-        f" {h[:w].ljust(w)} " for h, w in zip(headers, col_widths, strict=True)
-    )
-            + "|"
+        "|"
+        + "|".join(
+            f" {h[:w].ljust(w)} " for h, w in zip(headers, col_widths, strict=True)
+        )
+        + "|"
     )
     result.append(header_row)
     result.append(separator)
@@ -254,12 +256,12 @@ def table(
         while len(str_row) < len(col_widths):
             str_row.append("")
         data_row = (
-                "|"
-                + "|".join(
-            f" {truncate_text(cell, w).ljust(w)} "
-            for cell, w in zip(str_row, col_widths, strict=True)
-        )
-                + "|"
+            "|"
+            + "|".join(
+                f" {truncate_text(cell, w).ljust(w)} "
+                for cell, w in zip(str_row, col_widths, strict=True)
+            )
+            + "|"
         )
         result.append(data_row)
 

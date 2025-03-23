@@ -19,6 +19,7 @@ def get_terminal_size() -> tuple[int, int]:
     """
     try:
         import shutil
+
         terminal_size = shutil.get_terminal_size((80, 24))
         return terminal_size.columns, terminal_size.lines
     except (ImportError, OSError):
@@ -68,4 +69,4 @@ def truncate_text(text: str, max_length: int, indicator: str = "...") -> str:
     """
     if len(text) <= max_length:
         return text
-    return text[:max_length - len(indicator)] + indicator
+    return text[: max_length - len(indicator)] + indicator

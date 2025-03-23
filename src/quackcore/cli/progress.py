@@ -94,9 +94,9 @@ class ProgressReporter:
 
         # Avoid updating too frequently to prevent flickering
         if (
-            self.last_update_time is not None and
-            now - self.last_update_time < 0.1 and
-            self.current < (self.total or float("inf"))
+            self.last_update_time is not None
+            and now - self.last_update_time < 0.1
+            and self.current < (self.total or float("inf"))
         ):
             return
 

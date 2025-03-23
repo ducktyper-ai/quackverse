@@ -23,40 +23,32 @@ class QuackContext(BaseModel):
     including configuration, logging, paths, and environment metadata.
     """
 
-    config: QuackConfig = Field(
-        description="Loaded and normalized configuration."
-    )
+    config: QuackConfig = Field(description="Loaded and normalized configuration.")
 
     logger: logging.Logger = Field(
         description="Configured logger for the CLI application."
     )
 
-    base_dir: Path = Field(
-        description="Base directory for the application."
-    )
+    base_dir: Path = Field(description="Base directory for the application.")
 
     environment: str = Field(
         description="Current environment (development, test, production)."
     )
 
-    debug: bool = Field(
-        default=False,
-        description="Whether debug mode is enabled."
-    )
+    debug: bool = Field(default=False, description="Whether debug mode is enabled.")
 
     verbose: bool = Field(
-        default=False,
-        description="Whether verbose output is enabled."
+        default=False, description="Whether verbose output is enabled."
     )
 
     working_dir: Path = Field(
-        default_factory=Path.cwd,
-        description="Current working directory."
+        default_factory=Path.cwd, description="Current working directory."
     )
 
     extra: dict[str, Any] = Field(
         default_factory=dict,
-        description="Additional context data that might be needed by specific commands."
+        description="Additional context data that "
+        "might be needed by specific commands.",
     )
 
     model_config = {

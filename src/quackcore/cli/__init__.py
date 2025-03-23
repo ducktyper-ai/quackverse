@@ -7,7 +7,7 @@ for QuackVerse tools with consistent behavior and user experience.
 """
 
 # Bootstrap and core functionality
-from quackcore.cli.boostrap import (from_cli_options, init_cli_env)
+from quackcore.cli.boostrap import from_cli_options, init_cli_env
 from quackcore.cli.config import (
     find_project_root,
     load_config,
@@ -19,8 +19,6 @@ from quackcore.cli.error import (
     get_cli_info,
     handle_errors,
 )
-from quackcore.cli.logging import LoggerFactory, setup_logging
-from quackcore.cli.options import CliOptions, resolve_cli_args
 
 # Text formatting and display
 from quackcore.cli.formatting import (
@@ -41,6 +39,8 @@ from quackcore.cli.interaction import (
     confirm,
     with_spinner,
 )
+from quackcore.cli.logging import LoggerFactory, setup_logging
+from quackcore.cli.options import CliOptions, resolve_cli_args
 
 # Progress tracking
 from quackcore.cli.progress import (
@@ -63,24 +63,19 @@ __all__ = [
     "CliOptions",
     "init_cli_env",
     "from_cli_options",
-
     # Configuration
     "load_config",
     "find_project_root",
-
     # Logging
     "setup_logging",
     "LoggerFactory",
-
     # Error handling
     "format_cli_error",
     "handle_errors",
     "ensure_single_instance",
     "get_cli_info",
-
     # CLI arguments
     "resolve_cli_args",
-
     # Formatting and display
     "colorize",
     "print_error",
@@ -90,19 +85,16 @@ __all__ = [
     "print_debug",
     "table",
     "dict_to_table",
-
     # User interaction
     "ask",
     "ask_choice",
     "confirm",
     "with_spinner",
-
     # Progress tracking
     "show_progress",
     "ProgressReporter",
     "SimpleProgress",
     "ProgressCallback",
-
     # Terminal utilities
     "get_terminal_size",
     "truncate_text",

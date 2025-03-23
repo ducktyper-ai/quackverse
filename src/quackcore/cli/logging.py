@@ -9,8 +9,8 @@ with flexible configuration options and consistent output formatting.
 import logging
 from typing import Protocol, TypeVar
 
-from quackcore.config.models import QuackConfig
 from quackcore.cli.options import LogLevel
+from quackcore.config.models import QuackConfig
 
 T = TypeVar("T")  # Generic type for flexible typing
 
@@ -32,10 +32,10 @@ class LoggerFactory(Protocol):
 
 
 def _determine_effective_level(
-        cli_log_level: LogLevel | None,
-        cli_debug: bool,
-        cli_quiet: bool,
-        cfg: QuackConfig | None,
+    cli_log_level: LogLevel | None,
+    cli_debug: bool,
+    cli_quiet: bool,
+    cfg: QuackConfig | None,
 ) -> LogLevel:
     """
     Determine the effective logging level based on various inputs.
@@ -63,10 +63,10 @@ def _determine_effective_level(
 
 
 def _add_file_handler(
-        root_logger: logging.Logger,
-        cfg: QuackConfig,
-        level_value: int,
-        console_formatter: logging.Formatter | None = None,
+    root_logger: logging.Logger,
+    cfg: QuackConfig,
+    level_value: int,
+    console_formatter: logging.Formatter | None = None,
 ) -> None:
     """
     Add a file handler to the root logger if a log file is specified in the config.
@@ -105,11 +105,11 @@ def _add_file_handler(
 
 
 def setup_logging(
-        log_level: LogLevel | None = None,
-        debug: bool = False,
-        quiet: bool = False,
-        config: QuackConfig | None = None,
-        logger_name: str = "quack",
+    log_level: LogLevel | None = None,
+    debug: bool = False,
+    quiet: bool = False,
+    config: QuackConfig | None = None,
+    logger_name: str = "quack",
 ) -> tuple[logging.Logger, LoggerFactory]:
     """
     Set up logging for CLI applications.
