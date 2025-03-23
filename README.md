@@ -1,33 +1,592 @@
-# 🦆 QuackCore
+I'll create comprehensive documentation for QuackCore to help developers get started with this foundational library. The documentation will include everything needed to understand and utilize QuackCore effectively.
 
-## Python Infrastructure for Media Production Automation
+# QuackCore Documentation
 
-QuackCore is a foundational library that provides shared infrastructure for the Quack ecosystem of media production tools. It centralizes common functionality like path resolution, configuration management, and plugin architecture to enable seamless integration between specialized tools.
+## Introduction
 
-## 🌟 Features
+QuackCore is the foundational library that powers the QuackVerse ecosystem of media production tools. It provides shared infrastructure for path resolution, configuration management, plugin architecture, and other common functionality that enables seamless integration between specialized tools in the ecosystem.
 
-- **Unified Path Management**: Robust system for resolving and managing paths across different operating environments
-- **Configuration Framework**: Flexible configuration with environment-specific overrides
-- **Plugin Architecture**: Extensible system for registering commands and workflows
-- **Workflow Engine**: Chain operations together into repeatable workflows
-- **Command Registry**: Central registry for commands from all Quack modules
-- **Utilities**: Common utilities for file operations, logging, error handling, and more
-- **Testing Framework**: Shared testing infrastructure for all Quack modules
-- **Integrations**: Integrate with the ecosystem such as Google Drive, Google Mail and Notion for upload and download
+This documentation will help you get started with QuackCore and understand how to leverage its features in your own applications or when building new tools for the QuackVerse ecosystem.
 
-## 🧩 Core Modules
+## Installation
 
-- **paths**: Path resolution and manipulation utilities
-- **config**: Configuration management
-- **plugins**: Plugin discovery and registration
-- **commands**: Command registry and execution
-- **workflows**: Workflow definition and execution
-- **logging**: Structured logging framework
-- **utils**: Shared utility functions
+### Prerequisites
 
-## ⚙️ Integration
+- Python 3.13 or higher
+- pip package manager
 
-QuackCore serves as the foundation for all Quack ecosystem tools:
+### Basic Installation
+
+```bash
+pip install quackcore
+```
+
+### Optional Dependencies
+
+QuackCore offers several optional dependency groups for specific functionality:
+
+```bash
+# For Google Drive integration
+pip install "quackcore[drive]"
+
+# For Gmail integration
+pip install "quackcore[gmail]"
+
+# For Notion integration
+pip install "quackcore[notion]"
+
+# For Pandoc document conversion
+pip install "quackcore[pandoc]"
+
+# For development (includes testing tools)
+pip install "quackcore[dev]"
+
+# For all Google-related functionality
+pip install "quackcore[google]"
+```
+
+## Core Modules Overview
+
+QuackCore consists of several key modules, each providing specific functionality:
+
+### Configuration Management (`quackcore.config`)
+
+The configuration system provides a flexible way to manage application settings with support for environment-specific overrides.
+
+### Path Resolution (`quackcore.paths`)
+
+Utilities for resolving and managing file paths across different operating environments, detecting project structure, and standardizing path handling.
+
+### Filesystem Operations (`quackcore.fs`)
+
+A robust API for file operations with proper error handling and standardized result objects.
+
+### Plugin Architecture (`quackcore.plugins`)
+
+An extensible system for discovering, registering, and using plugins to extend functionality.
+
+### Integration Framework (`quackcore.integrations`)
+
+Connect with external services like Google Drive, Gmail, and Notion with a consistent interface.
+
+### Error Handling (`quackcore.errors`)
+
+Standardized error classes and utilities for consistent error handling across the ecosystem.
+
+### CLI Tools (`quackcore.cli`)
+
+Utilities for building command-line interfaces with consistent behavior and user experience.
+
+## Getting Started
+
+### Basic Configuration Setup
+
+```python
+from quackcore.config import load_config, QuackConfig
+
+# Load configuration from default locations
+config = load_config()
+
+# Access configuration values
+project_name = config.general.project_name
+log_level = config.logging.level
+
+# Load configuration from specific file
+custom_config = load_config("path/to/custom_config.yaml")
+```
+
+### Path Resolution
+
+```python
+from quackcore.paths import resolver
+
+# Find the project root directory
+project_root = resolver.get_project_root()
+
+# Resolve a path relative to the project root
+config_path = resolver.resolve_project_path("config/settings.yaml")
+
+# Detect project context
+context = resolver.detect_project_context()
+source_dir = context.get_source_dir()
+```
+
+### File Operations
+
+```python
+from quackcore.fs import service as fs
+
+# Read text from a file
+result = fs.read_text("path/to/file.txt")
+if result.success:
+    content = result.content
+else:
+    print(f"Error: {result.error}")
+
+# Write text to a file
+fs.write_text("path/to/output.txt", "Hello, QuackCore!")
+
+# Create a directory
+fs.create_directory("path/to/new/directory")
+
+# Read structured data
+yaml_result = fs.read_yaml("config.yaml")
+if yaml_result.success:
+    config_data = yaml_result.data
+```
+
+### Using Plugins
+
+```python
+from quackcore.plugins import registry
+
+# Get a list of all registered plugins
+plugin_names = registry.list_plugins()
+
+# Get a specific plugin
+pandoc_plugin = registry.get_plugin("Pandoc")
+if pandoc_plugin:
+    pandoc_plugin.initialize()
+    # Use the plugin's functionality
+```
+
+### Working with Google Drive Integration
+
+```python
+from quackcore.integrations.google.drive import GoogleDriveService
+
+# Initialize service
+drive_service = GoogleDriveService(
+    client_secrets_file="path/to/client_secrets.json",
+    credentials_file="path/to/credentials.json"
+)
+drive_service.initialize()
+
+# Upload a file
+result = drive_service.upload_file("path/to/local/file.pdf")
+if result.success:
+    print(f"File uploaded: {result.content}")
+
+# List files
+list_result = drive_service.list_files()
+if list_result.success:
+    files = list_result.content
+    for file in files:
+        print(f"File: {file['name']}")
+```
+
+### Working with Gmail Integration
+
+```python
+from quackcore.integrations.google.mail import GoogleMailService
+
+# Initialize service
+mail_service = GoogleMailService(
+    client_secrets_file="path/to/client_secrets.json",
+    credentials_file="path/to/credentials.json",
+    storage_path="path/to/downloaded/emails"
+)
+mail_service.initialize()
+
+# List emails with a specific query
+emails_result = mail_service.list_emails("subject:Important")
+if emails_result.success:
+    emails = emails_result.content
+    for email in emails:
+        print(f"Email ID: {email['id']}")
+        
+        # Download an email as HTML
+        download_result = mail_service.download_email(email['id'])
+        if download_result.success:
+            print(f"Email saved to: {download_result.content}")
+```
+
+### Error Handling
+
+```python
+from quackcore.errors import QuackError, QuackFileNotFoundError, wrap_io_errors
+
+# Use decorator for automatic error handling
+@wrap_io_errors
+def read_important_file(path):
+    with open(path, 'r') as f:
+        return f.read()
+    
+# Handle specific errors
+try:
+    content = read_important_file("config.txt")
+except QuackFileNotFoundError as e:
+    print(f"File not found: {e.path}")
+except QuackError as e:
+    print(f"Error: {e}")
+```
+
+### CLI Application Setup
+
+```python
+from quackcore.cli import init_cli_env, print_info, print_error, ask
+
+# Initialize CLI environment
+context = init_cli_env(
+    config_path="config.yaml",
+    app_name="my_app"
+)
+
+# Use CLI utilities
+print_info("Starting process...")
+
+# Get user input
+user_input = ask("Enter a value:", default="default_value")
+
+# Access logger
+context.logger.debug("Debug information")
+
+# Handle errors nicely
+try:
+    # Your code here
+    pass
+except Exception as e:
+    print_error(f"Error occurred: {e}", exit_code=1)
+```
+
+## Advanced Usage
+
+### Creating a Custom Plugin
+
+```python
+from quackcore.plugins.protocols import QuackPluginProtocol
+from quackcore.integrations.results import IntegrationResult
+
+class MyCustomPlugin(QuackPluginProtocol):
+    @property
+    def name(self) -> str:
+        return "MyCustomPlugin"
+    
+    @property
+    def version(self) -> str:
+        return "1.0.0"
+    
+    def initialize(self) -> IntegrationResult:
+        # Initialization logic here
+        return IntegrationResult.success_result(message="Plugin initialized successfully")
+    
+    def is_available(self) -> bool:
+        return True
+    
+    # Add custom methods for your plugin
+
+# Register the plugin
+from quackcore.plugins import registry
+registry.register(MyCustomPlugin())
+```
+
+### Working with Pandoc for Document Conversion
+
+```python
+from quackcore.plugins.pandoc import PandocService
+from pathlib import Path
+
+# Initialize the service
+pandoc = PandocService()
+pandoc.initialize()
+
+# Convert HTML to Markdown
+result = pandoc.html_to_markdown(
+    Path("document.html"), 
+    Path("output.md")
+)
+
+if result.success:
+    print(f"Converted to: {result.content}")
+else:
+    print(f"Conversion failed: {result.error}")
+
+# Convert Markdown to DOCX
+docx_result = pandoc.markdown_to_docx(
+    Path("document.md"),
+    Path("output.docx")
+)
+```
+
+### Creating Custom Configuration
+
+```python
+from pydantic import BaseModel, Field
+from quackcore.config.models import QuackConfig
+
+# Define custom configuration model
+class MyAppConfig(BaseModel):
+    api_key: str = Field(..., description="API key for external service")
+    endpoint: str = Field("https://api.example.com", description="API endpoint")
+    timeout: int = Field(30, description="Request timeout in seconds")
+
+# Add to QuackConfig
+config = QuackConfig()
+config.custom["my_app"] = MyAppConfig(api_key="your-api-key").model_dump()
+
+# Save configuration
+from quackcore.config.loader import merge_configs
+merged_config = merge_configs(config, {})
+```
+
+## Configuration File Format
+
+QuackCore uses YAML for configuration files. Here's an example of a basic configuration file:
+
+```yaml
+general:
+  project_name: "MyQuackProject"
+  environment: "development"
+  debug: true
+  verbose: true
+
+paths:
+  base_dir: "./project"
+  output_dir: "./project/output"
+  assets_dir: "./project/assets"
+  data_dir: "./project/data"
+  temp_dir: "./project/temp"
+
+logging:
+  level: "INFO"
+  file: "logs/app.log"
+  console: true
+
+integrations:
+  google:
+    client_secrets_file: "config/google_client_secret.json"
+    credentials_file: "config/google_credentials.json"
+    drive:
+      shared_folder_id: "your-folder-id"
+    gmail:
+      gmail_labels: ["INBOX", "IMPORTANT"]
+      gmail_days_back: 7
+
+plugins:
+  enabled:
+    - "Pandoc"
+    - "GoogleDrive"
+    - "GoogleMail"
+  paths:
+    - "./plugins"
+
+# Custom application-specific configuration
+custom:
+  my_app:
+    api_key: "your-api-key"
+    endpoint: "https://api.example.com"
+    timeout: 30
+```
+
+## Environment Variables
+
+QuackCore supports configuration through environment variables with the prefix `QUACK_`:
+
+```bash
+# Set configuration values
+export QUACK_ENV=production
+export QUACK_GENERAL__DEBUG=false
+export QUACK_LOGGING__LEVEL=WARNING
+export QUACK_PATHS__BASE_DIR=/opt/quackverse
+
+# Set Google integration configuration
+export QUACK_GOOGLE__CLIENT_SECRETS_FILE=/etc/quack/client_secrets.json
+export QUACK_GOOGLE__CREDENTIALS_FILE=/etc/quack/credentials.json
+```
+
+## Integration Authentication
+
+### Google API Setup
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project
+3. Enable the APIs you need (Drive API, Gmail API, etc.)
+4. Create OAuth 2.0 credentials
+5. Download the client secrets JSON file
+6. Use the client secrets file path in your QuackCore configuration
+
+```python
+from quackcore.integrations.google.auth import GoogleAuthProvider
+
+auth_provider = GoogleAuthProvider(
+    client_secrets_file="path/to/client_secrets.json",
+    credentials_file="path/to/store/credentials.json",
+    scopes=["https://www.googleapis.com/auth/drive.file"]
+)
+
+# Authenticate (this will open a browser window)
+auth_result = auth_provider.authenticate()
+if auth_result.success:
+    print("Authentication successful!")
+else:
+    print(f"Authentication failed: {auth_result.error}")
+```
+
+## Best Practices
+
+### Project Structure
+
+Follow this recommended project structure when using QuackCore:
+
+```
+my_project/
+├── config/
+│   ├── default.yaml       # Default configuration
+│   ├── development.yaml   # Development environment overrides
+│   └── production.yaml    # Production environment overrides
+├── src/
+│   └── my_app/
+│       ├── __init__.py
+│       └── main.py        # Application code
+├── data/                  # Data files
+├── assets/                # Media assets
+├── output/                # Generated output
+└── logs/                  # Log files
+```
+
+### Configuration Management
+
+- Keep sensitive data (API keys, secrets) out of your configuration files
+- Use environment variables for sensitive information and deployment-specific settings
+- Create environment-specific configuration files for different environments (development, staging, production)
+- Validate configuration at startup to catch issues early
+
+### Error Handling
+
+- Use the provided QuackError subclasses for specific error types
+- Add context to errors to make debugging easier
+- Use the `wrap_io_errors` decorator for functions that perform IO operations
+- Log errors with appropriate log levels
+
+### Path Handling
+
+- Always use the path resolver to handle paths in a cross-platform manner
+- Use relative paths from the project root when possible
+- Detect project structure with `detect_project_context()` instead of hardcoding paths
+
+### Plugin Development
+
+- Follow the plugin protocol interfaces for compatibility
+- Implement proper initialization and cleanup
+- Provide clear error messages
+- Use the standard result objects for consistent return values
+
+## Extending QuackCore
+
+### Creating a New Tool in the QuackVerse Ecosystem
+
+When creating a new tool that integrates with the QuackVerse ecosystem:
+
+1. Use QuackCore as a dependency
+2. Follow the architectural patterns established in QuackCore
+3. Implement a plugin interface if your tool provides functionality that others might use
+4. Use the standard error handling mechanisms
+5. Leverage the configuration system for settings
+
+Example of a new tool setup:
+
+```python
+# my_quack_tool/main.py
+from quackcore.config import load_config
+from quackcore.paths import resolver
+from quackcore.fs import service as fs
+from quackcore.cli import init_cli_env
+
+def main():
+    # Initialize the CLI environment
+    context = init_cli_env(app_name="my_quack_tool")
+    
+    # Get configuration
+    config = context.config
+    
+    # Set up logging
+    logger = context.logger
+    logger.info("Starting My Quack Tool")
+    
+    # Use QuackCore functionality
+    project_root = resolver.get_project_root()
+    output_dir = resolver.resolve_project_path("output")
+    
+    # Implement your tool's functionality
+    # ...
+    
+    logger.info("Process completed successfully")
+
+if __name__ == "__main__":
+    main()
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### Configuration Not Found
+
+```
+QuackConfigurationError: Configuration file not found in default locations.
+```
+
+**Solution**: Create a configuration file in one of these locations:
+- `./quack_config.yaml`
+- `./config/quack_config.yaml`
+- `~/.quack/config.yaml`
+
+Or specify the configuration path explicitly:
+
+```python
+from quackcore.config import load_config
+config = load_config("path/to/config.yaml")
+```
+
+#### Authentication Errors with Google Services
+
+```
+QuackAuthenticationError: Failed to authenticate with Google Drive
+```
+
+**Solution**:
+1. Ensure your client secrets file is valid and has the required scopes
+2. Check that your application has been authorized in Google Cloud Console
+3. Delete the credentials file and re-authenticate
+4. Verify network connectivity and firewall settings
+
+#### Plugin Not Found
+
+```
+QuackPluginError: No plugin found in module quackcore.plugins.my_plugin
+```
+
+**Solution**:
+1. Ensure the plugin is properly installed
+2. Check that the plugin follows the required protocol interface
+3. Verify that the plugin is registered correctly
+
+#### Path Resolution Errors
+
+```
+QuackFileNotFoundError: Could not find project root directory
+```
+
+**Solution**:
+1. Ensure you're running from within a valid project directory
+2. Create marker files (like `pyproject.toml` or `.quack`) in your project root
+3. Explicitly specify the project root directory
+
+## API Reference
+
+For detailed API documentation, refer to the inline documentation in the code or generate API documentation using a tool like Sphinx.
+
+## Contributing to QuackCore
+
+If you're interested in contributing to QuackCore:
+
+1. Fork the repository
+2. Install development dependencies: `pip install -e ".[dev]"`
+3. Make your changes
+4. Run tests: `pytest`
+5. Submit a pull request
+
+## Related Projects in the QuackVerse Ecosystem
 
 - **QuackImage**: Social media image generation
 - **QuackDistro**: Text generation for social media from transcripts
@@ -35,102 +594,6 @@ QuackCore serves as the foundation for all Quack ecosystem tools:
 - **QuackTutorial**: Educational programming tutorial generation
 - **QuackBuddy**: Interactive CLI assistant that ties everything together
 
-## 🚀 Getting Started
+## License
 
-```bash
-pip install quackcore
-```
-
-```python
-from quackcore.paths import PathResolver
-from quackcore.config import ConfigManager
-
-# Initialize with project configuration
-config = ConfigManager("my_project")
-resolver = PathResolver(config.get_config())
-
-# Resolve project paths
-media_path = resolver.get_media_path("my_project", "episode_5", "video")
-```
-
-## 📚 Example: Adding Commands
-
-```python
-from quackcore.commands import CommandRegistry
-
-@CommandRegistry.register(
-    "generate_thumbnails",
-    help_text="Generate thumbnails from video",
-    category="Media"
-)
-def generate_thumbnails(video_path, output_dir, count=3):
-    """Generate thumbnail candidates from video."""
-    # Implementation
-    pass
-```
-
-## 📦 Project Structure
-
-```
-├── LICENSE
-├── Makefile
-├── README.md
-├── pyproject.toml
-└── src
-    └── quackcore
-        ├── __init__.py
-        ├── config
-        │   ├── __init__.py
-        │   ├── loader.py
-        │   ├── models.py
-        │   ├── plugin.py
-        │   └── utils.py
-        ├── errors
-        │   ├── __init__.py
-        │   ├── base.py
-        │   └── handlers.py
-        ├── fs
-        │   ├── __init__.py
-        │   ├── operations.py
-        │   ├── plugin.py
-        │   ├── results.py
-        │   ├── service.py
-        │   └── utils.py
-        ├── paths
-        │   ├── __init__.py
-        │   ├── context.py
-        │   ├── plugin.py
-        │   ├── resolver.py
-        │   └── utils.py
-        └── plugins
-            ├── __init__.py
-            ├── discovery.py
-            ├── protocols.py
-            └── registry.py
-
-```
-
-## 💻 Requirements
-
-- Python 3.13+
-- Pydantic
-- Click
-- Rich
-
-## 🔧 Development
-
-```bash
-# Clone the repository
-git clone https://github.com/rodmtech/quackcore.git
-cd quackcore
-
-# Install development dependencies
-python -m pip install -e ".[dev]"
-
-# Run tests
-pytest
-```
-
-## 📄 License
-
-GNU Alfero
+QuackCore is licensed under the GNU GPL. See the LICENSE file for details.
