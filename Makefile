@@ -109,10 +109,6 @@ clean: ## Clean build artifacts and cache
 pre-commit: format lint test clean ## Run all checks before committing
 	@echo "${GREEN}✓ All checks passed${RESET}"
 
-.PHONY: run-examples
-run-examples: install-dev ## Run example scripts
-	$(PYTHON) examples/basic_generation.py output.webp --verbose
-
 .PHONY: structure
 structure: ## Show project structure
 	@echo "${YELLOW}Current Project Structure:${RESET}"
