@@ -1,10 +1,8 @@
-I'll create comprehensive documentation for QuackCore to help developers get started with this foundational library. The documentation will include everything needed to understand and utilize QuackCore effectively.
-
 # QuackCore Documentation
 
 ## Introduction
 
-QuackCore is the foundational library that powers the QuackVerse ecosystem of media production tools. It provides shared infrastructure for path resolution, configuration management, plugin architecture, and other common functionality that enables seamless integration between specialized tools in the ecosystem.
+QuackCore is the foundational library that powers the QuackVerse ecosystem of tools. It provides shared infrastructure for path resolution, configuration management, plugin architecture, and other common functionality that enables seamless integration between specialized tools in the ecosystem.
 
 This documentation will help you get started with QuackCore and understand how to leverage its features in your own applications or when building new tools for the QuackVerse ecosystem.
 
@@ -586,13 +584,6 @@ If you're interested in contributing to QuackCore:
 4. Run tests: `pytest`
 5. Submit a pull request
 
-## Related Projects in the QuackVerse Ecosystem
-
-- **QuackImage**: Social media image generation
-- **QuackDistro**: Text generation for social media from transcripts
-- **QuackVideo**: Social media video production
-- **QuackTutorial**: Educational programming tutorial generation
-- **QuackBuddy**: Interactive CLI assistant that ties everything together
 
 ## License
 
