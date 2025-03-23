@@ -11,19 +11,20 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs.results import FileInfoResult
 from quackcore.plugins.pandoc.config import ConversionConfig
 from quackcore.plugins.pandoc.models import ConversionMetrics
 from quackcore.plugins.pandoc.operations.html_to_md import (
+    _attempt_conversion,
+    _validate_input,
+    _write_and_validate_output,
     convert_html_to_markdown,
     post_process_markdown,
     validate_conversion,
-    _validate_input,
-    _attempt_conversion,
-    _write_and_validate_output,
 )
 
 
@@ -95,7 +96,9 @@ class TestPostProcessMarkdown:
         assert ":::" not in result
         assert "<div" not in result
         assert "</div>" not in result
-        assert "<!--" not in result or "-->" not in result  # May not always remove all comments
+        assert (
+            "<!--" not in result or "-->" not in result
+        )  # May not always remove all comments
 
 
 class TestValidateConversion:
@@ -161,9 +164,7 @@ class TestValidateConversion:
         mock_get_info.return_value = mock_output_info
 
         # Set minimum file size requirement higher than the output
-        config = ConversionConfig(
-            validation={"min_file_size": 100}
-        )
+        config = ConversionConfig(validation={"min_file_size": 100})
 
         with patch("pathlib.Path.read_text", return_value="# Small"):
             errors = validate_conversion(
@@ -210,12 +211,11 @@ class TestValidateConversion:
         mock_get_info.return_value = mock_output_info
 
         # Set conversion ratio threshold higher than the actual ratio
-        config = ConversionConfig(
-            validation={"conversion_ratio_threshold": 0.2}
-        )
+        config = ConversionConfig(validation={"conversion_ratio_threshold": 0.2})
 
-        with patch("pathlib.Path.read_text",
-                   return_value="# Content with sufficient length"):
+        with patch(
+            "pathlib.Path.read_text", return_value="# Content with sufficient length"
+        ):
             errors = validate_conversion(
                 Path("output.md"), Path("input.html"), 1000, config
             )
@@ -245,7 +245,8 @@ class TestValidateInput:
 
         with patch("pathlib.Path.read_text", return_value=mock_content):
             with patch(
-                    "quackcore.plugins.pandoc.operations.utils.validate_html_structure") as mock_validate:
+                "quackcore.plugins.pandoc.operations.utils.validate_html_structure"
+            ) as mock_validate:
                 mock_validate.return_value = (True, [])
 
                 config = ConversionConfig()
@@ -293,7 +294,8 @@ class TestValidateInput:
 
         with patch("pathlib.Path.read_text", return_value=mock_content):
             with patch(
-                    "quackcore.plugins.pandoc.operations.utils.validate_html_structure") as mock_validate:
+                "quackcore.plugins.pandoc.operations.utils.validate_html_structure"
+            ) as mock_validate:
                 mock_validate.return_value = (False, ["HTML document missing body tag"])
 
                 config = ConversionConfig()
@@ -340,10 +342,10 @@ class TestWriteAndValidateOutput:
     @patch("quackcore.fs.service.get_file_info")
     @patch("quackcore.fs.service.create_directory")
     def test_successful_write(
-            self,
-            mock_create_dir: MagicMock,
-            mock_get_info: MagicMock,
-            mock_write: MagicMock
+        self,
+        mock_create_dir: MagicMock,
+        mock_get_info: MagicMock,
+        mock_write: MagicMock,
     ) -> None:
         """Test successful write and validate."""
         # Mock successful write
@@ -361,19 +363,22 @@ class TestWriteAndValidateOutput:
 
         # Mock validation returning no errors
         with patch(
-                "quackcore.plugins.pandoc.operations.html_to_md.validate_conversion") as mock_validate:
+            "quackcore.plugins.pandoc.operations.html_to_md.validate_conversion"
+        ) as mock_validate:
             mock_validate.return_value = []
 
             config = ConversionConfig()
             start_time = time.time() - 1.5  # 1.5 seconds ago
 
-            conversion_time, output_size, validation_errors = _write_and_validate_output(
-                "# Markdown Content",
-                Path("output.md"),
-                Path("input.html"),
-                1000,
-                config,
-                start_time
+            conversion_time, output_size, validation_errors = (
+                _write_and_validate_output(
+                    "# Markdown Content",
+                    Path("output.md"),
+                    Path("input.html"),
+                    1000,
+                    config,
+                    start_time,
+                )
             )
 
             assert conversion_time > 1.0  # At least 1 second elapsed
@@ -387,10 +392,7 @@ class TestWriteAndValidateOutput:
     def test_write_failure(self, mock_write: MagicMock) -> None:
         """Test failure to write output."""
         # Mock failed write
-        mock_write.return_value = MagicMock(
-            success=False,
-            error="Permission denied"
-        )
+        mock_write.return_value = MagicMock(success=False, error="Permission denied")
 
         config = ConversionConfig()
         start_time = time.time()
@@ -402,7 +404,7 @@ class TestWriteAndValidateOutput:
                 Path("input.html"),
                 1000,
                 config,
-                start_time
+                start_time,
             )
 
         assert "Failed to write output file" in str(exc_info.value)
@@ -411,10 +413,10 @@ class TestWriteAndValidateOutput:
     @patch("quackcore.fs.service.get_file_info")
     @patch("quackcore.fs.service.create_directory")
     def test_validation_errors(
-            self,
-            mock_create_dir: MagicMock,
-            mock_get_info: MagicMock,
-            mock_write: MagicMock
+        self,
+        mock_create_dir: MagicMock,
+        mock_get_info: MagicMock,
+        mock_write: MagicMock,
     ) -> None:
         """Test when validation returns errors."""
         # Mock successful write
@@ -432,19 +434,22 @@ class TestWriteAndValidateOutput:
 
         # Mock validation returning errors
         with patch(
-                "quackcore.plugins.pandoc.operations.html_to_md.validate_conversion") as mock_validate:
+            "quackcore.plugins.pandoc.operations.html_to_md.validate_conversion"
+        ) as mock_validate:
             mock_validate.return_value = ["File size too small", "Invalid content"]
 
             config = ConversionConfig()
             start_time = time.time() - 1.0
 
-            conversion_time, output_size, validation_errors = _write_and_validate_output(
-                "# Small Content",
-                Path("output.md"),
-                Path("input.html"),
-                1000,
-                config,
-                start_time
+            conversion_time, output_size, validation_errors = (
+                _write_and_validate_output(
+                    "# Small Content",
+                    Path("output.md"),
+                    Path("input.html"),
+                    1000,
+                    config,
+                    start_time,
+                )
             )
 
             assert conversion_time > 0
@@ -462,11 +467,11 @@ class TestConvertHtmlToMarkdown:
     @patch("quackcore.plugins.pandoc.operations.html_to_md._write_and_validate_output")
     @patch("quackcore.plugins.pandoc.operations.html_to_md.track_metrics")
     def test_successful_conversion(
-            self,
-            mock_track: MagicMock,
-            mock_write: MagicMock,
-            mock_attempt: MagicMock,
-            mock_validate: MagicMock,
+        self,
+        mock_track: MagicMock,
+        mock_write: MagicMock,
+        mock_attempt: MagicMock,
+        mock_validate: MagicMock,
     ) -> None:
         """Test successful HTML to Markdown conversion."""
         # Mock successful validation
@@ -482,10 +487,7 @@ class TestConvertHtmlToMarkdown:
         metrics = ConversionMetrics()
 
         result = convert_html_to_markdown(
-            Path("input.html"),
-            Path("output.md"),
-            config,
-            metrics
+            Path("input.html"), Path("output.md"), config, metrics
         )
 
         assert result.success is True
@@ -513,10 +515,7 @@ class TestConvertHtmlToMarkdown:
         metrics = ConversionMetrics()
 
         result = convert_html_to_markdown(
-            Path("nonexistent.html"),
-            Path("output.md"),
-            config,
-            metrics
+            Path("nonexistent.html"), Path("output.md"), config, metrics
         )
 
         assert result.success is False
@@ -531,7 +530,7 @@ class TestConvertHtmlToMarkdown:
     @patch("quackcore.plugins.pandoc.operations.html_to_md._validate_input")
     @patch("quackcore.plugins.pandoc.operations.html_to_md._attempt_conversion")
     def test_conversion_attempt_failure(
-            self, mock_attempt: MagicMock, mock_validate: MagicMock
+        self, mock_attempt: MagicMock, mock_validate: MagicMock
     ) -> None:
         """Test conversion with conversion attempt failure."""
         # Mock successful validation
@@ -541,16 +540,15 @@ class TestConvertHtmlToMarkdown:
         mock_attempt.side_effect = QuackIntegrationError("Pandoc conversion failed")
 
         config = ConversionConfig(
-            retry_mechanism={"max_conversion_retries": 2,
-                             "conversion_retry_delay": 0.01}
+            retry_mechanism={
+                "max_conversion_retries": 2,
+                "conversion_retry_delay": 0.01,
+            }
         )
         metrics = ConversionMetrics()
 
         result = convert_html_to_markdown(
-            Path("input.html"),
-            Path("output.md"),
-            config,
-            metrics
+            Path("input.html"), Path("output.md"), config, metrics
         )
 
         assert result.success is False
@@ -567,10 +565,10 @@ class TestConvertHtmlToMarkdown:
     @patch("quackcore.plugins.pandoc.operations.html_to_md._attempt_conversion")
     @patch("quackcore.plugins.pandoc.operations.html_to_md._write_and_validate_output")
     def test_validation_errors_with_retry(
-            self,
-            mock_write: MagicMock,
-            mock_attempt: MagicMock,
-            mock_validate: MagicMock,
+        self,
+        mock_write: MagicMock,
+        mock_attempt: MagicMock,
+        mock_validate: MagicMock,
     ) -> None:
         """Test conversion with validation errors and retry."""
         # Mock successful validation
@@ -586,16 +584,15 @@ class TestConvertHtmlToMarkdown:
         ]
 
         config = ConversionConfig(
-            retry_mechanism={"max_conversion_retries": 2,
-                             "conversion_retry_delay": 0.01}
+            retry_mechanism={
+                "max_conversion_retries": 2,
+                "conversion_retry_delay": 0.01,
+            }
         )
         metrics = ConversionMetrics()
 
         result = convert_html_to_markdown(
-            Path("input.html"),
-            Path("output.md"),
-            config,
-            metrics
+            Path("input.html"), Path("output.md"), config, metrics
         )
 
         assert result.success is True

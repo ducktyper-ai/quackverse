@@ -10,7 +10,8 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 from pydantic import ValidationError
 
 from quackcore.plugins.pandoc.models import (
@@ -71,9 +72,7 @@ class TestConversionMetrics:
         st.dictionaries(
             st.text(),
             st.dictionaries(
-                st.one_of(
-                    st.just("original"), st.just("converted"), st.just("ratio")
-                ),
+                st.one_of(st.just("original"), st.just("converted"), st.just("ratio")),
                 st.one_of(st.integers(min_value=0), st.floats(min_value=0)),
             ),
         ),
@@ -324,7 +323,10 @@ class TestBatchConversionResult:
         )
         assert minimal_result.success is True
         assert minimal_result.content == successful_files
-        assert minimal_result.message == f"Successfully converted {len(successful_files)} files"
+        assert (
+            minimal_result.message
+            == f"Successfully converted {len(successful_files)} files"
+        )
         assert minimal_result.failed_files == []
         assert minimal_result.metrics is None
 

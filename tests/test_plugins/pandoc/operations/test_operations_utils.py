@@ -10,7 +10,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.plugins.pandoc.config import ConversionConfig
@@ -41,8 +42,10 @@ class TestVerifyPandoc:
 
     def test_pypandoc_not_installed(self) -> None:
         """Test when pypandoc is not installed."""
-        with patch("pypandoc.get_pandoc_version",
-                   side_effect=ImportError("No module named 'pypandoc'")):
+        with patch(
+            "pypandoc.get_pandoc_version",
+            side_effect=ImportError("No module named 'pypandoc'"),
+        ):
             with pytest.raises(QuackIntegrationError) as exc_info:
                 verify_pandoc()
 
@@ -50,8 +53,9 @@ class TestVerifyPandoc:
 
     def test_pandoc_not_installed(self) -> None:
         """Test when pandoc is not installed."""
-        with patch("pypandoc.get_pandoc_version",
-                   side_effect=OSError("Pandoc not found")):
+        with patch(
+            "pypandoc.get_pandoc_version", side_effect=OSError("Pandoc not found")
+        ):
             with pytest.raises(QuackIntegrationError) as exc_info:
                 verify_pandoc()
 
@@ -59,8 +63,9 @@ class TestVerifyPandoc:
 
     def test_other_exception(self) -> None:
         """Test when another exception occurs."""
-        with patch("pypandoc.get_pandoc_version",
-                   side_effect=Exception("Unexpected error")):
+        with patch(
+            "pypandoc.get_pandoc_version", side_effect=Exception("Unexpected error")
+        ):
             with pytest.raises(QuackIntegrationError) as exc_info:
                 verify_pandoc()
 
@@ -118,10 +123,7 @@ class TestPreparePandocArgs:
         config = ConversionConfig()
 
         args = prepare_pandoc_args(
-            config,
-            "html",
-            "markdown",
-            extra_args=["--custom-arg", "--another-arg"]
+            config, "html", "markdown", extra_args=["--custom-arg", "--another-arg"]
         )
 
         assert "--custom-arg" in args
@@ -274,12 +276,7 @@ class TestTrackMetrics:
 
         with patch("time.time", return_value=1005.0):  # 5 seconds elapsed
             track_metrics(
-                "file.html",
-                start_time,
-                original_size,
-                converted_size,
-                metrics,
-                config
+                "file.html", start_time, original_size, converted_size, metrics, config
             )
 
         assert "file.html" in metrics.conversion_times
@@ -298,12 +295,7 @@ class TestTrackMetrics:
         converted_size = 500
 
         track_metrics(
-            "file.html",
-            start_time,
-            original_size,
-            converted_size,
-            metrics,
-            config
+            "file.html", start_time, original_size, converted_size, metrics, config
         )
 
         assert "file.html" in metrics.file_sizes
@@ -323,12 +315,7 @@ class TestTrackMetrics:
         converted_size = 500
 
         track_metrics(
-            "file.html",
-            start_time,
-            original_size,
-            converted_size,
-            metrics,
-            config
+            "file.html", start_time, original_size, converted_size, metrics, config
         )
 
         assert "file.html" not in metrics.conversion_times
@@ -443,10 +430,7 @@ class TestCheckFileSize:
         assert is_valid is True
         assert errors == []
 
-    @given(
-        st.integers(min_value=0),
-        st.integers(min_value=0)
-    )
+    @given(st.integers(min_value=0), st.integers(min_value=0))
     def test_property_based(self, converted_size: int, min_size: int) -> None:
         """Property-based test for check_file_size."""
         is_valid, _ = check_file_size(converted_size, min_size)
@@ -465,8 +449,9 @@ class TestCheckConversionRatio:
         original_size = 1000
         threshold = 0.5
 
-        is_valid, errors = check_conversion_ratio(converted_size, original_size,
-                                                  threshold)
+        is_valid, errors = check_conversion_ratio(
+            converted_size, original_size, threshold
+        )
 
         assert is_valid is True
         assert errors == []
@@ -477,8 +462,9 @@ class TestCheckConversionRatio:
         original_size = 1000
         threshold = 0.5
 
-        is_valid, errors = check_conversion_ratio(converted_size, original_size,
-                                                  threshold)
+        is_valid, errors = check_conversion_ratio(
+            converted_size, original_size, threshold
+        )
 
         assert is_valid is False
         assert len(errors) == 1
@@ -491,8 +477,9 @@ class TestCheckConversionRatio:
         original_size = 0
         threshold = 0.1
 
-        is_valid, errors = check_conversion_ratio(converted_size, original_size,
-                                                  threshold)
+        is_valid, errors = check_conversion_ratio(
+            converted_size, original_size, threshold
+        )
 
         assert is_valid is True
         assert errors == []
@@ -500,13 +487,10 @@ class TestCheckConversionRatio:
     @given(
         st.integers(min_value=0),
         st.integers(min_value=0),
-        st.floats(min_value=0, max_value=1)
+        st.floats(min_value=0, max_value=1),
     )
     def test_property_based(
-            self,
-            converted_size: int,
-            original_size: int,
-            threshold: float
+        self, converted_size: int, original_size: int, threshold: float
     ) -> None:
         """Property-based test for check_conversion_ratio."""
         is_valid, _ = check_conversion_ratio(converted_size, original_size, threshold)

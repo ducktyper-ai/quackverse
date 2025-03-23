@@ -36,8 +36,12 @@ class TestFindProjectRoot:
         """Test handling exceptions from resolver."""
         with patch("quackcore.paths.resolver.get_project_root") as mock_get_root:
             # Test various exceptions that should be caught
-            for exception in [FileNotFoundError, PermissionError, ValueError,
-                              NotImplementedError]:
+            for exception in [
+                FileNotFoundError,
+                PermissionError,
+                ValueError,
+                NotImplementedError,
+            ]:
                 mock_get_root.side_effect = exception("Test error")
 
                 # Call the function under test

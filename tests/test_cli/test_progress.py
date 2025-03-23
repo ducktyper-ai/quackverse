@@ -88,8 +88,9 @@ class TestProgressReporter:
 
         # Test update throttling (updates too frequent)
         with patch.object(reporter, "_draw") as mock_draw:
-            with patch("time.time",
-                       return_value=123456.25):  # Only 0.05s since last update
+            with patch(
+                "time.time", return_value=123456.25
+            ):  # Only 0.05s since last update
                 reporter.update()
 
                 assert reporter.current == 11  # Incremented
@@ -176,8 +177,9 @@ class TestProgressReporter:
         reporter.current = 10
 
         with patch("quackcore.cli.terminal.get_terminal_size") as mock_get_size:
-            with patch.object(itertools, "cycle",
-                              return_value=iter(["-", "\\", "|", "/"])):
+            with patch.object(
+                itertools, "cycle", return_value=iter(["-", "\\", "|", "/"])
+            ):
                 mock_get_size.return_value = (80, 24)
 
                 # Call _draw
@@ -220,10 +222,7 @@ class TestSimpleProgress:
         # Test with custom parameters
         with patch.object(ProgressReporter, "start") as mock_start:
             progress = SimpleProgress(
-                iterable,
-                total=20,
-                desc="Custom Progress",
-                unit="steps"
+                iterable, total=20, desc="Custom Progress", unit="steps"
             )
 
             assert progress.total == 20  # Should use provided total
@@ -303,7 +302,8 @@ class TestShowProgress:
         iterable = range(10)
         mock_tqdm = MagicMock()
         mock_tqdm.return_value = iter(
-            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])  # Simulate iterator
+            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        )  # Simulate iterator
 
         with patch("quackcore.cli.progress.tqdm", mock_tqdm):
             with patch.dict("sys.modules", {"tqdm": MagicMock()}):
@@ -327,14 +327,13 @@ class TestShowProgress:
                     mock_instance = MagicMock()
                     mock_simple.return_value = mock_instance
                     mock_instance.__iter__.return_value = iter(
-                        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+                        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+                    )
 
                     result = show_progress(iterable, desc="Test")
 
                     # Should use SimpleProgress instead
-                    mock_simple.assert_called_once_with(
-                        iterable, None, "Test", "it"
-                    )
+                    mock_simple.assert_called_once_with(iterable, None, "Test", "it")
 
                     # Check the result is iterable
                     assert list(result) == list(range(10))
@@ -347,8 +346,9 @@ class TestProgressCallback:
         """Test that functions follow the ProgressCallback protocol."""
 
         # Create a function that matches the protocol
-        def callback(current: int, total: int | None,
-                     message: str | None = None) -> None:
+        def callback(
+            current: int, total: int | None, message: str | None = None
+        ) -> None:
             pass
 
         # There's no direct way to check protocol compliance at runtime,

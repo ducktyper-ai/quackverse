@@ -67,8 +67,9 @@ class TestPandocIntegration:
 
     @pytest.mark.integration
     @patch("quackcore.plugins.pandoc.service.verify_pandoc")
-    def test_service_initialization(self, mock_verify: MagicMock,
-                                    temp_dir: str) -> None:
+    def test_service_initialization(
+        self, mock_verify: MagicMock, temp_dir: str
+    ) -> None:
         """Test service initialization with custom config."""
         mock_verify.return_value = "2.18"
 
@@ -102,8 +103,11 @@ class TestPandocIntegration:
     @patch("quackcore.plugins.pandoc.service.verify_pandoc")
     @patch("pypandoc.convert_file")
     def test_html_to_markdown_workflow(
-            self, mock_convert: MagicMock, mock_verify: MagicMock, test_html_file: Path,
-            temp_dir: str
+        self,
+        mock_convert: MagicMock,
+        mock_verify: MagicMock,
+        test_html_file: Path,
+        temp_dir: str,
     ) -> None:
         """Test the complete workflow from HTML to Markdown."""
         mock_verify.return_value = "2.18"
@@ -123,10 +127,11 @@ This is a paragraph with [a link](https://example.com).
         service = PandocService(output_dir=output_dir)
 
         # Mock file system operations
-        with patch("quackcore.fs.service.create_directory"), \
-                patch("quackcore.fs.service.get_file_info") as mock_get_info, \
-                patch("quackcore.fs.service.write_text") as mock_write:
-
+        with (
+            patch("quackcore.fs.service.create_directory"),
+            patch("quackcore.fs.service.get_file_info") as mock_get_info,
+            patch("quackcore.fs.service.write_text") as mock_write,
+        ):
             # Mock file info for HTML file
             mock_html_info = MagicMock(
                 success=True,
@@ -173,8 +178,11 @@ This is a paragraph with [a link](https://example.com).
     @patch("quackcore.plugins.pandoc.service.verify_pandoc")
     @patch("pypandoc.convert_file")
     def test_markdown_to_docx_workflow(
-            self, mock_convert: MagicMock, mock_verify: MagicMock, test_md_file: Path,
-            temp_dir: str
+        self,
+        mock_convert: MagicMock,
+        mock_verify: MagicMock,
+        test_md_file: Path,
+        temp_dir: str,
     ) -> None:
         """Test the complete workflow from Markdown to DOCX."""
         mock_verify.return_value = "2.18"
@@ -188,11 +196,13 @@ This is a paragraph with [a link](https://example.com).
         service = PandocService(output_dir=output_dir)
 
         # Mock file system operations
-        with patch("quackcore.fs.service.create_directory"), \
-                patch("quackcore.fs.service.get_file_info") as mock_get_info, \
-                patch(
-                    "quackcore.plugins.pandoc.operations.utils.validate_docx_structure") as mock_validate:
-
+        with (
+            patch("quackcore.fs.service.create_directory"),
+            patch("quackcore.fs.service.get_file_info") as mock_get_info,
+            patch(
+                "quackcore.plugins.pandoc.operations.utils.validate_docx_structure"
+            ) as mock_validate,
+        ):
             # Mock file info for Markdown file
             mock_md_info = MagicMock(
                 success=True,
@@ -238,7 +248,7 @@ This is a paragraph with [a link](https://example.com).
     @pytest.mark.integration
     @patch("quackcore.plugins.pandoc.service.verify_pandoc")
     def test_convert_directory_workflow(
-            self, mock_verify: MagicMock, temp_dir: str
+        self, mock_verify: MagicMock, temp_dir: str
     ) -> None:
         """Test the directory conversion workflow."""
         mock_verify.return_value = "2.18"
@@ -269,11 +279,12 @@ This is a paragraph with [a link](https://example.com).
         service = PandocService(output_dir=output_dir)
 
         # Mock file system operations
-        with patch("quackcore.fs.service.create_directory"), \
-                patch("quackcore.fs.service.find_files") as mock_find, \
-                patch(
-                    "quackcore.plugins.pandoc.service.get_file_info") as mock_get_info, \
-                patch.object(service, "html_to_markdown") as mock_convert:
+        with (
+            patch("quackcore.fs.service.create_directory"),
+            patch("quackcore.fs.service.find_files") as mock_find,
+            patch("quackcore.plugins.pandoc.service.get_file_info") as mock_get_info,
+            patch.object(service, "html_to_markdown") as mock_convert,
+        ):
             # Mock find files
             mock_find.return_value = MagicMock(
                 success=True,
@@ -302,7 +313,7 @@ This is a paragraph with [a link](https://example.com).
                     1.0,
                     100,
                     200,
-                    f"Successfully converted test{i}.html"
+                    f"Successfully converted test{i}.html",
                 )
                 for i in range(3)
             ]
@@ -318,8 +329,9 @@ This is a paragraph with [a link](https://example.com).
             assert mock_convert.call_count == 3
 
     @pytest.mark.integration
-    def test_full_conversion_with_actual_pandoc(self, test_html_file: Path,
-                                                temp_dir: str) -> None:
+    def test_full_conversion_with_actual_pandoc(
+        self, test_html_file: Path, temp_dir: str
+    ) -> None:
         """
         Test actual conversion using pandoc if available.
         This test is skipped if pandoc is not installed.

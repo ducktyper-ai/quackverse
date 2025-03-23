@@ -10,7 +10,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs.results import FileInfoResult
@@ -58,11 +59,11 @@ class TestDocumentConverter:
     @patch("quackcore.fs.service.create_directory")
     @patch("quackcore.plugins.pandoc.converter.convert_html_to_markdown")
     def test_convert_file_html_to_markdown(
-            self,
-            mock_convert: MagicMock,
-            mock_create_dir: MagicMock,
-            mock_get_info: MagicMock,
-            mock_verify: MagicMock,
+        self,
+        mock_convert: MagicMock,
+        mock_create_dir: MagicMock,
+        mock_get_info: MagicMock,
+        mock_verify: MagicMock,
     ) -> None:
         """Test converting a file from HTML to Markdown."""
         mock_verify.return_value = "2.18"
@@ -86,8 +87,9 @@ class TestDocumentConverter:
         config = ConversionConfig()
         converter = DocumentConverter(config)
 
-        result = converter.convert_file(Path("test.html"), Path("output.md"),
-                                        "markdown")
+        result = converter.convert_file(
+            Path("test.html"), Path("output.md"), "markdown"
+        )
 
         assert result == expected_result
         mock_get_info.assert_called_once_with(Path("test.html"))
@@ -101,11 +103,11 @@ class TestDocumentConverter:
     @patch("quackcore.fs.service.create_directory")
     @patch("quackcore.plugins.pandoc.converter.convert_markdown_to_docx")
     def test_convert_file_markdown_to_docx(
-            self,
-            mock_convert: MagicMock,
-            mock_create_dir: MagicMock,
-            mock_get_info: MagicMock,
-            mock_verify: MagicMock,
+        self,
+        mock_convert: MagicMock,
+        mock_create_dir: MagicMock,
+        mock_get_info: MagicMock,
+        mock_verify: MagicMock,
     ) -> None:
         """Test converting a file from Markdown to DOCX."""
         mock_verify.return_value = "2.18"
@@ -141,7 +143,7 @@ class TestDocumentConverter:
     @patch("quackcore.plugins.pandoc.converter.verify_pandoc")
     @patch("quackcore.plugins.pandoc.converter.get_file_info")
     def test_convert_file_unsupported_conversion(
-            self, mock_get_info: MagicMock, mock_verify: MagicMock
+        self, mock_get_info: MagicMock, mock_verify: MagicMock
     ) -> None:
         """Test converting between unsupported formats."""
         mock_verify.return_value = "2.18"
@@ -163,7 +165,7 @@ class TestDocumentConverter:
     @patch("quackcore.plugins.pandoc.converter.verify_pandoc")
     @patch("quackcore.plugins.pandoc.converter.get_file_info")
     def test_convert_file_file_not_found(
-            self, mock_get_info: MagicMock, mock_verify: MagicMock
+        self, mock_get_info: MagicMock, mock_verify: MagicMock
     ) -> None:
         """Test conversion when input file is not found."""
         mock_verify.return_value = "2.18"
@@ -174,8 +176,9 @@ class TestDocumentConverter:
         config = ConversionConfig()
         converter = DocumentConverter(config)
 
-        result = converter.convert_file(Path("nonexistent.html"), Path("output.md"),
-                                        "markdown")
+        result = converter.convert_file(
+            Path("nonexistent.html"), Path("output.md"), "markdown"
+        )
 
         assert result.success is False
         assert "File not found" in result.error if result.error else ""
@@ -184,7 +187,7 @@ class TestDocumentConverter:
     @patch("quackcore.plugins.pandoc.converter.verify_pandoc")
     @patch("quackcore.fs.service.create_directory")
     def test_convert_batch(
-            self, mock_create_dir: MagicMock, mock_verify: MagicMock
+        self, mock_create_dir: MagicMock, mock_verify: MagicMock
     ) -> None:
         """Test batch conversion of multiple files."""
         mock_verify.return_value = "2.18"
@@ -229,7 +232,7 @@ class TestDocumentConverter:
     @patch("quackcore.plugins.pandoc.converter.verify_pandoc")
     @patch("quackcore.fs.service.create_directory")
     def test_convert_batch_mixed_results(
-            self, mock_create_dir: MagicMock, mock_verify: MagicMock
+        self, mock_create_dir: MagicMock, mock_verify: MagicMock
     ) -> None:
         """Test batch conversion with mixed success and failure."""
         mock_verify.return_value = "2.18"
@@ -269,8 +272,7 @@ class TestDocumentConverter:
         tasks = [task1, task2]
 
         with patch.object(
-                converter, "convert_file",
-                side_effect=[successful_result, failed_result]
+            converter, "convert_file", side_effect=[successful_result, failed_result]
         ):
             result = converter.convert_batch(tasks)
 
@@ -284,7 +286,7 @@ class TestDocumentConverter:
     @patch("quackcore.plugins.pandoc.converter.verify_pandoc")
     @patch("quackcore.fs.service.create_directory")
     def test_convert_batch_all_failed(
-            self, mock_create_dir: MagicMock, mock_verify: MagicMock
+        self, mock_create_dir: MagicMock, mock_verify: MagicMock
     ) -> None:
         """Test batch conversion with all failures."""
         mock_verify.return_value = "2.18"
@@ -313,9 +315,7 @@ class TestDocumentConverter:
 
         tasks = [task1, task2]
 
-        with patch.object(
-                converter, "convert_file", return_value=failed_result
-        ):
+        with patch.object(converter, "convert_file", return_value=failed_result):
             result = converter.convert_batch(tasks)
 
             assert result.success is False
@@ -328,7 +328,7 @@ class TestDocumentConverter:
     @patch("quackcore.plugins.pandoc.converter.verify_pandoc")
     @patch("quackcore.fs.service.get_file_info")
     def test_validate_conversion_success(
-            self, mock_get_info: MagicMock, mock_verify: MagicMock
+        self, mock_get_info: MagicMock, mock_verify: MagicMock
     ) -> None:
         """Test successful validation of converted file."""
         mock_verify.return_value = "2.18"
@@ -355,13 +355,15 @@ class TestDocumentConverter:
         converter = DocumentConverter(config)
 
         with patch("pathlib.Path.read_text", return_value="# Converted content"):
-            assert converter.validate_conversion(Path("output.md"),
-                                                 Path("test.html")) is True
+            assert (
+                converter.validate_conversion(Path("output.md"), Path("test.html"))
+                is True
+            )
 
     @patch("quackcore.plugins.pandoc.converter.verify_pandoc")
     @patch("quackcore.fs.service.get_file_info")
     def test_validate_conversion_missing_output(
-            self, mock_get_info: MagicMock, mock_verify: MagicMock
+        self, mock_get_info: MagicMock, mock_verify: MagicMock
     ) -> None:
         """Test validation when output file is missing."""
         mock_verify.return_value = "2.18"
@@ -381,13 +383,14 @@ class TestDocumentConverter:
         config = ConversionConfig()
         converter = DocumentConverter(config)
 
-        assert converter.validate_conversion(Path("output.md"),
-                                             Path("test.html")) is False
+        assert (
+            converter.validate_conversion(Path("output.md"), Path("test.html")) is False
+        )
 
     @patch("quackcore.plugins.pandoc.converter.verify_pandoc")
     @patch("quackcore.fs.service.get_file_info")
     def test_validate_conversion_missing_input(
-            self, mock_get_info: MagicMock, mock_verify: MagicMock
+        self, mock_get_info: MagicMock, mock_verify: MagicMock
     ) -> None:
         """Test validation when input file is missing."""
         mock_verify.return_value = "2.18"
@@ -414,13 +417,14 @@ class TestDocumentConverter:
         config = ConversionConfig()
         converter = DocumentConverter(config)
 
-        assert converter.validate_conversion(Path("output.md"),
-                                             Path("test.html")) is False
+        assert (
+            converter.validate_conversion(Path("output.md"), Path("test.html")) is False
+        )
 
     @patch("quackcore.plugins.pandoc.converter.verify_pandoc")
     @patch("quackcore.fs.service.get_file_info")
     def test_validate_conversion_docx(
-            self, mock_get_info: MagicMock, mock_verify: MagicMock
+        self, mock_get_info: MagicMock, mock_verify: MagicMock
     ) -> None:
         """Test validation of DOCX output."""
         mock_verify.return_value = "2.18"
@@ -447,18 +451,20 @@ class TestDocumentConverter:
         converter = DocumentConverter(config)
 
         with patch(
-                "quackcore.plugins.pandoc.operations.utils.validate_docx_structure") as mock_validate:
+            "quackcore.plugins.pandoc.operations.utils.validate_docx_structure"
+        ) as mock_validate:
             mock_validate.return_value = (True, [])
-            assert converter.validate_conversion(Path("output.docx"),
-                                                 Path("test.md")) is True
+            assert (
+                converter.validate_conversion(Path("output.docx"), Path("test.md"))
+                is True
+            )
             mock_validate.assert_called_once()
 
     @given(
-        st.integers(min_value=1, max_value=10),
-        st.integers(min_value=0, max_value=10)
+        st.integers(min_value=1, max_value=10), st.integers(min_value=0, max_value=10)
     )
     def test_convert_batch_property_based(
-            self, success_count: int, failure_count: int
+        self, success_count: int, failure_count: int
     ) -> None:
         """Property-based test for batch conversion with varying success/failure counts."""
         with patch("quackcore.plugins.pandoc.converter.verify_pandoc") as mock_verify:
@@ -470,35 +476,39 @@ class TestDocumentConverter:
             # Create tasks based on counts
             tasks = []
             for i in range(success_count + failure_count):
-                tasks.append(ConversionTask(
-                    source=FileInfo(path=Path(f"file{i}.html"), format="html"),
-                    target_format="markdown",
-                    output_path=Path(f"file{i}.md"),
-                ))
+                tasks.append(
+                    ConversionTask(
+                        source=FileInfo(path=Path(f"file{i}.html"), format="html"),
+                        target_format="markdown",
+                        output_path=Path(f"file{i}.md"),
+                    )
+                )
 
             # Create mock results
             results = []
             for i in range(success_count):
-                results.append(ConversionResult.success_result(
-                    Path(f"file{i}.md"),
-                    "html",
-                    "markdown",
-                    1.0,
-                    500,
-                    1000,
-                    "Success",
-                ))
+                results.append(
+                    ConversionResult.success_result(
+                        Path(f"file{i}.md"),
+                        "html",
+                        "markdown",
+                        1.0,
+                        500,
+                        1000,
+                        "Success",
+                    )
+                )
 
             for i in range(failure_count):
-                results.append(ConversionResult.error_result(
-                    "Failed",
-                    source_format="html",
-                    target_format="markdown",
-                ))
+                results.append(
+                    ConversionResult.error_result(
+                        "Failed",
+                        source_format="html",
+                        target_format="markdown",
+                    )
+                )
 
-            with patch.object(
-                    converter, "convert_file", side_effect=results
-            ):
+            with patch.object(converter, "convert_file", side_effect=results):
                 with patch("quackcore.fs.service.create_directory"):
                     result = converter.convert_batch(tasks)
 
@@ -511,10 +521,20 @@ class TestDocumentConverter:
                     # Check overall success/failure status
                     if success_count > 0 and failure_count == 0:
                         assert result.success is True
-                        assert "Successfully converted" in result.message if result.message else ""
+                        assert (
+                            "Successfully converted" in result.message
+                            if result.message
+                            else ""
+                        )
                     elif success_count > 0 and failure_count > 0:
                         assert result.success is True
-                        assert "Partially successful" in result.message if result.message else ""
+                        assert (
+                            "Partially successful" in result.message
+                            if result.message
+                            else ""
+                        )
                     else:
                         assert result.success is False
-                        assert "Failed to convert" in result.error if result.error else ""
+                        assert (
+                            "Failed to convert" in result.error if result.error else ""
+                        )

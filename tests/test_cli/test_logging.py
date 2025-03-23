@@ -100,7 +100,8 @@ class TestAddFileHandler:
 
                 # Verify a file handler was created
                 mock_file_handler.assert_called_once_with(
-                    str(Path("/path/to/logfile.log")))
+                    str(Path("/path/to/logfile.log"))
+                )
 
                 # Verify it was added to the logger
                 mock_handler.setLevel.assert_called_once_with(logging.INFO)
@@ -187,7 +188,8 @@ class TestSetupLogging:
     def test_with_config(self) -> None:
         """Test setup with configuration."""
         config = QuackConfig(
-            logging={"level": "CRITICAL", "file": Path("/path/to/logfile.log")})
+            logging={"level": "CRITICAL", "file": Path("/path/to/logfile.log")}
+        )
 
         with patch("quackcore.cli.logging._add_file_handler") as mock_add_file:
             logger, _ = setup_logging(config=config)

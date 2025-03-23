@@ -133,7 +133,7 @@ class TestTruncateText:
         # Should end with the indicator
         assert result.endswith(indicator)
         # Should start with the beginning of the original text
-        assert result.startswith(text[:max_length - len(indicator)])
+        assert result.startswith(text[: max_length - len(indicator)])
 
     def test_with_custom_indicator(self) -> None:
         """Test with custom truncation indicator."""
@@ -148,7 +148,7 @@ class TestTruncateText:
         # Should end with the custom indicator
         assert result.endswith(indicator)
         # Should start with the beginning of the original text
-        assert result.startswith(text[:max_length - len(indicator)])
+        assert result.startswith(text[: max_length - len(indicator)])
 
     def test_edge_cases(self) -> None:
         """Test edge cases for truncation."""

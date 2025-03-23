@@ -17,12 +17,12 @@ from quackcore.fs.results import FileInfoResult
 from quackcore.plugins.pandoc.config import ConversionConfig
 from quackcore.plugins.pandoc.models import ConversionMetrics
 from quackcore.plugins.pandoc.operations.md_to_docx import (
-    convert_markdown_to_docx,
-    validate_conversion,
-    _validate_markdown_input,
+    _check_docx_metadata,
     _convert_markdown_to_docx_once,
     _get_conversion_output,
-    _check_docx_metadata,
+    _validate_markdown_input,
+    convert_markdown_to_docx,
+    validate_conversion,
 )
 
 
@@ -100,8 +100,10 @@ class TestConvertMarkdownToDocxOnce:
     @patch("quackcore.fs.service.create_directory")
     @patch("quackcore.plugins.pandoc.operations.md_to_docx.prepare_pandoc_args")
     def test_successful_conversion(
-            self, mock_prepare_args: MagicMock, mock_create_dir: MagicMock,
-            mock_convert: MagicMock
+        self,
+        mock_prepare_args: MagicMock,
+        mock_create_dir: MagicMock,
+        mock_convert: MagicMock,
     ) -> None:
         """Test successful single conversion attempt."""
         # Mock prepare_pandoc_args
@@ -127,8 +129,10 @@ class TestConvertMarkdownToDocxOnce:
     @patch("quackcore.fs.service.create_directory")
     @patch("quackcore.plugins.pandoc.operations.md_to_docx.prepare_pandoc_args")
     def test_conversion_failure(
-            self, mock_prepare_args: MagicMock, mock_create_dir: MagicMock,
-            mock_convert: MagicMock
+        self,
+        mock_prepare_args: MagicMock,
+        mock_create_dir: MagicMock,
+        mock_convert: MagicMock,
     ) -> None:
         """Test conversion failure."""
         # Mock prepare_pandoc_args
@@ -140,8 +144,9 @@ class TestConvertMarkdownToDocxOnce:
         config = ConversionConfig()
 
         with pytest.raises(QuackIntegrationError) as exc_info:
-            _convert_markdown_to_docx_once(Path("input.md"), Path("output.docx"),
-                                           config)
+            _convert_markdown_to_docx_once(
+                Path("input.md"), Path("output.docx"), config
+            )
 
         assert "Pandoc conversion failed" in str(exc_info.value)
         mock_prepare_args.assert_called_once()
@@ -167,8 +172,9 @@ class TestGetConversionOutput:
 
         start_time = time.time() - 2.0  # 2 seconds ago
 
-        conversion_time, output_size = _get_conversion_output(Path("output.docx"),
-                                                              start_time)
+        conversion_time, output_size = _get_conversion_output(
+            Path("output.docx"), start_time
+        )
 
         assert conversion_time >= 1.9  # At least close to 2 seconds
         assert output_size == 800
@@ -214,7 +220,8 @@ class TestValidateConversion:
         mock_get_info.return_value = mock_file_info
 
         with patch(
-                "quackcore.plugins.pandoc.operations.md_to_docx.validate_docx_structure") as mock_validate:
+            "quackcore.plugins.pandoc.operations.md_to_docx.validate_docx_structure"
+        ) as mock_validate:
             mock_validate.return_value = (True, [])
 
             config = ConversionConfig()
@@ -240,9 +247,7 @@ class TestValidateConversion:
         mock_get_info.return_value = mock_file_info
 
         config = ConversionConfig()
-        errors = validate_conversion(
-            Path("output.docx"), Path("input.md"), 500, config
-        )
+        errors = validate_conversion(Path("output.docx"), Path("input.md"), 500, config)
 
         assert len(errors) == 1
         assert "does not exist" in errors[0]
@@ -261,13 +266,9 @@ class TestValidateConversion:
         mock_get_info.return_value = mock_file_info
 
         # Set minimum file size requirement higher than the output
-        config = ConversionConfig(
-            validation={"min_file_size": 100}
-        )
+        config = ConversionConfig(validation={"min_file_size": 100})
 
-        errors = validate_conversion(
-            Path("output.docx"), Path("input.md"), 500, config
-        )
+        errors = validate_conversion(Path("output.docx"), Path("input.md"), 500, config)
 
         assert len(errors) >= 1
         assert any("below the minimum threshold" in err for err in errors)
@@ -286,7 +287,8 @@ class TestValidateConversion:
         mock_get_info.return_value = mock_file_info
 
         with patch(
-                "quackcore.plugins.pandoc.operations.md_to_docx.validate_docx_structure") as mock_validate:
+            "quackcore.plugins.pandoc.operations.md_to_docx.validate_docx_structure"
+        ) as mock_validate:
             mock_validate.return_value = (False, ["DOCX document has no paragraphs"])
 
             config = ConversionConfig()
@@ -304,8 +306,9 @@ class TestCheckDocxMetadata:
 
     def test_with_docx_module_missing(self) -> None:
         """Test when python-docx module is not available."""
-        with patch("builtins.__import__",
-                   side_effect=ImportError("No module named 'docx'")):
+        with patch(
+            "builtins.__import__", side_effect=ImportError("No module named 'docx'")
+        ):
             # Should not raise exception, just log warning
             _check_docx_metadata(Path("output.docx"), Path("input.md"), True)
 
@@ -333,7 +336,8 @@ class TestCheckDocxMetadata:
 
         # Should not raise exception, just log a debug message
         with patch(
-                "quackcore.plugins.pandoc.operations.md_to_docx.logger.debug") as mock_debug:
+            "quackcore.plugins.pandoc.operations.md_to_docx.logger.debug"
+        ) as mock_debug:
             _check_docx_metadata(Path("output.docx"), Path("input.md"), True)
             mock_debug.assert_called_once()
             assert "Source file reference missing" in mock_debug.call_args[0][0]
@@ -346,17 +350,18 @@ class TestConvertMarkdownToDocx:
 
     @patch("quackcore.plugins.pandoc.operations.md_to_docx._validate_markdown_input")
     @patch(
-        "quackcore.plugins.pandoc.operations.md_to_docx._convert_markdown_to_docx_once")
+        "quackcore.plugins.pandoc.operations.md_to_docx._convert_markdown_to_docx_once"
+    )
     @patch("quackcore.plugins.pandoc.operations.md_to_docx._get_conversion_output")
     @patch("quackcore.plugins.pandoc.operations.md_to_docx.validate_conversion")
     @patch("quackcore.plugins.pandoc.operations.md_to_docx.track_metrics")
     def test_successful_conversion(
-            self,
-            mock_track: MagicMock,
-            mock_validate: MagicMock,
-            mock_get_output: MagicMock,
-            mock_convert: MagicMock,
-            mock_validate_input: MagicMock,
+        self,
+        mock_track: MagicMock,
+        mock_validate: MagicMock,
+        mock_get_output: MagicMock,
+        mock_convert: MagicMock,
+        mock_validate_input: MagicMock,
     ) -> None:
         """Test successful Markdown to DOCX conversion."""
         # Mock successful validation
@@ -372,10 +377,7 @@ class TestConvertMarkdownToDocx:
         metrics = ConversionMetrics()
 
         result = convert_markdown_to_docx(
-            Path("input.md"),
-            Path("output.docx"),
-            config,
-            metrics
+            Path("input.md"), Path("output.docx"), config, metrics
         )
 
         assert result.success is True
@@ -404,10 +406,7 @@ class TestConvertMarkdownToDocx:
         metrics = ConversionMetrics()
 
         result = convert_markdown_to_docx(
-            Path("nonexistent.md"),
-            Path("output.docx"),
-            config,
-            metrics
+            Path("nonexistent.md"), Path("output.docx"), config, metrics
         )
 
         assert result.success is False
@@ -421,9 +420,10 @@ class TestConvertMarkdownToDocx:
 
     @patch("quackcore.plugins.pandoc.operations.md_to_docx._validate_markdown_input")
     @patch(
-        "quackcore.plugins.pandoc.operations.md_to_docx._convert_markdown_to_docx_once")
+        "quackcore.plugins.pandoc.operations.md_to_docx._convert_markdown_to_docx_once"
+    )
     def test_conversion_failure(
-            self, mock_convert: MagicMock, mock_validate_input: MagicMock
+        self, mock_convert: MagicMock, mock_validate_input: MagicMock
     ) -> None:
         """Test when conversion fails."""
         # Mock successful validation
@@ -433,16 +433,15 @@ class TestConvertMarkdownToDocx:
         mock_convert.side_effect = QuackIntegrationError("Pandoc conversion failed")
 
         config = ConversionConfig(
-            retry_mechanism={"max_conversion_retries": 2,
-                             "conversion_retry_delay": 0.01}
+            retry_mechanism={
+                "max_conversion_retries": 2,
+                "conversion_retry_delay": 0.01,
+            }
         )
         metrics = ConversionMetrics()
 
         result = convert_markdown_to_docx(
-            Path("input.md"),
-            Path("output.docx"),
-            config,
-            metrics
+            Path("input.md"), Path("output.docx"), config, metrics
         )
 
         assert result.success is False
@@ -457,15 +456,16 @@ class TestConvertMarkdownToDocx:
 
     @patch("quackcore.plugins.pandoc.operations.md_to_docx._validate_markdown_input")
     @patch(
-        "quackcore.plugins.pandoc.operations.md_to_docx._convert_markdown_to_docx_once")
+        "quackcore.plugins.pandoc.operations.md_to_docx._convert_markdown_to_docx_once"
+    )
     @patch("quackcore.plugins.pandoc.operations.md_to_docx._get_conversion_output")
     @patch("quackcore.plugins.pandoc.operations.md_to_docx.validate_conversion")
     def test_validation_errors(
-            self,
-            mock_validate: MagicMock,
-            mock_get_output: MagicMock,
-            mock_convert: MagicMock,
-            mock_validate_input: MagicMock,
+        self,
+        mock_validate: MagicMock,
+        mock_get_output: MagicMock,
+        mock_convert: MagicMock,
+        mock_validate_input: MagicMock,
     ) -> None:
         """Test when conversion succeeds but validation fails."""
         # Mock successful validation
@@ -478,16 +478,15 @@ class TestConvertMarkdownToDocx:
         mock_validate.return_value = ["File size too small"]
 
         config = ConversionConfig(
-            retry_mechanism={"max_conversion_retries": 2,
-                             "conversion_retry_delay": 0.01}
+            retry_mechanism={
+                "max_conversion_retries": 2,
+                "conversion_retry_delay": 0.01,
+            }
         )
         metrics = ConversionMetrics()
 
         result = convert_markdown_to_docx(
-            Path("input.md"),
-            Path("output.docx"),
-            config,
-            metrics
+            Path("input.md"), Path("output.docx"), config, metrics
         )
 
         assert result.success is False

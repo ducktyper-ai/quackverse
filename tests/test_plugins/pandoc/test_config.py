@@ -12,6 +12,7 @@ from unittest.mock import MagicMock, patch
 
 from pydantic import ValidationError
 
+from quackcore.fs.results import DataResult
 from quackcore.plugins.pandoc.config import (
     ConversionConfig,
     MetricsConfig,
@@ -20,7 +21,6 @@ from quackcore.plugins.pandoc.config import (
     RetryConfig,
     ValidationConfig,
 )
-from quackcore.fs.results import DataResult
 
 
 class TestPandocOptions:

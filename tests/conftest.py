@@ -123,6 +123,9 @@ def mock_plugin() -> MockPlugin:
     """Create a mock plugin for testing."""
     return MockPlugin()
 
+
 def pytest_configure(config):
     """Register custom pytest marks."""
-    config.addinivalue_line("markers", "integration: mark a test as an integration test")
+    config.addinivalue_line(
+        "markers", "integration: mark a test as an integration test"
+    )

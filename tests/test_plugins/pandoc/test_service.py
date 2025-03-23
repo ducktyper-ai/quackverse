@@ -9,7 +9,8 @@ initializes, configures, and executes conversion operations.
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs.results import FindResult
@@ -37,7 +38,7 @@ class TestPandocService:
     @patch("quackcore.plugins.pandoc.service.verify_pandoc")
     @patch("quackcore.fs.service.create_directory")
     def test_initialize_success(
-            self, mock_create_dir: MagicMock, mock_verify: MagicMock
+        self, mock_create_dir: MagicMock, mock_verify: MagicMock
     ) -> None:
         """Test successful initialization of the service."""
         mock_verify.return_value = "2.18"
@@ -53,7 +54,7 @@ class TestPandocService:
         service = PandocService()
 
         with patch.object(
-                service.config_provider, "load_config", return_value=mock_config_result
+            service.config_provider, "load_config", return_value=mock_config_result
         ):
             with patch("quackcore.plugins.pandoc.service.DocumentConverter"):
                 result = service.initialize()
@@ -76,7 +77,7 @@ class TestPandocService:
         service = PandocService()
 
         with patch.object(
-                service.config_provider, "load_config", return_value=mock_config_result
+            service.config_provider, "load_config", return_value=mock_config_result
         ):
             result = service.initialize()
 
@@ -97,7 +98,7 @@ class TestPandocService:
         service = PandocService()
 
         with patch.object(
-                service.config_provider, "load_config", return_value=mock_config_result
+            service.config_provider, "load_config", return_value=mock_config_result
         ):
             result = service.initialize()
 
@@ -108,7 +109,7 @@ class TestPandocService:
     @patch("quackcore.plugins.pandoc.service.verify_pandoc")
     @patch("quackcore.plugins.pandoc.service.resolver.resolve_project_path")
     def test_html_to_markdown(
-            self, mock_resolve: MagicMock, mock_verify: MagicMock
+        self, mock_resolve: MagicMock, mock_verify: MagicMock
     ) -> None:
         """Test HTML to Markdown conversion."""
         mock_verify.return_value = "2.18"
@@ -142,7 +143,7 @@ class TestPandocService:
     @patch("quackcore.plugins.pandoc.service.verify_pandoc")
     @patch("quackcore.plugins.pandoc.service.resolver.resolve_project_path")
     def test_markdown_to_docx(
-            self, mock_resolve: MagicMock, mock_verify: MagicMock
+        self, mock_resolve: MagicMock, mock_verify: MagicMock
     ) -> None:
         """Test Markdown to DOCX conversion."""
         mock_verify.return_value = "2.18"
@@ -188,7 +189,7 @@ class TestPandocService:
     @patch("quackcore.plugins.pandoc.service.resolver.resolve_project_path")
     @patch("quackcore.fs.service.find_files")
     def test_convert_directory(
-            self, mock_find: MagicMock, mock_resolve: MagicMock, mock_verify: MagicMock
+        self, mock_find: MagicMock, mock_resolve: MagicMock, mock_verify: MagicMock
     ) -> None:
         """Test directory conversion."""
         mock_verify.return_value = "2.18"
@@ -197,10 +198,7 @@ class TestPandocService:
         # Mock file finding
         file_paths = [Path("file1.html"), Path("file2.html")]
         mock_find.return_value = FindResult(
-            success=True,
-            files=file_paths,
-            pattern="*.html",
-            message="Found 2 files"
+            success=True, files=file_paths, pattern="*.html", message="Found 2 files"
         )
 
         # Mock successful batch conversion

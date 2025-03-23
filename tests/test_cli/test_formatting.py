@@ -199,9 +199,7 @@ class TestPrintFunctions:
                 print_success("Test success")
 
                 # Verify colorize was called with the right parameters
-                mock_colorize.assert_called_once_with(
-                    "✓ Test success", fg="green"
-                )
+                mock_colorize.assert_called_once_with("✓ Test success", fg="green")
 
                 # Verify print was called with colorized text
                 mock_print.assert_called_once_with("COLORIZED SUCCESS")
@@ -215,9 +213,7 @@ class TestPrintFunctions:
                 print_info("Test info")
 
                 # Verify colorize was called with the right parameters
-                mock_colorize.assert_called_once_with(
-                    "ℹ Test info", fg="blue"
-                )
+                mock_colorize.assert_called_once_with("ℹ Test info", fg="blue")
 
                 # Verify print was called with colorized text
                 mock_print.assert_called_once_with("COLORIZED INFO")
@@ -337,9 +333,11 @@ class TestTable:
             mock_get_size.return_value = (30, 24)  # width, height
 
             with patch("quackcore.cli.formatting.truncate_text") as mock_truncate:
-                mock_truncate.side_effect = lambda text, width: text[
-                                                                :width] + "..." if len(
-                    text) > width else text
+                mock_truncate.side_effect = (
+                    lambda text, width: text[:width] + "..."
+                    if len(text) > width
+                    else text
+                )
 
                 result = table(headers, rows, max_width=30)
 

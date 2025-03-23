@@ -52,8 +52,9 @@ class TestInitCliEnv:
                         # Verify the mock calls
                         mock_find_root.assert_called_once()
                         mock_load_config.assert_called_once_with(None, None, None)
-                        mock_setup_logging.assert_called_once_with(None, False, False,
-                                                                   mock_config, "quack")
+                        mock_setup_logging.assert_called_once_with(
+                            None, False, False, mock_config, "quack"
+                        )
                         mock_logger.debug.assert_called()
 
     def test_with_explicit_parameters(self) -> None:
@@ -84,10 +85,12 @@ class TestInitCliEnv:
                     )
 
                     # Verify the parameters were passed correctly
-                    mock_load_config.assert_called_once_with("/path/to/config.yaml",
-                                                             {"key": "value"}, "test")
-                    mock_setup_logging.assert_called_once_with("DEBUG", True, True,
-                                                               mock_config, "test_app")
+                    mock_load_config.assert_called_once_with(
+                        "/path/to/config.yaml", {"key": "value"}, "test"
+                    )
+                    mock_setup_logging.assert_called_once_with(
+                        "DEBUG", True, True, mock_config, "test_app"
+                    )
 
                     # Verify the context properties
                     assert context.base_dir == Path("/custom/base/dir")
@@ -148,7 +151,8 @@ class TestInitCliEnv:
                     init_cli_env()
 
                 assert "Unexpected error initializing CLI environment" in str(
-                    excinfo.value)
+                    excinfo.value
+                )
                 assert "Unexpected error" in str(excinfo.value)
                 mock_error.assert_called_once()
 

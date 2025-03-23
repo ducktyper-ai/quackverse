@@ -265,7 +265,8 @@ class TestAskChoice:
 
         with patch("builtins.print") as mock_print:
             mock_print.side_effect = lambda *args: print_buffer.append(
-                " ".join(str(arg) for arg in args))
+                " ".join(str(arg) for arg in args)
+            )
 
             with patch("builtins.input", return_value="1"):
                 ask_choice("Select option", choices)
@@ -280,7 +281,8 @@ class TestAskChoice:
 
         with patch("builtins.print") as mock_print:
             mock_print.side_effect = lambda *args: print_buffer.append(
-                " ".join(str(arg) for arg in args))
+                " ".join(str(arg) for arg in args)
+            )
 
             with patch("builtins.input", return_value=""):
                 ask_choice("Select option", choices, default=0)
@@ -293,7 +295,8 @@ class TestAskChoice:
 
         with patch("builtins.print") as mock_print:
             mock_print.side_effect = lambda *args: print_buffer.append(
-                " ".join(str(arg) for arg in args))
+                " ".join(str(arg) for arg in args)
+            )
 
             with patch("builtins.input", side_effect=["3", "custom"]):
                 ask_choice("Select option", choices, allow_custom=True)

@@ -254,12 +254,15 @@ class TestGetCliInfo:
                     mock_now.return_value = datetime(2023, 1, 1, 12, 0, 0)
 
                     with patch("os.getpid", return_value=12345):
-                        with patch("pathlib.Path.cwd",
-                                   return_value=Path("/current/dir")):
-                            with patch("quackcore.config.utils.get_env",
-                                       return_value="test"):
+                        with patch(
+                            "pathlib.Path.cwd", return_value=Path("/current/dir")
+                        ):
+                            with patch(
+                                "quackcore.config.utils.get_env", return_value="test"
+                            ):
                                 with patch(
-                                        "quackcore.cli.terminal.get_terminal_size") as mock_term_size:
+                                    "quackcore.cli.terminal.get_terminal_size"
+                                ) as mock_term_size:
                                     mock_term_size.return_value = (80, 24)
 
                                     with patch.dict(os.environ, {"USER": "testuser"}):
@@ -286,10 +289,12 @@ class TestGetCliInfo:
                         with patch("pathlib.Path.cwd"):
                             with patch("quackcore.config.utils.get_env"):
                                 with patch(
-                                        "quackcore.cli.terminal.get_terminal_size") as mock_term_size:
+                                    "quackcore.cli.terminal.get_terminal_size"
+                                ) as mock_term_size:
                                     # Simulate an error getting terminal size
                                     mock_term_size.side_effect = OSError(
-                                        "Terminal error")
+                                        "Terminal error"
+                                    )
 
                                     # Call the function under test
                                     info = get_cli_info()
@@ -307,8 +312,11 @@ class TestGetCliInfo:
                             with patch("quackcore.config.utils.get_env"):
                                 with patch("quackcore.cli.terminal.get_terminal_size"):
                                     # Test various CI environment variables
-                                    for env_var in ["CI", "GITHUB_ACTIONS",
-                                                    "GITLAB_CI"]:
+                                    for env_var in [
+                                        "CI",
+                                        "GITHUB_ACTIONS",
+                                        "GITLAB_CI",
+                                    ]:
                                         with patch.dict(os.environ, {env_var: "true"}):
                                             info = get_cli_info()
                                             assert info["is_ci"] is True

@@ -150,16 +150,18 @@ class TestResolveCliArgs:
                 # Double dash arguments with values
                 st.tuples(
                     st.sampled_from(
-                        ["--config", "--log-level", "--environment", "--base-dir"]),
-                    st.text(min_size=1, max_size=20)
+                        ["--config", "--log-level", "--environment", "--base-dir"]
+                    ),
+                    st.text(min_size=1, max_size=20),
                 ),
                 # Double dash arguments with equals
                 st.sampled_from(
-                    ["--config=value", "--log-level=DEBUG", "--environment=test"]),
+                    ["--config=value", "--log-level=DEBUG", "--environment=test"]
+                ),
                 # Boolean flags with double dash
                 st.sampled_from(["--debug", "--verbose", "--quiet", "--no-color"]),
                 # Boolean flags with single dash
-                st.sampled_from(["-d", "-v", "-q"])
+                st.sampled_from(["-d", "-v", "-q"]),
             )
         )
     )
@@ -185,15 +187,22 @@ class TestResolveCliArgs:
 
         # Check that boolean flags are set to True
         for flag in ["debug", "verbose", "quiet", "no-color"]:
-            if f"--{flag}" in args or (flag == "debug" and "-d" in args) or \
-                    (flag == "verbose" and "-v" in args) or (
-                    flag == "quiet" and "-q" in args):
+            if (
+                f"--{flag}" in args
+                or (flag == "debug" and "-d" in args)
+                or (flag == "verbose" and "-v" in args)
+                or (flag == "quiet" and "-q" in args)
+            ):
                 assert result.get(flag, False) is True
 
         # Check that arguments with values are properly parsed
         for i in range(len(args) - 1):
-            if args[i] in ["--config", "--log-level", "--environment",
-                           "--base-dir"] and i + 1 < len(args):
+            if args[i] in [
+                "--config",
+                "--log-level",
+                "--environment",
+                "--base-dir",
+            ] and i + 1 < len(args):
                 if not args[i + 1].startswith("-"):
                     arg_name = args[i][2:]  # Remove '--'
                     assert result.get(arg_name) == args[i + 1]
