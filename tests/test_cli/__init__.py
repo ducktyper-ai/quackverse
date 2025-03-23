@@ -1,4 +1,4 @@
-# tests/test_cli/test_cli_init.py
+# tests/test_cli/__init__.py
 """
 Tests for CLI module initialization.
 """

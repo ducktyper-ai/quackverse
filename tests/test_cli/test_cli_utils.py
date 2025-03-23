@@ -8,7 +8,7 @@ import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
-from hypothesis import given, assume
+from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from quackcore.cli.utils import (
@@ -192,15 +192,15 @@ class TestColorUtilities:
         blink=st.booleans(),
     )
     def test_colorize(
-            self,
-            text: str,
-            fg: str | None,
-            bg: str | None,
-            bold: bool,
-            dim: bool,
-            underline: bool,
-            italic: bool,
-            blink: bool,
+        self,
+        text: str,
+        fg: str | None,
+        bg: str | None,
+        bold: bool,
+        dim: bool,
+        underline: bool,
+        italic: bool,
+        blink: bool,
     ) -> None:
         """Test the colorize function with Hypothesis."""
         # Test with color support

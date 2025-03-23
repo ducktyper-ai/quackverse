@@ -10,15 +10,19 @@ import pytest
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
-from quackcore.cli.boostrap import CliOptions, QuackContext, _merge_cli_overrides, \
-    resolve_cli_args
+from quackcore.cli.boostrap import (
+    CliOptions,
+    QuackContext,
+    _merge_cli_overrides,
+    resolve_cli_args,
+)
 from quackcore.config.models import QuackConfig
 
 # Strategy for CLI argument names
 cli_arg_name_strategy = st.text(
-    alphabet=st.characters(whitelist_categories=('Lu', 'Ll'), blacklist_characters='-'),
+    alphabet=st.characters(whitelist_categories=("Lu", "Ll"), blacklist_characters="-"),
     min_size=1,
-    max_size=20
+    max_size=20,
 ).map(lambda s: s.lower())
 
 # Strategy for CLI argument values
@@ -26,49 +30,59 @@ cli_arg_value_strategy = st.one_of(
     st.text(min_size=0, max_size=50),
     st.booleans().map(str),
     st.integers(min_value=-1000, max_value=1000).map(str),
-    st.floats(min_value=-100.0, max_value=100.0).map(lambda f: f"{f:.2f}")
+    st.floats(min_value=-100.0, max_value=100.0).map(lambda f: f"{f:.2f}"),
 )
 
 # Strategy for basic CLI args dictionaries
 cli_args_strategy = st.dictionaries(
-    keys=cli_arg_name_strategy,
-    values=cli_arg_value_strategy,
-    max_size=10
+    keys=cli_arg_name_strategy, values=cli_arg_value_strategy, max_size=10
 )
 
 # Strategy for filesystem paths
 path_strategy = st.one_of(
     # Relative paths
     st.lists(
-        st.text(min_size=1, max_size=10,
-                alphabet=st.characters(whitelist_categories=('Lu', 'Ll', 'Nd'),
-                                       blacklist_characters='\\/:*?"<>|')),
+        st.text(
+            min_size=1,
+            max_size=10,
+            alphabet=st.characters(
+                whitelist_categories=("Lu", "Ll", "Nd"),
+                blacklist_characters='\\/:*?"<>|',
+            ),
+        ),
         min_size=1,
-        max_size=3
+        max_size=3,
     ).map(lambda parts: str(Path(*parts))),
     # "Absolute" paths (for testing)
     st.lists(
-        st.text(min_size=1, max_size=10,
-                alphabet=st.characters(whitelist_categories=('Lu', 'Ll', 'Nd'),
-                                       blacklist_characters='\\/:*?"<>|')),
+        st.text(
+            min_size=1,
+            max_size=10,
+            alphabet=st.characters(
+                whitelist_categories=("Lu", "Ll", "Nd"),
+                blacklist_characters='\\/:*?"<>|',
+            ),
+        ),
         min_size=1,
-        max_size=3
-    ).map(lambda parts: str(Path('/') / Path(*parts)))
+        max_size=3,
+    ).map(lambda parts: str(Path("/") / Path(*parts))),
 )
 
 # Strategy for basic CLI options
 cli_options_strategy = st.builds(
     CliOptions,
     config_path=st.one_of(st.none(), path_strategy.map(Path)),
-    log_level=st.one_of(st.none(), st.sampled_from(
-        ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])),
+    log_level=st.one_of(
+        st.none(), st.sampled_from(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
+    ),
     debug=st.booleans(),
     verbose=st.booleans(),
     quiet=st.booleans(),
-    environment=st.one_of(st.none(),
-                          st.sampled_from(["development", "test", "production"])),
+    environment=st.one_of(
+        st.none(), st.sampled_from(["development", "test", "production"])
+    ),
     base_dir=st.one_of(st.none(), path_strategy.map(Path)),
-    no_color=st.booleans()
+    no_color=st.booleans(),
 )
 
 
@@ -105,17 +119,16 @@ class TestCliPropertyBased:
         if len(args) > 1:
             assert "log-level" in result and result["log-level"] == args[1]
 
-    @given(
-        config=st.builds(QuackConfig),
-        overrides=cli_args_strategy
-    )
+    @given(config=st.builds(QuackConfig), overrides=cli_args_strategy)
     @settings(max_examples=50)
-    def test_merge_cli_overrides_properties(self, config: QuackConfig,
-                                            overrides: dict[str, str]) -> None:
+    def test_merge_cli_overrides_properties(
+        self, config: QuackConfig, overrides: dict[str, str]
+    ) -> None:
         """Test properties of the _merge_cli_overrides function."""
         # Skip None values, config/help/version keys which are ignored
         filtered_overrides = {
-            k: v for k, v in overrides.items()
+            k: v
+            for k, v in overrides.items()
             if v is not None and k not in ("config", "help", "version")
         }
 
@@ -141,7 +154,8 @@ class TestCliPropertyBased:
                         # For boolean flags, the value should be True regardless of the string
                         if isinstance(config_value, bool):
                             assert config_value is True or config_value == (
-                                        value.lower() == "true")
+                                value.lower() == "true"
+                            )
                         # For other types, we can't easily check the exact value due to type conversion
                         # But we could add more specific checks if needed
 
@@ -169,14 +183,13 @@ class TestCliPropertyBased:
     @given(
         config=st.builds(QuackConfig),
         extra_data=st.dictionaries(
-            keys=st.text(min_size=1, max_size=10),
-            values=st.text(),
-            max_size=5
-        )
+            keys=st.text(min_size=1, max_size=10), values=st.text(), max_size=5
+        ),
     )
     @settings(max_examples=50)
-    def test_quack_context_properties(self, config: QuackConfig,
-                                      extra_data: dict[str, Any]) -> None:
+    def test_quack_context_properties(
+        self, config: QuackConfig, extra_data: dict[str, Any]
+    ) -> None:
         """Test properties of the QuackContext class."""
         # Create a basic context
         logger = object()  # Mock logger
@@ -187,7 +200,7 @@ class TestCliPropertyBased:
             logger=logger,
             base_dir=base_dir,
             environment="test",
-            extra={}
+            extra={},
         )
 
         # Test with_extra method

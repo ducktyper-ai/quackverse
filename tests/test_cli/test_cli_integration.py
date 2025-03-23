@@ -197,11 +197,14 @@ class TestCliIntegration:
     def test_load_config_with_env_vars(self, temp_config_file: Path) -> None:
         """Test loading config with environment variable overrides."""
         # Set environment variables
-        with patch.dict(os.environ, {
-            "QUACK_GENERAL__PROJECT_NAME": "EnvProject",
-            "QUACK_LOGGING__LEVEL": "ERROR",
-            "QUACK_GENERAL__DEBUG": "false",
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                "QUACK_GENERAL__PROJECT_NAME": "EnvProject",
+                "QUACK_LOGGING__LEVEL": "ERROR",
+                "QUACK_GENERAL__DEBUG": "false",
+            },
+        ):
             # Load config with environment variables
             config = load_config(temp_config_file, merge_env=True)
 

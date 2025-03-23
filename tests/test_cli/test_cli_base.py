@@ -2,6 +2,7 @@
 """
 Tests for CLI bootstrap functionality.
 """
+
 import logging
 import os
 from pathlib import Path
@@ -12,8 +13,8 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from quackcore.cli.boostrap import (
-    QuackContext,
     CliOptions,
+    QuackContext,
     _add_file_handler,
     _determine_effective_level,
     _merge_cli_overrides,
@@ -193,8 +194,9 @@ class TestLoggingSetup:
                 _add_file_handler(root_logger, config, logging.INFO)
 
                 # Verify the directory was created
-                mock_create_dir.assert_called_once_with(Path("/test/log"),
-                                                        exist_ok=True)
+                mock_create_dir.assert_called_once_with(
+                    Path("/test/log"), exist_ok=True
+                )
 
                 # Verify handler was created and configured
                 mock_file_handler.assert_called_once_with(str(config.logging.file))
@@ -351,10 +353,10 @@ class TestCliEnvironment:
     @patch("quackcore.cli.boostrap.setup_logging")
     @patch("quackcore.cli.boostrap.find_project_root")
     def test_init_cli_env(
-            self,
-            mock_find_project_root: MagicMock,
-            mock_setup_logging: MagicMock,
-            mock_load_config: MagicMock,
+        self,
+        mock_find_project_root: MagicMock,
+        mock_setup_logging: MagicMock,
+        mock_load_config: MagicMock,
     ) -> None:
         """Test initializing the CLI environment."""
         # Mock dependencies
@@ -395,9 +397,7 @@ class TestCliEnvironment:
             app_name="test_app",
         )
 
-        mock_load_config.assert_called_with(
-            config_path, {"key": "value"}, "test"
-        )
+        mock_load_config.assert_called_with(config_path, {"key": "value"}, "test")
         mock_setup_logging.assert_called_with(
             "DEBUG", True, False, mock_config, "test_app"
         )
@@ -534,14 +534,19 @@ class TestUtilityFunctions:
         with patch("platform.platform", return_value="Linux-test"):
             with patch("platform.python_version", return_value="3.13.0"):
                 with patch("datetime.datetime") as mock_datetime:
-                    mock_datetime.now.return_value.isoformat.return_value = "2023-01-01T00:00:00"
+                    mock_datetime.now.return_value.isoformat.return_value = (
+                        "2023-01-01T00:00:00"
+                    )
 
                     with patch("os.getpid", return_value=12345):
                         with patch.dict(os.environ, {"USER": "testuser"}):
-                            with patch("quackcore.cli.boostrap.get_env",
-                                       return_value="test"):
-                                with patch("quackcore.cli.boostrap.get_terminal_size",
-                                           return_value=(100, 50)):
+                            with patch(
+                                "quackcore.cli.boostrap.get_env", return_value="test"
+                            ):
+                                with patch(
+                                    "quackcore.cli.boostrap.get_terminal_size",
+                                    return_value=(100, 50),
+                                ):
                                     info = get_cli_info()
 
                                     # Verify info contains expected keys

@@ -1,17 +1,18 @@
-"""
-Utility functions for CLI applications.
+# src/quackcore/cli/utils.py
+from __future__ import annotations
 
-This module provides helper functions for common CLI tasks such as
-colored output, progress indicators, and user input handling.
-"""
-
+import getpass
+import itertools
 import os
-import sys
 import shutil
+import sys
+import threading
+import time
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from enum import Enum
 from functools import wraps
-from typing import Any, Callable, Literal, TypeVar, overload, Protocol
-from collections.abc import Iterable, Iterator, Mapping
+from io import TextIOBase
+from typing import Any, Literal, Protocol, TypeVar, overload
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -60,7 +61,7 @@ def supports_color() -> bool:
     Check if the terminal supports color output.
 
     Returns:
-        True if color is supported, False otherwise
+        True if color is supported, False otherwise.
     """
     # Return False if NO_COLOR env var is set (https://no-color.org/)
     if os.environ.get("NO_COLOR") is not None:
@@ -77,7 +78,9 @@ def supports_color() -> bool:
     in_github_actions = "GITHUB_ACTIONS" in os.environ
 
     # If running in CI that supports color, allow it
-    in_ci_with_color = "CI" in os.environ and os.environ.get("CI_FORCE_COLORS", "0") == "1"
+    in_ci_with_color = (
+        "CI" in os.environ and os.environ.get("CI_FORCE_COLORS", "0") == "1"
+    )
 
     return is_tty or in_github_actions or in_ci_with_color
 
@@ -86,10 +89,12 @@ def colorize(
     text: str,
     fg: Literal[
         "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white", "reset"
-    ] | None = None,
+    ]
+    | None = None,
     bg: Literal[
         "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white", "reset"
-    ] | None = None,
+    ]
+    | None = None,
     bold: bool = False,
     dim: bool = False,
     underline: bool = False,
@@ -101,18 +106,18 @@ def colorize(
     Add ANSI color and style to text.
 
     Args:
-        text: The text to colorize
-        fg: Foreground color
-        bg: Background color
-        bold: Whether to make the text bold
-        dim: Whether to make the text dim
-        underline: Whether to underline the text
-        italic: Whether to italicize the text
-        blink: Whether to make the text blink
-        force: Whether to force color even if the terminal doesn't support it
+        text: The text to colorize.
+        fg: Foreground color.
+        bg: Background color.
+        bold: Whether to make the text bold.
+        dim: Whether to make the text dim.
+        underline: Whether to underline the text.
+        italic: Whether to italicize the text.
+        blink: Whether to make the text blink.
+        force: Whether to force color even if the terminal doesn't support it.
 
     Returns:
-        Colorized text
+        Colorized text.
     """
     if not (force or supports_color()):
         return text
@@ -141,7 +146,7 @@ def colorize(
         "reset": Color.BG_RESET,
     }
 
-    codes = []
+    codes: list[str] = []
 
     if bold:
         codes.append(Color.BOLD)
@@ -169,8 +174,8 @@ def print_error(message: str, *, exit_code: int | None = None) -> None:
     Print an error message to stderr.
 
     Args:
-        message: The error message
-        exit_code: If provided, exit with this code after printing
+        message: The error message.
+        exit_code: If provided, exit with this code after printing.
     """
     print(colorize(f"Error: {message}", fg="red", bold=True), file=sys.stderr)
 
@@ -183,7 +188,7 @@ def print_warning(message: str) -> None:
     Print a warning message to stderr.
 
     Args:
-        message: The warning message
+        message: The warning message.
     """
     print(colorize(f"Warning: {message}", fg="yellow"), file=sys.stderr)
 
@@ -193,7 +198,7 @@ def print_success(message: str) -> None:
     Print a success message.
 
     Args:
-        message: The success message
+        message: The success message.
     """
     print(colorize(f"✓ {message}", fg="green"))
 
@@ -203,7 +208,7 @@ def print_info(message: str) -> None:
     Print an informational message.
 
     Args:
-        message: The informational message
+        message: The informational message.
     """
     print(colorize(f"ℹ {message}", fg="blue"))
 
@@ -212,10 +217,10 @@ def print_debug(message: str) -> None:
     """
     Print a debug message.
 
-    Only prints if QUACK_DEBUG environment variable is set.
+    Only prints if the QUACK_DEBUG environment variable is set.
 
     Args:
-        message: The debug message
+        message: The debug message.
     """
     if os.environ.get("QUACK_DEBUG") == "1":
         print(colorize(f"DEBUG: {message}", fg="magenta", dim=True))
@@ -225,19 +230,19 @@ def confirm(
     prompt: str,
     default: bool = False,
     abort: bool = False,
-    abort_message: str = "Operation aborted by user."
+    abort_message: str = "Operation aborted by user.",
 ) -> bool:
     """
     Ask for user confirmation.
 
     Args:
-        prompt: The prompt to display
-        default: Default response if user presses Enter
-        abort: Whether to abort (sys.exit) on negative confirmation
-        abort_message: Message to display if aborting
+        prompt: The prompt to display.
+        default: Default response if user presses Enter.
+        abort: Whether to abort (sys.exit) on negative confirmation.
+        abort_message: Message to display if aborting.
 
     Returns:
-        True if confirmed, False otherwise
+        True if confirmed, False otherwise.
     """
     suffix = " [Y/n]" if default else " [y/N]"
     response = input(f"{prompt}{suffix} ").lower().strip()
@@ -284,25 +289,20 @@ def ask(
     Ask the user for input with optional validation.
 
     Args:
-        prompt: The prompt to display
-        default: Default value if user presses Enter
-        validate: Optional validation function that returns True for valid input
-        hide_input: Whether to hide user input (for passwords)
-        required: Whether input is required (can't be empty)
+        prompt: The prompt to display.
+        default: Default value if user presses Enter.
+        validate: Optional validation function that returns True for valid input.
+        hide_input: Whether to hide user input (for passwords).
+        required: Whether input is required (cannot be empty).
 
     Returns:
-        User input
+        User input.
     """
-    import getpass
-
     suffix = f" [{default}]" if default is not None else ""
     prompt_str = f"{prompt}{suffix}: "
 
     while True:
-        if hide_input:
-            value = getpass.getpass(prompt_str)
-        else:
-            value = input(prompt_str)
+        value = getpass.getpass(prompt_str) if hide_input else input(prompt_str)
 
         if not value:
             if default is not None:
@@ -330,20 +330,20 @@ def ask_choice(
     Ask the user to select from a list of choices.
 
     Args:
-        prompt: The prompt to display
-        choices: List of choices to present
-        default: Default choice index if user presses Enter
-        allow_custom: Whether to allow custom input not in choices
+        prompt: The prompt to display.
+        choices: List of choices to present.
+        default: Default choice index if user presses Enter.
+        allow_custom: Whether to allow custom input not in choices.
 
     Returns:
-        Selected choice
+        Selected choice.
     """
     # Display choices
     print(f"{prompt}")
     for i, choice in enumerate(choices, 1):
-        print(f"{i}. {choice}" + (" (default)" if default == i - 1 else ""))
+        default_note = " (default)" if default == i - 1 else ""
+        print(f"{i}. {choice}{default_note}")
 
-    # Get selection
     if allow_custom:
         print(f"{len(choices) + 1}. Enter custom value")
 
@@ -361,7 +361,10 @@ def ask_choice(
             elif allow_custom and index == len(choices):
                 return input("Enter custom value: ").strip()
             else:
-                print_error(f"Please enter a number between 1 and {len(choices) + (1 if allow_custom else 0)}")
+                print_error(
+                    f"Please enter a number between 1 "
+                    f"and {len(choices) + (1 if allow_custom else 0)}"
+                )
         except ValueError:
             if allow_custom and selection:
                 return selection
@@ -371,14 +374,16 @@ def ask_choice(
 class ProgressCallback(Protocol):
     """Protocol for progress callbacks."""
 
-    def __call__(self, current: int, total: int | None, message: str | None = None) -> None:
+    def __call__(
+        self, current: int, total: int | None, message: str | None = None
+    ) -> None:
         """
         Update progress information.
 
         Args:
-            current: Current progress value
-            total: Total expected value (None if unknown)
-            message: Optional status message
+            current: Current progress value.
+            total: Total expected value (None if unknown).
+            message: Optional status message.
         """
         ...
 
@@ -397,31 +402,30 @@ class ProgressReporter:
         desc: str | None = None,
         unit: str = "it",
         show_eta: bool = True,
-        file=sys.stdout,
-    ):
+        file: TextIOBase = sys.stdout,
+    ) -> None:
         """
         Initialize a progress reporter.
 
         Args:
-            total: Total number of items to process
-            desc: Description of the process
-            unit: Unit of items being processed
-            show_eta: Whether to show estimated time remaining
-            file: File to write progress to
+            total: Total number of items to process.
+            desc: Description of the process.
+            unit: Unit of items being processed.
+            show_eta: Whether to show estimated time remaining.
+            file: File to write progress to.
         """
-        self.total = total
-        self.desc = desc or "Progress"
-        self.unit = unit
-        self.current = 0
-        self.show_eta = show_eta
-        self.file = file
-        self.start_time = None
-        self.last_update_time = None
+        self.total: int | None = total
+        self.desc: str = desc or "Progress"
+        self.unit: str = unit
+        self.current: int = 0
+        self.show_eta: bool = show_eta
+        self.file: TextIOBase = file
+        self.start_time: float | None = None
+        self.last_update_time: float | None = None
         self.callbacks: list[ProgressCallback] = []
 
     def start(self) -> None:
         """Start the progress tracking."""
-        import time
         self.start_time = time.time()
         self.last_update_time = self.start_time
         self.current = 0
@@ -432,25 +436,25 @@ class ProgressReporter:
         Update the progress.
 
         Args:
-            current: Current progress value (increments by 1 if None)
-            message: Optional status message to display
+            current: Current progress value (increments by 1 if None).
+            message: Optional status message to display.
         """
-        import time
-
         now = time.time()
         if current is not None:
             self.current = current
         else:
             self.current += 1
 
-        # Don't update too frequently to avoid flickering
-        if now - (self.last_update_time or 0) < 0.1 and self.current < (self.total or float('inf')):
+        # Avoid updating too frequently to prevent flickering.
+        if now - (self.last_update_time or 0) < 0.1 and self.current < (
+            self.total or float("inf")
+        ):
             return
 
         self.last_update_time = now
         self._draw(message)
 
-        # Call any registered callbacks
+        # Call any registered callbacks.
         for callback in self.callbacks:
             callback(self.current, self.total, message)
 
@@ -459,7 +463,7 @@ class ProgressReporter:
         Mark the progress as complete.
 
         Args:
-            message: Optional final message to display
+            message: Optional final message to display.
         """
         if self.total is None:
             self.total = self.current
@@ -472,18 +476,16 @@ class ProgressReporter:
         Add a callback to be called on progress updates.
 
         Args:
-            callback: Function to call with progress updates
+            callback: Function to call with progress updates.
         """
         self.callbacks.append(callback)
 
     def _draw(self, message: str | None = None) -> None:
         """Draw the progress bar."""
-        import time
-
         if not hasattr(self.file, "isatty") or not self.file.isatty():
-            return  # Don't draw progress bars in non-TTY environments
+            return  # Do not draw progress bars in non-TTY environments
 
-        term_width = get_terminal_size()[0]
+        term_width, _ = get_terminal_size()
 
         if self.total:
             percentage = min(100, self.current * 100 // self.total)
@@ -491,7 +493,6 @@ class ProgressReporter:
             filled_length = int(bar_length * self.current // self.total)
             bar = "█" * filled_length + "░" * (bar_length - filled_length)
 
-            # Calculate ETA
             eta_str = ""
             if self.show_eta and self.start_time and self.current > 0:
                 elapsed = time.time() - self.start_time
@@ -499,11 +500,12 @@ class ProgressReporter:
                 remaining = (self.total - self.current) / rate if rate > 0 else 0
                 eta_str = f" ETA: {int(remaining)}s"
 
-            progress_str = f"\r{self.desc}: {self.current}/{self.total} {self.unit} [{bar}] {percentage}%{eta_str}"
+            progress_str = (
+                f"\r{self.desc}: {self.current}/{self.total} "
+                f"{self.unit} [{bar}] {percentage}%{eta_str}"
+            )
         else:
-            # Spinner for unknown total
-            import itertools
-            spinner = itertools.cycle(['-', '\\', '|', '/'])
+            spinner = itertools.cycle(["-", "\\", "|", "/"])
             progress_str = f"\r{self.desc}: {self.current} {self.unit} {next(spinner)}"
 
         if message:
@@ -513,7 +515,7 @@ class ProgressReporter:
         self.file.flush()
 
 
-class SimpleProgress:
+class SimpleProgress(Iterator[T]):
     """
     Simple progress tracker for iterables.
 
@@ -527,26 +529,23 @@ class SimpleProgress:
         total: int | None = None,
         desc: str | None = None,
         unit: str = "it",
-    ):
+    ) -> None:
         """
         Initialize a simple progress tracker.
 
         Args:
-            iterable: The iterable to track progress for
-            total: Total number of items (if not available from len())
-            desc: Description of the process
-            unit: Unit of items being processed
+            iterable: The iterable to track progress for.
+            total: Total number of items (if not available from len()).
+            desc: Description of the process.
+            unit: Unit of items being processed.
         """
         self.iterable = iter(iterable)
-        self.total = total
-
-        # Try to get length if not provided
+        self.total: int | None = total
         if self.total is None and hasattr(iterable, "__len__"):
             try:
                 self.total = len(iterable)  # type: ignore
             except (TypeError, AttributeError):
                 pass
-
         self.reporter = ProgressReporter(self.total, desc, unit)
         self.reporter.start()
 
@@ -574,19 +573,20 @@ def show_progress(
     """
     Show a progress bar for an iterable.
 
-    If tqdm is available, use it. Otherwise, fall back to a simpler progress indicator.
+    If tqdm is available, use it; otherwise, fall back to a simpler progress indicator.
 
     Args:
-        iterable: The iterable to process
-        total: Total number of items (needed for iterables with no len())
-        desc: Description to show next to the progress bar
-        unit: Unit of items being processed
+        iterable: The iterable to process.
+        total: Total number of items (needed for iterables without __len__).
+        desc: Description to show next to the progress bar.
+        unit: Unit of items being processed.
 
     Returns:
-        An iterator that wraps the original iterable with progress reporting
+        An iterator that wraps the original iterable with progress reporting.
     """
     try:
         from tqdm import tqdm
+
         return tqdm(iterable, total=total, desc=desc, unit=unit)
     except ImportError:
         return SimpleProgress(iterable, total, desc, unit)
@@ -597,13 +597,12 @@ def get_terminal_size() -> tuple[int, int]:
     Get the terminal size.
 
     Returns:
-        Tuple of (columns, lines)
+        A tuple of (columns, lines).
     """
     try:
         terminal_size = shutil.get_terminal_size((80, 24))
         return terminal_size.columns, terminal_size.lines
     except (ImportError, OSError):
-        # Fallback to default size if not available
         return 80, 24
 
 
@@ -612,17 +611,16 @@ def truncate_text(text: str, max_length: int, indicator: str = "...") -> str:
     Truncate text to a maximum length with an indicator.
 
     Args:
-        text: Text to truncate
-        max_length: Maximum length
-        indicator: String to append to truncated text
+        text: Text to truncate.
+        max_length: Maximum length.
+        indicator: String to append to truncated text.
 
     Returns:
-        Truncated text
+        Truncated text.
     """
     if len(text) <= max_length:
         return text
-
-    return text[:max_length - len(indicator)] + indicator
+    return text[: max_length - len(indicator)] + indicator
 
 
 def table(
@@ -636,72 +634,67 @@ def table(
     Format data as a text table.
 
     Args:
-        headers: Table headers
-        rows: Table rows
-        max_width: Maximum width of the table in characters
-        title: Optional title for the table
-        footer: Optional footer for the table
+        headers: Table headers.
+        rows: Table rows.
+        max_width: Maximum width of the table in characters.
+        title: Optional title for the table.
+        footer: Optional footer for the table.
 
     Returns:
-        Formatted table as a string
+        Formatted table as a string.
     """
     if not rows:
         return ""
 
-    # Calculate column widths
     all_rows = [headers] + rows
     col_widths = [
-        max(len(str(row[i])) for row in all_rows)
-        for i in range(len(headers))
+        max(len(str(row[i])) for row in all_rows) for i in range(len(headers))
     ]
 
-    # Adjust for max_width if specified
     if max_width:
-        term_width = get_terminal_size()[0]
+        term_width, _ = get_terminal_size()
         available_width = min(term_width, max_width) - len(headers) - 1
-
-        # Calculate total width and reduce proportionally if needed
         total_width = sum(col_widths)
         if total_width > available_width:
             scale = available_width / total_width
             col_widths = [max(3, int(w * scale)) for w in col_widths]
 
-    # Format the rows
     total_width = sum(col_widths) + len(col_widths) * 3 + 1
     separator = "+" + "+".join("-" * (w + 2) for w in col_widths) + "+"
-    result = []
+    result: list[str] = []
 
-    # Add title if provided
     if title:
         title_line = f"| {title.center(total_width - 4)} |"
         result.extend([separator, title_line, separator])
     else:
         result.append(separator)
 
-    # Format headers
-    header_row = "|" + "|".join(
-        f" {h[:w].ljust(w)} " for h, w in zip(headers, col_widths)
-    ) + "|"
+    header_row = (
+        "|"
+        + "|".join(
+            f" {h[:w].ljust(w)} " for h, w in zip(headers, col_widths, strict=True)
+        )
+        + "|"
+    )
     result.append(header_row)
     result.append(separator)
 
-    # Format data rows
     for row in rows:
-        # Convert all values to strings and handle missing values
         str_row = [str(cell) if cell is not None else "" for cell in row]
-        # Pad or truncate row if needed
         while len(str_row) < len(col_widths):
             str_row.append("")
-
-        data_row = "|" + "|".join(
-            f" {truncate_text(cell, w).ljust(w)} "
-            for cell, w in zip(str_row, col_widths)
-        ) + "|"
+        data_row = (
+            "|"
+            + "|".join(
+                f" {truncate_text(cell, w).ljust(w)} "
+                for cell, w in zip(str_row, col_widths, strict=True)
+            )
+            + "|"
+        )
         result.append(data_row)
 
     result.append(separator)
 
-    # Add footer if provided
     if footer:
         footer_line = f"| {footer.ljust(total_width - 4)} |"
         result.extend([footer_line, separator])
@@ -709,24 +702,23 @@ def table(
     return "\n".join(result)
 
 
-def with_spinner(desc: str = "Processing"):
+def with_spinner(
+    desc: str = "Processing",
+) -> Callable[[Callable[..., U]], Callable[..., U]]:
     """
     Decorator to show a spinner while a function is running.
 
     Args:
-        desc: Description to show next to the spinner
+        desc: Description to show next to the spinner.
 
     Returns:
-        Decorated function
+        A decorator that wraps a function and displays a spinner during its execution.
     """
+
     def decorator(func: Callable[..., U]) -> Callable[..., U]:
         @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> U:
-            import itertools
-            import threading
-            import time
-
-            spinner = itertools.cycle(['-', '\\', '|', '/'])
+        def wrapper(*args: object, **kwargs: object) -> U:
+            spinner = itertools.cycle(["-", "\\", "|", "/"])
             spinning = True
 
             def spin() -> None:
@@ -748,6 +740,7 @@ def with_spinner(desc: str = "Processing"):
                 thread.join()
 
         return wrapper
+
     return decorator
 
 
@@ -756,11 +749,11 @@ def dict_to_table(data: Mapping[str, Any], title: str | None = None) -> str:
     Convert a dictionary to a formatted table.
 
     Args:
-        data: Dictionary to convert
-        title: Optional title for the table
+        data: Dictionary to convert.
+        title: Optional title for the table.
 
     Returns:
-        Formatted table as a string
+        Formatted table as a string.
     """
     headers = ["Key", "Value"]
     rows = [[str(k), str(v)] for k, v in data.items()]
