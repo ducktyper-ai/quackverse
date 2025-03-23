@@ -1,4 +1,4 @@
-# tests/test_plugins/pandoc/test_operations_utils.py
+# tests/test_plugins/pandoc/operations/test_operations_utils.py
 """
 Tests for pandoc plugin operations utility functions.
 

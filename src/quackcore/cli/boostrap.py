@@ -1,4 +1,4 @@
-# src/quackcore/cli/bootstrap.py
+# src/quackcore/cli/boostrap.py
 """
 CLI bootstrapper for QuackCore.
 
