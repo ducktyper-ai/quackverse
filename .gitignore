@@ -88,7 +88,6 @@ wheels/
 MANIFEST
 setup.cfg
 setup.py
-pyproject.toml
 
 # PyInstaller
 *.manifest
