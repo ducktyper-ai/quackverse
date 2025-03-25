@@ -2,9 +2,13 @@
 
 ## Introduction
 
-QuackCore is the foundational library that powers the QuackVerse ecosystem of tools. It provides shared infrastructure for path resolution, configuration management, plugin architecture, and other common functionality that enables seamless integration between specialized tools in the ecosystem.
+**QuackCore** is the foundational library powering the **QuackVerse** ecosystem of tools. It provides shared infrastructure for path resolution, configuration management, plugin architecture, integration protocols, and CLI utilities. This modular core enables seamless interoperability between tools and consistent behavior across the QuackVerse.
 
-This documentation will help you get started with QuackCore and understand how to leverage its features in your own applications or when building new tools for the QuackVerse ecosystem.
+QuackCore is designed for developers building internal tools, CLI agents, automation pipelines, and integrations within the QuackVerse ecosystem. It also powers educational content used in the **AI Product Engineer** learning platform.
+
+This documentation helps you get started with QuackCore and use its features in your own applications or when building new tools in the ecosystem.
+
+---
 
 ## Installation
 
@@ -21,7 +25,7 @@ pip install quackcore
 
 ### Optional Dependencies
 
-QuackCore offers several optional dependency groups for specific functionality:
+QuackCore provides optional dependency groups tailored to specific integrations:
 
 ```bash
 # For Google Drive integration
@@ -43,37 +47,34 @@ pip install "quackcore[dev]"
 pip install "quackcore[google]"
 ```
 
+---
+
 ## Core Modules Overview
 
-QuackCore consists of several key modules, each providing specific functionality:
+QuackCore is organized into distinct modules that provide clear functionality:
 
-### Configuration Management (`quackcore.config`)
+### `quackcore.config`
+Robust configuration system supporting YAML, environment variables, and runtime overrides.
 
-The configuration system provides a flexible way to manage application settings with support for environment-specific overrides.
+### `quackcore.paths`
+Standardized path resolution and project structure detection across environments.
 
-### Path Resolution (`quackcore.paths`)
+### `quackcore.fs`
+Safe and consistent filesystem operations with error handling and structured results.
 
-Utilities for resolving and managing file paths across different operating environments, detecting project structure, and standardizing path handling.
+### `quackcore.plugins`
+Extensible plugin discovery and registration framework to build modular CLI agents and tools.
 
-### Filesystem Operations (`quackcore.fs`)
+### `quackcore.integrations`
+Interfaces to third-party services (Google Drive, Gmail, Notion, Pandoc) through a clean adapter layer.
 
-A robust API for file operations with proper error handling and standardized result objects.
+### `quackcore.errors`
+Structured error handling system with typed exceptions for improved developer experience.
 
-### Plugin Architecture (`quackcore.plugins`)
+### `quackcore.cli`
+Shared CLI environment initialization and I/O utilities for user-friendly tooling.
 
-An extensible system for discovering, registering, and using plugins to extend functionality.
-
-### Integration Framework (`quackcore.integrations`)
-
-Connect with external services like Google Drive, Gmail, and Notion with a consistent interface.
-
-### Error Handling (`quackcore.errors`)
-
-Standardized error classes and utilities for consistent error handling across the ecosystem.
-
-### CLI Tools (`quackcore.cli`)
-
-Utilities for building command-line interfaces with consistent behavior and user experience.
+---
 
 ## Getting Started
 
@@ -247,6 +248,8 @@ except Exception as e:
     print_error(f"Error occurred: {e}", exit_code=1)
 ```
 
+---
+
 ## Advanced Usage
 
 ### Creating a Custom Plugin
@@ -281,11 +284,11 @@ registry.register(MyCustomPlugin())
 ### Working with Pandoc for Document Conversion
 
 ```python
-from quackcore.plugins.pandoc import PandocService
+from quackcore.integrations.pandoc import PandocIntegration
 from pathlib import Path
 
 # Initialize the service
-pandoc = PandocService()
+pandoc = PandocIntegration()
 pandoc.initialize()
 
 # Convert HTML to Markdown
@@ -304,6 +307,15 @@ docx_result = pandoc.markdown_to_docx(
     Path("document.md"),
     Path("output.docx")
 )
+
+# Convert all HTML files in a directory to Markdown
+batch_result = pandoc.convert_directory(
+    Path("html_files"), 
+    "markdown",
+    Path("output_dir")
+)
+if batch_result.success:
+    print(f"Converted {len(batch_result.content)} files")
 ```
 
 ### Creating Custom Configuration
@@ -420,7 +432,29 @@ else:
     print(f"Authentication failed: {auth_result.error}")
 ```
 
-## Best Practices
+---
+
+## QuackVerse Ecosystem Compatibility
+
+QuackCore is the backbone of the **QuackVerse**—a suite of open and internal tools that power:
+- Tutorial scaffolding
+- Generative AI pipelines for content
+- Educational workflows within the **AI Product Engineer** platform
+
+Tools built with QuackCore gain immediate compatibility with:
+- AIPE’s content pipeline
+- The QuackTool CLI standard
+- Plugin chaining and execution environments
+
+To create your own tool:
+- Follow QuackCore’s plugin or integration protocol
+- Use `quackcore.config` and `quackcore.fs` for standard behavior
+- Register your tool with `quackcore.plugins.registry`
+
+This ensures your tool can be consumed by orchestrators like **QuackBuddy** and exposed via upcoming standards such as **MCP**.
+
+---
+
 
 ### Project Structure
 
@@ -574,7 +608,12 @@ QuackFileNotFoundError: Could not find project root directory
 
 For detailed API documentation, refer to the inline documentation in the code or generate API documentation using a tool like Sphinx.
 
-## Contributing to QuackCore
+---
+
+## Contributing
+
+We welcome contributors interested in extending the open-source core of QuackCore.
+
 
 If you're interested in contributing to QuackCore:
 
@@ -584,7 +623,10 @@ If you're interested in contributing to QuackCore:
 4. Run tests: `pytest`
 5. Submit a pull request
 
+---
 
 ## License
 
 QuackCore is licensed under the GNU GPL. See the LICENSE file for details.
+
+*Note: Certain tools built on QuackCore may be proprietary and are licensed separately.*
