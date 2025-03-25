@@ -22,7 +22,7 @@ from quackcore.integrations.google.auth import GoogleAuthProvider
 from quackcore.integrations.google.config import GoogleConfigProvider
 from quackcore.integrations.google.drive.models import DriveFile, DriveFolder
 from quackcore.integrations.protocols import StorageIntegrationProtocol
-from quackcore.integrations.results import IntegrationResult
+from quackcore.integrations.core.results import IntegrationResult
 from quackcore.paths import resolver
 
 NoneType = type(None)

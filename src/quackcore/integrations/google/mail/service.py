@@ -12,7 +12,7 @@ from quackcore.integrations.google.config import GoogleConfigProvider
 from quackcore.integrations.google.mail.config import GmailServiceConfig
 from quackcore.integrations.google.mail.operations import auth, email
 from quackcore.integrations.google.mail.protocols import GmailService, GoogleCredentials
-from quackcore.integrations.results import IntegrationResult
+from quackcore.integrations.core.results import IntegrationResult
 from quackcore.paths import resolver
 
 

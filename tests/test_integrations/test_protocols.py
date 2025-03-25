@@ -5,13 +5,13 @@ Tests for integration protocol interfaces.
 
 from collections.abc import Mapping
 
-from quackcore.integrations.protocols import (
+from quackcore.integrations.core.protocols import (
     AuthProviderProtocol,
     ConfigProviderProtocol,
     IntegrationProtocol,
     StorageIntegrationProtocol,
 )
-from quackcore.integrations.results import AuthResult, ConfigResult, IntegrationResult
+from quackcore.integrations.core.results import AuthResult, ConfigResult, IntegrationResult
 
 
 # Test implementations of each protocol

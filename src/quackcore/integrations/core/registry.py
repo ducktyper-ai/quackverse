@@ -19,7 +19,7 @@ from types import ModuleType
 from typing import Protocol, TypeVar, cast
 
 from quackcore.errors import QuackError
-from quackcore.integrations.protocols import IntegrationProtocol
+from quackcore.integrations.core.protocols import IntegrationProtocol
 
 T = TypeVar("T", bound=IntegrationProtocol)
 

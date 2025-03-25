@@ -21,7 +21,7 @@ from quackcore.integrations.pandoc.operations.utils import (
     track_metrics,
     validate_docx_structure,
 )
-from quackcore.integrations.results import IntegrationResult
+from quackcore.integrations.core.results import IntegrationResult
 
 logger = logging.getLogger(__name__)
 

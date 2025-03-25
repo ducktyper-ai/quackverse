@@ -9,7 +9,7 @@ ensuring consistent behavior across different services and platforms.
 from collections.abc import Mapping
 from typing import Any, Protocol, TypeVar, runtime_checkable
 
-from quackcore.integrations.results import AuthResult, ConfigResult, IntegrationResult
+from quackcore.integrations.core.results import AuthResult, ConfigResult, IntegrationResult
 
 T = TypeVar("T")  # Generic type for results
 F = TypeVar("F")  # Generic type for file content

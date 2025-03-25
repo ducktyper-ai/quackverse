@@ -27,7 +27,7 @@ from quackcore.integrations.pandoc.protocols import (
     BatchConverterProtocol,
     DocumentConverterProtocol,
 )
-from quackcore.integrations.results import IntegrationResult
+from quackcore.integrations.core.results import IntegrationResult
 
 logger = logging.getLogger(__name__)
 

@@ -14,12 +14,12 @@ from typing import Any
 
 from quackcore.errors import QuackConfigurationError, QuackFileNotFoundError
 from quackcore.fs import service as fs
-from quackcore.integrations.protocols import (
+from quackcore.integrations.core.protocols import (
     AuthProviderProtocol,
     ConfigProviderProtocol,
     IntegrationProtocol,
 )
-from quackcore.integrations.results import (
+from quackcore.integrations.core.results import (
     AuthResult,
     ConfigResult,
     IntegrationResult,

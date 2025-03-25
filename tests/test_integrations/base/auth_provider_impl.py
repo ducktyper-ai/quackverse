@@ -6,7 +6,7 @@ Implementation classes for testing auth providers.
 import os
 
 from quackcore.integrations.base import BaseAuthProvider
-from quackcore.integrations.results import AuthResult
+from quackcore.integrations.core.results import AuthResult
 
 
 class MockAuthProvider(BaseAuthProvider):

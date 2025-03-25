@@ -26,7 +26,7 @@ from quackcore.integrations.pandoc.operations import (
     verify_pandoc,
 )
 from quackcore.integrations.pandoc.protocols import PandocConversionProtocol
-from quackcore.integrations.results import IntegrationResult
+from quackcore.integrations.core.results import IntegrationResult
 from quackcore.paths import resolver
 
 logger = logging.getLogger(__name__)

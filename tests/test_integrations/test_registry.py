@@ -6,9 +6,8 @@ Tests for the integration registry module.
 import pytest
 
 from quackcore.errors import QuackError
-from quackcore.integrations.protocols import IntegrationProtocol
-from quackcore.integrations.registry import IntegrationRegistry
-from quackcore.integrations.results import IntegrationResult
+from quackcore.integrations.core.registry import IntegrationRegistry
+from quackcore.integrations.core.results import IntegrationResult
 
 
 # Create a mock integration for testing

@@ -12,7 +12,7 @@ from typing import Protocol, TypeVar, runtime_checkable
 from quackcore.integrations.pandoc.models import (
     ConversionTask,
 )
-from quackcore.integrations.results import IntegrationResult
+from quackcore.integrations.core.results import IntegrationResult
 
 # Generic type variables for flexible return types
 T = TypeVar("T")

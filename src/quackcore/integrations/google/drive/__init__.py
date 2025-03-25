@@ -8,7 +8,7 @@ files, with a consistent interface for uploading, downloading, and managing cont
 
 from quackcore.integrations.google.drive.models import DriveFile, DriveFolder
 from quackcore.integrations.google.drive.service import GoogleDriveService
-from quackcore.integrations.protocols import StorageIntegrationProtocol
+from quackcore.integrations.core.protocols import StorageIntegrationProtocol
 
 __all__ = [
     "GoogleDriveService",

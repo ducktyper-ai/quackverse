@@ -9,15 +9,13 @@ ensures proper runtime protocol checking.
 from collections.abc import Mapping
 from typing import Protocol, TypeVar, runtime_checkable
 
-import pytest
-
-from quackcore.integrations.protocols import (
+from quackcore.integrations.core.protocols import (
     AuthProviderProtocol,
     ConfigProviderProtocol,
     IntegrationProtocol,
     StorageIntegrationProtocol,
 )
-from quackcore.integrations.results import AuthResult, ConfigResult, IntegrationResult
+from quackcore.integrations.core.results import AuthResult, ConfigResult, IntegrationResult
 
 
 # Define a clean minimal implementation of each protocol to avoid

@@ -14,7 +14,7 @@ from quackcore.integrations.pandoc.models import (
     FileInfo,
 )
 from quackcore.integrations.pandoc.service import PandocIntegration
-from quackcore.integrations.protocols import IntegrationProtocol
+from quackcore.integrations.core.protocols import IntegrationProtocol
 
 __all__ = [
     # Main integration class

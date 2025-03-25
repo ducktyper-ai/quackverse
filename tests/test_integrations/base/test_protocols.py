@@ -6,15 +6,13 @@ Tests for integration protocol interfaces.
 from collections.abc import Mapping
 from typing import Protocol, runtime_checkable
 
-import pytest
-
 from quackcore.integrations.protocols import (
     AuthProviderProtocol,
     ConfigProviderProtocol,
     IntegrationProtocol,
     StorageIntegrationProtocol,
 )
-from quackcore.integrations.results import AuthResult, ConfigResult, IntegrationResult
+from quackcore.integrations.core.results import AuthResult, ConfigResult, IntegrationResult
 
 
 # Test implementations of each protocol

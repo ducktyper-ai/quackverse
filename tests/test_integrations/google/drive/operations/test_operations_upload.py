@@ -11,7 +11,7 @@ import pytest
 from quackcore.errors import QuackApiError, QuackIntegrationError
 from quackcore.fs.results import FileInfoResult
 from quackcore.integrations.google.drive.operations import upload
-from quackcore.integrations.results import IntegrationResult
+from quackcore.integrations.core.results import IntegrationResult
 from tests.test_integrations.google.drive.mocks import (
     MockDriveFilesResource,
     MockDriveService,

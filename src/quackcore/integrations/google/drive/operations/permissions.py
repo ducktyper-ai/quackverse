@@ -11,7 +11,7 @@ import logging
 from quackcore.errors import QuackApiError
 from quackcore.integrations.google.drive.protocols import DriveService
 from quackcore.integrations.google.drive.utils.api import execute_api_request
-from quackcore.integrations.results import IntegrationResult
+from quackcore.integrations.core.results import IntegrationResult
 
 
 def set_file_permissions(

@@ -256,28 +256,31 @@ except Exception as e:
 
 ```python
 from quackcore.plugins.protocols import QuackPluginProtocol
-from quackcore.integrations.results import IntegrationResult
+from quackcore.integrations.core.results import IntegrationResult
+
 
 class MyCustomPlugin(QuackPluginProtocol):
     @property
     def name(self) -> str:
         return "MyCustomPlugin"
-    
+
     @property
     def version(self) -> str:
         return "1.0.0"
-    
+
     def initialize(self) -> IntegrationResult:
         # Initialization logic here
         return IntegrationResult.success_result(message="Plugin initialized successfully")
-    
+
     def is_available(self) -> bool:
         return True
-    
+
     # Add custom methods for your plugin
+
 
 # Register the plugin
 from quackcore.plugins import registry
+
 registry.register(MyCustomPlugin())
 ```
 
