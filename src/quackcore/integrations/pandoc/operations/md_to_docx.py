@@ -1,9 +1,9 @@
-# src/quackcore/plugins/pandoc/operations/md_to_docx.py
+# src/quackcore/integrations/pandoc/operations/md_to_docx.py
 """
 Markdown to DOCX conversion operations.
 
 This module provides functions for converting Markdown documents to DOCX
-using pandoc with optimized settings.
+using pandoc with optimized settings and error handling.
 """
 
 import logging
@@ -12,15 +12,16 @@ from pathlib import Path
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs import service as fs
-from quackcore.plugins.pandoc.config import ConversionConfig
-from quackcore.plugins.pandoc.models import ConversionMetrics, ConversionResult
-from quackcore.plugins.pandoc.operations.utils import (
+from quackcore.integrations.pandoc.config import PandocConfig
+from quackcore.integrations.pandoc.models import ConversionDetails, ConversionMetrics
+from quackcore.integrations.pandoc.operations.utils import (
     check_conversion_ratio,
     check_file_size,
     prepare_pandoc_args,
     track_metrics,
     validate_docx_structure,
 )
+from quackcore.integrations.results import IntegrationResult
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +63,7 @@ def _validate_markdown_input(markdown_path: Path) -> int:
 
 
 def _convert_markdown_to_docx_once(
-    markdown_path: Path, output_path: Path, config: ConversionConfig
+    markdown_path: Path, output_path: Path, config: PandocConfig
 ) -> None:
     """
     Perform a single conversion attempt from Markdown to DOCX using pandoc.
@@ -125,9 +126,9 @@ def _get_conversion_output(output_path: Path, start_time: float) -> tuple[float,
 def convert_markdown_to_docx(
     markdown_path: Path,
     output_path: Path,
-    config: ConversionConfig,
+    config: PandocConfig,
     metrics: ConversionMetrics | None = None,
-) -> ConversionResult:
+) -> IntegrationResult[tuple[Path, ConversionDetails]]:
     """
     Convert a Markdown file to DOCX.
 
@@ -138,7 +139,7 @@ def convert_markdown_to_docx(
         metrics: Optional metrics tracker.
 
     Returns:
-        ConversionResult: Result of the conversion.
+        IntegrationResult[tuple[Path, ConversionDetails]]: Result of the conversion.
     """
     filename: str = markdown_path.name
     original_size: int = _validate_markdown_input(markdown_path)
@@ -167,14 +168,18 @@ def convert_markdown_to_docx(
                 )
                 metrics.successful_conversions += 1
 
-            return ConversionResult.success_result(
-                output_path,
-                "markdown",
-                "docx",
-                conversion_time,
-                output_size,
-                original_size,
-                f"Successfully converted {markdown_path} to DOCX",
+            # Create conversion details
+            details = ConversionDetails(
+                source_format="markdown",
+                target_format="docx",
+                conversion_time=conversion_time,
+                output_size=output_size,
+                input_size=original_size,
+            )
+
+            return IntegrationResult.success_result(
+                (output_path, details),
+                message=f"Successfully converted {markdown_path} to DOCX",
             )
 
         except Exception as e:
@@ -191,20 +196,14 @@ def convert_markdown_to_docx(
                     if isinstance(e, QuackIntegrationError)
                     else f"Failed to convert Markdown to DOCX: {str(e)}"
                 )
-                return ConversionResult.error_result(
-                    error_msg, source_format="markdown", target_format="docx"
-                )
+                return IntegrationResult.error_result(error_msg)
             time.sleep(config.retry_mechanism.conversion_retry_delay)
 
-    return ConversionResult.error_result(
-        "Conversion failed after maximum retries",
-        source_format="markdown",
-        target_format="docx",
-    )
+    return IntegrationResult.error_result("Conversion failed after maximum retries")
 
 
 def validate_conversion(
-    output_path: Path, input_path: Path, original_size: int, config: ConversionConfig
+    output_path: Path, input_path: Path, original_size: int, config: PandocConfig
 ) -> list[str]:
     """
     Validate the converted DOCX document.

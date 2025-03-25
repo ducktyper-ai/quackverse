@@ -1,9 +1,9 @@
-# src/quackcore/plugins/pandoc/operations/html_to_md.py
+# src/quackcore/integrations/pandoc/operations/html_to_md.py
 """
 HTML to Markdown conversion operations.
 
 This module provides functions for converting HTML documents to Markdown
-using pandoc with optimized settings.
+using pandoc with optimized settings and error handling.
 """
 
 import logging
@@ -13,20 +13,21 @@ from pathlib import Path
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs import service as fs
-from quackcore.plugins.pandoc.config import ConversionConfig
-from quackcore.plugins.pandoc.models import ConversionMetrics, ConversionResult
-from quackcore.plugins.pandoc.operations.utils import (
+from quackcore.integrations.pandoc.config import PandocConfig
+from quackcore.integrations.pandoc.models import ConversionDetails, ConversionMetrics
+from quackcore.integrations.pandoc.operations.utils import (
     check_conversion_ratio,
     check_file_size,
     prepare_pandoc_args,
     track_metrics,
     validate_html_structure,
 )
+from quackcore.integrations.results import IntegrationResult
 
 logger = logging.getLogger(__name__)
 
 
-def _validate_input(html_path: Path, config: ConversionConfig) -> int:
+def _validate_input(html_path: Path, config: PandocConfig) -> int:
     """
     Validate the input HTML file and return its size.
 
@@ -65,7 +66,7 @@ def _validate_input(html_path: Path, config: ConversionConfig) -> int:
     return original_size
 
 
-def _attempt_conversion(html_path: Path, config: ConversionConfig) -> str:
+def _attempt_conversion(html_path: Path, config: PandocConfig) -> str:
     """
     Perform a single attempt to convert an HTML file to Markdown using pandoc.
 
@@ -103,7 +104,7 @@ def _write_and_validate_output(
     output_path: Path,
     input_path: Path,
     original_size: int,
-    config: ConversionConfig,
+    config: PandocConfig,
     attempt_start: float,
 ) -> tuple[float, int, list[str]]:
     """
@@ -147,9 +148,9 @@ def _write_and_validate_output(
 def convert_html_to_markdown(
     html_path: Path,
     output_path: Path,
-    config: ConversionConfig,
+    config: PandocConfig,
     metrics: ConversionMetrics | None = None,
-) -> ConversionResult:
+) -> IntegrationResult[tuple[Path, ConversionDetails]]:
     """
     Convert an HTML file to Markdown.
 
@@ -160,7 +161,7 @@ def convert_html_to_markdown(
         metrics: Optional metrics tracker.
 
     Returns:
-        ConversionResult: Result of the conversion.
+        IntegrationResult[tuple[Path, ConversionDetails]]: Result of the conversion.
     """
     filename: str = html_path.name
 
@@ -192,11 +193,9 @@ def convert_html_to_markdown(
                     if metrics:
                         metrics.failed_conversions += 1
                         metrics.errors[str(html_path)] = error_str
-                    return ConversionResult.error_result(
-                        "Conversion validation failed after maximum retries",
-                        validation_errors,
-                        "html",
-                        "markdown",
+                    return IntegrationResult.error_result(
+                        "Conversion validation "
+                        "failed after maximum retries: " + error_str
                     )
                 time.sleep(config.retry_mechanism.conversion_retry_delay)
                 continue
@@ -207,14 +206,18 @@ def convert_html_to_markdown(
                 )
                 metrics.successful_conversions += 1
 
-            return ConversionResult.success_result(
-                output_path,
-                "html",
-                "markdown",
-                conversion_time,
-                output_size,
-                original_size,
-                f"Successfully converted {html_path} to Markdown",
+            # Create conversion details
+            details = ConversionDetails(
+                source_format="html",
+                target_format="markdown",
+                conversion_time=conversion_time,
+                output_size=output_size,
+                input_size=original_size,
+            )
+
+            return IntegrationResult.success_result(
+                (output_path, details),
+                message=f"Successfully converted {html_path} to Markdown",
             )
 
         except Exception as e:
@@ -230,18 +233,10 @@ def convert_html_to_markdown(
                 if metrics:
                     metrics.failed_conversions += 1
                     metrics.errors[str(html_path)] = str(e)
-                return ConversionResult.error_result(
-                    error_msg,
-                    source_format="html",
-                    target_format="markdown",
-                )
+                return IntegrationResult.error_result(error_msg)
             time.sleep(config.retry_mechanism.conversion_retry_delay)
 
-    return ConversionResult.error_result(
-        "Conversion failed after maximum retries",
-        source_format="html",
-        target_format="markdown",
-    )
+    return IntegrationResult.error_result("Conversion failed after maximum retries")
 
 
 def post_process_markdown(markdown_content: str) -> str:
@@ -267,7 +262,7 @@ def validate_conversion(
     output_path: Path,
     input_path: Path,
     original_size: int,
-    config: ConversionConfig,
+    config: PandocConfig,
 ) -> list[str]:
     """
     Validate the converted markdown document.

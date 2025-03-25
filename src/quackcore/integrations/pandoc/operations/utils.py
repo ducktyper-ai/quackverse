@@ -1,4 +1,4 @@
-# src/quackcore/plugins/pandoc/operations/utils.py
+# src/quackcore/integrations/pandoc/operations/utils.py
 """
 Utility functions for pandoc operations.
 
@@ -12,8 +12,8 @@ from pathlib import Path
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs import service as fs
-from quackcore.plugins.pandoc.config import ConversionConfig
-from quackcore.plugins.pandoc.models import ConversionMetrics, FileInfo
+from quackcore.integrations.pandoc.config import PandocConfig
+from quackcore.integrations.pandoc.models import ConversionMetrics, FileInfo
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ def verify_pandoc() -> str:
 
 
 def prepare_pandoc_args(
-    config: ConversionConfig,
+    config: PandocConfig,
     source_format: str,
     target_format: str,
     extra_args: list[str] | None = None,
@@ -68,12 +68,17 @@ def prepare_pandoc_args(
     """
     # Base arguments from configuration
     pandoc_opts = config.pandoc_options
-    args = [
+
+    # Create the initial arguments with potential None values
+    raw_args = [
         f"--wrap={pandoc_opts.wrap}",
         "--standalone" if pandoc_opts.standalone else None,
         f"--markdown-headings={pandoc_opts.markdown_headings}",
         "--reference-links" if pandoc_opts.reference_links else None,
     ]
+
+    # Filter out None values to get a clean list[str]
+    args: list[str] = [arg for arg in raw_args if arg is not None]
 
     # Add resource paths
     for path in pandoc_opts.resource_path:
@@ -89,8 +94,7 @@ def prepare_pandoc_args(
     if extra_args:
         args.extend(extra_args)
 
-    # Filter out None values
-    return [arg for arg in args if arg is not None]
+    return args
 
 
 def validate_html_structure(
@@ -172,8 +176,8 @@ def validate_docx_structure(
         return len(errors) == 0, errors
 
     except ImportError:
-        errors.append("python-docx module is not installed")
-        return False, errors
+        logger.warning("python-docx module is not installed")
+        return True, []  # Don't fail if module isn't installed
     except Exception as e:
         errors.append(f"DOCX validation error: {str(e)}")
         return False, errors
@@ -185,7 +189,7 @@ def track_metrics(
     original_size: int,
     converted_size: int,
     metrics: ConversionMetrics,
-    config: ConversionConfig,
+    config: PandocConfig,
 ) -> None:
     """
     Track conversion metrics.

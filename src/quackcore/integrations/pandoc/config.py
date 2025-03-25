@@ -1,20 +1,19 @@
-# src/quackcore/plugins/pandoc/config.py
+# src/quackcore/integrations/pandoc/config.py
 """
-Configuration models for Pandoc plugin.
+Configuration models for Pandoc integration.
 
-This module provides Pydantic models for the pandoc plugin configuration.
+This module provides Pydantic models and configuration provider for the Pandoc
+integration, handling settings for document conversion between various formats.
 """
 
 import logging
 from pathlib import Path
-from typing import ClassVar, TypeVar
+from typing import Any, ClassVar
 
 from pydantic import BaseModel, Field, field_validator
 
 from quackcore.config.models import LoggingConfig
-
-T = TypeVar("T")  # Generic type for flexible typing
-R = TypeVar("R")  # Generic type for flexible typing
+from quackcore.integrations.base import BaseConfigProvider
 
 
 class PandocOptions(BaseModel):
@@ -74,7 +73,7 @@ class MetricsConfig(BaseModel):
     )
 
 
-class ConversionConfig(BaseModel):
+class PandocConfig(BaseModel):
     """Main configuration for document conversion."""
 
     pandoc_options: PandocOptions = Field(
@@ -108,22 +107,20 @@ class ConversionConfig(BaseModel):
     @classmethod
     def validate_output_dir(cls, v: Path) -> Path:
         """Validate that the output directory exists or can be created."""
-        if not v.exists():
-            # We validate but don't create - creation happens at runtime
-            pass
+        # We only validate path format, creation happens at runtime
         return v
 
 
-class PandocConfigProvider:
-    """Configuration provider for Pandoc plugin."""
+class PandocConfigProvider(BaseConfigProvider):
+    """Configuration provider for Pandoc integration."""
 
+    # Class variables with proper typing
     DEFAULT_CONFIG_LOCATIONS: ClassVar[list[str]] = [
         "./config/pandoc_config.yaml",
         "./config/quack_config.yaml",
         "./quack_config.yaml",
         "~/.quack/pandoc_config.yaml",
     ]
-
     ENV_PREFIX: ClassVar[str] = "QUACK_PANDOC_"
 
     def __init__(self, log_level: int = logging.INFO) -> None:
@@ -133,85 +130,14 @@ class PandocConfigProvider:
         Args:
             log_level: Logging level
         """
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(log_level)
+        super().__init__(log_level)
 
     @property
     def name(self) -> str:
         """Get the name of the configuration provider."""
         return "PandocConfig"
 
-    def load_config(self, config_path: str | Path | None = None) -> R:
-        """
-        Load configuration from a file.
-
-        Args:
-            config_path: Path to the configuration file
-
-        Returns:
-            ConfigResult: Result containing configuration data
-        """
-        from quackcore.config.loader import load_config
-        from quackcore.fs.results import DataResult
-
-        try:
-            # Try to load from the specified path
-            if config_path:
-                from quackcore.fs import service as fs
-
-                yaml_result = fs.read_yaml(config_path)
-                if not yaml_result.success:
-                    self.logger.error(
-                        f"Failed to load config from {config_path}: {yaml_result.error}"
-                    )
-                    return DataResult(
-                        success=False,
-                        path=str(config_path),
-                        data={},
-                        format="yaml",
-                        error=yaml_result.error,
-                    )
-                config_data = yaml_result.data
-            else:
-                # Try to load from the QuackCore configuration system
-                config = load_config()
-                config_data = config.custom.get("pandoc", {})
-                if not config_data:
-                    # Use default configuration as fallback
-                    config_data = self.get_default_config()
-
-            # Extract pandoc-specific configuration
-            pandoc_config = self._extract_config(config_data)
-
-            # Validate the configuration
-            if not self.validate_config(pandoc_config):
-                return DataResult(
-                    success=False,
-                    path=str(config_path) if config_path else "default_config",
-                    data={},
-                    format="yaml",
-                    error="Invalid configuration",
-                )
-
-            return DataResult(
-                success=True,
-                path=str(config_path) if config_path else "default_config",
-                data=pandoc_config,
-                format="yaml",
-                message="Successfully loaded configuration",
-            )
-
-        except Exception as e:
-            self.logger.error(f"Error loading configuration: {str(e)}")
-            return DataResult(
-                success=False,
-                path=str(config_path) if config_path else "default_config",
-                data={},
-                format="yaml",
-                error=f"Error loading configuration: {str(e)}",
-            )
-
-    def _extract_config(self, config_data: dict[str, T]) -> dict[str, R]:
+    def _extract_config(self, config_data: dict[str, Any]) -> dict[str, Any]:
         """
         Extract pandoc-specific configuration from the full config data.
 
@@ -232,9 +158,9 @@ class PandocConfigProvider:
         # Otherwise, return the original data for further processing
         return config_data
 
-    def validate_config(self, config: dict[str, T]) -> bool:
+    def validate_config(self, config: dict[str, Any]) -> bool:
         """
-        Validate configuration data.
+        Validate configuration data against the Pandoc configuration schema.
 
         Args:
             config: Configuration data to validate
@@ -243,18 +169,18 @@ class PandocConfigProvider:
             bool: True if configuration is valid
         """
         try:
-            ConversionConfig(**config)
+            PandocConfig(**config)
             return True
         except Exception as e:
             self.logger.error(f"Configuration validation failed: {e}")
             return False
 
-    def get_default_config(self) -> dict[str, R]:
+    def get_default_config(self) -> dict[str, Any]:
         """
-        Get default configuration values.
+        Get default configuration values for Pandoc.
 
         Returns:
             dict[str, Any]: Default configuration values
         """
-        default_config = ConversionConfig().model_dump()
+        default_config = PandocConfig().model_dump()
         return default_config

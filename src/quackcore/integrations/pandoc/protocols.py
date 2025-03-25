@@ -1,19 +1,22 @@
-# src/quackcore/plugins/pandoc/protocols.py
+# src/quackcore/integrations/pandoc/protocols.py
 """
-Protocol definitions for pandoc plugin.
+Protocol definitions for Pandoc integration.
 
-This module defines protocol classes for pandoc conversion services,
+This module defines protocol classes for document conversion services,
 ensuring proper typing throughout the codebase.
 """
 
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import Protocol, TypeVar, runtime_checkable
 
-from quackcore.plugins.pandoc.models import (
-    BatchConversionResult,
-    ConversionResult,
+from quackcore.integrations.pandoc.models import (
     ConversionTask,
 )
+from quackcore.integrations.results import IntegrationResult
+
+# Generic type variables for flexible return types
+T = TypeVar("T")
+R = TypeVar("R")
 
 
 @runtime_checkable
@@ -22,7 +25,7 @@ class DocumentConverterProtocol(Protocol):
 
     def convert_file(
         self, input_path: Path, output_path: Path, output_format: str
-    ) -> ConversionResult:
+    ) -> IntegrationResult[Path]:
         """
         Convert a file from one format to another.
 
@@ -32,7 +35,7 @@ class DocumentConverterProtocol(Protocol):
             output_format: Target format
 
         Returns:
-            ConversionResult: Result of the conversion
+            IntegrationResult[Path]: Result of the conversion
         """
         ...
 
@@ -56,7 +59,7 @@ class BatchConverterProtocol(Protocol):
 
     def convert_batch(
         self, tasks: list[ConversionTask], output_dir: Path | None = None
-    ) -> BatchConversionResult:
+    ) -> IntegrationResult[list[Path]]:
         """
         Convert a batch of files.
 
@@ -65,18 +68,18 @@ class BatchConverterProtocol(Protocol):
             output_dir: Directory to save converted files
 
         Returns:
-            BatchConversionResult: Result of the batch conversion
+            IntegrationResult[list[Path]]: Result of the batch conversion
         """
         ...
 
 
 @runtime_checkable
-class PandocServiceProtocol(Protocol):
-    """Protocol for the main pandoc service."""
+class PandocConversionProtocol(Protocol):
+    """Protocol for the main pandoc conversion operations."""
 
     def html_to_markdown(
         self, html_path: Path, output_path: Path | None = None
-    ) -> ConversionResult:
+    ) -> IntegrationResult[Path]:
         """
         Convert HTML to Markdown.
 
@@ -85,13 +88,13 @@ class PandocServiceProtocol(Protocol):
             output_path: Optional path to save the Markdown file
 
         Returns:
-            ConversionResult: Result of the conversion
+            IntegrationResult[Path]: Result of the conversion
         """
         ...
 
     def markdown_to_docx(
         self, markdown_path: Path, output_path: Path | None = None
-    ) -> ConversionResult:
+    ) -> IntegrationResult[Path]:
         """
         Convert Markdown to DOCX.
 
@@ -100,13 +103,18 @@ class PandocServiceProtocol(Protocol):
             output_path: Optional path to save the DOCX file
 
         Returns:
-            ConversionResult: Result of the conversion
+            IntegrationResult[Path]: Result of the conversion
         """
         ...
 
     def convert_directory(
-        self, input_dir: Path, output_format: str, output_dir: Path | None = None
-    ) -> BatchConversionResult:
+        self,
+        input_dir: Path,
+        output_format: str,
+        output_dir: Path | None = None,
+        file_pattern: str | None = None,
+        recursive: bool = False,
+    ) -> IntegrationResult[list[Path]]:
         """
         Convert all files in a directory.
 
@@ -114,26 +122,10 @@ class PandocServiceProtocol(Protocol):
             input_dir: Directory containing files to convert
             output_format: Target format
             output_dir: Optional directory to save converted files
+            file_pattern: Optional pattern to match files
+            recursive: Whether to search subdirectories
 
         Returns:
-            BatchConversionResult: Result of the conversion
-        """
-        ...
-
-    def is_pandoc_available(self) -> bool:
-        """
-        Check if pandoc is available.
-
-        Returns:
-            bool: True if pandoc is available, False otherwise
-        """
-        ...
-
-    def get_pandoc_version(self) -> str | None:
-        """
-        Get the pandoc version.
-
-        Returns:
-            str | None: Pandoc version string or None if not available
+            IntegrationResult[list[Path]]: Result of the conversion
         """
         ...
