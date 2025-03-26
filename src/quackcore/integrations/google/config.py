@@ -12,7 +12,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from quackcore.integrations.base import BaseConfigProvider
+from quackcore.integrations.core.base import BaseConfigProvider
 
 
 class GoogleBaseConfig(BaseModel):

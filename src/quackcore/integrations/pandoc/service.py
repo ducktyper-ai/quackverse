@@ -13,7 +13,7 @@ from typing import cast
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs import service as fs
-from quackcore.integrations.base import BaseIntegrationService
+from quackcore.integrations.core.base import BaseIntegrationService
 from quackcore.integrations.pandoc.config import PandocConfig, PandocConfigProvider
 from quackcore.integrations.pandoc.converter import DocumentConverter
 from quackcore.integrations.pandoc.models import (

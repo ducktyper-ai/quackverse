@@ -3,7 +3,7 @@
 Implementation classes for testing integration services.
 """
 
-from quackcore.integrations.base import BaseIntegrationService
+from quackcore.integrations.core.base import BaseIntegrationService
 
 
 class MockIntegrationService(BaseIntegrationService):

@@ -1,4 +1,4 @@
-# src/quackcore/integrations/base.py
+# src/quackcore/integrations/core/base.py
 """
 Base classes for QuackCore integrations.
 

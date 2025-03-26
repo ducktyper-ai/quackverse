@@ -13,7 +13,7 @@ from typing import Any, ClassVar
 from pydantic import BaseModel, Field, field_validator
 
 from quackcore.config.models import LoggingConfig
-from quackcore.integrations.base import BaseConfigProvider
+from quackcore.integrations.core.base import BaseConfigProvider
 
 
 class PandocOptions(BaseModel):

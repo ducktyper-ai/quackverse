@@ -7,7 +7,7 @@ retrieval, listing, and management through a consistent interface.
 """
 
 from quackcore.integrations.google.mail.service import GoogleMailService
-from quackcore.integrations.protocols import IntegrationProtocol
+from quackcore.integrations.core.protocols import IntegrationProtocol
 
 __all__ = [
     "GoogleMailService",

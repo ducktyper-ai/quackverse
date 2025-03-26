@@ -6,7 +6,7 @@ from typing import cast
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs import service as fs
-from quackcore.integrations.base import BaseIntegrationService
+from quackcore.integrations.core.base import BaseIntegrationService
 from quackcore.integrations.google.auth import GoogleAuthProvider
 from quackcore.integrations.google.config import GoogleConfigProvider
 from quackcore.integrations.google.mail.config import GmailServiceConfig

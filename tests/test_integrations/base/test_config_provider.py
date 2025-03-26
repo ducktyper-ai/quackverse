@@ -10,7 +10,7 @@ from unittest.mock import patch
 import pytest
 
 from quackcore.errors import QuackConfigurationError, QuackFileNotFoundError
-from quackcore.integrations.base import BaseConfigProvider
+from quackcore.integrations.core.base import BaseConfigProvider
 from tests.test_integrations.base.config_provider_impl import MockConfigProvider
 
 

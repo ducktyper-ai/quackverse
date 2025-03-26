@@ -1,4 +1,4 @@
-# src/quackcore/integrations/results.py
+# src/quackcore/integrations/core/results.py
 """
 Result models for integration operations.
 

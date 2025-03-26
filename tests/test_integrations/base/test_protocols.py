@@ -6,7 +6,7 @@ Tests for integration protocol interfaces.
 from collections.abc import Mapping
 from typing import Protocol, runtime_checkable
 
-from quackcore.integrations.protocols import (
+from quackcore.integrations.core.protocols import (
     AuthProviderProtocol,
     ConfigProviderProtocol,
     IntegrationProtocol,

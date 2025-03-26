@@ -17,11 +17,11 @@ from quackcore.errors import (
     QuackIntegrationError,
 )
 from quackcore.fs import service as fs
-from quackcore.integrations.base import BaseIntegrationService
+from quackcore.integrations.core.base import BaseIntegrationService
 from quackcore.integrations.google.auth import GoogleAuthProvider
 from quackcore.integrations.google.config import GoogleConfigProvider
 from quackcore.integrations.google.drive.models import DriveFile, DriveFolder
-from quackcore.integrations.protocols import StorageIntegrationProtocol
+from quackcore.integrations.core.protocols import StorageIntegrationProtocol
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.paths import resolver
 

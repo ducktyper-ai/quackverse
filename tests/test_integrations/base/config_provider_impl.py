@@ -3,7 +3,7 @@
 Implementation classes for testing config providers.
 """
 
-from quackcore.integrations.base import BaseConfigProvider
+from quackcore.integrations.core.base import BaseConfigProvider
 
 
 class MockConfigProvider(BaseConfigProvider):

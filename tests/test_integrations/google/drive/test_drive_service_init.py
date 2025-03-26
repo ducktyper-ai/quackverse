@@ -6,7 +6,7 @@ Tests for Google Drive service initialization.
 from unittest.mock import MagicMock, patch
 
 from quackcore.integrations.google.drive.service import GoogleDriveService
-from quackcore.integrations.protocols import StorageIntegrationProtocol
+from quackcore.integrations.core.protocols import StorageIntegrationProtocol
 
 
 class TestGoogleDriveServiceInit:

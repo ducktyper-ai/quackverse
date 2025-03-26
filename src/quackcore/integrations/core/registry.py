@@ -1,4 +1,4 @@
-# src/quackcore/integrations/registry.py
+# src/quackcore/integrations/core/registry.py
 """
 Registry for QuackCore integrations.
 

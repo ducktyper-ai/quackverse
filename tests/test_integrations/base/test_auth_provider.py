@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from quackcore.integrations.base import BaseAuthProvider
+from quackcore.integrations.core.base import BaseAuthProvider
 from tests.test_integrations.base.auth_provider_impl import MockAuthProvider
 
 
