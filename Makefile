@@ -52,7 +52,7 @@ install: ## Install quackcore package
 .PHONY: install-all
 install-all: ## Install package with all optional dependencies
 	@echo "${BLUE}Installing quackcore package with all optional dependencies but not dev tools...${RESET}"
-	uv pip install -e ".[gmail,notion,google,drive,pandoc]"
+	uv pip install -e ".[gmail,notion,google,drive,pandoc, llms]"
 	@echo "${GREEN}All packages installed successfully${RESET}"
 
 
