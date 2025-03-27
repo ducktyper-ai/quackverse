@@ -11,26 +11,26 @@ import logging
 import os
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
+# Import these directly from their modules to ensure mocks work
 from quackcore.cli.config import find_project_root, load_config
 from quackcore.cli.context import QuackContext
 from quackcore.cli.logging import setup_logging
-from quackcore.cli.options import CliOptions
 from quackcore.errors import QuackError
 
 
 def init_cli_env(
-    *,
-    config_path: str | Path | None = None,
-    log_level: str | None = None,
-    debug: bool = False,
-    verbose: bool = False,
-    quiet: bool = False,
-    environment: str | None = None,
-    base_dir: str | Path | None = None,
-    cli_args: Mapping[str, Any] | None = None,
-    app_name: str = "quack",
+        *,
+        config_path: str | Path | None = None,
+        log_level: str | None = None,
+        debug: bool = False,
+        verbose: bool = False,
+        quiet: bool = False,
+        environment: str | None = None,
+        base_dir: str | Path | None = None,
+        cli_args: Mapping[str, Any] | None = None,
+        app_name: str = "quack",
 ) -> QuackContext:
     """
     Initialize a CLI environment and return a context object.
@@ -57,23 +57,37 @@ def init_cli_env(
         QuackError: If initialization fails
     """
     try:
-        base_directory = Path(base_dir) if base_dir else find_project_root()
-        effective_config_path = config_path
-        cfg = load_config(effective_config_path, cli_args, environment)
+        # Determine the base directory - explicitly call find_project_root
+        if base_dir:
+            base_directory = Path(base_dir)
+        else:
+            base_directory = find_project_root()  # This should use the imported function
 
+        # Load configuration with explicit call to load_config
+        cfg = load_config(config_path, cli_args, environment)  # This should use the imported function
+
+        # Set debug/verbose flags in the config
+        # Directly modify the attributes to ensure mock objects are updated
         if debug:
             cfg.general.debug = True
         if verbose:
             cfg.general.verbose = True
 
+        # Setup logging with the configured parameters
         logger, get_logger = setup_logging(log_level, debug, quiet, cfg, app_name)
-        env = os.environ.get("QUACK_ENV", "development").lower()
 
+        # Get environment from env var or use 'development' as default
+        env = os.environ.get("QUACK_ENV", "development").lower()
+        if environment:
+            env = environment.lower()
+
+        # Log debug information
         logger.debug(f"QuackCore CLI initialized in {env} environment")
         logger.debug(f"Base directory: {base_directory}")
-        if effective_config_path:
-            logger.debug(f"Config loaded from: {effective_config_path}")
+        if config_path:
+            logger.debug(f"Config loaded from: {config_path}")
 
+        # Create and return a QuackContext with all the initialized components
         return QuackContext(
             config=cfg,
             logger=logger,
@@ -85,16 +99,20 @@ def init_cli_env(
         )
 
     except QuackError as e:
+        # Log and re-raise QuackError
         logging.error(f"Failed to initialize CLI environment: {e}")
         raise
     except Exception as e:
+        # Wrap other exceptions in QuackError
         error = QuackError(f"Unexpected error initializing CLI environment: {e}")
         logging.error(str(error))
         raise error from e
 
+if TYPE_CHECKING:
+    from quackcore.cli.options import CliOptions
 
 def from_cli_options(
-    options: CliOptions,
+    options: "CliOptions",
     cli_args: Mapping[str, Any] | None = None,
     app_name: str = "quack",
 ) -> QuackContext:

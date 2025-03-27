@@ -6,6 +6,7 @@ This module provides functions for setting up logging in CLI applications,
 with flexible configuration options and consistent output formatting.
 """
 
+import atexit
 import logging
 from typing import Protocol, TypeVar
 
@@ -32,10 +33,10 @@ class LoggerFactory(Protocol):
 
 
 def _determine_effective_level(
-    cli_log_level: LogLevel | None,
-    cli_debug: bool,
-    cli_quiet: bool,
-    cfg: QuackConfig | None,
+        cli_log_level: LogLevel | None,
+        cli_debug: bool,
+        cli_quiet: bool,
+        cfg: QuackConfig | None,
 ) -> LogLevel:
     """
     Determine the effective logging level based on various inputs.
@@ -62,11 +63,15 @@ def _determine_effective_level(
     return "INFO"
 
 
+# Keep track of file handlers we've added
+_file_handlers: list[logging.FileHandler] = []
+
+
 def _add_file_handler(
-    root_logger: logging.Logger,
-    cfg: QuackConfig,
-    level_value: int,
-    console_formatter: logging.Formatter | None = None,
+        root_logger: logging.Logger,
+        cfg: QuackConfig,
+        level_value: int,
+        console_formatter: logging.Formatter | None = None,
 ) -> None:
     """
     Add a file handler to the root logger if a log file is specified in the config.
@@ -100,16 +105,31 @@ def _add_file_handler(
 
         root_logger.addHandler(file_handler)
         root_logger.debug(f"Log file configured: {log_file}")
+
+        # Add to our global list for cleanup on exit
+        _file_handlers.append(file_handler)
     except Exception as e:
         root_logger.warning(f"Failed to set up log file: {e}")
 
 
+# Register a cleanup function to close all file handlers on exit
+@atexit.register
+def _cleanup_file_handlers() -> None:
+    """Close all file handlers on exit to prevent resource warnings."""
+    for handler in _file_handlers:
+        try:
+            handler.close()
+        except Exception:
+            pass  # Ignore errors during cleanup
+    _file_handlers.clear()
+
+
 def setup_logging(
-    log_level: LogLevel | None = None,
-    debug: bool = False,
-    quiet: bool = False,
-    config: QuackConfig | None = None,
-    logger_name: str = "quack",
+        log_level: LogLevel | None = None,
+        debug: bool = False,
+        quiet: bool = False,
+        config: QuackConfig | None = None,
+        logger_name: str = "quack",
 ) -> tuple[logging.Logger, LoggerFactory]:
     """
     Set up logging for CLI applications.
