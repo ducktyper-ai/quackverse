@@ -12,11 +12,11 @@ from typing import cast
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.integrations.core.base import BaseIntegrationService
+from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.llms.clients import LLMClient
 from quackcore.integrations.llms.config import LLMConfig, LLMConfigProvider
 from quackcore.integrations.llms.models import ChatMessage, LLMOptions
 from quackcore.integrations.llms.registry import get_llm_client
-from quackcore.integrations.core.results import IntegrationResult
 
 
 class LLMIntegration(BaseIntegrationService):
@@ -34,11 +34,11 @@ class LLMIntegration(BaseIntegrationService):
         Initialize the LLM integration service.
 
         Args:
-            provider: LLM provider name.
-            model: Model name to use.
-            api_key: API key for authentication.
-            config_path: Path to configuration file.
-            log_level: Logging level.
+            provider: LLM provider name
+            model: Model name to use
+            api_key: API key for authentication
+            config_path: Path to configuration file
+            log_level: Logging level
         """
         config_provider = LLMConfigProvider(log_level)
         super().__init__(config_provider, None, config_path, log_level)
@@ -50,12 +50,22 @@ class LLMIntegration(BaseIntegrationService):
 
     @property
     def name(self) -> str:
-        """Get the name of the integration."""
+        """
+        Get the name of the integration.
+
+        Returns:
+            str: Integration name
+        """
         return "LLM"
 
     @property
     def version(self) -> str:
-        """Get the version of the integration."""
+        """
+        Get the version of the integration.
+
+        Returns:
+            str: Integration version
+        """
         return "1.0.0"
 
     def initialize(self) -> IntegrationResult:
@@ -65,7 +75,7 @@ class LLMIntegration(BaseIntegrationService):
         This method loads the configuration and initializes the LLM client.
 
         Returns:
-            IntegrationResult: Result of initialization.
+            IntegrationResult: Result of initialization
         """
         try:
             init_result = super().initialize()
@@ -81,7 +91,7 @@ class LLMIntegration(BaseIntegrationService):
             # Get provider-specific config
             provider_config = cast(dict, llm_config.get(provider, {}))
 
-            # Initialize client
+            # Initialize client with appropriate arguments
             client_args = {
                 "provider": provider,
                 "model": self.model or provider_config.get("default_model"),
@@ -121,10 +131,10 @@ class LLMIntegration(BaseIntegrationService):
         Extract and validate the LLM configuration.
 
         Returns:
-            dict: LLM configuration.
+            dict: LLM configuration
 
         Raises:
-            QuackIntegrationError: If configuration is invalid.
+            QuackIntegrationError: If configuration is invalid
         """
         if not self.config:
             # Get default configuration
@@ -154,12 +164,12 @@ class LLMIntegration(BaseIntegrationService):
         Send a chat completion request to the LLM.
 
         Args:
-            messages: Sequence of messages for the conversation.
-            options: Additional options for the completion request.
-            callback: Optional callback function for streaming responses.
+            messages: Sequence of messages for the conversation
+            options: Additional options for the completion request
+            callback: Optional callback function for streaming responses
 
         Returns:
-            IntegrationResult[str]: Result of the chat completion request.
+            IntegrationResult[str]: Result of the chat completion request
         """
         if init_error := self._ensure_initialized():
             return init_error
@@ -176,10 +186,10 @@ class LLMIntegration(BaseIntegrationService):
         Count the number of tokens in the messages.
 
         Args:
-            messages: Sequence of messages to count tokens for.
+            messages: Sequence of messages to count tokens for
 
         Returns:
-            IntegrationResult[int]: Result containing the token count.
+            IntegrationResult[int]: Result containing the token count
         """
         if init_error := self._ensure_initialized():
             return init_error
@@ -194,10 +204,10 @@ class LLMIntegration(BaseIntegrationService):
         Get the LLM client instance.
 
         Returns:
-            LLMClient: LLM client instance.
+            LLMClient: LLM client instance
 
         Raises:
-            QuackIntegrationError: If the client is not initialized.
+            QuackIntegrationError: If the client is not initialized
         """
         if not self._initialized or not self.client:
             raise QuackIntegrationError("LLM client not initialized")

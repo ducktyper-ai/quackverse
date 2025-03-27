@@ -610,8 +610,6 @@ class OpenAIClient(LLMClient):
                 return IntegrationResult.error_result(f"Error counting tokens: {e}")
 
 
-# src/quackcore/integrations/llms/clients.py (continued)
-
 class MockLLMClient(LLMClient):
     """Mock LLM client for testing and educational purposes."""
 
