@@ -20,6 +20,9 @@ from quackcore.paths import resolver as path_resolver
 # Import config utility functions
 from quackcore.config.utils import load_env_config, normalize_paths
 
+# Detect test environment - make this a module variable so it can be patched in tests
+is_test = 'pytest' in sys.modules or 'unittest' in sys.modules
+
 
 def _is_test_path(path_str: str) -> bool:
     """
@@ -117,9 +120,6 @@ def load_config(
     if environment:
         os.environ["QUACK_ENV"] = environment
 
-    # Detect test environment
-    is_test = 'pytest' in sys.modules or 'unittest' in sys.modules
-
     # Try to load config from file
     try:
         if config_path and is_test and _is_test_path(str(config_path)):
@@ -129,8 +129,8 @@ def load_config(
             # Use the helper function that can be mocked in tests
             config = _get_core_config(config_path)
     except QuackConfigurationError:
-        if config_path and not is_test:
-            # Only re-raise in non-test environment or when not using a test path
+        if config_path and (not is_test or not _is_test_path(str(config_path))):
+            # Re-raise unless it's a test path in a test environment
             raise
         # Otherwise, use a default config
         config = QuackConfig()

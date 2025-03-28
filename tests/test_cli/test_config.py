@@ -146,27 +146,30 @@ class TestLoadConfig:
             # Set up mock to raise error
             mock_get_core_config.side_effect = QuackConfigurationError("Config error")
 
-            # Test when config_path is given but raises an error
-            with pytest.raises(QuackConfigurationError):
-                with patch('quackcore.cli.config._is_test_path', return_value=False):
-                    load_config("/path/to/config.yaml")
+            # Force non-test mode to ensure error is re-raised
+            with patch('quackcore.cli.config._is_test_path', return_value=False):
+                with patch('quackcore.cli.config.is_test', False):
+                    # Test when config_path is given but raises an error
+                    with pytest.raises(QuackConfigurationError):
+                        load_config("/path/to/config.yaml")
 
             # Reset the mock for the next test
             mock_get_core_config.reset_mock()
-
-            # Make sure it still raises the error
             mock_get_core_config.side_effect = QuackConfigurationError("Config error")
 
-            # Test when no config_path is given and error occurs (should return default config)
+            # Test when in test mode - should not raise but return default config
             mock_default_config = MockConfig()
+            with patch('quackcore.config.models.QuackConfig',
+                       return_value=mock_default_config):
+                with patch('quackcore.cli.config.normalize_paths',
+                           return_value=mock_default_config):
+                    with patch('quackcore.cli.config.load_env_config',
+                               return_value=mock_default_config):
+                        with patch('quackcore.cli.config.is_test', True):
+                            config = load_config()
 
-            with patch('quackcore.config.models.QuackConfig', return_value=mock_default_config):
-                with patch('quackcore.cli.config.normalize_paths', return_value=mock_default_config):
-                    with patch('quackcore.cli.config.load_env_config', return_value=mock_default_config):
-                        config = load_config()
-
-                        # Should return the default config
-                        assert isinstance(config, MockConfig)
+                            # Should return the default config
+                            assert isinstance(config, MockConfig)
 
     def test_normalize_paths(self):
         """Test that paths are normalized in the configuration."""
@@ -186,7 +189,7 @@ class TestLoadConfig:
                     # Verify normalize_paths was called
                     mock_normalize.assert_called_once_with(mock_config)
                     assert config is mock_normalized_config
-                    
+
 class TestMergeCliOverrides:
     """Tests for _merge_cli_overrides function."""
 
