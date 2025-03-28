@@ -10,6 +10,7 @@ error messaging.
 import os
 import sys
 from collections.abc import Callable
+from datetime import datetime
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -38,9 +39,9 @@ def format_cli_error(error: Exception) -> str:
                 parts.append(f"  {key}: {value}")
 
         if (
-            hasattr(error, "original_error")
-            and error.original_error
-            and error.original_error is not error
+                hasattr(error, "original_error")
+                and error.original_error
+                and error.original_error is not error
         ):
             parts.append(f"\nOriginal error: {error.original_error}")
 
@@ -49,11 +50,15 @@ def format_cli_error(error: Exception) -> str:
         return str(error)
 
 
+# Move the import out of the function to avoid closure issues
+from quackcore.cli.formatting import print_error as _print_error
+
+
 def handle_errors(
-    error_types: type[Exception] | tuple[type[Exception], ...] = Exception,
-    title: str | None = None,
-    show_traceback: bool = False,
-    exit_code: int | None = None,
+        error_types: type[Exception] | tuple[type[Exception], ...] = Exception,
+        title: str | None = None,
+        show_traceback: bool = False,
+        exit_code: int | None = None,
 ) -> Callable[[Callable[..., T]], Callable[..., T | None]]:
     """
     Decorator to handle errors in a function.
@@ -67,7 +72,6 @@ def handle_errors(
     Returns:
         A decorator function
     """
-    from quackcore.cli.formatting import print_error
 
     def decorator(func: Callable[..., T]) -> Callable[..., T | None]:
         def wrapper(*args: object, **kwargs: object) -> T | None:
@@ -75,11 +79,11 @@ def handle_errors(
                 return func(*args, **kwargs)
             except error_types as e:
                 func_title = title or f"Error in {func.__name__}"
-                print_error(f"{func_title}: {format_cli_error(e)}")
+                # Use the global imported print_error, which can be mocked
+                _print_error(f"{func_title}: {format_cli_error(e)}")
 
                 if show_traceback:
                     import traceback
-
                     traceback.print_exc()
 
                 if exit_code is not None:
@@ -132,6 +136,20 @@ def ensure_single_instance(app_name: str) -> bool:
         return False
 
 
+# Create a separate function to get the current datetime
+# This makes it easier to mock in tests
+def _get_current_datetime() -> datetime:
+    """
+    Get the current datetime.
+
+    This function exists to make the code more testable.
+
+    Returns:
+        Current datetime
+    """
+    return datetime.now()
+
+
 def get_cli_info() -> dict[str, Any]:
     """
     Get information about the CLI environment.
@@ -143,7 +161,6 @@ def get_cli_info() -> dict[str, Any]:
         Dictionary with CLI environment information
     """
     import platform
-    from datetime import datetime
 
     from quackcore.cli.terminal import get_terminal_size
     from quackcore.config.utils import get_env
@@ -151,7 +168,7 @@ def get_cli_info() -> dict[str, Any]:
     info = {
         "platform": platform.platform(),
         "python_version": platform.python_version(),
-        "time": datetime.now().isoformat(),
+        "time": _get_current_datetime().isoformat(),  # Use helper function
         "pid": os.getpid(),
         "cwd": str(Path.cwd()),
         "environment": get_env(),

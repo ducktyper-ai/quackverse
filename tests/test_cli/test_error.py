@@ -11,6 +11,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from quackcore.cli.error import (
+    _print_error,  # Import the imported print_error for easier mocking
+    _get_current_datetime,  # Import the helper function
     ensure_single_instance,
     format_cli_error,
     get_cli_info,
@@ -57,23 +59,22 @@ class TestHandleErrors:
 
     def test_basic_decorator(self) -> None:
         """Test basic usage of the decorator."""
+        # Mock the print_error function BEFORE defining functions with decorators
+        with patch("quackcore.cli.error._print_error") as mock_print_error:
+            # Define a function with the decorator
+            @handle_errors()
+            def successful_function() -> str:
+                return "success"
 
-        # Define a function with the decorator
-        @handle_errors()
-        def successful_function() -> str:
-            return "success"
+            # Test successful execution
+            result = successful_function()
+            assert result == "success"
 
-        # Test successful execution
-        result = successful_function()
-        assert result == "success"
+            # Define a function that raises an error
+            @handle_errors()
+            def failing_function() -> None:
+                raise ValueError("Test error")
 
-        # Define a function that raises an error
-        @handle_errors()
-        def failing_function() -> None:
-            raise ValueError("Test error")
-
-        # Mock print_error function
-        with patch("quackcore.cli.formatting.print_error") as mock_print_error:
             # Call the function
             result = failing_function()
 
@@ -85,19 +86,17 @@ class TestHandleErrors:
 
     def test_with_specific_error_types(self) -> None:
         """Test specifying error types to catch."""
+        with patch("quackcore.cli.error._print_error") as mock_print_error:
+            # Define a function that catches only ValueError
+            @handle_errors(error_types=ValueError)
+            def value_error_function() -> None:
+                raise ValueError("Value error")
 
-        # Define a function that catches only ValueError
-        @handle_errors(error_types=ValueError)
-        def value_error_function() -> None:
-            raise ValueError("Value error")
+            # Define a function that catches multiple error types
+            @handle_errors(error_types=(ValueError, TypeError))
+            def multiple_error_function() -> None:
+                raise TypeError("Type error")
 
-        # Define a function that catches multiple error types
-        @handle_errors(error_types=(ValueError, TypeError))
-        def multiple_error_function() -> None:
-            raise TypeError("Type error")
-
-        # Mock print_error function
-        with patch("quackcore.cli.formatting.print_error") as mock_print_error:
             # Call the functions
             value_error_function()
             multiple_error_function()
@@ -116,12 +115,11 @@ class TestHandleErrors:
 
     def test_with_custom_title(self) -> None:
         """Test using a custom error title."""
+        with patch("quackcore.cli.error._print_error") as mock_print_error:
+            @handle_errors(title="Custom Error Title")
+            def custom_title_function() -> None:
+                raise ValueError("Test error")
 
-        @handle_errors(title="Custom Error Title")
-        def custom_title_function() -> None:
-            raise ValueError("Test error")
-
-        with patch("quackcore.cli.formatting.print_error") as mock_print_error:
             custom_title_function()
 
             # Verify the custom title was used
@@ -129,13 +127,12 @@ class TestHandleErrors:
 
     def test_with_traceback(self) -> None:
         """Test showing traceback."""
-
-        @handle_errors(show_traceback=True)
-        def traceback_function() -> None:
-            raise ValueError("Test error")
-
-        with patch("quackcore.cli.formatting.print_error") as mock_print_error:
+        with patch("quackcore.cli.error._print_error") as mock_print_error:
             with patch("traceback.print_exc") as mock_print_exc:
+                @handle_errors(show_traceback=True)
+                def traceback_function() -> None:
+                    raise ValueError("Test error")
+
                 traceback_function()
 
                 # Verify traceback was printed
@@ -143,13 +140,12 @@ class TestHandleErrors:
 
     def test_with_exit_code(self) -> None:
         """Test exiting with specific code."""
-
-        @handle_errors(exit_code=42)
-        def exit_function() -> None:
-            raise ValueError("Test error")
-
-        with patch("quackcore.cli.formatting.print_error") as mock_print_error:
+        with patch("quackcore.cli.error._print_error") as mock_print_error:
             with patch("sys.exit") as mock_exit:
+                @handle_errors(exit_code=42)
+                def exit_function() -> None:
+                    raise ValueError("Test error")
+
                 exit_function()
 
                 # Verify sys.exit was called with the right code
@@ -247,21 +243,26 @@ class TestGetCliInfo:
 
     def test_basic_info(self) -> None:
         """Test getting basic CLI information."""
+        # Since we can't directly patch datetime.datetime.now in Python 3.13,
+        # we'll patch our helper function instead
+        fixed_datetime = datetime(2023, 1, 1, 12, 0, 0)
+
         # Mock various functions
         with patch("platform.platform", return_value="Test Platform"):
             with patch("platform.python_version", return_value="3.13.0"):
-                with patch("datetime.now") as mock_now:
-                    mock_now.return_value = datetime(2023, 1, 1, 12, 0, 0)
-
+                # Patch our helper function instead of datetime.datetime.now
+                with patch("quackcore.cli.error._get_current_datetime",
+                           return_value=fixed_datetime):
                     with patch("os.getpid", return_value=12345):
                         with patch(
-                            "pathlib.Path.cwd", return_value=Path("/current/dir")
+                                "pathlib.Path.cwd", return_value=Path("/current/dir")
                         ):
                             with patch(
-                                "quackcore.config.utils.get_env", return_value="test"
+                                    "quackcore.config.utils.get_env",
+                                    return_value="test"
                             ):
                                 with patch(
-                                    "quackcore.cli.terminal.get_terminal_size"
+                                        "quackcore.cli.terminal.get_terminal_size"
                                 ) as mock_term_size:
                                     mock_term_size.return_value = (80, 24)
 
@@ -284,12 +285,13 @@ class TestGetCliInfo:
         """Test handling errors getting terminal size."""
         with patch("platform.platform"):
             with patch("platform.python_version"):
-                with patch("datetime.now", return_value=datetime(2023, 1, 1, 12, 0, 0)):
+                with patch("quackcore.cli.error._get_current_datetime",
+                           return_value=datetime(2023, 1, 1, 12, 0, 0)):
                     with patch("os.getpid"):
                         with patch("pathlib.Path.cwd"):
                             with patch("quackcore.config.utils.get_env"):
                                 with patch(
-                                    "quackcore.cli.terminal.get_terminal_size"
+                                        "quackcore.cli.terminal.get_terminal_size"
                                 ) as mock_term_size:
                                     # Simulate an error getting terminal size
                                     mock_term_size.side_effect = OSError(
@@ -306,7 +308,8 @@ class TestGetCliInfo:
         """Test detecting CI environments."""
         with patch("platform.platform"):
             with patch("platform.python_version"):
-                with patch("datetime.now", return_value=datetime(2023, 1, 1, 12, 0, 0)):
+                with patch("quackcore.cli.error._get_current_datetime",
+                           return_value=datetime(2023, 1, 1, 12, 0, 0)):
                     with patch("os.getpid"):
                         with patch("pathlib.Path.cwd"):
                             with patch("quackcore.config.utils.get_env"):
