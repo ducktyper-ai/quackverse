@@ -344,9 +344,21 @@ class TestTable:
                 # Verify truncate_text was called
                 assert mock_truncate.called
 
-                # Description should be truncated
-                assert "This is a very" in result
-                assert "..." in result
+                # Description should be truncated - check column contents
+                # In a constrained table with max_width=30, the Description column
+                # will have width for ~11 characters plus "..." based on our mock
+                lines = result.strip().split("\n")
+                description_cell = ""
+                for line in lines:
+                    if "Test" in line and "|" in line:
+                        parts = line.split("|")
+                        if len(parts) > 2:
+                            description_cell = parts[2].strip()
+
+                # Verify our mock truncation happened
+                assert "..." in description_cell
+                # Verify at least some of the description is visible
+                assert "This is" in description_cell
 
 
 class TestDictToTable:

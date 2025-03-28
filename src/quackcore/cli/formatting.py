@@ -53,21 +53,21 @@ class Color(str, Enum):
 
 
 def colorize(
-    text: str,
-    fg: Literal[
-        "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white", "reset"
-    ]
-    | None = None,
-    bg: Literal[
-        "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white", "reset"
-    ]
-    | None = None,
-    bold: bool = False,
-    dim: bool = False,
-    underline: bool = False,
-    italic: bool = False,
-    blink: bool = False,
-    force: bool = False,
+        text: str,
+        fg: Literal[
+                "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white", "reset"
+            ]
+            | None = None,
+        bg: Literal[
+                "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white", "reset"
+            ]
+            | None = None,
+        bold: bool = False,
+        dim: bool = False,
+        underline: bool = False,
+        italic: bool = False,
+        blink: bool = False,
+        force: bool = False,
 ) -> str:
     """
     Add ANSI color and style to text.
@@ -196,11 +196,11 @@ def print_debug(message: str) -> None:
 
 
 def table(
-    headers: list[str],
-    rows: list[list[str]],
-    max_width: int | None = None,
-    title: str | None = None,
-    footer: str | None = None,
+        headers: list[str],
+        rows: list[list[str]],
+        max_width: int | None = None,
+        title: str | None = None,
+        footer: str | None = None,
 ) -> str:
     """
     Format data as a text table.
@@ -219,56 +219,139 @@ def table(
         return ""
 
     all_rows = [headers] + rows
+
+    # Get terminal width if max_width is not specified or too large
+    term_width, _ = get_terminal_size()
+    if max_width is None or max_width > term_width:
+        max_width = term_width
+
+    # Set minimum column width
+    min_column_width = 3
+
+    # Calculate initial column widths based on content
     col_widths = [
         max(len(str(row[i])) for row in all_rows) for i in range(len(headers))
     ]
 
-    if max_width:
-        term_width, _ = get_terminal_size()
-        available_width = min(term_width, max_width) - len(headers) - 1
-        total_width = sum(col_widths)
-        if total_width > available_width:
-            scale = available_width / total_width
-            col_widths = [max(3, int(w * scale)) for w in col_widths]
+    # Calculate the space required for borders and padding
+    # Each column has '| ' at start and ' ' at end
+    padding_per_column = 3  # '| ' = 2, ' ' = 1
+    border_chars = len(headers) + 1  # One '+' between each column and at start/end
 
-    total_width = sum(col_widths) + len(col_widths) * 3 + 1
+    # Calculate total width including borders and padding
+    total_width = sum(col_widths) + (padding_per_column * len(headers)) - len(
+        headers) + border_chars
+
+    # Adjust column widths if the table exceeds max_width
+    if max_width and total_width > max_width:
+        # Calculate available space for content
+        available_width = max_width - (
+                    border_chars + (padding_per_column * len(headers)) - len(headers))
+
+        # Calculate how much space we need to trim
+        excess = sum(col_widths) - available_width
+
+        if excess > 0:
+            # Get columns that can be shrunk (width > min_column_width)
+            shrinkable_cols = [(i, w) for i, w in enumerate(col_widths) if
+                               w > min_column_width]
+            shrinkable_width = sum(w for _, w in shrinkable_cols) - (
+                        len(shrinkable_cols) * min_column_width)
+
+            # If we can't shrink enough, set all columns to minimum width
+            if shrinkable_width < excess:
+                # Prioritize the columns - keep the first column wider if possible
+                col_widths = [min_column_width] * len(col_widths)
+
+                # If we have extra space, allocate more to important columns
+                if available_width > len(col_widths) * min_column_width:
+                    extra = available_width - (len(col_widths) * min_column_width)
+                    # Give extra space to the first column, then distribute rest evenly
+                    if extra > 0:
+                        first_extra = min(extra,
+                                          7)  # Give up to 7 extra chars to first column
+                        col_widths[0] += first_extra
+                        extra -= first_extra
+
+                        # Distribute remaining extra space
+                        if extra > 0 and len(col_widths) > 1:
+                            per_col = extra // (len(col_widths) - 1)
+                            for i in range(1, len(col_widths)):
+                                col_widths[i] += per_col
+            else:
+                # We can shrink enough - distribute the reduction proportionally
+                for i, width in enumerate(col_widths):
+                    if width > min_column_width:
+                        # Calculate the proportion of this column to the total shrinkable width
+                        shrinkable = width - min_column_width
+                        reduction = int((shrinkable / shrinkable_width) * excess)
+
+                        # Ensure we don't reduce below minimum
+                        col_widths[i] = max(min_column_width, width - reduction)
+
+    # Create the separator line
     separator = "+" + "+".join("-" * (w + 2) for w in col_widths) + "+"
+
+    # Double-check that the separator fits within max_width
+    if max_width and len(separator) > max_width:
+        # If we still exceed max_width, make one final adjustment
+        available_width = max_width - (
+                    border_chars + len(headers) * 2)  # absolute minimum
+        col_widths = [max(1, available_width // len(headers))] * len(headers)
+        separator = "+" + "+".join("-" * (w + 2) for w in col_widths) + "+"
+
     result: list[str] = []
 
     if title:
-        title_line = f"| {title.center(total_width - 4)} |"
+        # Make sure title fits within the separator length
+        title_max_width = len(separator) - 4
+        if len(title) > title_max_width:
+            title = truncate_text(title, title_max_width)
+
+        title_line = f"| {title.center(len(separator) - 4)} |"
         result.extend([separator, title_line, separator])
     else:
         result.append(separator)
 
+    # Create header row
     header_row = (
-        "|"
-        + "|".join(
-            f" {h[:w].ljust(w)} " for h, w in zip(headers, col_widths, strict=True)
-        )
-        + "|"
+            "|"
+            + "|".join(
+        f" {truncate_text(h, w).ljust(w)} " for h, w in
+        zip(headers, col_widths, strict=True)
     )
+            + "|"
+    )
+
     result.append(header_row)
     result.append(separator)
 
+    # Create data rows
     for row in rows:
         str_row = [str(cell) if cell is not None else "" for cell in row]
         while len(str_row) < len(col_widths):
             str_row.append("")
+
         data_row = (
-            "|"
-            + "|".join(
-                f" {truncate_text(cell, w).ljust(w)} "
-                for cell, w in zip(str_row, col_widths, strict=True)
-            )
-            + "|"
+                "|"
+                + "|".join(
+            f" {truncate_text(cell, w).ljust(w)} "
+            for cell, w in zip(str_row, col_widths, strict=True)
         )
+                + "|"
+        )
+
         result.append(data_row)
 
     result.append(separator)
 
     if footer:
-        footer_line = f"| {footer.ljust(total_width - 4)} |"
+        # Make sure footer fits within the separator length
+        footer_max_width = len(separator) - 4
+        if len(footer) > footer_max_width:
+            footer = truncate_text(footer, footer_max_width)
+
+        footer_line = f"| {footer.ljust(len(separator) - 4)} |"
         result.extend([footer_line, separator])
 
     return "\n".join(result)

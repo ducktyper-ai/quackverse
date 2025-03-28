@@ -313,7 +313,11 @@ class TestGetCliInfo:
                     with patch("os.getpid"):
                         with patch("pathlib.Path.cwd"):
                             with patch("quackcore.config.utils.get_env"):
-                                with patch("quackcore.cli.terminal.get_terminal_size"):
+                                # Make sure get_terminal_size returns a valid tuple
+                                with patch(
+                                        "quackcore.cli.terminal.get_terminal_size",
+                                        return_value=(80, 24)
+                                ):
                                     # Test various CI environment variables
                                     for env_var in [
                                         "CI",
