@@ -10,6 +10,9 @@ across all test modules and makes tests more maintainable.
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+# Import the real QuackConfig class to create a proper mock
+from quackcore.config.models import QuackConfig
+
 
 class GeneralConfig:
     """A class to track changes to general config attributes."""
@@ -42,7 +45,7 @@ class MockConfig:
         # Add more commonly used attributes as needed
         self.logging = MagicMock()
         self.logging.level = "INFO"
-        self.logging.file = Path("/mock/path/to/log.log")
+        self.logging.file = None  # Avoid filesystem errors in tests
         self.logging.console = True
 
         self.paths = MagicMock()
@@ -93,7 +96,7 @@ def patch_common_dependencies(func):
     """
     # Apply patches in the correct order from innermost to outermost
     # This is important as the mocks will be passed to the function in reverse order
-    setup_logging_patch = patch('quackcore.cli.logging.setup_logging')
+    setup_logging_patch = patch('quackcore.cli.boostrap.setup_logging')
     load_config_patch = patch('quackcore.cli.boostrap.load_config')
     find_root_patch = patch('quackcore.cli.boostrap.find_project_root')
 

@@ -61,10 +61,10 @@ def init_cli_env(
         if base_dir:
             base_directory = Path(base_dir)
         else:
-            base_directory = find_project_root()  # This should use the imported function
+            base_directory = find_project_root()
 
         # Load configuration with explicit call to load_config
-        cfg = load_config(config_path, cli_args, environment)  # This should use the imported function
+        cfg = load_config(config_path, cli_args, environment)
 
         # Set debug/verbose flags in the config
         # Directly modify the attributes to ensure mock objects are updated
@@ -74,6 +74,7 @@ def init_cli_env(
             cfg.general.verbose = True
 
         # Setup logging with the configured parameters
+        # Important: Use the imported function directly to ensure mocks work
         logger, get_logger = setup_logging(log_level, debug, quiet, cfg, app_name)
 
         # Get environment from env var or use 'development' as default
