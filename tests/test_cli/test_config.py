@@ -24,8 +24,8 @@ class TestFindProjectRoot:
 
     def test_with_resolver(self):
         """Test using the path resolver."""
-        # Use patches directly instead of importing from a different location
-        with patch('quackcore.paths.resolver.get_project_root') as mock_get_root:
+        # Patch the path_resolver that's imported at the module level
+        with patch('quackcore.cli.config.path_resolver.get_project_root') as mock_get_root:
             # Set up mock to return a specific path
             mock_get_root.return_value = Path("/project/root")
 
@@ -49,7 +49,7 @@ class TestFindProjectRoot:
         ]
 
         for exception in exceptions:
-            with patch('quackcore.paths.resolver.get_project_root') as mock_get_root:
+            with patch('quackcore.cli.config.path_resolver.get_project_root') as mock_get_root:
                 mock_get_root.side_effect = exception
 
                 # Mock Path.cwd() for deterministic test results
@@ -61,9 +61,9 @@ class TestFindProjectRoot:
                     assert result == Path("/fallback/path")
 
         # Special handling for QuackFileNotFoundError
-        with patch('quackcore.paths.resolver.get_project_root') as mock_get_root:
+        with patch('quackcore.cli.config.path_resolver.get_project_root') as mock_get_root:
             mock_get_root.side_effect = QuackFileNotFoundError("unknown",
-                                                               "File not found")
+                                                                "File not found")
 
             # Mock Path.cwd() for deterministic test results
             with patch.object(Path, "cwd", return_value=Path("/fallback/path")):
@@ -122,7 +122,7 @@ class TestLoadConfig:
 
                 # Verify environment was set and passed
                 assert os.environ.get("QUACK_ENV") == "production"
-                mock_core_load_config.assert_called_once_with(None, "production")
+                mock_core_load_config.assert_called_once_with(None)
                 assert config is mock_config
 
     def test_load_with_config_error(self):

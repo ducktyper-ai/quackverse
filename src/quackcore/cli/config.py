@@ -15,6 +15,8 @@ from typing import Any
 
 from quackcore.config.models import QuackConfig
 from quackcore.errors import QuackConfigurationError
+# Import resolver at module level for better testability
+from quackcore.paths import resolver as path_resolver
 
 
 def _merge_cli_overrides(
@@ -120,10 +122,9 @@ def find_project_root() -> Path:
     Returns:
         Path to the project root
     """
-    from quackcore.paths import resolver
-
     try:
-        return resolver.get_project_root()
+        # Use the imported resolver
+        return path_resolver.get_project_root()
     except Exception:
         # Catch all exceptions to ensure tests can run without a project root
         return Path.cwd()
