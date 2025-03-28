@@ -82,8 +82,10 @@ class TestConfirm:
 
     def test_abort(self) -> None:
         """Test aborting on negative confirmation."""
+        # We need to patch the import inside the interaction module
         with patch("builtins.input", return_value="n"):
-            with patch("quackcore.cli.formatting.print_error") as mock_print_error:
+            # Patch the print_error directly in the module where it's used
+            with patch("quackcore.cli.interaction.print_error") as mock_print_error:
                 with patch("sys.exit") as mock_exit:
                     confirm("Continue?", abort=True, abort_message="Aborted!")
 
@@ -93,7 +95,7 @@ class TestConfirm:
 
         # Also check that sys.exit is not called for positive confirmation
         with patch("builtins.input", return_value="y"):
-            with patch("quackcore.cli.formatting.print_error") as mock_print_error:
+            with patch("quackcore.cli.interaction.print_error") as mock_print_error:
                 with patch("sys.exit") as mock_exit:
                     confirm("Continue?", abort=True, abort_message="Aborted!")
 
@@ -135,7 +137,7 @@ class TestAsk:
 
         # Test with invalid input followed by valid input
         with patch("builtins.input", side_effect=["abc", "123"]):
-            with patch("quackcore.cli.formatting.print_error") as mock_print_error:
+            with patch("quackcore.cli.interaction.print_error") as mock_print_error:
                 result = ask("Enter number", validate=is_numeric)
 
                 assert result == "123"
@@ -151,7 +153,7 @@ class TestAsk:
         """Test with required input."""
         # Test with empty input followed by valid input
         with patch("builtins.input", side_effect=["", "valid input"]):
-            with patch("quackcore.cli.formatting.print_error") as mock_print_error:
+            with patch("quackcore.cli.interaction.print_error") as mock_print_error:
                 result = ask("Enter value", required=True)
 
                 assert result == "valid input"
@@ -242,7 +244,7 @@ class TestAskChoice:
 
         # Invalid input (out of range) followed by valid input
         with patch("builtins.input", side_effect=["5", "1"]):
-            with patch("quackcore.cli.formatting.print_error") as mock_print_error:
+            with patch("quackcore.cli.interaction.print_error") as mock_print_error:
                 result = ask_choice("Select option", choices)
 
                 assert result == "option1"
@@ -250,7 +252,7 @@ class TestAskChoice:
 
         # Non-numeric input followed by valid input
         with patch("builtins.input", side_effect=["abc", "2"]):
-            with patch("quackcore.cli.formatting.print_error") as mock_print_error:
+            with patch("quackcore.cli.interaction.print_error") as mock_print_error:
                 result = ask_choice("Select option", choices)
 
                 assert result == "option2"
