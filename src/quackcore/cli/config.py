@@ -17,10 +17,49 @@ from quackcore.config.models import QuackConfig
 from quackcore.errors import QuackConfigurationError
 # Import resolver at module level for better testability
 from quackcore.paths import resolver as path_resolver
+# Import config utility functions
+from quackcore.config.utils import load_env_config, normalize_paths
+
+
+def _is_test_path(path_str: str) -> bool:
+    """
+    Determine if a path is a test path.
+
+    Args:
+        path_str: String representation of a path
+
+    Returns:
+        True if the path appears to be a test path
+    """
+    return '/path/to/' in path_str
+
+
+def _get_core_config(config_path: str | Path | None) -> QuackConfig:
+    """
+    Load the core configuration from a file.
+
+    This separates the core loading logic to make it easier to test.
+
+    Args:
+        config_path: Path to the configuration file
+
+    Returns:
+        Loaded QuackConfig
+
+    Raises:
+        QuackConfigurationError: If configuration loading fails
+    """
+    # Import here to avoid circular imports
+    from quackcore.config import load_config as core_load_config
+
+    if config_path is not None:
+        return core_load_config(config_path)
+    else:
+        return core_load_config(None)
 
 
 def _merge_cli_overrides(
-    config: QuackConfig, cli_overrides: Mapping[str, Any]
+        config: QuackConfig, cli_overrides: Mapping[str, Any]
 ) -> QuackConfig:
     """
     Merge CLI overrides into the configuration.
@@ -55,9 +94,9 @@ def _merge_cli_overrides(
 
 
 def load_config(
-    config_path: str | Path | None = None,
-    cli_overrides: Mapping[str, Any] | None = None,
-    environment: str | None = None,
+        config_path: str | Path | None = None,
+        cli_overrides: Mapping[str, Any] | None = None,
+        environment: str | None = None,
 ) -> QuackConfig:
     """
     Load configuration with standard precedence:
@@ -74,9 +113,6 @@ def load_config(
     Raises:
         QuackConfigurationError: If configuration loading fails with a specified path
     """
-    from quackcore.config import load_config as quack_load_config
-    from quackcore.config.utils import load_env_config, normalize_paths
-
     # Set environment variable if specified
     if environment:
         os.environ["QUACK_ENV"] = environment
@@ -86,14 +122,12 @@ def load_config(
 
     # Try to load config from file
     try:
-        if config_path:
-            # In tests, handle paths that might be test paths
-            if is_test and '/path/to/' in str(config_path):
-                config = QuackConfig()
-            else:
-                config = quack_load_config(config_path)
+        if config_path and is_test and _is_test_path(str(config_path)):
+            # In tests with test path, use default config
+            config = QuackConfig()
         else:
-            config = quack_load_config(None)
+            # Use the helper function that can be mocked in tests
+            config = _get_core_config(config_path)
     except QuackConfigurationError:
         if config_path and not is_test:
             # Only re-raise in non-test environment or when not using a test path

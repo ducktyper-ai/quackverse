@@ -10,22 +10,12 @@ across all test modules and makes tests more maintainable.
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-# Import the real QuackConfig class to create a proper mock
 from quackcore.config.models import QuackConfig
 
 
-class GeneralConfig:
-    """A class to track changes to general config attributes."""
-
-    def __init__(self, debug=False, verbose=False):
-        """Initialize with default values."""
-        self.debug = debug
-        self.verbose = verbose
-
-
-class MockConfig:
+class MockConfig(QuackConfig):
     """
-    Mock configuration class for testing.
+    Mock configuration class for testing that inherits from QuackConfig.
 
     This provides a standard mock implementation that can be used across test modules,
     with easily modifiable attributes that match the QuackConfig structure.
@@ -39,16 +29,18 @@ class MockConfig:
             debug: Initial value for general.debug
             verbose: Initial value for general.verbose
         """
-        # Create a general namespace that actually tracks state
-        self.general = GeneralConfig(debug, verbose)
+        # Initialize the base QuackConfig
+        super().__init__()
 
-        # Add more commonly used attributes as needed
-        self.logging = MagicMock()
+        # Override the values we want to customize
+        self.general.debug = debug
+        self.general.verbose = verbose
+
+        # Add commonly used test values
         self.logging.level = "INFO"
-        self.logging.file = None  # Avoid filesystem errors in tests
+        self.logging.file = None  # Avoid filesystem errors
         self.logging.console = True
 
-        self.paths = MagicMock()
         self.paths.base_dir = Path("/mock/base/dir")
         self.paths.output_dir = Path("/mock/output/dir")
 
