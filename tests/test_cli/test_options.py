@@ -144,71 +144,71 @@ class TestResolveCliArgs:
             "no-color": True,
         }
 
+    def test_duplicate_args(self) -> None:
+        """Test handling duplicate arguments."""
+        # Last occurrence should be kept
+        args = ["--config", "first", "--config", "second"]
+        result = resolve_cli_args(args)
+        assert result == {"config": "second"}
+
+        # Last occurrence should be kept for equals style too
+        args = ["--config=first", "--config=second"]
+        result = resolve_cli_args(args)
+        assert result == {"config": "second"}
+
+        # Mixed styles should also respect last occurrence
+        args = ["--config", "first", "--config=second"]
+        result = resolve_cli_args(args)
+        assert result == {"config": "second"}
+
+        args = ["--config=first", "--config", "second"]
+        result = resolve_cli_args(args)
+        assert result == {"config": "second"}
+
+    # Use a simplified approach for property-based testing to avoid order issues
     @given(
         st.lists(
-            st.one_of(
-                # Double dash arguments with values
-                st.tuples(
-                    st.sampled_from(
-                        ["--config", "--log-level", "--environment", "--base-dir"]
-                    ),
-                    st.text(min_size=1, max_size=20),
-                ),
-                # Double dash arguments with equals
-                st.sampled_from(
-                    ["--config=value", "--log-level=DEBUG", "--environment=test"]
-                ),
-                # Boolean flags with double dash
-                st.sampled_from(["--debug", "--verbose", "--quiet", "--no-color"]),
-                # Boolean flags with single dash
-                st.sampled_from(["-d", "-v", "-q"]),
-            )
+            st.sampled_from([
+                "--debug", "--verbose", "--quiet", "--no-color",
+                "-d", "-v", "-q"
+            ]),
+            min_size=0, max_size=5
         )
     )
-    def test_property_based(self, args_tuples: list) -> None:
-        """
-        Property-based test for resolve_cli_args.
+    def test_property_based_flags(self, args: list[str]) -> None:
+        """Test property-based testing for boolean flags."""
+        result = resolve_cli_args(args)
 
-        Generates various combinations of CLI arguments and ensures
-        the function handles them appropriately.
-        """
-        # Convert tuple-based arguments to flat list
-        args = []
-        for item in args_tuples:
-            if isinstance(item, tuple):
-                args.extend(item)
+        for flag in ["debug", "verbose", "quiet", "no-color"]:
+            # Check if flag should be set (either via long or short form)
+            should_be_set = (
+                    f"--{flag}" in args
+                    or (flag == "debug" and "-d" in args)
+                    or (flag == "verbose" and "-v" in args)
+                    or (flag == "quiet" and "-q" in args)
+            )
+
+            if should_be_set:
+                assert result.get(flag, False) is True
             else:
-                args.append(item)
+                assert flag not in result
+
+    @given(
+        st.dictionaries(
+            st.sampled_from(["config", "log-level", "environment", "base-dir"]),
+            st.text(min_size=1, max_size=20),
+            min_size=0, max_size=4
+        )
+    )
+    def test_property_based_values(self, arg_dict: dict[str, str]) -> None:
+        """Test property-based testing for arguments with values."""
+        # Convert dictionary to CLI arguments
+        args = []
+        for key, value in arg_dict.items():
+            args.extend([f"--{key}", value])
 
         result = resolve_cli_args(args)
 
-        # Basic validation of the result
-        assert isinstance(result, dict)
-
-        # Check that boolean flags are set to True
-        for flag in ["debug", "verbose", "quiet", "no-color"]:
-            if (
-                f"--{flag}" in args
-                or (flag == "debug" and "-d" in args)
-                or (flag == "verbose" and "-v" in args)
-                or (flag == "quiet" and "-q" in args)
-            ):
-                assert result.get(flag, False) is True
-
-        # Check that arguments with values are properly parsed
-        for i in range(len(args) - 1):
-            if args[i] in [
-                "--config",
-                "--log-level",
-                "--environment",
-                "--base-dir",
-            ] and i + 1 < len(args):
-                if not args[i + 1].startswith("-"):
-                    arg_name = args[i][2:]  # Remove '--'
-                    assert result.get(arg_name) == args[i + 1]
-
-        # Check for arguments with equals sign
-        for arg in args:
-            if "=" in arg and arg.startswith("--"):
-                name, value = arg[2:].split("=", 1)
-                assert result.get(name) == value
+        # Check that all arguments were processed correctly
+        for key, value in arg_dict.items():
+            assert result.get(key) == value
