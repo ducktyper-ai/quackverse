@@ -85,9 +85,12 @@ class TestAddFileHandler:
 
         config = QuackConfig(logging={"file": Path("/path/to/logfile.log")})
 
-        # Mock the fs service
+        # Mock the fs service by patching the import where it's used
         with patch("quackcore.fs.service.create_directory") as mock_create_dir:
-            mock_create_dir.return_value.success = True
+            # Set up the success attribute on the result object
+            result = MagicMock()
+            result.success = True
+            mock_create_dir.return_value = result
 
             with patch("logging.FileHandler") as mock_file_handler:
                 mock_handler = MagicMock()
@@ -95,8 +98,8 @@ class TestAddFileHandler:
 
                 _add_file_handler(root_logger, config, logging.INFO)
 
-                # Verify the directory was created
-                mock_create_dir.assert_called_once()
+                # Verify the directory was created with the correct path
+                mock_create_dir.assert_called_once_with(Path("/path/to"), exist_ok=True)
 
                 # Verify a file handler was created
                 mock_file_handler.assert_called_once_with(
@@ -118,8 +121,11 @@ class TestAddFileHandler:
 
         # Mock directory creation failure
         with patch("quackcore.fs.service.create_directory") as mock_create_dir:
-            mock_create_dir.return_value.success = False
-            mock_create_dir.return_value.error = "Permission denied"
+            # Set up a failed result
+            result = MagicMock()
+            result.success = False
+            result.error = "Permission denied"
+            mock_create_dir.return_value = result
 
             with patch("logging.FileHandler") as mock_file_handler:
                 # Function should catch the exception and log warning
@@ -145,7 +151,10 @@ class TestAddFileHandler:
         config = QuackConfig(logging={"file": Path("/path/to/logfile.log")})
 
         with patch("quackcore.fs.service.create_directory") as mock_create_dir:
-            mock_create_dir.return_value.success = True
+            # Set up a successful result
+            result = MagicMock()
+            result.success = True
+            mock_create_dir.return_value = result
 
             with patch("logging.FileHandler") as mock_file_handler:
                 mock_file_handler.side_effect = PermissionError("Permission denied")

@@ -8,6 +8,7 @@ with flexible configuration options and consistent output formatting.
 
 import atexit
 import logging
+from pathlib import Path
 from typing import Protocol, TypeVar
 
 from quackcore.cli.options import LogLevel
@@ -82,15 +83,28 @@ def _add_file_handler(
         level_value: The numeric logging level
         console_formatter: Optional formatter to use for consistency with console output
     """
-    from quackcore.fs import service as fs
+    # Import here to avoid import at module level, making it easier to mock in tests
+    from quackcore.fs.service import create_directory
 
     try:
         log_file = cfg.logging.file
         if not log_file:
             return
 
+        # Ensure log_file is a Path object
+        log_file = Path(log_file) if not isinstance(log_file, Path) else log_file
         log_dir = log_file.parent
-        fs.create_directory(log_dir, exist_ok=True)
+
+        # Create the log directory
+        result = create_directory(log_dir, exist_ok=True)
+
+        # Return early if directory creation failed
+        if not result.success:
+            root_logger.warning(f"Failed to create log directory: {result.error}")
+            return
+
+        # Add this debug line to help with troubleshooting
+        root_logger.debug(f"Log directory created: {log_dir}")
 
         file_handler = logging.FileHandler(str(log_file))
         file_handler.setLevel(level_value)
