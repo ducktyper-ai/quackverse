@@ -163,23 +163,33 @@ def setup_logging(
         - The root logger instance
         - A logger factory function to create named loggers
     """
+    # Determine the effective log level
     effective_level: LogLevel = _determine_effective_level(
         log_level, debug, quiet, config
     )
 
-    root_logger = logging.getLogger(logger_name)
+    # Convert string level to numeric value
     try:
         level_value = getattr(logging, effective_level)
     except (AttributeError, TypeError):
         level_value = logging.INFO
 
+    # Configure the root logger
+    root_logger = logging.getLogger(logger_name)
+
+    # Important: Set propagate to False for the root logger to avoid duplicate logs
+    root_logger.propagate = False
+
+    # Set the level and clear existing handlers
     root_logger.setLevel(level_value)
     for handler in root_logger.handlers[:]:
         root_logger.removeHandler(handler)
 
+    # Add console handler
     console_handler = logging.StreamHandler()
     console_handler.setLevel(level_value)
 
+    # Configure formatter based on debug mode
     if effective_level == "DEBUG":
         formatter = logging.Formatter(
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -190,11 +200,16 @@ def setup_logging(
     console_handler.setFormatter(formatter)
     root_logger.addHandler(console_handler)
 
+    # Add file handler if configured
     if config and config.logging.file:
         _add_file_handler(root_logger, config, level_value, formatter)
 
+    # Factory function that creates loggers with the correct name and level
     def get_logger(name: str) -> logging.Logger:
         """Create or get a named logger with the configured settings."""
-        return logging.getLogger(f"{logger_name}.{name}")
+        logger = logging.getLogger(f"{logger_name}.{name}")
+        # Explicitly set the level to match the root logger
+        logger.setLevel(root_logger.level)
+        return logger
 
     return root_logger, get_logger
