@@ -14,9 +14,8 @@ from googleapiclient.http import MediaInMemoryUpload
 
 from quackcore.errors import QuackApiError, QuackIntegrationError
 from quackcore.fs import service as fs
-from quackcore.integrations.google.drive.operations.permissions import (
-    set_file_permissions,
-)
+# Import the module directly to make mocking easier
+from quackcore.integrations.google.drive.operations import permissions
 from quackcore.integrations.google.drive.protocols import (
     DriveService,
     GoogleCredentials,
@@ -151,9 +150,10 @@ def upload_file(
         # Get the file ID as a string
         file_id = str(file["id"])
 
-        # Set permissions if needed
+        # Set permissions if needed - use module-level access
         if make_public:
-            perm_result = set_file_permissions(
+            # Use module-level access for better testability
+            perm_result = permissions.set_file_permissions(
                 drive_service, file_id, "reader", "anyone", logger
             )
             if not perm_result.success:
