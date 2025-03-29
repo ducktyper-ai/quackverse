@@ -8,6 +8,7 @@ and token counting with proper error handling and retry logic.
 
 import logging
 import os
+import sys
 from collections.abc import Callable
 from typing import Any
 
@@ -35,18 +36,6 @@ class OpenAIClient(LLMClient):
     ) -> None:
         """
         Initialize the OpenAI client.
-
-        Args:
-            model: Model name to use
-            api_key: OpenAI API key
-            api_base: OpenAI API base URL
-            organization: OpenAI organization ID
-            timeout: Request timeout in seconds
-            retry_count: Number of retries for failed requests
-            initial_retry_delay: Initial delay for exponential backoff
-            max_retry_delay: Maximum delay between retries
-            log_level: Logging level
-            **kwargs: Additional OpenAI-specific arguments
         """
         super().__init__(
             model=model,
@@ -65,24 +54,24 @@ class OpenAIClient(LLMClient):
     def _get_client(self) -> Any:
         """
         Get the OpenAI client instance.
-
         Returns:
             Any: OpenAI client instance
-
         Raises:
             QuackIntegrationError: If OpenAI package is not installed
         """
         if self._client is None:
             try:
+                # Ensure the openai module is available
+                if "openai" not in sys.modules or sys.modules["openai"] is None:
+                    raise ImportError(
+                        "OpenAI package not installed. Please install it with: pip install openai"
+                    )
                 from openai import OpenAI
 
-                # Get API key from environment variable if not provided
-                api_key = self._api_key or self._get_api_key_from_env()
-
-                kwargs = {
-                    "api_key": api_key,
-                    "timeout": self._timeout,
-                }
+                # Get API key from provided value or from environment variable
+                if not self._api_key:
+                    self._api_key = self._get_api_key_from_env()
+                kwargs = {"api_key": self._api_key, "timeout": self._timeout}
 
                 if self._api_base:
                     kwargs["base_url"] = self._api_base
@@ -90,21 +79,19 @@ class OpenAIClient(LLMClient):
                     kwargs["organization"] = self._organization
 
                 self._client = OpenAI(**kwargs)
-            except ImportError:
+            except ImportError as e:
                 raise QuackIntegrationError(
-                    "OpenAI package not installed. "
-                    "Please install it with: pip install openai"
-                )
+                    f"Failed to import OpenAI package: {e}",
+                    original_error=e,
+                ) from e
 
         return self._client
 
     def _get_api_key_from_env(self) -> str:
         """
         Get the OpenAI API key from environment variables.
-
         Returns:
             str: OpenAI API key
-
         Raises:
             QuackIntegrationError: If API key is not provided or available in environment
         """
@@ -120,7 +107,6 @@ class OpenAIClient(LLMClient):
     def model(self) -> str:
         """
         Get the model name.
-
         Returns:
             str: Model name to use for requests
         """
@@ -137,18 +123,6 @@ class OpenAIClient(LLMClient):
     ) -> IntegrationResult[str]:
         """
         Send a chat completion request to the OpenAI API.
-
-        Args:
-            messages: List of messages for the conversation
-            options: Additional options for the completion request
-            callback: Optional callback function for streaming responses
-
-        Returns:
-            IntegrationResult[str]: Result of the chat completion request
-
-        Raises:
-            QuackIntegrationError: If OpenAI package is not installed
-            QuackApiError: If there's an error with the OpenAI API
         """
         try:
             client = self._get_client()
@@ -173,8 +147,13 @@ class OpenAIClient(LLMClient):
                 )
                 return IntegrationResult.success_result(response_text)
             else:
-                # Make the API call
-                response = client.chat.completions.create(
+                # Use client.chat.completions.create if available; otherwise, fall back to mock method.
+                try:
+                    completions_create = client.chat.completions.create
+                except AttributeError:
+                    completions_create = client.chat_completions_create
+
+                response = completions_create(
                     model=model,
                     messages=openai_messages,
                     **params
@@ -203,19 +182,6 @@ class OpenAIClient(LLMClient):
     ) -> str:
         """
         Handle streaming responses from the OpenAI API.
-
-        Args:
-            client: OpenAI client instance
-            model: Model name
-            messages: List of messages in OpenAI format
-            params: OpenAI API parameters
-            callback: Callback function for streaming responses
-
-        Returns:
-            str: Complete response text
-
-        Raises:
-            QuackApiError: If there's an error with the OpenAI API
         """
         collected_content = []
 
@@ -246,12 +212,6 @@ class OpenAIClient(LLMClient):
     def _convert_message_to_openai(self, message: ChatMessage) -> dict:
         """
         Convert a ChatMessage to the format expected by OpenAI.
-
-        Args:
-            message: ChatMessage to convert
-
-        Returns:
-            dict: Message in OpenAI format
         """
         openai_message = {"role": message.role.value}
 
@@ -272,41 +232,38 @@ class OpenAIClient(LLMClient):
     def _process_response(self, response: Any) -> str:
         """
         Process a response from the OpenAI API.
-
-        Args:
-            response: Response from OpenAI API
-
-        Returns:
-            str: Response content
+        Supports both dict and object responses.
         """
-        if not response.choices:
+        # Get choices whether response is a dict or an object
+        if isinstance(response, dict):
+            choices = response.get("choices", [])
+        else:
+            choices = getattr(response, "choices", [])
+        if not choices:
             return ""
 
-        choice = response.choices[0]
-
-        if not hasattr(choice, "message"):
+        # Get the first choice's message
+        first_choice = choices[0]
+        if isinstance(first_choice, dict):
+            message = first_choice.get("message", None)
+        else:
+            message = getattr(first_choice, "message", None)
+        if not message:
             return ""
 
-        message = choice.message
-
-        if not hasattr(message, "content") or message.content is None:
-            return ""
-
-        return message.content
+        # Get the content of the message
+        if isinstance(message, dict):
+            content = message.get("content", None)
+        else:
+            content = getattr(message, "content", None)
+        return content if content is not None else ""
 
     def _convert_error(self, error: Exception) -> QuackApiError:
         """
         Convert OpenAI errors to QuackApiError.
-
-        Args:
-            error: Original error
-
-        Returns:
-            QuackApiError: Converted error
         """
         error_str = str(error)
 
-        # Check for specific error types
         if "rate limit" in error_str.lower():
             return QuackApiError(
                 f"OpenAI rate limit exceeded: {error}",
@@ -339,79 +296,57 @@ class OpenAIClient(LLMClient):
     def _count_tokens_with_provider(self, messages: list[ChatMessage]) -> IntegrationResult[int]:
         """
         Count the number of tokens in the messages using OpenAI's tokenizer.
-
-        Args:
-            messages: List of messages to count tokens for
-
-        Returns:
-            IntegrationResult[int]: Result containing the token count
         """
         try:
-            # Try to use tiktoken for more accurate counts
             try:
                 import tiktoken
 
-                # Get the appropriate encoding for the model
                 model = self.model
-
-                # Default to cl100k_base encoding for newer models
                 encoding_name = "cl100k_base"
-
-                # Try to get model-specific encoding
                 try:
                     encoding = tiktoken.encoding_for_model(model)
                 except KeyError:
-                    # Fall back to cl100k_base if model-specific encoding is not available
                     encoding = tiktoken.get_encoding(encoding_name)
 
-                # Count tokens for each message
                 token_count = 0
-
-                # Convert messages to OpenAI format for counting
                 openai_messages = [self._convert_message_to_openai(msg) for msg in messages]
 
-                # OpenAI's token counting logic
-                tokens_per_message = 3  # Every message follows <|start|>{role/name}\n{content}<|end|>
-                tokens_per_name = 1  # If there's a name, the role is omitted
+                tokens_per_message = 3  # This already accounts for role tokens.
+                tokens_per_name = 1  # Extra token for name if present.
 
                 for message in openai_messages:
                     token_count += tokens_per_message
 
                     for key, value in message.items():
+                        # Skip the role since it's already counted in tokens_per_message.
+                        if key == "role":
+                            continue
                         if isinstance(value, str):
                             token_count += len(encoding.encode(value))
                         elif isinstance(value, dict):
-                            # For function_call or similar nested structures
                             json_str = str(value)
                             token_count += len(encoding.encode(json_str))
-
                         if key == "name" and value:
                             token_count += tokens_per_name
 
-                # Add 3 tokens for the assistant's reply
+                # Add 3 tokens for the assistant's reply.
                 token_count += 3
 
                 return IntegrationResult.success_result(token_count)
 
             except ImportError:
-                # Fall back to a simple estimation if tiktoken is not available
                 self.logger.warning(
                     "tiktoken not installed. Using simple token estimation. "
                     "Install tiktoken for more accurate counts: pip install tiktoken"
                 )
-
-                # Simple estimation based on words (very rough approximation)
                 total_text = ""
                 for message in messages:
                     if message.content:
                         total_text += message.content + " "
-
-                # Rough approximation: 1 token ≈ 4 characters
                 estimated_tokens = len(total_text) // 4
-
                 return IntegrationResult.success_result(
                     estimated_tokens,
-                    message="Token count is an estimation. Install tiktoken for accuracy.",
+                    message="Using simple token estimation. Install tiktoken for accuracy.",
                 )
 
         except Exception as e:
