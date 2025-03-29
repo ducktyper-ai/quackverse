@@ -8,7 +8,6 @@ including file metadata handling and media upload.
 
 import logging
 from pathlib import Path
-from typing import Any
 
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaInMemoryUpload
@@ -83,13 +82,13 @@ def resolve_file_details(
 
 
 def upload_file(
-        drive_service: DriveService,
-        file_path: str,
-        remote_path: str | None = None,
-        description: str | None = None,
-        parent_folder_id: str | None = None,
-        make_public: bool = True,
-        logger: logging.Logger | None = None,
+    drive_service: DriveService,
+    file_path: str,
+    remote_path: str | None = None,
+    description: str | None = None,
+    parent_folder_id: str | None = None,
+    make_public: bool = True,
+    logger: logging.Logger | None = None,
 ) -> IntegrationResult[str]:
     """
     Upload a file to Google Drive.

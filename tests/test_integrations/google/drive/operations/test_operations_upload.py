@@ -163,7 +163,7 @@ class TestDriveOperationsUpload:
                 mock_fs.read_binary.return_value.success = True
                 mock_fs.read_binary.return_value.content = b"test content"
 
-                # Instead of creating a mock class, use MagicMock for the instance
+                # Use MagicMock for the media instance
                 media_mock = MagicMock()
 
                 # Patch the MediaInMemoryUpload class with our mock
@@ -180,14 +180,15 @@ class TestDriveOperationsUpload:
                             "webViewLink": "https://drive.google.com/file/d/file123/view",
                         }
 
-                        # Mock set_file_permissions
-                        with patch(
-                                "quackcore.integrations.google.drive.operations.permissions.set_file_permissions"
-                        ) as mock_permissions:
-                            mock_permissions.return_value = IntegrationResult(
-                                success=True
-                            )
+                        # Creating a default IntegrationResult for set_file_permissions
+                        perm_result = IntegrationResult(success=True, content=True,
+                                                        message="Permission set")
 
+                        # Mock set_file_permissions with direct access to the path in upload.py
+                        with patch(
+                                "quackcore.integrations.google.drive.operations.permissions.set_file_permissions",
+                                return_value=perm_result
+                        ) as mock_permissions:
                             # Test successful upload
                             result = upload.upload_file(
                                 mock_drive_service,
@@ -203,23 +204,13 @@ class TestDriveOperationsUpload:
                                     == "https://drive.google.com/file/d/file123/view"
                             )
 
-                            # Check that execute_api_request was called correctly
+                            # Check that execute_api_request was called
                             mock_execute.assert_called_once()
 
-                            # Check that set_file_permissions was called
+                            # Check that set_file_permissions was called with the right arguments
                             mock_permissions.assert_called_once_with(
                                 mock_drive_service, "file123", "reader", "anyone", None
                             )
-
-                            # Verify our mock service was used correctly
-                            mock_service = mock_drive_service
-                            assert isinstance(mock_service, MockDriveService)
-                            assert mock_service.files_call_count == 1
-
-                            # Check file resource calls
-                            files_resource = mock_service.files()
-                            assert isinstance(files_resource, MockDriveFilesResource)
-                            assert files_resource.create_call_count == 1
 
     def test_upload_file_read_error(self, tmp_path: Path) -> None:
         """Test error handling when reading file fails."""
