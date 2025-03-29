@@ -46,6 +46,9 @@ __all__ = [
     "register_llm_client",
     # Factory function for integration discovery
     "create_integration",
+    # Module
+    "get_mock_llm",
+    "create_integration"
 ]
 
 
