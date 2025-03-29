@@ -14,9 +14,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from quackcore.errors import QuackApiError, QuackIntegrationError
-# Removed unused import: from quackcore.integrations.llms.clients.base import LLMClient
 from quackcore.integrations.llms.models import ChatMessage, LLMOptions, RoleType
 from tests.test_integrations.llms.mocks.clients import MockClient
+from quackcore.integrations.core.results import IntegrationResult  # Import IntegrationResult for testing
 
 
 class TestLLMClient:
@@ -95,11 +95,11 @@ class TestLLMClient:
         assert mock_client.last_messages[1].role == RoleType.USER
         assert mock_client.last_messages[1].content == "User message"
 
-        # Test with invalid message type
-        # Using cast to tell type checker we're deliberately testing with invalid type
+        # Test with invalid message type (update: check error result instead of exception)
         invalid_messages = cast(List[dict], ["invalid message"])
-        with pytest.raises(ValueError):
-            mock_client.chat(invalid_messages)
+        result = mock_client.chat(invalid_messages)
+        assert result.success is False
+        assert "Unsupported message type" in result.error
 
     def test_chat_default_options(self, mock_client: MockClient) -> None:
         """Test using default options in the chat method."""
@@ -189,10 +189,11 @@ class TestLLMClient:
             max_retry_delay=0.2,
         )
 
-        # Mock _chat_with_provider to fail twice, then succeed
+        # Mock _chat_with_provider to fail twice, then succeed.
+        # For the successful case, use the class method to create a proper IntegrationResult.
         mock_provider = MagicMock()
         error = QuackApiError("Rate limit exceeded", "TestService")
-        mock_provider.side_effect = [error, error, "Success"]
+        mock_provider.side_effect = [error, error, IntegrationResult.success_result("Success")]
 
         with patch.object(client, "_chat_with_provider", mock_provider):
             with patch.object(time, "sleep") as mock_sleep:
@@ -206,12 +207,11 @@ class TestLLMClient:
 
                 # Check sleep durations - should be exponential backoff
                 assert mock_sleep.call_args_list[0][0][0] == 0.1  # Initial delay
-                assert mock_sleep.call_args_list[1][0][
-                           0] == 0.2  # Doubled but capped at max
+                assert mock_sleep.call_args_list[1][0][0] == 0.2  # Doubled but capped at max
 
                 # Verify the result was successful after retries
                 assert result.success is True
-                assert result.content == "Success"  # The successful response from the mock
+                assert result.content == "Success"
 
         # Test reaching max retries
         client = MockClient(

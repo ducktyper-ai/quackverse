@@ -30,13 +30,15 @@ class MockLLMClient(LLMClient):
         Initialize the mock LLM client.
 
         Args:
-            script: List of responses to return in sequence
-            model: Mock model name
-            log_level: Logging level
-            **kwargs: Additional arguments
+            script: List of responses to return in sequence.
+                    If None, a default response will be used.
+            model: Mock model name.
+            log_level: Logging level.
+            **kwargs: Additional arguments.
         """
         super().__init__(model=model, log_level=log_level, **kwargs)
-        self._script = script or ["This is a mock response from the LLM."]
+        # Check explicitly for None instead of falsy check
+        self._script = ["This is a mock response from the LLM."] if script is None else script
         self._current_index = 0
 
     def _chat_with_provider(
@@ -49,12 +51,12 @@ class MockLLMClient(LLMClient):
         Return a mock response from the script.
 
         Args:
-            messages: List of messages for the conversation
-            options: Additional options for the completion request
-            callback: Optional callback function for streaming responses
+            messages: List of messages for the conversation.
+            options: Additional options for the completion request.
+            callback: Optional callback function for streaming responses.
 
         Returns:
-            IntegrationResult[str]: Result of the chat completion request
+            IntegrationResult[str]: Result of the chat completion request.
         """
         # Get the next response from the script
         if not self._script:
@@ -74,8 +76,8 @@ class MockLLMClient(LLMClient):
         Simulate streaming by sending chunks of the response to the callback.
 
         Args:
-            response: Full response text
-            callback: Callback function for streaming responses
+            response: Full response text.
+            callback: Callback function for streaming responses.
         """
         # Split the response into chunks (words for simplicity)
         chunks = response.split(" ")
@@ -91,10 +93,10 @@ class MockLLMClient(LLMClient):
         Provide a mock token count.
 
         Args:
-            messages: List of messages to count tokens for
+            messages: List of messages to count tokens for.
 
         Returns:
-            IntegrationResult[int]: Result containing the token count
+            IntegrationResult[int]: Result containing the token count.
         """
         # Simple mock implementation: count characters and divide by 4
         total_chars = 0
@@ -112,7 +114,7 @@ class MockLLMClient(LLMClient):
         Set the list of responses to return.
 
         Args:
-            responses: List of responses to return in sequence
+            responses: List of responses to return in sequence.
         """
         self._script = responses
         self._current_index = 0

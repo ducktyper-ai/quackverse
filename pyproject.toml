@@ -67,7 +67,7 @@ drive = [
 ]
 pandoc = ["pypandoc", "beautifulsoup4"]
 
-llms = ['tiktoken']
+llms = ['tiktoken', 'openai', 'anthropic']
 
 [project.urls]
 "Homepage" = "https://github.com/aipengineer/quackcore"

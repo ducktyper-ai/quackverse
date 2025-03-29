@@ -60,62 +60,60 @@ class TestAnthropicClient:
     def test_get_client(self) -> None:
         """Test getting the Anthropic client instance."""
         # Test with explicit API key
-        with patch("anthropic.Anthropic", create=True) as mock_anthropic:
-            mock_instance = MagicMock()
-            mock_anthropic.return_value = mock_instance
+        mock_instance = MagicMock()
+        mock_anthropic_class = MagicMock()
+        mock_anthropic_class.return_value = mock_instance
+        mock_anthropic_module = MagicMock(Anthropic=mock_anthropic_class)
 
-            # We also need to patch the import check to avoid ImportError
-            with patch("builtins.__import__", side_effect=lambda name, *args, **kwargs:
-            MagicMock() if name == "anthropic" else __import__(name, *args, **kwargs)):
-                client = AnthropicClient(api_key="test-key")
-                result = client._get_client()
+        with patch.dict("sys.modules", {"anthropic": mock_anthropic_module}):
+            client = AnthropicClient(api_key="test-key")
+            result = client._get_client()
 
-                assert result == mock_instance
-                mock_anthropic.assert_called_once_with(api_key="test-key")
+            # Verify that the returned client is our mock_instance
+            assert result == mock_instance
+            mock_anthropic_class.assert_called_once_with(api_key="test-key")
 
-                # Should cache the client
-                assert client._client == mock_instance
+            # Should cache the client
+            assert client._client == mock_instance
 
-                # Second call should use cached client
-                client._get_client()
-                assert mock_anthropic.call_count == 1
+            # Second call should use cached client
+            client._get_client()
+            assert mock_anthropic_class.call_count == 1
 
         # Test with API key from environment
-        with patch("anthropic.Anthropic", create=True) as mock_anthropic:
-            # We also need to patch the import check
-            with patch("builtins.__import__", side_effect=lambda name, *args, **kwargs:
-            MagicMock() if name == "anthropic" else __import__(name, *args, **kwargs)):
-                with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "env-key"}):
-                    client = AnthropicClient()
-                    client._get_client()
+        mock_instance = MagicMock()
+        mock_anthropic_class = MagicMock()
+        mock_anthropic_class.return_value = mock_instance
+        mock_anthropic_module = MagicMock(Anthropic=mock_anthropic_class)
 
-                    mock_anthropic.assert_called_once_with(api_key="env-key")
+        with patch.dict("sys.modules", {"anthropic": mock_anthropic_module}):
+            with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "env-key"}):
+                client = AnthropicClient()
+                client._get_client()
+                mock_anthropic_class.assert_called_once_with(api_key="env-key")
 
         # Test with additional parameters
-        with patch("anthropic.Anthropic", create=True) as mock_anthropic:
-            # We also need to patch the import check
-            with patch("builtins.__import__", side_effect=lambda name, *args, **kwargs:
-            MagicMock() if name == "anthropic" else __import__(name, *args, **kwargs)):
-                client = AnthropicClient(
-                    api_key="test-key",
-                    api_base="https://custom-api.anthropic.com",
-                )
-                client._get_client()
+        mock_instance = MagicMock()
+        mock_anthropic_class = MagicMock()
+        mock_anthropic_class.return_value = mock_instance
+        mock_anthropic_module = MagicMock(Anthropic=mock_anthropic_class)
 
-                mock_anthropic.assert_called_once_with(
-                    api_key="test-key",
-                    base_url="https://custom-api.anthropic.com",
-                )
+        with patch.dict("sys.modules", {"anthropic": mock_anthropic_module}):
+            client = AnthropicClient(
+                api_key="test-key",
+                api_base="https://custom-api.anthropic.com",
+            )
+            client._get_client()
+            mock_anthropic_class.assert_called_once_with(
+                api_key="test-key",
+                base_url="https://custom-api.anthropic.com",
+            )
 
-        # Test import error
-        with patch("builtins.__import__", side_effect=lambda name, *args, **kwargs:
-        exec(
-            'raise ImportError("No module named \'anthropic\'")') if name == "anthropic"
-        else __import__(name, *args, **kwargs)):
+        # Test import error by removing anthropic from sys.modules
+        with patch.dict("sys.modules", {"anthropic": None}):
             with pytest.raises(QuackIntegrationError) as excinfo:
                 client = AnthropicClient(api_key="test-key")
                 client._get_client()
-
             assert "Anthropic package not installed" in str(excinfo.value)
 
     def test_get_api_key_from_env(self) -> None:

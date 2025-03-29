@@ -1,4 +1,3 @@
-# src/quackcore/integrations/llms/clients/base.py
 """
 Base LLM client implementation.
 
@@ -197,8 +196,7 @@ class LLMClient(ABC, LLMProviderProtocol):
             return IntegrationResult.error_result(f"Error counting tokens: {e}")
 
     @abstractmethod
-    def _count_tokens_with_provider(self, messages: list[ChatMessage]) -> \
-    IntegrationResult[int]:
+    def _count_tokens_with_provider(self, messages: list[ChatMessage]) -> IntegrationResult[int]:
         """
         Provider-specific implementation of token counting.
 
@@ -224,23 +222,30 @@ class LLMClient(ABC, LLMProviderProtocol):
 
         Raises:
             ValueError: If messages are of an unsupported type
-            QuackIntegrationError: If message conversion fails
+            QuackIntegrationError: If message conversion fails or required fields are missing
         """
         normalized_messages: list[ChatMessage] = []
 
         for message in messages:
-            try:
-                if isinstance(message, dict):
+            if isinstance(message, dict):
+                # Ensure required keys are present
+                if "role" not in message or "content" not in message:
+                    raise QuackIntegrationError(
+                        "Failed to normalize message: missing required fields 'role' and/or 'content'",
+                        context={"message_type": type(message).__name__}
+                    )
+                try:
                     normalized_messages.append(ChatMessage.from_dict(message))
-                elif isinstance(message, ChatMessage):
-                    normalized_messages.append(message)
-                else:
-                    raise ValueError(f"Unsupported message type: {type(message)}")
-            except Exception as e:
-                raise QuackIntegrationError(
-                    f"Failed to normalize message: {e}",
-                    context={"message_type": type(message).__name__},
-                    original_error=e
-                )
+                except Exception as e:
+                    raise QuackIntegrationError(
+                        f"Failed to normalize message: {e}",
+                        context={"message_type": type(message).__name__},
+                        original_error=e
+                    )
+            elif isinstance(message, ChatMessage):
+                normalized_messages.append(message)
+            else:
+                raise ValueError(f"Unsupported message type: {type(message)}")
 
         return normalized_messages
+
