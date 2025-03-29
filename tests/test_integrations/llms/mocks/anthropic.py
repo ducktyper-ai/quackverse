@@ -94,10 +94,10 @@ class MockAnthropicStreamingResponse(MockStreamingGenerator):
             content: str = "This is a mock Anthropic response",
             chunk_size: int = 5,
             model: str = "claude-3-opus-20240229",
-            error: Optional[Exception] = None,
-            error_after: Optional[int] = None,
+            error: Exception | None = None,
+            error_after: int | None = None,
             id: str = "msg_123",
-    ):
+    ) -> None:
         """
         Initialize a mock Anthropic streaming generator.
 
@@ -117,13 +117,14 @@ class MockAnthropicStreamingResponse(MockStreamingGenerator):
             error_after=error_after
         )
         self.id = id
+        self.chunks_iter = None
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> "MockAnthropicStreamingResponse":
         """Return self as iterator."""
         self.chunks_iter = self.generate_chunks()
         return self
 
-    def __next__(self) -> Dict[str, Any]:
+    def __next__(self) -> Any:
         """
         Get the next chunk in Anthropic streaming format.
 
@@ -158,10 +159,17 @@ class MockAnthropicStreamingResponse(MockStreamingGenerator):
             # Re-raise StopIteration to end the stream
             raise StopIteration
 
-    def message_stream(self):
-        """Context manager for Anthropic streaming."""
+    def __enter__(self) -> "MockAnthropicStreamingResponse":
+        """Context manager enter method."""
         return self
 
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        """Context manager exit method."""
+        pass
+
+    def message_stream(self) -> "MockAnthropicStreamingResponse":
+        """Context manager for Anthropic streaming."""
+        return self
 
 class MockAnthropicErrorResponse:
     """A mock error response mimicking Anthropic API errors."""

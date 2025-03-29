@@ -385,8 +385,8 @@ class OpenAIClient(LLMClient):
                             json_str = str(value)
                             token_count += len(encoding.encode(json_str))
 
-                    if message.get("name"):
-                        token_count += tokens_per_name
+                        if key == "name" and value:
+                            token_count += tokens_per_name
 
                 # Add 3 tokens for the assistant's reply
                 token_count += 3
