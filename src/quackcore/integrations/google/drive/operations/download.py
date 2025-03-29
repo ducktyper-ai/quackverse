@@ -10,8 +10,6 @@ import io
 import logging
 from typing import TypeVar
 
-from googleapiclient.http import MediaIoBaseDownload
-
 from quackcore.errors import QuackApiError
 from quackcore.fs import service as fs
 from quackcore.fs.operations import FileSystemOperations
@@ -59,6 +57,7 @@ def resolve_download_path(
     # If path doesn't exist, assume it's a file path the user wants to create
     return local_path_obj
 
+
 def download_file(
         drive_service: DriveService,
         file_id: str,
@@ -78,13 +77,14 @@ def download_file(
         IntegrationResult with the local file path.
     """
     logger = logger or logging.getLogger(__name__)
-    # Create file system operations instance
-    fs_ops = FileSystemOperations()
 
     try:
+        # Get the files resource once and reuse it
+        files_resource = drive_service.files()
+
         # Get file metadata
         file_metadata = execute_api_request(
-            drive_service.files().get(file_id=file_id, fields="name, mimeType"),
+            files_resource.get(file_id=file_id, fields="name, mimeType"),
             "Failed to get file metadata from Google Drive",
             "files.get",
         )
@@ -101,19 +101,36 @@ def download_file(
             )
 
         # Download file content
-        request = drive_service.files().get_media(file_id=file_id)
+        try:
+            request = files_resource.get_media(file_id=file_id)
+            fh = io.BytesIO()
 
-        fh = io.BytesIO()
-        downloader = MediaIoBaseDownload(fh, request)
+            # Create MediaIoBaseDownload
+            from googleapiclient.http import MediaIoBaseDownload
+            downloader = MediaIoBaseDownload(fh, request)
 
-        done = False
-        while not done:
-            status, done = downloader.next_chunk()
-            logger.debug(f"Download progress: {int(status.progress() * 100)}%")
+            # Download in chunks
+            done = False
+            while not done:
+                status, done = downloader.next_chunk()
+                logger.debug(f"Download progress: {int(status.progress() * 100)}%")
 
-        # Write content to file - Use FileSystemOperations instance
+        except Exception as api_error:
+            raise QuackApiError(
+                f"Failed to download file from Google Drive: {api_error}",
+                service="Google Drive",
+                api_method="files.get_media",
+                original_error=api_error,
+            ) from api_error
+
+        # Write file to disk using FileSystemOperations
         fh.seek(0)
+
+        # Import and create FileSystemOperations here to match the test's patching structure
+        from quackcore.fs.operations import FileSystemOperations
+        fs_ops = FileSystemOperations()
         write_result = fs_ops.write_binary(download_path, fh.read())
+
         if not write_result.success:
             return IntegrationResult.error_result(
                 f"Failed to write file: {write_result.error}"

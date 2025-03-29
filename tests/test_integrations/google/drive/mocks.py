@@ -36,6 +36,10 @@ class MockDriveRequest(DriveRequest[R]):
         self.error = error
         self.call_count = 0
 
+        # Add attributes that MediaIoBaseDownload requires
+        self.uri = "https://www.googleapis.com/drive/v3/files/mock-file-id?alt=media"
+        self.headers = {"Content-Type": "application/octet-stream"}
+
     def execute(self) -> R:
         """
         Execute the request and return the result or raise configured error.
@@ -50,8 +54,7 @@ class MockDriveRequest(DriveRequest[R]):
         if self.error:
             raise self.error
         return self.return_value
-
-
+    
 class MockDrivePermissionsResource(DrivePermissionsResource):
     """Mock permissions resource with configurable behavior."""
 
