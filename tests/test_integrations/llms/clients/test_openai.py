@@ -28,8 +28,7 @@ class TestOpenAIClient:
     @pytest.fixture
     def openai_client(self) -> OpenAIClient:
         """Create an OpenAI client with test API key."""
-        with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}):
-            return OpenAIClient(model="gpt-4o")
+        return OpenAIClient(model="gpt-4o", api_key="test-key")  # Add api_key here
 
     def test_init(self) -> None:
         """Test initializing the OpenAI client."""
@@ -163,29 +162,34 @@ class TestOpenAIClient:
         assert openai_message == {"role": "assistant"}
 
         # Test with name
-        message = ChatMessage(role=RoleType.FUNCTION, content="Function result",
-                              name="get_weather")
+        message = ChatMessage(
+            role=RoleType.FUNCTION, content="Function result", name="get_weather"
+        )
         openai_message = client._convert_message_to_openai(message)
 
         assert openai_message == {
             "role": "function",
             "content": "Function result",
-            "name": "get_weather"
+            "name": "get_weather",
         }
 
         # Test with function call
         message = ChatMessage(
             role=RoleType.ASSISTANT,
             content=None,
-            function_call={"name": "get_weather",
-                           "arguments": '{"location": "San Francisco"}'}
+            function_call={
+                "name": "get_weather",
+                "arguments": '{"location": "San Francisco"}',
+            },
         )
         openai_message = client._convert_message_to_openai(message)
 
         assert openai_message == {
             "role": "assistant",
-            "function_call": {"name": "get_weather",
-                              "arguments": '{"location": "San Francisco"}'}
+            "function_call": {
+                "name": "get_weather",
+                "arguments": '{"location": "San Francisco"}',
+            },
         }
 
         # Test with tool calls
@@ -196,10 +200,12 @@ class TestOpenAIClient:
                 {
                     "id": "call_123",
                     "type": "function",
-                    "function": {"name": "get_weather",
-                                 "arguments": '{"location": "London"}'}
+                    "function": {
+                        "name": "get_weather",
+                        "arguments": '{"location": "London"}',
+                    },
                 }
-            ]
+            ],
         )
         openai_message = client._convert_message_to_openai(message)
 
@@ -209,10 +215,12 @@ class TestOpenAIClient:
                 {
                     "id": "call_123",
                     "type": "function",
-                    "function": {"name": "get_weather",
-                                 "arguments": '{"location": "London"}'}
+                    "function": {
+                        "name": "get_weather",
+                        "arguments": '{"location": "London"}',
+                    },
                 }
-            ]
+            ],
         }
 
     def test_process_response(self) -> None:
@@ -241,13 +249,7 @@ class TestOpenAIClient:
 
         # Test with None content
         none_content_response = MagicMock()
-        none_content_response.choices = [
-            MagicMock(
-                message=MagicMock(
-                    content=None
-                )
-            )
-        ]
+        none_content_response.choices = [MagicMock(message=MagicMock(content=None))]
         result = client._process_response(none_content_response)
         assert result == ""
 
@@ -257,9 +259,7 @@ class TestOpenAIClient:
 
         # Test with mock OpenAI error responses
         rate_limit_error = MockOpenAIErrorResponse(
-            message="Rate limit exceeded",
-            code="rate_limit_exceeded",
-            status_code=429
+            message="Rate limit exceeded", code="rate_limit_exceeded", status_code=429
         ).to_exception()
 
         api_error = client._convert_error(rate_limit_error)
@@ -270,9 +270,7 @@ class TestOpenAIClient:
 
         # Test invalid API key error
         auth_error = MockOpenAIErrorResponse(
-            message="Invalid API key provided",
-            code="invalid_api_key",
-            status_code=401
+            message="Invalid API key provided", code="invalid_api_key", status_code=401
         ).to_exception()
 
         api_error = client._convert_error(auth_error)
@@ -280,9 +278,7 @@ class TestOpenAIClient:
 
         # Test insufficient quota error
         quota_error = MockOpenAIErrorResponse(
-            message="Insufficient quota",
-            code="insufficient_quota",
-            status_code=402
+            message="Insufficient quota", code="insufficient_quota", status_code=402
         ).to_exception()
 
         api_error = client._convert_error(quota_error)
@@ -290,9 +286,7 @@ class TestOpenAIClient:
 
         # Test generic error
         generic_error = MockOpenAIErrorResponse(
-            message="Some other error",
-            code="server_error",
-            status_code=500
+            message="Some other error", code="server_error", status_code=500
         ).to_exception()
 
         api_error = client._convert_error(generic_error)
@@ -302,14 +296,11 @@ class TestOpenAIClient:
         """Test the OpenAI chat implementation using mock client."""
         # Create a mock client with predefined responses
         mock_client = MockOpenAIClient(
-            responses=["Test response", "Second response"],
-            model="gpt-4o"
+            responses=["Test response", "Second response"], model="gpt-4o"
         )
 
         # Set up messages and options
-        messages = [
-            ChatMessage(role=RoleType.USER, content="User message")
-        ]
+        messages = [ChatMessage(role=RoleType.USER, content="User message")]
         options = LLMOptions(temperature=0.5, max_tokens=100)
 
         # Create OpenAI client with the mock
@@ -335,14 +326,11 @@ class TestOpenAIClient:
 
             # Test with error
             mock_error = MockOpenAIErrorResponse(
-                message="API error",
-                code="server_error",
-                status_code=500
+                message="API error", code="server_error", status_code=500
             ).to_exception()
 
             error_client = MockOpenAIClient(
-                responses=["Shouldn't reach this"],
-                errors=[mock_error]
+                responses=["Shouldn't reach this"], errors=[mock_error]
             )
 
             with patch.object(client, "_get_client", return_value=error_client):
@@ -352,8 +340,9 @@ class TestOpenAIClient:
                 assert "OpenAI API error" in str(excinfo.value)
 
     @patch("openai.OpenAI")
-    def test_chat_with_provider(self, mock_openai: MagicMock,
-                                openai_client: OpenAIClient) -> None:
+    def test_chat_with_provider(
+        self, mock_openai: MagicMock, openai_client: OpenAIClient
+    ) -> None:
         """Test the OpenAI-specific chat implementation with standard mocks."""
         # Set up mock OpenAI client
         mock_instance = MagicMock()
@@ -363,15 +352,15 @@ class TestOpenAIClient:
         mock_response = MockOpenAIResponse(
             content="Response content",
             model="gpt-4o",
-            usage={"prompt_tokens": 10, "completion_tokens": 15, "total_tokens": 25}
+            usage={"prompt_tokens": 10, "completion_tokens": 15, "total_tokens": 25},
         )
 
-        mock_instance.chat.completions.create.return_value = mock_response.to_openai_format()
+        mock_instance.chat.completions.create.return_value = (
+            mock_response.to_openai_format()
+        )
 
         # Set up messages and options
-        messages = [
-            ChatMessage(role=RoleType.USER, content="User message")
-        ]
+        messages = [ChatMessage(role=RoleType.USER, content="User message")]
         options = LLMOptions(temperature=0.5, max_tokens=100)
 
         # Test normal completion
@@ -397,8 +386,9 @@ class TestOpenAIClient:
         options.stream = True
 
         # Set up streaming response
-        mock_stream = MockOpenAIStreamingResponse(content="Streaming response",
-                                                  model="gpt-4o")
+        mock_stream = MockOpenAIStreamingResponse(
+            content="Streaming response", model="gpt-4o"
+        )
         mock_instance.chat.completions.create.return_value = mock_stream
 
         result = openai_client._chat_with_provider(messages, options, callback)
@@ -413,9 +403,7 @@ class TestOpenAIClient:
         # Test with API error using our mock error response
         mock_instance.chat.completions.create.reset_mock()
         mock_error = MockOpenAIErrorResponse(
-            message="API error",
-            code="server_error",
-            status_code=500
+            message="API error", code="server_error", status_code=500
         ).to_exception()
 
         mock_instance.chat.completions.create.side_effect = mock_error
@@ -433,8 +421,9 @@ class TestOpenAIClient:
             assert "Failed to import OpenAI package" in str(excinfo.value)
 
     @patch("tiktoken.encoding_for_model")
-    def test_count_tokens_with_provider(self, mock_tiktoken: MagicMock,
-                                        openai_client: OpenAIClient) -> None:
+    def test_count_tokens_with_provider(
+        self, mock_tiktoken: MagicMock, openai_client: OpenAIClient
+    ) -> None:
         """Test the OpenAI-specific token counting implementation."""
         # Set up mock encoding
         mock_encoding = MagicMock()
@@ -450,7 +439,7 @@ class TestOpenAIClient:
         # Set up messages
         messages = [
             ChatMessage(role=RoleType.SYSTEM, content="System message"),
-            ChatMessage(role=RoleType.USER, content="User message")
+            ChatMessage(role=RoleType.USER, content="User message"),
         ]
 
         # Test token counting with tiktoken
@@ -493,8 +482,9 @@ class TestOpenAIClient:
                 assert "tiktoken not installed" in mock_warning.call_args[0][0]
 
         # Test with general error
-        with patch("tiktoken.encoding_for_model",
-                   side_effect=Exception("Counting error")):
+        with patch(
+            "tiktoken.encoding_for_model", side_effect=Exception("Counting error")
+        ):
             result = openai_client._count_tokens_with_provider(messages)
 
             assert result.success is False
@@ -514,15 +504,16 @@ class TestOpenAIClient:
         mock_stream = MockOpenAIStreamingResponse(
             content=streaming_content,
             model="gpt-4o",
-            chunk_size=2  # Split into smaller chunks for testing
+            chunk_size=2,  # Split into smaller chunks for testing
         )
 
         mock_client = MagicMock()
         mock_client.chat.completions.create.return_value = mock_stream
 
         # Test streaming
-        result = client._handle_streaming(mock_client, "gpt-4o", messages, params,
-                                          callback)
+        result = client._handle_streaming(
+            mock_client, "gpt-4o", messages, params, callback
+        )
 
         assert result == streaming_content
         # Should have multiple callback calls based on chunk size
@@ -530,17 +521,12 @@ class TestOpenAIClient:
 
         # Verify create was called with stream=True
         mock_client.chat.completions.create.assert_called_once_with(
-            model="gpt-4o",
-            messages=messages,
-            stream=True,
-            **params
+            model="gpt-4o", messages=messages, stream=True, **params
         )
 
         # Test with error during streaming
         mock_error = MockOpenAIErrorResponse(
-            message="Streaming error",
-            code="server_error",
-            status_code=500
+            message="Streaming error", code="server_error", status_code=500
         ).to_exception()
 
         mock_client.chat.completions.create.side_effect = mock_error
@@ -554,6 +540,7 @@ class TestOpenAIClient:
         mock_client.chat.completions.create.side_effect = None
         mock_client.chat.completions.create.return_value = [MagicMock(choices=[])]
 
-        result = client._handle_streaming(mock_client, "gpt-4o", messages, params,
-                                          callback)
+        result = client._handle_streaming(
+            mock_client, "gpt-4o", messages, params, callback
+        )
         assert result == ""

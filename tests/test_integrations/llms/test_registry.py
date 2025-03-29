@@ -71,10 +71,13 @@ class TestLLMRegistry:
         # Clean up
         del _LLM_REGISTRY["testclient"]
 
+    # tests/test_integrations/llms/test_registry.py
+
     def test_get_llm_client_openai(self) -> None:
         """Test getting the OpenAI client."""
         with patch(
-                "quackcore.integrations.llms.clients.openai.OpenAIClient") as mock_openai:
+                "quackcore.integrations.llms.registry.OpenAIClient"
+        ) as mock_openai:
             mock_instance = MagicMock()
             mock_openai.return_value = mock_instance
 
@@ -88,12 +91,14 @@ class TestLLMRegistry:
     def test_get_llm_client_anthropic(self) -> None:
         """Test getting the Anthropic client."""
         with patch(
-                "quackcore.integrations.llms.clients.anthropic.AnthropicClient") as mock_anthropic:
+            "quackcore.integrations.llms.clients.anthropic.AnthropicClient"
+        ) as mock_anthropic:
             mock_instance = MagicMock()
             mock_anthropic.return_value = mock_instance
 
-            client = get_llm_client("anthropic", model="claude-3-opus",
-                                    api_key="test-key")
+            client = get_llm_client(
+                "anthropic", model="claude-3-opus", api_key="test-key"
+            )
 
             assert client == mock_instance
             mock_anthropic.assert_called_once_with(
@@ -110,7 +115,8 @@ class TestLLMRegistry:
     def test_get_llm_client_case_insensitive(self) -> None:
         """Test that provider names are case-insensitive."""
         with patch(
-                "quackcore.integrations.llms.clients.openai.OpenAIClient") as mock_openai:
+            "quackcore.integrations.llms.clients.openai.OpenAIClient"
+        ) as mock_openai:
             mock_instance = MagicMock()
             mock_openai.return_value = mock_instance
 
@@ -131,7 +137,8 @@ class TestLLMRegistry:
     def test_get_llm_client_initialization_error(self) -> None:
         """Test handling client initialization errors."""
         with patch(
-                "quackcore.integrations.llms.clients.openai.OpenAIClient") as mock_openai:
+            "quackcore.integrations.llms.clients.openai.OpenAIClient"
+        ) as mock_openai:
             mock_openai.side_effect = Exception("Initialization error")
 
             with pytest.raises(QuackIntegrationError) as excinfo:

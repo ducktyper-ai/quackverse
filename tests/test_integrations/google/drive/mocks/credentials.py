@@ -10,13 +10,13 @@ class MockGoogleCredentials(GoogleCredentials):
     """Mock Google credentials for authentication testing."""
 
     def __init__(
-            self,
-            token: str = "test_token",
-            refresh_token: str = "refresh_token",
-            token_uri: str = "https://oauth2.googleapis.com/token",
-            client_id: str = "client_id",
-            client_secret: str = "client_secret",
-            scopes: list[str] | None = None,
+        self,
+        token: str = "test_token",
+        refresh_token: str = "refresh_token",
+        token_uri: str = "https://oauth2.googleapis.com/token",
+        client_id: str = "client_id",
+        client_secret: str = "client_secret",
+        scopes: list[str] | None = None,
     ):
         """
         Initialize mock Google credentials.

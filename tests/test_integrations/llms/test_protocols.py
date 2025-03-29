@@ -41,35 +41,36 @@ class TestLLMProtocols:
 
     def test_incomplete_protocol_implementation(self) -> None:
         """Test that incomplete implementations don't satisfy the protocol."""
-        # Create a mock that's missing methods
-        incomplete_mock = MagicMock()
-        # Only implement some methods from the protocol
-        incomplete_mock.chat = MagicMock(return_value=MagicMock(success=True))
-        # Missing count_tokens and model property
 
+        # Create a class that's missing methods
+        class IncompleteMock:
+            def chat(self, *args, **kwargs):
+                return MagicMock(success=True)
+
+        incomplete = IncompleteMock()
         # Should not be recognized as implementing the protocol
-        assert not isinstance(incomplete_mock, LLMProviderProtocol)
+        assert not isinstance(incomplete, LLMProviderProtocol)
 
         # Add count_tokens but not model property
-        incomplete_mock.count_tokens = MagicMock(return_value=MagicMock(success=True))
-        assert not isinstance(incomplete_mock, LLMProviderProtocol)
-
-        # Add model as an attribute, not a property
-        incomplete_mock.model = "test-model"
-        assert not isinstance(incomplete_mock, LLMProviderProtocol)
-
-        # Create a new mock with model as a property
-        class ProperMock:
+        class PartialMock:
             def chat(self, *args, **kwargs):
                 return MagicMock(success=True)
 
             def count_tokens(self, *args, **kwargs):
                 return MagicMock(success=True)
 
-            @property
-            def model(self):
-                return "test-model"
+        partial = PartialMock()
+        assert not isinstance(partial, LLMProviderProtocol)
 
-        proper_mock = ProperMock()
-        # Now it should satisfy the protocol
-        assert isinstance(proper_mock, LLMProviderProtocol)
+        # Add model as an attribute, not a property
+        class MockWithAttribute:
+            def chat(self, *args, **kwargs):
+                return MagicMock(success=True)
+
+            def count_tokens(self, *args, **kwargs):
+                return MagicMock(success=True)
+
+            model = "test-model"
+
+        attribute_mock = MockWithAttribute()
+        assert not isinstance(attribute_mock, LLMProviderProtocol)

@@ -11,6 +11,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from quackcore.errors import QuackIntegrationError
+from quackcore.integrations.core import BaseIntegrationService
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.llms.models import ChatMessage, LLMOptions, RoleType
 from quackcore.integrations.llms.service import LLMIntegration
@@ -23,7 +24,7 @@ class TestLLMService:
     @pytest.fixture
     def llm_service(self) -> LLMIntegration:
         """Create an LLM integration service with mock configuration."""
-        with patch("quackcore.config.loader.load_config_file") as mock_load:
+        with patch("quackcore.config.loader.load_config") as mock_load:
             # Provide a default config that should work
             mock_load.return_value.success = True
             mock_load.return_value.content = {
@@ -36,31 +37,36 @@ class TestLLMService:
                 },
             }
 
-            return LLMIntegration()
+            # Mock the path resolution to return the original path
+            with patch.object(BaseIntegrationService, "_resolve_path") as mock_resolve:
+                mock_resolve.side_effect = lambda x: x
+                return LLMIntegration()
 
     def test_init(self) -> None:
         """Test initializing the LLM integration service."""
         # Test with default parameters
-        service = LLMIntegration()
-        assert service.provider is None
-        assert service.model is None
-        assert service.api_key is None
-        assert service.client is None
-        assert service._initialized is False
+        with patch.object(BaseIntegrationService, "_resolve_path") as mock_resolve:
+            mock_resolve.side_effect = lambda x: x
+            service = LLMIntegration()
+            assert service.provider is None
+            assert service.model is None
+            assert service.api_key is None
+            assert service.client is None
+            assert service._initialized is False
 
-        # Test with custom parameters
-        service = LLMIntegration(
-            provider="anthropic",
-            model="claude-3-opus",
-            api_key="test-key",
-            config_path="config.yaml",
-            log_level=20,
-        )
-        assert service.provider == "anthropic"
-        assert service.model == "claude-3-opus"
-        assert service.api_key == "test-key"
-        assert service.config_path == "config.yaml"
-        assert service.logger.level == 20
+            # Test with custom parameters
+            service = LLMIntegration(
+                provider="anthropic",
+                model="claude-3-opus",
+                api_key="test-key",
+                config_path="config.yaml",
+                log_level=20,
+            )
+            assert service.provider == "anthropic"
+            assert service.model == "claude-3-opus"
+            assert service.api_key == "test-key"
+            assert service.config_path == "config.yaml"
+            assert service.logger.level == 20
 
     def test_name_and_version(self, llm_service: LLMIntegration) -> None:
         """Test the name and version properties."""
@@ -71,7 +77,8 @@ class TestLLMService:
         """Test initializing the LLM integration."""
         # Test successful initialization
         with patch(
-                "quackcore.integrations.llms.registry.get_llm_client") as mock_get_client:
+            "quackcore.integrations.llms.registry.get_llm_client"
+        ) as mock_get_client:
             mock_client = MagicMock()
             mock_get_client.return_value = mock_client
 
@@ -88,7 +95,8 @@ class TestLLMService:
 
         # Test base initialization failure
         with patch(
-                "quackcore.integrations.core.base.BaseIntegrationService.initialize") as mock_init:
+            "quackcore.integrations.core.base.BaseIntegrationService.initialize"
+        ) as mock_init:
             mock_init.return_value = IntegrationResult(
                 success=False,
                 error="Base initialization failed",
@@ -112,9 +120,11 @@ class TestLLMService:
 
         # Test client initialization failure
         with patch(
-                "quackcore.integrations.llms.registry.get_llm_client") as mock_get_client:
+            "quackcore.integrations.llms.registry.get_llm_client"
+        ) as mock_get_client:
             mock_get_client.side_effect = QuackIntegrationError(
-                "Client initialization failed")
+                "Client initialization failed"
+            )
 
             result = llm_service.initialize()
 
@@ -141,7 +151,8 @@ class TestLLMService:
         llm_service.config = None
 
         with patch(
-                "quackcore.integrations.llms.config.LLMConfigProvider.load_config") as mock_load:
+            "quackcore.integrations.llms.config.LLMConfigProvider.load_config"
+        ) as mock_load:
             # Simulate successful config loading
             mock_load.return_value.success = True
             mock_load.return_value.content = {
@@ -155,11 +166,13 @@ class TestLLMService:
 
         # Test with config loading failure
         with patch(
-                "quackcore.integrations.llms.config.LLMConfigProvider.load_config") as mock_load:
+            "quackcore.integrations.llms.config.LLMConfigProvider.load_config"
+        ) as mock_load:
             mock_load.return_value.success = False
 
             with patch(
-                    "quackcore.integrations.llms.config.LLMConfigProvider.get_default_config") as mock_default:
+                "quackcore.integrations.llms.config.LLMConfigProvider.get_default_config"
+            ) as mock_default:
                 mock_default.return_value = {
                     "default_provider": "mock",
                     "timeout": 10,

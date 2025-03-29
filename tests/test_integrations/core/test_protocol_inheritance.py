@@ -15,7 +15,11 @@ from quackcore.integrations.core.protocols import (
     IntegrationProtocol,
     StorageIntegrationProtocol,
 )
-from quackcore.integrations.core.results import AuthResult, ConfigResult, IntegrationResult
+from quackcore.integrations.core.results import (
+    AuthResult,
+    ConfigResult,
+    IntegrationResult,
+)
 
 
 # Define a clean minimal implementation of each protocol to avoid

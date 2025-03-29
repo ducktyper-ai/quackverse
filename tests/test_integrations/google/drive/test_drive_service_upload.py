@@ -7,8 +7,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from quackcore.errors import QuackApiError
-from quackcore.integrations.google.drive.service import GoogleDriveService
 from quackcore.integrations.core.results import IntegrationResult
+from quackcore.integrations.google.drive.service import GoogleDriveService
 
 
 class TestGoogleDriveServiceUpload:

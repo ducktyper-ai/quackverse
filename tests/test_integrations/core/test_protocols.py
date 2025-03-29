@@ -11,7 +11,11 @@ from quackcore.integrations.core.protocols import (
     IntegrationProtocol,
     StorageIntegrationProtocol,
 )
-from quackcore.integrations.core.results import AuthResult, ConfigResult, IntegrationResult
+from quackcore.integrations.core.results import (
+    AuthResult,
+    ConfigResult,
+    IntegrationResult,
+)
 
 
 # Test implementations of each protocol

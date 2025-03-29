@@ -71,6 +71,7 @@ class OpenAIClient(LLMClient):
                 # Get API key from provided value or from environment variable
                 if not self._api_key:
                     self._api_key = self._get_api_key_from_env()
+
                 kwargs = {"api_key": self._api_key, "timeout": self._timeout}
 
                 if self._api_base:
@@ -154,9 +155,7 @@ class OpenAIClient(LLMClient):
                     completions_create = client.chat_completions_create
 
                 response = completions_create(
-                    model=model,
-                    messages=openai_messages,
-                    **params
+                    model=model, messages=openai_messages, **params
                 )
 
                 # Process the response
@@ -172,13 +171,15 @@ class OpenAIClient(LLMClient):
             # Convert OpenAI errors to QuackApiError
             raise self._convert_error(e)
 
+    # src/quackcore/integrations/llms/clients/openai.py
+
     def _handle_streaming(
-        self,
-        client: Any,
-        model: str,
-        messages: list[dict],
-        params: dict,
-        callback: Callable[[str], None] | None,
+            self,
+            client: Any,
+            model: str,
+            messages: list[dict],
+            params: dict,
+            callback: Callable[[str], None] | None,
     ) -> str:
         """
         Handle streaming responses from the OpenAI API.
@@ -186,29 +187,42 @@ class OpenAIClient(LLMClient):
         collected_content = []
 
         try:
+            # Remove stream parameter if it exists in params to avoid duplication
+            params_copy = params.copy()
+            if "stream" in params_copy:
+                del params_copy["stream"]
+
             stream = client.chat.completions.create(
-                model=model,
-                messages=messages,
-                stream=True,
-                **params
+                model=model, messages=messages, stream=True, **params_copy
             )
 
             for chunk in stream:
-                if not chunk.choices:
-                    continue
+                # Support both dict and object formats for chunks
+                if isinstance(chunk, dict):
+                    choices = chunk.get("choices", [])
+                    if not choices:
+                        continue
 
-                delta = chunk.choices[0].delta
+                    delta = choices[0].get("delta", {})
+                    content = delta.get("content")
+                else:
+                    if not hasattr(chunk, "choices") or not chunk.choices:
+                        continue
 
-                if delta.content:
-                    collected_content.append(delta.content)
+                    delta = chunk.choices[0].delta if hasattr(chunk.choices[0],
+                                                              "delta") else {}
+                    content = delta.content if hasattr(delta, "content") else None
+
+                if content:
+                    collected_content.append(content)
                     if callback:
-                        callback(delta.content)
+                        callback(content)
 
             return "".join(collected_content)
         except Exception as e:
             # Convert OpenAI errors to QuackApiError
             raise self._convert_error(e)
-
+        
     def _convert_message_to_openai(self, message: ChatMessage) -> dict:
         """
         Convert a ChatMessage to the format expected by OpenAI.
@@ -269,7 +283,7 @@ class OpenAIClient(LLMClient):
                 f"OpenAI rate limit exceeded: {error}",
                 service="OpenAI",
                 api_method="chat.completions.create",
-                original_error=error
+                original_error=error,
             )
         elif "invalid api key" in error_str.lower():
             return QuackApiError(
@@ -293,7 +307,9 @@ class OpenAIClient(LLMClient):
                 original_error=error,
             )
 
-    def _count_tokens_with_provider(self, messages: list[ChatMessage]) -> IntegrationResult[int]:
+    def _count_tokens_with_provider(
+        self, messages: list[ChatMessage]
+    ) -> IntegrationResult[int]:
         """
         Count the number of tokens in the messages using OpenAI's tokenizer.
         """
@@ -309,7 +325,9 @@ class OpenAIClient(LLMClient):
                     encoding = tiktoken.get_encoding(encoding_name)
 
                 token_count = 0
-                openai_messages = [self._convert_message_to_openai(msg) for msg in messages]
+                openai_messages = [
+                    self._convert_message_to_openai(msg) for msg in messages
+                ]
 
                 tokens_per_message = 3  # This already accounts for role tokens.
                 tokens_per_name = 1  # Extra token for name if present.

@@ -3,11 +3,13 @@
 Mock OpenAI classes for LLM testing.
 """
 
-from typing import Any, Dict, Iterator, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 from unittest.mock import MagicMock
 
-from tests.test_integrations.llms.mocks.base import MockLLMResponse, \
-    MockStreamingGenerator
+from tests.test_integrations.llms.mocks.base import (
+    MockLLMResponse,
+    MockStreamingGenerator,
+)
 from tests.test_integrations.llms.mocks.clients import MockClient
 
 
@@ -15,15 +17,15 @@ class MockOpenAIResponse(MockLLMResponse):
     """A mock response mimicking the OpenAI API format."""
 
     def __init__(
-            self,
-            content: str = "This is a mock OpenAI response",
-            model: str = "gpt-4o",
-            usage: Optional[Dict[str, int]] = None,
-            finish_reason: str = "stop",
-            error: Optional[Exception] = None,
-            object_type: str = "chat.completion",
-            id: str = "chatcmpl-123",
-            created: int = 1677858242,
+        self,
+        content: str = "This is a mock OpenAI response",
+        model: str = "gpt-4o",
+        usage: Optional[Dict[str, int]] = None,
+        finish_reason: str = "stop",
+        error: Optional[Exception] = None,
+        object_type: str = "chat.completion",
+        id: str = "chatcmpl-123",
+        created: int = 1677858242,
     ):
         """
         Initialize a mock OpenAI response.
@@ -77,58 +79,88 @@ class MockOpenAIResponse(MockLLMResponse):
 class MockOpenAIStreamingResponse(MockStreamingGenerator):
     """A generator that yields chunks in OpenAI streaming format."""
 
-    def __iter__(self) -> Iterator[Any]:
+    def __init__(
+            self,
+            content: str = "This is a mock response",
+            chunk_size: int = 5,
+            model: str = "mock-model",
+            error: Exception | None = None,
+            error_after: int | None = None,
+    ):
+        """Initialize with content to stream in chunks."""
+        super().__init__(
+            content=content,
+            chunk_size=chunk_size,
+            model=model,
+            error=error,
+            error_after=error_after,
+        )
+        # Pre-generate all chunks to avoid iteration issues
+        self.chunks = list(self._generate_all_chunks())
+        self.current_index = 0
+
+    def _generate_all_chunks(self):
+        """Generate all chunks at once."""
+        # Split the response into chunks
+        chunks = [
+            self.content[i:i + self.chunk_size]
+            for i in range(0, len(self.content), self.chunk_size)
+        ]
+
+        # Generate content chunks
+        for i, chunk in enumerate(chunks):
+            if self.error and self.error_after is not None and i >= self.error_after:
+                raise self.error
+
+            yield {
+                "choices": [
+                    {
+                        "delta": {
+                            "content": chunk,
+                            "role": "assistant" if i == 0 else None
+                        },
+                        "finish_reason": None
+                    }
+                ],
+                "model": self.model
+            }
+
+        # Add final chunk with finish_reason
+        yield {
+            "choices": [
+                {
+                    "delta": {
+                        "content": None
+                    },
+                    "finish_reason": "stop"
+                }
+            ],
+            "model": self.model
+        }
+
+    def __iter__(self):
         """Return self as iterator."""
+        self.current_index = 0
         return self
 
-    def __next__(self) -> Dict[str, Any]:
-        """
-        Get the next chunk in OpenAI streaming format.
-
-        Returns:
-            Dict: A chunk of the response in OpenAI format
-
-        Raises:
-            StopIteration: When all chunks have been yielded
-            Exception: If error is set and error_after chunks have been yielded
-        """
-        try:
-            chunk_text = next(self.generate_chunks())
-
-            # Create a mock chunk in OpenAI format
-            mock_chunk = MagicMock()
-            mock_chunk.choices = [MagicMock()]
-            mock_chunk.choices[0].delta = MagicMock()
-            mock_chunk.choices[0].delta.content = chunk_text
-            mock_chunk.choices[0].delta.role = "assistant"
-            mock_chunk.choices[0].finish_reason = None
-            mock_chunk.model = self.model
-
-            return mock_chunk
-        except StopIteration:
-            # For the last chunk, set finish_reason
-            mock_chunk = MagicMock()
-            mock_chunk.choices = [MagicMock()]
-            mock_chunk.choices[0].delta = MagicMock()
-            mock_chunk.choices[0].delta.content = None
-            mock_chunk.choices[0].finish_reason = "stop"
-            mock_chunk.model = self.model
-
-            # This will end the iteration next time
-            self.content = ""
-            return mock_chunk
-
+    def __next__(self):
+        """Get next chunk."""
+        if self.current_index < len(self.chunks):
+            chunk = self.chunks[self.current_index]
+            self.current_index += 1
+            return chunk
+        raise StopIteration
 
 class MockOpenAIErrorResponse:
     """A mock error response mimicking OpenAI API errors."""
 
     def __init__(
-            self,
-            message: str = "OpenAI API error",
-            code: str = "rate_limit_exceeded",
-            type: str = "server_error",
-            param: Optional[str] = None,
-            status_code: int = 429,
+        self,
+        message: str = "OpenAI API error",
+        code: str = "rate_limit_exceeded",
+        type: str = "server_error",
+        param: Optional[str] = None,
+        status_code: int = 429,
     ):
         """
         Initialize a mock OpenAI error response.
@@ -178,12 +210,12 @@ class MockOpenAIClient(MockClient):
     """A mock OpenAI client."""
 
     def __init__(
-            self,
-            responses: List[str] = None,
-            token_counts: List[int] = None,
-            model: str = "gpt-4o",
-            errors: List[Exception] = None,
-            **kwargs: Any
+        self,
+        responses: List[str] = None,
+        token_counts: List[int] = None,
+        model: str = "gpt-4o",
+        errors: List[Exception] = None,
+        **kwargs: Any,
     ):
         """
         Initialize a mock OpenAI client.
@@ -200,7 +232,7 @@ class MockOpenAIClient(MockClient):
             token_counts=token_counts,
             model=model,
             errors=errors,
-            **kwargs
+            **kwargs,
         )
 
         # Track OpenAI-specific data

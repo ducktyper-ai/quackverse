@@ -40,18 +40,21 @@ class TestDriveOperationsDownload:
             patch("quackcore.fs.service.join_path") as mock_join,
             patch("quackcore.fs.service.create_directory") as mock_mkdir,
             patch(
-                "quackcore.integrations.google.drive.utils.api.execute_api_request") as mock_execute,
+                "quackcore.integrations.google.drive.utils.api.execute_api_request"
+            ) as mock_execute,
             patch(
-                "quackcore.integrations.google.drive.operations.download.FileSystemOperations") as mock_file_ops
+                "quackcore.integrations.google.drive.operations.download.FileSystemOperations"
+            ) as mock_file_ops,
         ):
             # Configure mocks
             mock_resolve.return_value = "/tmp/test_file.txt"
             mock_join.return_value = Path("/tmp/test_file.txt")
-            mock_mkdir.return_value = OperationResult(success=True, path="/tmp",
-                                                      message="Directory created")
+            mock_mkdir.return_value = OperationResult(
+                success=True, path="/tmp", message="Directory created"
+            )
             mock_execute.return_value = {
                 "name": "test_file.txt",
-                "mimeType": "text/plain"
+                "mimeType": "text/plain",
             }
 
             # Setup file operations mock
@@ -84,7 +87,7 @@ class TestDriveOperationsDownload:
                 mock_drive_service,
                 "file123",
                 "/tmp/test_file.txt",
-                progress_callback=progress_callback
+                progress_callback=progress_callback,
             )
 
             # Assertions
@@ -142,8 +145,9 @@ class TestDriveOperationsDownload:
             return download.resolve_download_path(metadata, path)
 
         # Apply the patch
-        with patch.object(download, "resolve_download_path",
-                          side_effect=patched_resolve_download_path):
+        with patch.object(
+            download, "resolve_download_path", side_effect=patched_resolve_download_path
+        ):
             result = download.resolve_download_path(file_metadata, str(local_dir))
             assert str(result) == str(local_dir / "test_file.txt")
 
@@ -171,7 +175,7 @@ class TestDriveOperationsDownload:
 
         # Mock execute_api_request to raise QuackApiError
         with patch(
-                "quackcore.integrations.google.drive.utils.api.execute_api_request"
+            "quackcore.integrations.google.drive.utils.api.execute_api_request"
         ) as mock_execute:
             mock_execute.side_effect = QuackApiError(
                 "Failed to get file metadata",
@@ -226,7 +230,7 @@ class TestDriveOperationsDownload:
                         mock_join.return_value = Path("/tmp/test_file.txt")
 
                         with patch(
-                                "quackcore.fs.service.create_directory"
+                            "quackcore.fs.service.create_directory"
                         ) as mock_mkdir:
                             mkdir_result = OperationResult(
                                 success=True, path="/tmp", message="Directory created"
@@ -234,11 +238,11 @@ class TestDriveOperationsDownload:
                             mock_mkdir.return_value = mkdir_result
 
                             with patch(
-                                    "quackcore.integrations.google.drive.operations.download.FileSystemOperations",
-                                    return_value=file_ops_mock
+                                "quackcore.integrations.google.drive.operations.download.FileSystemOperations",
+                                return_value=file_ops_mock,
                             ):
                                 with patch(
-                                        "quackcore.integrations.google.drive.utils.api.execute_api_request"
+                                    "quackcore.integrations.google.drive.utils.api.execute_api_request"
                                 ) as mock_execute:
                                     mock_execute.return_value = {
                                         "name": "test_file.txt",

@@ -16,8 +16,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs import service as fs
 from quackcore.integrations.core.base import BaseAuthProvider
-from quackcore.integrations.google.serialization import serialize_credentials
 from quackcore.integrations.core.results import AuthResult
+from quackcore.integrations.google.serialization import serialize_credentials
 
 
 class GoogleAuthProvider(BaseAuthProvider):

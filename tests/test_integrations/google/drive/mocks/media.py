@@ -5,6 +5,7 @@ Mock objects for Google Drive media operations (downloads, uploads).
 This module provides mock implementations for media operations such as
 download status, media uploaders, and downloaders.
 """
+
 from collections.abc import Callable
 
 
@@ -33,35 +34,35 @@ class MockDownloadStatus:
     def __eq__(self, other) -> bool:
         if isinstance(other, (int, float)):
             return self._progress_value == other
-        if hasattr(other, 'progress') and callable(getattr(other, 'progress')):
+        if hasattr(other, "progress") and callable(getattr(other, "progress")):
             return self._progress_value == other.progress()
         return NotImplemented
 
     def __lt__(self, other) -> bool:
         if isinstance(other, (int, float)):
             return self._progress_value < other
-        if hasattr(other, 'progress') and callable(getattr(other, 'progress')):
+        if hasattr(other, "progress") and callable(getattr(other, "progress")):
             return self._progress_value < other.progress()
         return NotImplemented
 
     def __le__(self, other) -> bool:
         if isinstance(other, (int, float)):
             return self._progress_value <= other
-        if hasattr(other, 'progress') and callable(getattr(other, 'progress')):
+        if hasattr(other, "progress") and callable(getattr(other, "progress")):
             return self._progress_value <= other.progress()
         return NotImplemented
 
     def __gt__(self, other) -> bool:
         if isinstance(other, (int, float)):
             return self._progress_value > other
-        if hasattr(other, 'progress') and callable(getattr(other, 'progress')):
+        if hasattr(other, "progress") and callable(getattr(other, "progress")):
             return self._progress_value > other.progress()
         return NotImplemented
 
     def __ge__(self, other) -> bool:
         if isinstance(other, (int, float)):
             return self._progress_value >= other
-        if hasattr(other, 'progress') and callable(getattr(other, 'progress')):
+        if hasattr(other, "progress") and callable(getattr(other, "progress")):
             return self._progress_value >= other.progress()
         return NotImplemented
 
@@ -121,7 +122,7 @@ def create_mock_media_io_base_download() -> Callable:
     """
 
     def create_downloader_factory(
-            progress_sequence: list[tuple[float, bool]] | None = None
+        progress_sequence: list[tuple[float, bool]] | None = None,
     ) -> MockMediaDownloader:
         """
         Create a mock downloader with the specified progress sequence.

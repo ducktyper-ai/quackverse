@@ -11,12 +11,12 @@ class MockLLMResponse:
     """A mock LLM response for testing client implementations."""
 
     def __init__(
-            self,
-            content: str = "This is a mock response",
-            model: str = "mock-model",
-            usage: Optional[Dict[str, int]] = None,
-            finish_reason: str = "stop",
-            error: Optional[Exception] = None,
+        self,
+        content: str = "This is a mock response",
+        model: str = "mock-model",
+        usage: Optional[Dict[str, int]] = None,
+        finish_reason: str = "stop",
+        error: Optional[Exception] = None,
     ):
         """
         Initialize a mock LLM response.
@@ -30,8 +30,11 @@ class MockLLMResponse:
         """
         self.content = content
         self.model = model
-        self.usage = usage or {"prompt_tokens": 10, "completion_tokens": 20,
-                               "total_tokens": 30}
+        self.usage = usage or {
+            "prompt_tokens": 10,
+            "completion_tokens": 20,
+            "total_tokens": 30,
+        }
         self.finish_reason = finish_reason
         self.error = error
 
@@ -39,11 +42,8 @@ class MockLLMResponse:
         self.choices = [
             MagicMock(
                 index=0,
-                message=MagicMock(
-                    content=content,
-                    role="assistant"
-                ),
-                finish_reason=finish_reason
+                message=MagicMock(content=content, role="assistant"),
+                finish_reason=finish_reason,
             )
         ]
 
@@ -51,7 +51,7 @@ class MockLLMResponse:
         self.usage_info = MagicMock(
             prompt_tokens=self.usage["prompt_tokens"],
             completion_tokens=self.usage["completion_tokens"],
-            total_tokens=self.usage["total_tokens"]
+            total_tokens=self.usage["total_tokens"],
         )
 
     def get_content(self) -> str:
@@ -68,18 +68,14 @@ class MockLLMResponse:
             "content": self.content,
             "model": self.model,
             "usage": self.usage,
-            "finish_reason": self.finish_reason
+            "finish_reason": self.finish_reason,
         }
 
 
 class MockTokenResponse:
     """A mock token count response."""
 
-    def __init__(
-            self,
-            count: int = 30,
-            error: Optional[Exception] = None
-    ):
+    def __init__(self, count: int = 30, error: Optional[Exception] = None):
         """
         Initialize a mock token count response.
 
@@ -107,12 +103,12 @@ class MockStreamingGenerator:
     """A generator that yields mock streaming chunks."""
 
     def __init__(
-            self,
-            content: str = "This is a mock response",
-            chunk_size: int = 5,
-            model: str = "mock-model",
-            error: Optional[Exception] = None,
-            error_after: Optional[int] = None
+        self,
+        content: str = "This is a mock response",
+        chunk_size: int = 5,
+        model: str = "mock-model",
+        error: Optional[Exception] = None,
+        error_after: Optional[int] = None,
     ):
         """
         Initialize a mock streaming generator.
@@ -148,8 +144,10 @@ class MockStreamingGenerator:
         Raises:
             Exception: If error is set and error_after chunks have been yielded.
         """
-        chunks = [self.content[i:i + self.chunk_size]
-                  for i in range(0, len(self.content), self.chunk_size)]
+        chunks = [
+            self.content[i : i + self.chunk_size]
+            for i in range(0, len(self.content), self.chunk_size)
+        ]
 
         for i, chunk in enumerate(chunks):
             if self.error and self.error_after is not None and i >= self.error_after:

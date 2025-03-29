@@ -38,7 +38,9 @@ class MockLLMClient(LLMClient):
         """
         super().__init__(model=model, log_level=log_level, **kwargs)
         # Check explicitly for None instead of falsy check
-        self._script = ["This is a mock response from the LLM."] if script is None else script
+        self._script = (
+            ["This is a mock response from the LLM."] if script is None else script
+        )
         self._current_index = 0
 
     def _chat_with_provider(
@@ -88,7 +90,9 @@ class MockLLMClient(LLMClient):
             callback(chunk_with_space)
             time.sleep(0.1)  # Simulate delay between chunks
 
-    def _count_tokens_with_provider(self, messages: list[ChatMessage]) -> IntegrationResult[int]:
+    def _count_tokens_with_provider(
+        self, messages: list[ChatMessage]
+    ) -> IntegrationResult[int]:
         """
         Provide a mock token count.
 

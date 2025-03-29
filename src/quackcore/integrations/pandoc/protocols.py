@@ -9,10 +9,10 @@ ensuring proper typing throughout the codebase.
 from pathlib import Path
 from typing import Protocol, TypeVar, runtime_checkable
 
+from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.pandoc.models import (
     ConversionTask,
 )
-from quackcore.integrations.core.results import IntegrationResult
 
 # Generic type variables for flexible return types
 T = TypeVar("T")

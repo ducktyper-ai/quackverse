@@ -158,8 +158,10 @@ class TestAnthropicClient:
         message = ChatMessage(role=RoleType.ASSISTANT, content="Assistant message")
         anthropic_message = client._convert_message_to_anthropic(message)
 
-        assert anthropic_message == {"role": "assistant",
-                                     "content": "Assistant message"}
+        assert anthropic_message == {
+            "role": "assistant",
+            "content": "Assistant message",
+        }
 
         # Test with empty content
         message = ChatMessage(role=RoleType.USER, content=None)
@@ -173,9 +175,7 @@ class TestAnthropicClient:
 
         # Use MockAnthropicErrorResponse to create test errors
         rate_limit_error = MockAnthropicErrorResponse(
-            message="Rate limit exceeded",
-            type="rate_limit_error",
-            status_code=429
+            message="Rate limit exceeded", type="rate_limit_error", status_code=429
         ).to_exception()
 
         api_error = client._convert_error(rate_limit_error)
@@ -188,7 +188,7 @@ class TestAnthropicClient:
         invalid_key_error = MockAnthropicErrorResponse(
             message="Invalid API key provided",
             type="authentication_error",
-            status_code=401
+            status_code=401,
         ).to_exception()
 
         api_error = client._convert_error(invalid_key_error)
@@ -196,9 +196,7 @@ class TestAnthropicClient:
 
         # Test insufficient quota error
         quota_error = MockAnthropicErrorResponse(
-            message="Insufficient quota",
-            type="quota_error",
-            status_code=402
+            message="Insufficient quota", type="quota_error", status_code=402
         ).to_exception()
 
         api_error = client._convert_error(quota_error)
@@ -206,9 +204,7 @@ class TestAnthropicClient:
 
         # Test generic error
         generic_error = MockAnthropicErrorResponse(
-            message="Some other error",
-            type="api_error",
-            status_code=500
+            message="Some other error", type="api_error", status_code=500
         ).to_exception()
 
         api_error = client._convert_error(generic_error)
@@ -219,14 +215,13 @@ class TestAnthropicClient:
         # Set up messages and options
         messages = [
             ChatMessage(role=RoleType.SYSTEM, content="System message"),
-            ChatMessage(role=RoleType.USER, content="User message")
+            ChatMessage(role=RoleType.USER, content="User message"),
         ]
         options = LLMOptions(temperature=0.5, max_tokens=100, top_p=0.8)
 
         # Use MockAnthropicResponse for non-streaming response
         mock_response = MockAnthropicResponse(
-            content="Response content",
-            model="claude-3-opus-20240229"
+            content="Response content", model="claude-3-opus-20240229"
         )
 
         # Test normal completion
@@ -256,8 +251,7 @@ class TestAnthropicClient:
 
         # Use MockAnthropicStreamingResponse for streaming
         mock_stream = MockAnthropicStreamingResponse(
-            content="Hello world!",
-            model="claude-3-opus-20240229"
+            content="Hello world!", model="claude-3-opus-20240229"
         )
 
         with patch.object(anthropic_client, "_get_client") as mock_get_client:
@@ -265,25 +259,26 @@ class TestAnthropicClient:
             mock_client.messages.stream.return_value = mock_stream
             mock_get_client.return_value = mock_client
 
-            result = anthropic_client._chat_with_provider(messages, streaming_options,
-                                                          callback)
+            result = anthropic_client._chat_with_provider(
+                messages, streaming_options, callback
+            )
 
             assert result.success is True
             assert result.content == "Hello world!"
 
             # Verify Anthropic streaming was called correctly
             mock_client.messages.stream.assert_called_once()
-            assert mock_client.messages.stream.call_args[1][
-                       "model"] == "claude-3-opus-20240229"
+            assert (
+                mock_client.messages.stream.call_args[1]["model"]
+                == "claude-3-opus-20240229"
+            )
             assert mock_client.messages.stream.call_args[1]["stream"] is True
 
         # Test with API error
         with patch.object(anthropic_client, "_get_client") as mock_get_client:
             mock_client = MagicMock()
             error_response = MockAnthropicErrorResponse(
-                message="API error",
-                type="server_error",
-                status_code=500
+                message="API error", type="server_error", status_code=500
             ).to_exception()
             mock_client.messages.create.side_effect = error_response
             mock_get_client.return_value = mock_client
@@ -300,13 +295,14 @@ class TestAnthropicClient:
 
             assert "Failed to import Anthropic package" in str(excinfo.value)
 
-    def test_count_tokens_with_provider(self,
-                                        anthropic_client: AnthropicClient) -> None:
+    def test_count_tokens_with_provider(
+        self, anthropic_client: AnthropicClient
+    ) -> None:
         """Test the Anthropic-specific token counting implementation."""
         # Set up messages
         messages = [
             ChatMessage(role=RoleType.SYSTEM, content="System message"),
-            ChatMessage(role=RoleType.USER, content="User message")
+            ChatMessage(role=RoleType.USER, content="User message"),
         ]
 
         # Use MockAnthropicClient's count_tokens method
@@ -338,8 +334,10 @@ class TestAnthropicClient:
 
                 # Should log a warning
                 mock_warning.assert_called_once()
-                assert "Anthropic token counting API not available" in \
-                       mock_warning.call_args[0][0]
+                assert (
+                    "Anthropic token counting API not available"
+                    in mock_warning.call_args[0][0]
+                )
 
         # Test with general error
         with patch.object(anthropic_client, "_get_client") as mock_get_client:
@@ -366,7 +364,7 @@ class TestAnthropicClient:
         mock_stream = MockAnthropicStreamingResponse(
             content="Hello world!",
             model="claude-3-opus-20240229",
-            chunk_size=2  # Split into smaller chunks for testing
+            chunk_size=2,  # Split into smaller chunks for testing
         )
 
         mock_client = MagicMock()
@@ -374,12 +372,7 @@ class TestAnthropicClient:
 
         # Test streaming
         result = client._handle_streaming(
-            mock_client,
-            "claude-3-opus-20240229",
-            system,
-            messages,
-            params,
-            callback
+            mock_client, "claude-3-opus-20240229", system, messages, params, callback
         )
 
         assert result == "Hello world!"
@@ -391,14 +384,12 @@ class TestAnthropicClient:
             messages=messages,
             system=system,
             stream=True,
-            **params
+            **params,
         )
 
         # Test with error during streaming
         error = MockAnthropicErrorResponse(
-            message="Streaming error",
-            type="server_error",
-            status_code=500
+            message="Streaming error", type="server_error", status_code=500
         ).to_exception()
 
         mock_client.messages.stream.side_effect = error
@@ -410,7 +401,7 @@ class TestAnthropicClient:
                 system,
                 messages,
                 params,
-                callback
+                callback,
             )
 
         assert "Anthropic API error: Streaming error" in str(excinfo.value)

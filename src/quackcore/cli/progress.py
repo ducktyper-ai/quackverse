@@ -22,7 +22,7 @@ class ProgressCallback(Protocol):
     """Protocol for progress callbacks."""
 
     def __call__(
-            self, current: int, total: int | None, message: str | None = None
+        self, current: int, total: int | None, message: str | None = None
     ) -> None:
         """
         Update progress information.
@@ -44,12 +44,12 @@ class ProgressReporter:
     """
 
     def __init__(
-            self,
-            total: int | None = None,
-            desc: str | None = None,
-            unit: str = "it",
-            show_eta: bool = True,
-            file: TextIOBase = sys.stdout,
+        self,
+        total: int | None = None,
+        desc: str | None = None,
+        unit: str = "it",
+        show_eta: bool = True,
+        file: TextIOBase = sys.stdout,
     ) -> None:
         """
         Initialize a progress reporter.
@@ -177,11 +177,11 @@ class SimpleProgress(Iterator[T]):
     """
 
     def __init__(
-            self,
-            iterable: Iterable[T],
-            total: int | None = None,
-            desc: str | None = None,
-            unit: str = "it",
+        self,
+        iterable: Iterable[T],
+        total: int | None = None,
+        desc: str | None = None,
+        unit: str = "it",
     ) -> None:
         """
         Initialize a simple progress tracker.
@@ -218,10 +218,10 @@ class SimpleProgress(Iterator[T]):
 
 
 def show_progress(
-        iterable: Iterable[T],
-        total: int | None = None,
-        desc: str | None = None,
-        unit: str = "it",
+    iterable: Iterable[T],
+    total: int | None = None,
+    desc: str | None = None,
+    unit: str = "it",
 ) -> Iterator[T]:
     """
     Show a progress bar for an iterable.

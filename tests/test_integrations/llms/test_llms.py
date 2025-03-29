@@ -27,15 +27,12 @@ __all__ = [
     "TestOpenAIClient",
     "TestAnthropicClient",
     "TestMockLLMClient",
-
     # Model and protocol tests
     "TestLLMModels",
     "TestLLMProtocols",
-
     # Configuration tests
     "TestLLMConfig",
     "TestLLMConfigProvider",
-
     # Integration tests
     "TestLLMRegistry",
     "TestLLMService",

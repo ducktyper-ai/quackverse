@@ -6,8 +6,10 @@ Mock Anthropic classes for LLM testing.
 from typing import Any, Dict, Iterator, List, Optional, Union
 from unittest.mock import MagicMock
 
-from tests.test_integrations.llms.mocks.base import MockLLMResponse, \
-    MockStreamingGenerator
+from tests.test_integrations.llms.mocks.base import (
+    MockLLMResponse,
+    MockStreamingGenerator,
+)
 from tests.test_integrations.llms.mocks.clients import MockClient
 
 
@@ -15,16 +17,16 @@ class MockAnthropicResponse(MockLLMResponse):
     """A mock response mimicking the Anthropic API format."""
 
     def __init__(
-            self,
-            content: str = "This is a mock Anthropic response",
-            model: str = "claude-3-opus-20240229",
-            usage: Optional[Dict[str, int]] = None,
-            finish_reason: str = "end_turn",
-            error: Optional[Exception] = None,
-            id: str = "msg_123",
-            type: str = "message",
-            stop_reason: Optional[str] = None,
-            stop_sequence: Optional[str] = None,
+        self,
+        content: str = "This is a mock Anthropic response",
+        model: str = "claude-3-opus-20240229",
+        usage: Optional[Dict[str, int]] = None,
+        finish_reason: str = "end_turn",
+        error: Optional[Exception] = None,
+        id: str = "msg_123",
+        type: str = "message",
+        stop_reason: Optional[str] = None,
+        stop_sequence: Optional[str] = None,
     ):
         """
         Initialize a mock Anthropic response.
@@ -54,12 +56,7 @@ class MockAnthropicResponse(MockLLMResponse):
         self.stop_sequence = stop_sequence
 
         # Create Anthropic-style structure
-        self.content = [
-            MagicMock(
-                type="text",
-                text=content
-            )
-        ]
+        self.content = [MagicMock(type="text", text=content)]
 
     def to_anthropic_format(self) -> Dict[str, Any]:
         """Convert to Anthropic API format."""
@@ -70,19 +67,14 @@ class MockAnthropicResponse(MockLLMResponse):
             "id": self.id,
             "type": self.type,
             "role": "assistant",
-            "content": [
-                {
-                    "type": "text",
-                    "text": self.get_content()
-                }
-            ],
+            "content": [{"type": "text", "text": self.get_content()}],
             "model": self.model,
             "stop_reason": self.stop_reason,
             "stop_sequence": self.stop_sequence,
             "usage": {
                 "input_tokens": self.usage["prompt_tokens"],
-                "output_tokens": self.usage["completion_tokens"]
-            }
+                "output_tokens": self.usage["completion_tokens"],
+            },
         }
 
 
@@ -90,13 +82,13 @@ class MockAnthropicStreamingResponse(MockStreamingGenerator):
     """A generator that yields chunks in Anthropic streaming format."""
 
     def __init__(
-            self,
-            content: str = "This is a mock Anthropic response",
-            chunk_size: int = 5,
-            model: str = "claude-3-opus-20240229",
-            error: Exception | None = None,
-            error_after: int | None = None,
-            id: str = "msg_123",
+        self,
+        content: str = "This is a mock Anthropic response",
+        chunk_size: int = 5,
+        model: str = "claude-3-opus-20240229",
+        error: Exception | None = None,
+        error_after: int | None = None,
+        id: str = "msg_123",
     ) -> None:
         """
         Initialize a mock Anthropic streaming generator.
@@ -114,7 +106,7 @@ class MockAnthropicStreamingResponse(MockStreamingGenerator):
             chunk_size=chunk_size,
             model=model,
             error=error,
-            error_after=error_after
+            error_after=error_after,
         )
         self.id = id
         self.chunks_iter = None
@@ -171,14 +163,15 @@ class MockAnthropicStreamingResponse(MockStreamingGenerator):
         """Context manager for Anthropic streaming."""
         return self
 
+
 class MockAnthropicErrorResponse:
     """A mock error response mimicking Anthropic API errors."""
 
     def __init__(
-            self,
-            message: str = "Anthropic API error",
-            type: str = "api_error",
-            status_code: int = 429,
+        self,
+        message: str = "Anthropic API error",
+        type: str = "api_error",
+        status_code: int = 429,
     ):
         """
         Initialize a mock Anthropic error response.
@@ -223,12 +216,12 @@ class MockAnthropicClient(MockClient):
     """A mock Anthropic client."""
 
     def __init__(
-            self,
-            responses: List[str] = None,
-            token_counts: List[int] = None,
-            model: str = "claude-3-opus-20240229",
-            errors: List[Exception] = None,
-            **kwargs: Any
+        self,
+        responses: List[str] = None,
+        token_counts: List[int] = None,
+        model: str = "claude-3-opus-20240229",
+        errors: List[Exception] = None,
+        **kwargs: Any,
     ):
         """
         Initialize a mock Anthropic client.
@@ -245,7 +238,7 @@ class MockAnthropicClient(MockClient):
             token_counts=token_counts,
             model=model,
             errors=errors,
-            **kwargs
+            **kwargs,
         )
 
         # Track Anthropic-specific data
@@ -279,8 +272,9 @@ class MockAnthropicClient(MockClient):
 
         # Handle streaming
         if kwargs.get("stream", False):
-            return MockAnthropicStreamingResponse(content=response_text,
-                                                  model=self.model)
+            return MockAnthropicStreamingResponse(
+                content=response_text, model=self.model
+            )
 
         # Return a normal response
         return MockAnthropicResponse(content=response_text, model=self.model)

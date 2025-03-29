@@ -75,6 +75,6 @@ def get_llm_client(
     except Exception as e:
         raise QuackIntegrationError(
             f"Failed to initialize {provider} client: {e}",
-            context={'provider': provider},
+            context={"provider": provider},
             original_error=e,
         ) from e

@@ -10,18 +10,19 @@ import logging
 from typing import Any
 
 from quackcore.errors import QuackApiError
+from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.google.drive.protocols import DriveService
+
 # Import the utils.api module itself, not just the function
 from quackcore.integrations.google.drive.utils import api
-from quackcore.integrations.core.results import IntegrationResult
 
 
 def set_file_permissions(
-        drive_service: DriveService,
-        file_id: str,
-        role: str = "reader",
-        type_: str = "anyone",
-        logger: logging.Logger | None = None,
+    drive_service: DriveService,
+    file_id: str,
+    role: str = "reader",
+    type_: str = "anyone",
+    logger: logging.Logger | None = None,
 ) -> IntegrationResult[bool]:
     """
     Set permissions for a file or folder in Google Drive.
@@ -47,8 +48,10 @@ def set_file_permissions(
         }
 
         # Create the request
-        request = drive_service.files().permissions().create(
-            file_id=file_id, body=permission, fields="id"
+        request = (
+            drive_service.files()
+            .permissions()
+            .create(file_id=file_id, body=permission, fields="id")
         )
 
         # Use the module import to call the function - this should make patching work
@@ -73,9 +76,9 @@ def set_file_permissions(
 
 
 def get_sharing_link(
-        drive_service: DriveService,
-        file_id: str,
-        logger: logging.Logger | None = None,
+    drive_service: DriveService,
+    file_id: str,
+    logger: logging.Logger | None = None,
 ) -> IntegrationResult[str]:
     """
     Get the sharing link for a file in Google Drive.
@@ -102,9 +105,9 @@ def get_sharing_link(
 
         # Extract link with explicit type annotation
         link: str = (
-                str(file_metadata.get("webViewLink", ""))
-                or str(file_metadata.get("webContentLink", ""))
-                or f"https://drive.google.com/file/d/{file_id}/view"
+            str(file_metadata.get("webViewLink", ""))
+            or str(file_metadata.get("webContentLink", ""))
+            or f"https://drive.google.com/file/d/{file_id}/view"
         )
 
         return IntegrationResult.success_result(

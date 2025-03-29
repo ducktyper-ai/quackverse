@@ -11,8 +11,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.integrations.google.mail.service import GoogleMailService
 from quackcore.integrations.core.results import IntegrationResult
+from quackcore.integrations.google.mail.service import GoogleMailService
 from tests.test_integrations.google.mail.mocks import (
     create_error_gmail_service,
     create_mock_gmail_service,

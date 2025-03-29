@@ -23,12 +23,12 @@ class LLMIntegration(BaseIntegrationService):
     """Integration service for LLMs."""
 
     def __init__(
-            self,
-            provider: str | None = None,
-            model: str | None = None,
-            api_key: str | None = None,
-            config_path: str | None = None,
-            log_level: int = logging.INFO,
+        self,
+        provider: str | None = None,
+        model: str | None = None,
+        api_key: str | None = None,
+        config_path: str | None = None,
+        log_level: int = logging.INFO,
     ) -> None:
         """
         Initialize the LLM integration service.
@@ -155,10 +155,10 @@ class LLMIntegration(BaseIntegrationService):
             raise QuackIntegrationError(f"Invalid LLM configuration: {e}")
 
     def chat(
-            self,
-            messages: Sequence[ChatMessage] | Sequence[dict],
-            options: LLMOptions | None = None,
-            callback: Callable[[str], None] | None = None,
+        self,
+        messages: Sequence[ChatMessage] | Sequence[dict],
+        options: LLMOptions | None = None,
+        callback: Callable[[str], None] | None = None,
     ) -> IntegrationResult[str]:
         """
         Send a chat completion request to the LLM.
@@ -180,7 +180,7 @@ class LLMIntegration(BaseIntegrationService):
         return self.client.chat(messages, options, callback)
 
     def count_tokens(
-            self, messages: Sequence[ChatMessage] | Sequence[dict]
+        self, messages: Sequence[ChatMessage] | Sequence[dict]
     ) -> IntegrationResult[int]:
         """
         Count the number of tokens in the messages.

@@ -27,7 +27,9 @@ class ChatMessage(BaseModel):
 
     role: RoleType = Field(..., description="Role of the message sender")
     content: str | None = Field(None, description="Message content")
-    name: str | None = Field(None, description="Name of the sender (for function calls)")
+    name: str | None = Field(
+        None, description="Name of the sender (for function calls)"
+    )
     function_call: dict | None = Field(None, description="Function call data")
     tool_calls: list[dict] | None = Field(None, description="Tool call data")
 
@@ -66,7 +68,9 @@ class FunctionDefinition(BaseModel):
 
     name: str = Field(..., description="Function name")
     description: str | None = Field(None, description="Function description")
-    parameters: dict[str, Any] = Field(default_factory=dict, description="Function parameters")
+    parameters: dict[str, Any] = Field(
+        default_factory=dict, description="Function parameters"
+    )
 
 
 class ToolDefinition(BaseModel):
@@ -90,25 +94,36 @@ class ToolCall(BaseModel):
     type: str = Field("function", description="Tool type")
     function: FunctionCall = Field(..., description="Function call")
 
+    model_config = {
+        "extra": "forbid"
+    }
 
 class LLMOptions(BaseModel):
     """Model for additional options for LLM requests."""
 
     temperature: float = Field(0.7, description="Temperature for sampling")
-    max_tokens: int | None = Field(None, description="Maximum number of tokens to generate")
+    max_tokens: int | None = Field(
+        None, description="Maximum number of tokens to generate"
+    )
     top_p: float = Field(1.0, description="Nucleus sampling parameter")
     frequency_penalty: float = Field(0.0, description="Frequency penalty")
     presence_penalty: float = Field(0.0, description="Presence penalty")
     stop: list[str] | None = Field(None, description="Stop sequences")
-    functions: list[FunctionDefinition] | None = Field(None, description="Available functions")
+    functions: list[FunctionDefinition] | None = Field(
+        None, description="Available functions"
+    )
     tools: list[ToolDefinition] | None = Field(None, description="Available tools")
     model: str | None = Field(None, description="Override model name")
-    response_format: dict | None = Field(None, description="Response format specification")
+    response_format: dict | None = Field(
+        None, description="Response format specification"
+    )
     seed: int | None = Field(None, description="Random seed for deterministic results")
     stream: bool = Field(False, description="Whether to stream the response")
     timeout: int = Field(60, description="Request timeout in seconds")
     retry_count: int = Field(3, description="Number of retries for failed requests")
-    initial_retry_delay: float = Field(1.0, description="Initial delay for exponential backoff")
+    initial_retry_delay: float = Field(
+        1.0, description="Initial delay for exponential backoff"
+    )
     max_retry_delay: float = Field(30.0, description="Maximum delay between retries")
 
     @field_validator("temperature")
@@ -174,7 +189,9 @@ class LLMResult(BaseModel):
     role: Literal["assistant"] = Field("assistant", description="Message role")
     model: str = Field(..., description="Model used for completion")
     prompt_tokens: int | None = Field(None, description="Number of prompt tokens")
-    completion_tokens: int | None = Field(None, description="Number of completion tokens")
+    completion_tokens: int | None = Field(
+        None, description="Number of completion tokens"
+    )
     total_tokens: int | None = Field(None, description="Total number of tokens")
     function_call: FunctionCall | None = Field(None, description="Function call data")
     tool_calls: list[ToolCall] | None = Field(None, description="Tool call data")

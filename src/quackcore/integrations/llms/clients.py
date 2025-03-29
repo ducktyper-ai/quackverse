@@ -14,9 +14,9 @@ from typing import Any
 
 from quackcore import QuackIntegrationError
 from quackcore.errors import QuackApiError
+from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.llms.models import ChatMessage, LLMOptions
 from quackcore.integrations.llms.protocols import LLMProviderProtocol
-from quackcore.integrations.core.results import IntegrationResult
 
 
 class LLMClient(ABC, LLMProviderProtocol):
@@ -170,7 +170,9 @@ class LLMClient(ABC, LLMProviderProtocol):
             return IntegrationResult.error_result(f"Error counting tokens: {e}")
 
     @abstractmethod
-    def _count_tokens_with_provider(self, messages: list[ChatMessage]) -> IntegrationResult[int]:
+    def _count_tokens_with_provider(
+        self, messages: list[ChatMessage]
+    ) -> IntegrationResult[int]:
         """
         Provider-specific implementation of token counting.
 
@@ -206,21 +208,22 @@ class LLMClient(ABC, LLMProviderProtocol):
 
         return normalized_messages
 
+
 class OpenAIClient(LLMClient):
     """OpenAI LLM client implementation."""
 
     def __init__(
-            self,
-            model: str | None = None,
-            api_key: str | None = None,
-            api_base: str | None = None,
-            organization: str | None = None,
-            timeout: int = 60,
-            retry_count: int = 3,
-            initial_retry_delay: float = 1.0,
-            max_retry_delay: float = 30.0,
-            log_level: int = logging.INFO,
-            **kwargs: Any,
+        self,
+        model: str | None = None,
+        api_key: str | None = None,
+        api_base: str | None = None,
+        organization: str | None = None,
+        timeout: int = 60,
+        retry_count: int = 3,
+        initial_retry_delay: float = 1.0,
+        max_retry_delay: float = 30.0,
+        log_level: int = logging.INFO,
+        **kwargs: Any,
     ) -> None:
         """
         Initialize the OpenAI client.
@@ -324,10 +327,10 @@ class OpenAIClient(LLMClient):
         return self._model
 
     def _chat_with_provider(
-            self,
-            messages: list[ChatMessage],
-            options: LLMOptions,
-            callback: Callable[[str], None] | None = None,
+        self,
+        messages: list[ChatMessage],
+        options: LLMOptions,
+        callback: Callable[[str], None] | None = None,
     ) -> IntegrationResult[str]:
         """
         Send a chat completion request to the OpenAI API.
@@ -365,9 +368,7 @@ class OpenAIClient(LLMClient):
             else:
                 # Make the API call
                 response = client.chat.completions.create(
-                    model=model,
-                    messages=openai_messages,
-                    **params
+                    model=model, messages=openai_messages, **params
                 )
 
                 # Process the response
@@ -384,12 +385,12 @@ class OpenAIClient(LLMClient):
             raise self._convert_error(e)
 
     def _handle_streaming(
-            self,
-            client: Any,
-            model: str,
-            messages: list[dict],
-            params: dict,
-            callback: Callable[[str], None] | None,
+        self,
+        client: Any,
+        model: str,
+        messages: list[dict],
+        params: dict,
+        callback: Callable[[str], None] | None,
     ) -> str:
         """
         Handle streaming responses from the OpenAI API.
@@ -408,10 +409,7 @@ class OpenAIClient(LLMClient):
 
         try:
             stream = client.chat.completions.create(
-                model=model,
-                messages=messages,
-                stream=True,
-                **params
+                model=model, messages=messages, stream=True, **params
             )
 
             for chunk in stream:
@@ -524,101 +522,106 @@ class OpenAIClient(LLMClient):
                 original_error=error,
             )
 
-    def _count_tokens_with_provider(self, messages: list[ChatMessage]) -> \
-        IntegrationResult[int]:
-            """
-            Count the number of tokens in the messages using OpenAI's tokenizer.
+    def _count_tokens_with_provider(
+        self, messages: list[ChatMessage]
+    ) -> IntegrationResult[int]:
+        """
+        Count the number of tokens in the messages using OpenAI's tokenizer.
 
-            Args:
-                messages: List of messages to count tokens for.
+        Args:
+            messages: List of messages to count tokens for.
 
-            Returns:
-                IntegrationResult[int]: Result containing the token count.
-            """
+        Returns:
+            IntegrationResult[int]: Result containing the token count.
+        """
+        try:
+            # Try to use tiktoken for more accurate counts
             try:
-                # Try to use tiktoken for more accurate counts
+                import tiktoken
+
+                # Get the appropriate encoding for the model
+                model = self.model
+
+                # Default to cl100k_base encoding for newer models
+                encoding_name = "cl100k_base"
+
+                # Try to get model-specific encoding
                 try:
-                    import tiktoken
+                    encoding = tiktoken.encoding_for_model(model)
+                except KeyError:
+                    # Fall back to cl100k_base if model-specific encoding is not available
+                    encoding = tiktoken.get_encoding(encoding_name)
 
-                    # Get the appropriate encoding for the model
-                    model = self.model
+                # Count tokens for each message
+                token_count = 0
 
-                    # Default to cl100k_base encoding for newer models
-                    encoding_name = "cl100k_base"
+                # Convert messages to OpenAI format for counting
+                openai_messages = [
+                    self._convert_message_to_openai(msg) for msg in messages
+                ]
 
-                    # Try to get model-specific encoding
-                    try:
-                        encoding = tiktoken.encoding_for_model(model)
-                    except KeyError:
-                        # Fall back to cl100k_base if model-specific encoding is not available
-                        encoding = tiktoken.get_encoding(encoding_name)
+                # OpenAI's token counting logic
+                tokens_per_message = (
+                    3  # Every message follows <|start|>{role/name}\n{content}<|end|>
+                )
+                tokens_per_name = 1  # If there's a name, the role is omitted
 
-                    # Count tokens for each message
-                    token_count = 0
+                for message in openai_messages:
+                    token_count += tokens_per_message
 
-                    # Convert messages to OpenAI format for counting
-                    openai_messages = [self._convert_message_to_openai(msg) for msg in
-                                       messages]
+                    for key, value in message.items():
+                        if isinstance(value, str):
+                            token_count += len(encoding.encode(value))
+                        elif isinstance(value, dict):
+                            # For function_call or similar nested structures
+                            json_str = str(value)
+                            token_count += len(encoding.encode(json_str))
 
-                    # OpenAI's token counting logic
-                    tokens_per_message = 3  # Every message follows <|start|>{role/name}\n{content}<|end|>
-                    tokens_per_name = 1  # If there's a name, the role is omitted
+                    if message.get("name"):
+                        token_count += tokens_per_name
 
-                    for message in openai_messages:
-                        token_count += tokens_per_message
+                # Add 3 tokens for the assistant's reply
+                token_count += 3
 
-                        for key, value in message.items():
-                            if isinstance(value, str):
-                                token_count += len(encoding.encode(value))
-                            elif isinstance(value, dict):
-                                # For function_call or similar nested structures
-                                json_str = str(value)
-                                token_count += len(encoding.encode(json_str))
+                return IntegrationResult.success_result(token_count)
 
-                        if message.get("name"):
-                            token_count += tokens_per_name
+            except ImportError:
+                import tiktoken
 
-                    # Add 3 tokens for the assistant's reply
-                    token_count += 3
+                # Fall back to a simple estimation if tiktoken is not available
+                self.logger.warning(
+                    "tiktoken not installed. Using simple token estimation. "
+                    "Install tiktoken for more accurate counts: pip install tiktoken"
+                )
 
-                    return IntegrationResult.success_result(token_count)
+                # Simple estimation based on words (very rough approximation)
+                total_text = ""
+                for message in messages:
+                    if message.content:
+                        total_text += message.content + " "
 
-                except ImportError:
-                    import tiktoken
-                    # Fall back to a simple estimation if tiktoken is not available
-                    self.logger.warning(
-                        "tiktoken not installed. Using simple token estimation. "
-                        "Install tiktoken for more accurate counts: pip install tiktoken"
-                    )
+                # Rough approximation: 1 token ≈ 4 characters
+                estimated_tokens = len(total_text) // 4
 
-                    # Simple estimation based on words (very rough approximation)
-                    total_text = ""
-                    for message in messages:
-                        if message.content:
-                            total_text += message.content + " "
+                return IntegrationResult.success_result(
+                    estimated_tokens,
+                    message="Token count is an estimation. Install tiktoken for accuracy.",
+                )
 
-                    # Rough approximation: 1 token ≈ 4 characters
-                    estimated_tokens = len(total_text) // 4
-
-                    return IntegrationResult.success_result(
-                        estimated_tokens,
-                        message="Token count is an estimation. Install tiktoken for accuracy.",
-                    )
-
-            except Exception as e:
-                self.logger.error(f"Error counting tokens: {e}")
-                return IntegrationResult.error_result(f"Error counting tokens: {e}")
+        except Exception as e:
+            self.logger.error(f"Error counting tokens: {e}")
+            return IntegrationResult.error_result(f"Error counting tokens: {e}")
 
 
 class MockLLMClient(LLMClient):
     """Mock LLM client for testing and educational purposes."""
 
     def __init__(
-            self,
-            script: list[str] | None = None,
-            model: str = "mock-model",
-            log_level: int = logging.INFO,
-            **kwargs: Any,
+        self,
+        script: list[str] | None = None,
+        model: str = "mock-model",
+        log_level: int = logging.INFO,
+        **kwargs: Any,
     ) -> None:
         """
         Initialize the mock LLM client.
@@ -634,10 +637,10 @@ class MockLLMClient(LLMClient):
         self._current_index = 0
 
     def _chat_with_provider(
-            self,
-            messages: list[ChatMessage],
-            options: LLMOptions,
-            callback: Callable[[str], None] | None = None,
+        self,
+        messages: list[ChatMessage],
+        options: LLMOptions,
+        callback: Callable[[str], None] | None = None,
     ) -> IntegrationResult[str]:
         """
         Return a mock response from the script.
@@ -680,8 +683,9 @@ class MockLLMClient(LLMClient):
             callback(chunk_with_space)
             time.sleep(0.1)  # Simulate delay between chunks
 
-    def _count_tokens_with_provider(self, messages: list[ChatMessage]) -> \
-    IntegrationResult[int]:
+    def _count_tokens_with_provider(
+        self, messages: list[ChatMessage]
+    ) -> IntegrationResult[int]:
         """
         Provide a mock token count.
 

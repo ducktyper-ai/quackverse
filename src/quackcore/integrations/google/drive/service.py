@@ -16,13 +16,14 @@ from quackcore.errors import (
     QuackBaseAuthError,
     QuackIntegrationError,
 )
-from quackcore.fs import service as fs, FileSystemOperations
+from quackcore.fs import FileSystemOperations
+from quackcore.fs import service as fs
 from quackcore.integrations.core.base import BaseIntegrationService
+from quackcore.integrations.core.protocols import StorageIntegrationProtocol
+from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.google.auth import GoogleAuthProvider
 from quackcore.integrations.google.config import GoogleConfigProvider
 from quackcore.integrations.google.drive.models import DriveFile, DriveFolder
-from quackcore.integrations.core.protocols import StorageIntegrationProtocol
-from quackcore.integrations.core.results import IntegrationResult
 from quackcore.paths import resolver
 
 NoneType = type(None)
@@ -195,7 +196,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
         return path_obj, filename, folder_id, mime_type
 
     def _resolve_download_path(
-            self, file_metadata: dict[str, Any], local_path: str | None
+        self, file_metadata: dict[str, Any], local_path: str | None
     ) -> str:
         """
         Resolve the local path for file download.
@@ -355,7 +356,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             )
 
     def download_file(
-            self, remote_id: str, local_path: str | None = None
+        self, remote_id: str, local_path: str | None = None
     ) -> IntegrationResult[str]:
         """
         Download a file from Google Drive.

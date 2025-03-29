@@ -11,7 +11,7 @@ import logging
 import os
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 # Import these directly from their modules to ensure mocks work
 from quackcore.cli.config import find_project_root, load_config
@@ -21,16 +21,16 @@ from quackcore.errors import QuackError
 
 
 def init_cli_env(
-        *,
-        config_path: str | Path | None = None,
-        log_level: str | None = None,
-        debug: bool = False,
-        verbose: bool = False,
-        quiet: bool = False,
-        environment: str | None = None,
-        base_dir: str | Path | None = None,
-        cli_args: Mapping[str, Any] | None = None,
-        app_name: str = "quack",
+    *,
+    config_path: str | Path | None = None,
+    log_level: str | None = None,
+    debug: bool = False,
+    verbose: bool = False,
+    quiet: bool = False,
+    environment: str | None = None,
+    base_dir: str | Path | None = None,
+    cli_args: Mapping[str, Any] | None = None,
+    app_name: str = "quack",
 ) -> QuackContext:
     """
     Initialize a CLI environment and return a context object.
@@ -109,8 +109,10 @@ def init_cli_env(
         logging.error(str(error))
         raise error from e
 
+
 if TYPE_CHECKING:
     from quackcore.cli.options import CliOptions
+
 
 def from_cli_options(
     options: "CliOptions",

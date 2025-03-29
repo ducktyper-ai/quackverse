@@ -10,11 +10,11 @@ import logging
 from collections.abc import Iterable, Mapping
 
 from quackcore.errors import QuackApiError
+from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.google.drive.models import DriveFile, DriveFolder
 from quackcore.integrations.google.drive.protocols import DriveService
 from quackcore.integrations.google.drive.utils.api import execute_api_request
 from quackcore.integrations.google.drive.utils.query import build_query
-from quackcore.integrations.core.results import IntegrationResult
 
 
 def list_files(

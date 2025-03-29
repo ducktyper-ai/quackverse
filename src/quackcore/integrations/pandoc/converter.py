@@ -12,6 +12,7 @@ from pathlib import Path
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs import service as fs
+from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.models import (
     ConversionMetrics,
@@ -27,7 +28,6 @@ from quackcore.integrations.pandoc.protocols import (
     BatchConverterProtocol,
     DocumentConverterProtocol,
 )
-from quackcore.integrations.core.results import IntegrationResult
 
 logger = logging.getLogger(__name__)
 

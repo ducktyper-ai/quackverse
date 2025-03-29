@@ -3,8 +3,8 @@
 Mock request objects for Google Drive testing.
 """
 
-from unittest.mock import Mock
 from typing import TypeVar
+from unittest.mock import Mock
 
 from quackcore.integrations.google.drive.protocols import DriveRequest
 

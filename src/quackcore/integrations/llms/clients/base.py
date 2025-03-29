@@ -21,15 +21,15 @@ class LLMClient(ABC, LLMProviderProtocol):
     """Base class for LLM clients."""
 
     def __init__(
-            self,
-            model: str | None = None,
-            api_key: str | None = None,
-            timeout: int = 60,
-            retry_count: int = 3,
-            initial_retry_delay: float = 1.0,
-            max_retry_delay: float = 30.0,
-            log_level: int = logging.INFO,
-            **kwargs: Any,
+        self,
+        model: str | None = None,
+        api_key: str | None = None,
+        timeout: int = 60,
+        retry_count: int = 3,
+        initial_retry_delay: float = 1.0,
+        max_retry_delay: float = 30.0,
+        log_level: int = logging.INFO,
+        **kwargs: Any,
     ) -> None:
         """
         Initialize the LLM client.
@@ -71,10 +71,10 @@ class LLMClient(ABC, LLMProviderProtocol):
         return self._model
 
     def chat(
-            self,
-            messages: Sequence[ChatMessage] | Sequence[dict],
-            options: LLMOptions | None = None,
-            callback: Callable[[str], None] | None = None,
+        self,
+        messages: Sequence[ChatMessage] | Sequence[dict],
+        options: LLMOptions | None = None,
+        callback: Callable[[str], None] | None = None,
     ) -> IntegrationResult[str]:
         """
         Send a chat completion request to the LLM.
@@ -144,10 +144,10 @@ class LLMClient(ABC, LLMProviderProtocol):
 
     @abstractmethod
     def _chat_with_provider(
-            self,
-            messages: list[ChatMessage],
-            options: LLMOptions,
-            callback: Callable[[str], None] | None = None,
+        self,
+        messages: list[ChatMessage],
+        options: LLMOptions,
+        callback: Callable[[str], None] | None = None,
     ) -> IntegrationResult[str]:
         """
         Provider-specific implementation of chat completion request.
@@ -163,7 +163,7 @@ class LLMClient(ABC, LLMProviderProtocol):
         ...
 
     def count_tokens(
-            self, messages: Sequence[ChatMessage] | Sequence[dict]
+        self, messages: Sequence[ChatMessage] | Sequence[dict]
     ) -> IntegrationResult[int]:
         """
         Count the number of tokens in the messages.
@@ -196,7 +196,9 @@ class LLMClient(ABC, LLMProviderProtocol):
             return IntegrationResult.error_result(f"Error counting tokens: {e}")
 
     @abstractmethod
-    def _count_tokens_with_provider(self, messages: list[ChatMessage]) -> IntegrationResult[int]:
+    def _count_tokens_with_provider(
+        self, messages: list[ChatMessage]
+    ) -> IntegrationResult[int]:
         """
         Provider-specific implementation of token counting.
 
@@ -209,7 +211,7 @@ class LLMClient(ABC, LLMProviderProtocol):
         ...
 
     def _normalize_messages(
-            self, messages: Sequence[ChatMessage] | Sequence[dict]
+        self, messages: Sequence[ChatMessage] | Sequence[dict]
     ) -> list[ChatMessage]:
         """
         Normalize messages to a list of ChatMessage objects.
@@ -232,7 +234,7 @@ class LLMClient(ABC, LLMProviderProtocol):
                 if "role" not in message or "content" not in message:
                     raise QuackIntegrationError(
                         "Failed to normalize message: missing required fields 'role' and/or 'content'",
-                        context={"message_type": type(message).__name__}
+                        context={"message_type": type(message).__name__},
                     )
                 try:
                     normalized_messages.append(ChatMessage.from_dict(message))
@@ -240,7 +242,7 @@ class LLMClient(ABC, LLMProviderProtocol):
                     raise QuackIntegrationError(
                         f"Failed to normalize message: {e}",
                         context={"message_type": type(message).__name__},
-                        original_error=e
+                        original_error=e,
                     )
             elif isinstance(message, ChatMessage):
                 normalized_messages.append(message)
@@ -248,4 +250,3 @@ class LLMClient(ABC, LLMProviderProtocol):
                 raise ValueError(f"Unsupported message type: {type(message)}")
 
         return normalized_messages
-

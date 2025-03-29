@@ -15,7 +15,10 @@ import pytest
 
 from quackcore.errors import QuackError
 from quackcore.integrations.core.protocols import IntegrationProtocol
-from quackcore.integrations.core.registry import IntegrationRegistry, PluginLoaderProtocol
+from quackcore.integrations.core.registry import (
+    IntegrationRegistry,
+    PluginLoaderProtocol,
+)
 
 
 class MockIntegration:

@@ -8,15 +8,17 @@ retry logic, error handling, and message normalization.
 
 import logging
 import time
-from typing import cast, List
+from typing import List, cast
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from quackcore.errors import QuackApiError, QuackIntegrationError
+from quackcore.integrations.core.results import (  # Import IntegrationResult for testing
+    IntegrationResult,
+)
 from quackcore.integrations.llms.models import ChatMessage, LLMOptions, RoleType
 from tests.test_integrations.llms.mocks.clients import MockClient
-from quackcore.integrations.core.results import IntegrationResult  # Import IntegrationResult for testing
 
 
 class TestLLMClient:
@@ -111,7 +113,9 @@ class TestLLMClient:
         assert result.success is True
         assert isinstance(mock_client.last_options, LLMOptions)
         assert mock_client.last_options.temperature == 0.7  # Default value
-        assert mock_client.last_options.model == "test-model"  # Should use client's model
+        assert (
+            mock_client.last_options.model == "test-model"
+        )  # Should use client's model
 
     def test_chat_custom_options(self, mock_client: MockClient) -> None:
         """Test using custom options in the chat method."""
@@ -128,7 +132,9 @@ class TestLLMClient:
         result = mock_client.chat(messages, options)
         assert result.success is True
         assert mock_client.last_options == options
-        assert mock_client.last_options.model == "custom-model"  # Should use provided model
+        assert (
+            mock_client.last_options.model == "custom-model"
+        )  # Should use provided model
 
     def test_chat_with_callback(self, mock_client: MockClient) -> None:
         """Test the chat method with a callback function."""
@@ -193,7 +199,11 @@ class TestLLMClient:
         # For the successful case, use the class method to create a proper IntegrationResult.
         mock_provider = MagicMock()
         error = QuackApiError("Rate limit exceeded", "TestService")
-        mock_provider.side_effect = [error, error, IntegrationResult.success_result("Success")]
+        mock_provider.side_effect = [
+            error,
+            error,
+            IntegrationResult.success_result("Success"),
+        ]
 
         with patch.object(client, "_chat_with_provider", mock_provider):
             with patch.object(time, "sleep") as mock_sleep:
@@ -207,7 +217,9 @@ class TestLLMClient:
 
                 # Check sleep durations - should be exponential backoff
                 assert mock_sleep.call_args_list[0][0][0] == 0.1  # Initial delay
-                assert mock_sleep.call_args_list[1][0][0] == 0.2  # Doubled but capped at max
+                assert (
+                    mock_sleep.call_args_list[1][0][0] == 0.2
+                )  # Doubled but capped at max
 
                 # Verify the result was successful after retries
                 assert result.success is True

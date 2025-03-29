@@ -5,7 +5,10 @@ Mock service objects for Google Drive testing.
 
 from typing import Any
 
-from quackcore.integrations.google.drive.protocols import DriveService, DriveFilesResource
+from quackcore.integrations.google.drive.protocols import (
+    DriveFilesResource,
+    DriveService,
+)
 from tests.test_integrations.google.drive.mocks.resources import (
     MockDriveFilesResource,
     MockDrivePermissionsResource,
@@ -37,9 +40,9 @@ class MockDriveService(DriveService):
 
 
 def create_mock_drive_service(
-        file_id: str = "file123",
-        file_metadata: dict[str, Any] | None = None,
-        file_list: list[dict[str, Any]] | None = None,
+    file_id: str = "file123",
+    file_metadata: dict[str, Any] | None = None,
+    file_list: list[dict[str, Any]] | None = None,
 ) -> DriveService:
     """
     Create and return a configurable mock Drive service.
@@ -61,13 +64,13 @@ def create_mock_drive_service(
 
 
 def create_error_drive_service(
-        create_error: Exception | None = None,
-        get_error: Exception | None = None,
-        get_media_error: Exception | None = None,
-        list_error: Exception | None = None,
-        update_error: Exception | None = None,
-        delete_error: Exception | None = None,
-        permission_error: Exception | None = None,
+    create_error: Exception | None = None,
+    get_error: Exception | None = None,
+    get_media_error: Exception | None = None,
+    list_error: Exception | None = None,
+    update_error: Exception | None = None,
+    delete_error: Exception | None = None,
+    permission_error: Exception | None = None,
 ) -> DriveService:
     """
     Create a Drive service mock that raises configurable exceptions.

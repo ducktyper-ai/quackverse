@@ -49,14 +49,21 @@ class TestLLMModels:
             content=None,
             name="assistant_name",
             function_call={"name": "test_function", "arguments": "{}"},
-            tool_calls=[{"id": "call_1", "type": "function",
-                         "function": {"name": "test_func", "arguments": "{}"}}],
+            tool_calls=[
+                {
+                    "id": "call_1",
+                    "type": "function",
+                    "function": {"name": "test_func", "arguments": "{}"},
+                }
+            ],
         )
         assert message.role == RoleType.ASSISTANT
         assert message.content is None
         assert message.name == "assistant_name"
         assert message.function_call == {"name": "test_function", "arguments": "{}"}
-        assert message.tool_calls is not None  # Ensure tool_calls is not None before checking length
+        assert (
+            message.tool_calls is not None
+        )  # Ensure tool_calls is not None before checking length
         assert len(message.tool_calls) == 1
         assert message.tool_calls[0]["id"] == "call_1"
 
@@ -66,14 +73,21 @@ class TestLLMModels:
         assert message.content == "Hello"
 
         # Test from_dict with complete data
-        message = ChatMessage.from_dict({
-            "role": "assistant",
-            "content": None,
-            "name": "assistant_name",
-            "function_call": {"name": "test_function", "arguments": "{}"},
-            "tool_calls": [{"id": "call_1", "type": "function",
-                            "function": {"name": "test_func", "arguments": "{}"}}],
-        })
+        message = ChatMessage.from_dict(
+            {
+                "role": "assistant",
+                "content": None,
+                "name": "assistant_name",
+                "function_call": {"name": "test_function", "arguments": "{}"},
+                "tool_calls": [
+                    {
+                        "id": "call_1",
+                        "type": "function",
+                        "function": {"name": "test_func", "arguments": "{}"},
+                    }
+                ],
+            }
+        )
         assert message.role == RoleType.ASSISTANT
         assert message.content is None
         assert message.name == "assistant_name"

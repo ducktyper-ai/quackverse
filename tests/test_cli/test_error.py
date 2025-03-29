@@ -10,9 +10,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from quackcore.cli.error import _get_current_datetime  # Import the helper function
 from quackcore.cli.error import (
     _print_error,  # Import the imported print_error for easier mocking
-    _get_current_datetime,  # Import the helper function
+)
+from quackcore.cli.error import (
     ensure_single_instance,
     format_cli_error,
     get_cli_info,
@@ -116,6 +118,7 @@ class TestHandleErrors:
     def test_with_custom_title(self) -> None:
         """Test using a custom error title."""
         with patch("quackcore.cli.error._print_error") as mock_print_error:
+
             @handle_errors(title="Custom Error Title")
             def custom_title_function() -> None:
                 raise ValueError("Test error")
@@ -129,6 +132,7 @@ class TestHandleErrors:
         """Test showing traceback."""
         with patch("quackcore.cli.error._print_error") as mock_print_error:
             with patch("traceback.print_exc") as mock_print_exc:
+
                 @handle_errors(show_traceback=True)
                 def traceback_function() -> None:
                     raise ValueError("Test error")
@@ -142,6 +146,7 @@ class TestHandleErrors:
         """Test exiting with specific code."""
         with patch("quackcore.cli.error._print_error") as mock_print_error:
             with patch("sys.exit") as mock_exit:
+
                 @handle_errors(exit_code=42)
                 def exit_function() -> None:
                     raise ValueError("Test error")
@@ -251,18 +256,19 @@ class TestGetCliInfo:
         with patch("platform.platform", return_value="Test Platform"):
             with patch("platform.python_version", return_value="3.13.0"):
                 # Patch our helper function instead of datetime.datetime.now
-                with patch("quackcore.cli.error._get_current_datetime",
-                           return_value=fixed_datetime):
+                with patch(
+                    "quackcore.cli.error._get_current_datetime",
+                    return_value=fixed_datetime,
+                ):
                     with patch("os.getpid", return_value=12345):
                         with patch(
-                                "pathlib.Path.cwd", return_value=Path("/current/dir")
+                            "pathlib.Path.cwd", return_value=Path("/current/dir")
                         ):
                             with patch(
-                                    "quackcore.config.utils.get_env",
-                                    return_value="test"
+                                "quackcore.config.utils.get_env", return_value="test"
                             ):
                                 with patch(
-                                        "quackcore.cli.terminal.get_terminal_size"
+                                    "quackcore.cli.terminal.get_terminal_size"
                                 ) as mock_term_size:
                                     mock_term_size.return_value = (80, 24)
 
@@ -285,13 +291,15 @@ class TestGetCliInfo:
         """Test handling errors getting terminal size."""
         with patch("platform.platform"):
             with patch("platform.python_version"):
-                with patch("quackcore.cli.error._get_current_datetime",
-                           return_value=datetime(2023, 1, 1, 12, 0, 0)):
+                with patch(
+                    "quackcore.cli.error._get_current_datetime",
+                    return_value=datetime(2023, 1, 1, 12, 0, 0),
+                ):
                     with patch("os.getpid"):
                         with patch("pathlib.Path.cwd"):
                             with patch("quackcore.config.utils.get_env"):
                                 with patch(
-                                        "quackcore.cli.terminal.get_terminal_size"
+                                    "quackcore.cli.terminal.get_terminal_size"
                                 ) as mock_term_size:
                                     # Simulate an error getting terminal size
                                     mock_term_size.side_effect = OSError(
@@ -308,15 +316,17 @@ class TestGetCliInfo:
         """Test detecting CI environments."""
         with patch("platform.platform"):
             with patch("platform.python_version"):
-                with patch("quackcore.cli.error._get_current_datetime",
-                           return_value=datetime(2023, 1, 1, 12, 0, 0)):
+                with patch(
+                    "quackcore.cli.error._get_current_datetime",
+                    return_value=datetime(2023, 1, 1, 12, 0, 0),
+                ):
                     with patch("os.getpid"):
                         with patch("pathlib.Path.cwd"):
                             with patch("quackcore.config.utils.get_env"):
                                 # Make sure get_terminal_size returns a valid tuple
                                 with patch(
-                                        "quackcore.cli.terminal.get_terminal_size",
-                                        return_value=(80, 24)
+                                    "quackcore.cli.terminal.get_terminal_size",
+                                    return_value=(80, 24),
                                 ):
                                     # Test various CI environment variables
                                     for env_var in [

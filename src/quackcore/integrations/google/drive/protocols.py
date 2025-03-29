@@ -6,7 +6,7 @@ This module defines protocol classes for Google Drive services and resources,
 ensuring proper typing throughout the codebase and avoiding the use of Any.
 """
 
-from typing import TypeVar, runtime_checkable, Protocol
+from typing import Protocol, TypeVar, runtime_checkable
 
 T = TypeVar("T")  # Generic type for result content
 R = TypeVar("R")  # Generic type for return values
@@ -70,7 +70,9 @@ class DriveFilesResource(Protocol):
         """
         ...
 
-    def get(self, file_id: str, fields: str | None = None) -> DriveRequest[dict[str, object]]:
+    def get(
+        self, file_id: str, fields: str | None = None
+    ) -> DriveRequest[dict[str, object]]:
         """
         Get a file's metadata.
 
@@ -96,7 +98,10 @@ class DriveFilesResource(Protocol):
         ...
 
     def list(
-        self, q: str | None = None, fields: str | None = None, page_size: int | None = None
+        self,
+        q: str | None = None,
+        fields: str | None = None,
+        page_size: int | None = None,
     ) -> DriveRequest[dict[str, object]]:
         """
         List files.

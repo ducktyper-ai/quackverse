@@ -34,10 +34,10 @@ class LoggerFactory(Protocol):
 
 
 def _determine_effective_level(
-        cli_log_level: LogLevel | None,
-        cli_debug: bool,
-        cli_quiet: bool,
-        cfg: QuackConfig | None,
+    cli_log_level: LogLevel | None,
+    cli_debug: bool,
+    cli_quiet: bool,
+    cfg: QuackConfig | None,
 ) -> LogLevel:
     """
     Determine the effective logging level based on various inputs.
@@ -69,10 +69,10 @@ _file_handlers: list[logging.FileHandler] = []
 
 
 def _add_file_handler(
-        root_logger: logging.Logger,
-        cfg: QuackConfig,
-        level_value: int,
-        console_formatter: logging.Formatter | None = None,
+    root_logger: logging.Logger,
+    cfg: QuackConfig,
+    level_value: int,
+    console_formatter: logging.Formatter | None = None,
 ) -> None:
     """
     Add a file handler to the root logger if a log file is specified in the config.
@@ -139,11 +139,11 @@ def _cleanup_file_handlers() -> None:
 
 
 def setup_logging(
-        log_level: LogLevel | None = None,
-        debug: bool = False,
-        quiet: bool = False,
-        config: QuackConfig | None = None,
-        logger_name: str = "quack",
+    log_level: LogLevel | None = None,
+    debug: bool = False,
+    quiet: bool = False,
+    config: QuackConfig | None = None,
+    logger_name: str = "quack",
 ) -> tuple[logging.Logger, LoggerFactory]:
     """
     Set up logging for CLI applications.

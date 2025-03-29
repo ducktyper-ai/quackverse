@@ -17,13 +17,13 @@ class MockClient(LLMClient):
     """Base mock client for testing."""
 
     def __init__(
-            self,
-            responses: List[str] = None,
-            token_counts: List[int] = None,
-            model: str = "mock-model",
-            errors: List[Exception] = None,
-            log_level: int = logging.INFO,
-            **kwargs: Any
+        self,
+        responses: List[str] = None,
+        token_counts: List[int] = None,
+        model: str = "mock-model",
+        errors: List[Exception] = None,
+        log_level: int = logging.INFO,
+        **kwargs: Any,
     ):
         """
         Initialize a mock LLM client.
@@ -49,10 +49,10 @@ class MockClient(LLMClient):
         self.last_callback = None
 
     def _chat_with_provider(
-            self,
-            messages: List[ChatMessage],
-            options: LLMOptions,
-            callback: Optional[Callable[[str], None]] = None,
+        self,
+        messages: List[ChatMessage],
+        options: LLMOptions,
+        callback: Optional[Callable[[str], None]] = None,
     ) -> IntegrationResult[str]:
         """
         Mock implementation of chat method.
@@ -101,8 +101,9 @@ class MockClient(LLMClient):
         for word in words:
             callback(word + " ")
 
-    def _count_tokens_with_provider(self, messages: List[ChatMessage]) -> \
-    IntegrationResult[int]:
+    def _count_tokens_with_provider(
+        self, messages: List[ChatMessage]
+    ) -> IntegrationResult[int]:
         """
         Mock implementation of count_tokens method.
 
@@ -128,12 +129,12 @@ class MockClient(LLMClient):
 
 
 def create_mock_client(
-        client_type: Type[LLMClient] = MockClient,
-        responses: List[str] = None,
-        token_counts: List[int] = None,
-        model: str = "mock-model",
-        errors: List[Exception] = None,
-        **kwargs: Any
+    client_type: Type[LLMClient] = MockClient,
+    responses: List[str] = None,
+    token_counts: List[int] = None,
+    model: str = "mock-model",
+    errors: List[Exception] = None,
+    **kwargs: Any,
 ) -> LLMClient:
     """
     Create a mock LLM client of the specified type.
@@ -154,5 +155,5 @@ def create_mock_client(
         token_counts=token_counts,
         model=model,
         errors=errors,
-        **kwargs
+        **kwargs,
     )

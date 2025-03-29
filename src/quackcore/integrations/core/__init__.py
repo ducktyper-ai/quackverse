@@ -20,7 +20,11 @@ from quackcore.integrations.core.protocols import (
     StorageIntegrationProtocol,
 )
 from quackcore.integrations.core.registry import IntegrationRegistry
-from quackcore.integrations.core.results import AuthResult, ConfigResult, IntegrationResult
+from quackcore.integrations.core.results import (
+    AuthResult,
+    ConfigResult,
+    IntegrationResult,
+)
 
 # Create a global registry instance
 registry = IntegrationRegistry()

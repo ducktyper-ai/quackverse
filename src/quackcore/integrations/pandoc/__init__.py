@@ -6,6 +6,7 @@ This package provides an integration for document conversion using Pandoc,
 including HTML to Markdown and Markdown to DOCX conversion.
 """
 
+from quackcore.integrations.core.protocols import IntegrationProtocol
 from quackcore.integrations.pandoc.config import PandocConfig, PandocConfigProvider
 from quackcore.integrations.pandoc.converter import DocumentConverter
 from quackcore.integrations.pandoc.models import (
@@ -14,7 +15,6 @@ from quackcore.integrations.pandoc.models import (
     FileInfo,
 )
 from quackcore.integrations.pandoc.service import PandocIntegration
-from quackcore.integrations.core.protocols import IntegrationProtocol
 
 __all__ = [
     # Main integration class

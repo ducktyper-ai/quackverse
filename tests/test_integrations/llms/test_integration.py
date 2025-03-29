@@ -6,7 +6,7 @@ This module tests the integration between different components of the LLM module
 ensuring they work together properly in real-world scenarios.
 """
 
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -23,19 +23,33 @@ from quackcore.integrations.llms.clients import AnthropicClient, OpenAIClient
 class TestLLMIntegration:
     """Integration tests for the LLM module."""
 
+
     def test_create_integration(self) -> None:
         """Test the create_integration factory function."""
         with patch(
-                "quackcore.integrations.llms.service.LLMIntegration") as mock_service:
-            mock_instance = mock_service.return_value
+                "quackcore.integrations.llms.service.LLMIntegration"
+        ) as mock_service:
+            # Configure the mock to implement the protocol
+            from quackcore.integrations.core.protocols import IntegrationProtocol
+
+            # Create a real class that implements the protocol
+            class MockIntegration:
+                name = "LLM"
+                version = "1.0.0"
+
+                def initialize(self):
+                    return MagicMock()
+
+            # Return an instance of this class
+            mock_instance = MockIntegration()
+            mock_service.return_value = mock_instance
 
             integration = create_integration()
 
             assert integration == mock_instance
             mock_service.assert_called_once()
 
-            # Ensure it matches IntegrationProtocol
-            from quackcore.integrations.core.protocols import IntegrationProtocol
+            # Now it should pass the isinstance check
             assert isinstance(integration, IntegrationProtocol)
 
     def test_get_mock_llm(self) -> None:
@@ -57,9 +71,11 @@ class TestLLMIntegration:
         # Create messages
         messages = [
             ChatMessage.from_dict(
-                {"role": "system", "content": "Be helpful and polite."}),
+                {"role": "system", "content": "Be helpful and polite."}
+            ),
             ChatMessage.from_dict(
-                {"role": "user", "content": "Tell me about yourself."})
+                {"role": "user", "content": "Tell me about yourself."}
+            ),
         ]
 
         # Create options
@@ -97,8 +113,9 @@ class TestLLMIntegration:
         """Test creating an Anthropic client (mock the actual API calls)."""
         with patch("anthropic.Anthropic"):
             # Get an Anthropic client
-            client = get_llm_client(provider="anthropic",
-                                    model="claude-3-opus-20240229")
+            client = get_llm_client(
+                provider="anthropic", model="claude-3-opus-20240229"
+            )
 
             # Verify it's the right type
             assert isinstance(client, AnthropicClient)

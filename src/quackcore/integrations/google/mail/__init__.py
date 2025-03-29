@@ -6,8 +6,8 @@ This module provides integration with Gmail, allowing for email
 retrieval, listing, and management through a consistent interface.
 """
 
-from quackcore.integrations.google.mail.service import GoogleMailService
 from quackcore.integrations.core.protocols import IntegrationProtocol
+from quackcore.integrations.google.mail.service import GoogleMailService
 
 __all__ = [
     "GoogleMailService",

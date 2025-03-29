@@ -14,6 +14,7 @@ from typing import cast
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs import service as fs
 from quackcore.integrations.core.base import BaseIntegrationService
+from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.pandoc.config import PandocConfig, PandocConfigProvider
 from quackcore.integrations.pandoc.converter import DocumentConverter
 from quackcore.integrations.pandoc.models import (
@@ -26,7 +27,6 @@ from quackcore.integrations.pandoc.operations import (
     verify_pandoc,
 )
 from quackcore.integrations.pandoc.protocols import PandocConversionProtocol
-from quackcore.integrations.core.results import IntegrationResult
 from quackcore.paths import resolver
 
 logger = logging.getLogger(__name__)

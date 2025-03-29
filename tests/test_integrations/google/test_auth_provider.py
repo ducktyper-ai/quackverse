@@ -11,8 +11,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.integrations.google.auth import GoogleAuthProvider
 from quackcore.integrations.core.results import AuthResult
+from quackcore.integrations.google.auth import GoogleAuthProvider
 
 from .mocks import mock_credentials
 

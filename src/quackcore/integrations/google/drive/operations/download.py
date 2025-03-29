@@ -7,8 +7,8 @@ This module provides robust file download functionality with improved error hand
 
 import io
 import logging
-from pathlib import Path
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 from googleapiclient.http import MediaIoBaseDownload
@@ -16,14 +16,14 @@ from googleapiclient.http import MediaIoBaseDownload
 from quackcore.errors import QuackApiError
 from quackcore.fs import service as fs
 from quackcore.fs.operations import FileSystemOperations
+from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.google.drive.protocols import DriveService
 from quackcore.integrations.google.drive.utils.api import execute_api_request
-from quackcore.integrations.core.results import IntegrationResult
 from quackcore.paths import resolver
 
 
 def resolve_download_path(
-        file_metadata: dict[str, Any], local_path: str | None = None
+    file_metadata: dict[str, Any], local_path: str | None = None
 ) -> str:
     """
     Resolve the local path for file download with enhanced path handling.
@@ -47,19 +47,22 @@ def resolve_download_path(
     file_info = fs.get_file_info(local_path_obj)
 
     if file_info.success and file_info.exists:
-        return fs.join_path(local_path_obj,
-                            file_name) if file_info.is_dir else local_path_obj
+        return (
+            fs.join_path(local_path_obj, file_name)
+            if file_info.is_dir
+            else local_path_obj
+        )
 
     # If path doesn't exist, assume it's a file path the user wants to create
     return local_path_obj
 
 
 def download_file(
-        drive_service: DriveService,
-        file_id: str,
-        local_path: str | None = None,
-        logger: logging.Logger | None = None,
-        progress_callback: Callable[[float], None] | None = None
+    drive_service: DriveService,
+    file_id: str,
+    local_path: str | None = None,
+    logger: logging.Logger | None = None,
+    progress_callback: Callable[[float], None] | None = None,
 ) -> IntegrationResult[str]:
     """
     Download a file from Google Drive with improved error handling and progress tracking.
@@ -124,15 +127,18 @@ def download_file(
                 if progress_callback is not None:
                     try:
                         # First try the normal way if we have a proper status object
-                        if status is not None and hasattr(status,
-                                                          'progress') and callable(
-                                getattr(status, 'progress')):
+                        if (
+                            status is not None
+                            and hasattr(status, "progress")
+                            and callable(getattr(status, "progress"))
+                        ):
                             try:
                                 progress_value = status.progress()
                                 # Call the callback with our progress value
                                 progress_callback(progress_value)
                                 logger.debug(
-                                    f"Download progress: {int(progress_value * 100)}%")
+                                    f"Download progress: {int(progress_value * 100)}%"
+                                )
                             except (TypeError, ValueError, AttributeError) as err:
                                 # If normal progress getting fails, use a simple value
                                 logger.warning(f"Progress access issue: {err}")

@@ -9,20 +9,20 @@ including creating folders and deleting files or folders.
 import logging
 
 from quackcore.errors import QuackApiError
+from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.google.drive.operations.permissions import (
     set_file_permissions,
 )
 from quackcore.integrations.google.drive.protocols import DriveService
 from quackcore.integrations.google.drive.utils.api import execute_api_request
-from quackcore.integrations.core.results import IntegrationResult
 
 
 def create_folder(
-        drive_service: DriveService,
-        folder_name: str,
-        parent_id: str | None = None,
-        make_public: bool = True,
-        logger: logging.Logger | None = None,
+    drive_service: DriveService,
+    folder_name: str,
+    parent_id: str | None = None,
+    make_public: bool = True,
+    logger: logging.Logger | None = None,
 ) -> IntegrationResult[str]:
     """
     Create a folder in Google Drive.

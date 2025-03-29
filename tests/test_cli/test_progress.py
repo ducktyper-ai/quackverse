@@ -160,7 +160,9 @@ class TestProgressReporter:
             # Check output contains expected elements
             assert "Progress: 50/100" in output
             assert "it" in output  # Default unit
-            assert message in output, f"Message '{message}' not found in output: {repr(output)}"
+            assert message in output, (
+                f"Message '{message}' not found in output: {repr(output)}"
+            )
             assert "[" in output  # Progress bar
 
         # Test with unknown total (spinner-based progress)
@@ -170,7 +172,7 @@ class TestProgressReporter:
 
         with patch("quackcore.cli.terminal.get_terminal_size") as mock_get_size:
             with patch.object(
-                    itertools, "cycle", return_value=iter(["-", "\\", "|", "/"])
+                itertools, "cycle", return_value=iter(["-", "\\", "|", "/"])
             ):
                 mock_get_size.return_value = (80, 24)
 
@@ -315,7 +317,7 @@ class TestProgressCallback:
 
         # Create a function that matches the protocol
         def callback(
-                current: int, total: int | None, message: str | None = None
+            current: int, total: int | None, message: str | None = None
         ) -> None:
             pass
 

@@ -5,10 +5,16 @@ Tests for the BaseIntegrationService class.
 
 from unittest.mock import patch
 
-from quackcore.integrations.core.results import AuthResult, ConfigResult, IntegrationResult
+from quackcore.integrations.core.results import (
+    AuthResult,
+    ConfigResult,
+    IntegrationResult,
+)
 from tests.test_integrations.core.base.auth_provider_impl import MockAuthProvider
 from tests.test_integrations.core.base.config_provider_impl import MockConfigProvider
-from tests.test_integrations.core.base.integration_service_impl import MockIntegrationService
+from tests.test_integrations.core.base.integration_service_impl import (
+    MockIntegrationService,
+)
 
 
 class TestBaseIntegrationService:

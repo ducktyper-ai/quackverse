@@ -21,16 +21,16 @@ class AnthropicClient(LLMClient):
     """Anthropic LLM client implementation."""
 
     def __init__(
-            self,
-            model: str | None = None,
-            api_key: str | None = None,
-            api_base: str | None = None,
-            timeout: int = 60,
-            retry_count: int = 3,
-            initial_retry_delay: float = 1.0,
-            max_retry_delay: float = 30.0,
-            log_level: int = logging.INFO,
-            **kwargs: Any,
+        self,
+        model: str | None = None,
+        api_key: str | None = None,
+        api_base: str | None = None,
+        timeout: int = 60,
+        retry_count: int = 3,
+        initial_retry_delay: float = 1.0,
+        max_retry_delay: float = 30.0,
+        log_level: int = logging.INFO,
+        **kwargs: Any,
     ) -> None:
         """
         Initialize the Anthropic client.
@@ -137,13 +137,13 @@ class AnthropicClient(LLMClient):
         }
 
     def _handle_streaming(
-            self,
-            client: Any,
-            model: str,
-            system: str | None,
-            messages: list[dict],
-            params: dict,
-            callback: Callable[[str], None] | None,
+        self,
+        client: Any,
+        model: str,
+        system: str | None,
+        messages: list[dict],
+        params: dict,
+        callback: Callable[[str], None] | None,
     ) -> str:
         """
         Handle streaming responses from the Anthropic API.
@@ -167,11 +167,7 @@ class AnthropicClient(LLMClient):
         try:
             # Create stream object
             stream = client.messages.stream(
-                model=model,
-                messages=messages,
-                system=system,
-                stream=True,
-                **params
+                model=model, messages=messages, system=system, stream=True, **params
             )
 
             # Use the stream context manager if available (real API client)
@@ -179,9 +175,12 @@ class AnthropicClient(LLMClient):
             try:
                 with stream as context_stream:
                     for chunk in context_stream:
-                        if hasattr(chunk,
-                                   'type') and chunk.type == "content_block_delta" and hasattr(
-                                chunk, 'delta') and hasattr(chunk.delta, 'text'):
+                        if (
+                            hasattr(chunk, "type")
+                            and chunk.type == "content_block_delta"
+                            and hasattr(chunk, "delta")
+                            and hasattr(chunk.delta, "text")
+                        ):
                             collected_content.append(chunk.delta.text)
                             if callback:
                                 callback(chunk.delta.text)
@@ -189,9 +188,12 @@ class AnthropicClient(LLMClient):
                 # If context manager protocol isn't supported (e.g., in tests),
                 # try to use the stream directly as an iterator
                 for chunk in stream:
-                    if hasattr(chunk,
-                               'type') and chunk.type == "content_block_delta" and hasattr(
-                            chunk, 'delta') and hasattr(chunk.delta, 'text'):
+                    if (
+                        hasattr(chunk, "type")
+                        and chunk.type == "content_block_delta"
+                        and hasattr(chunk, "delta")
+                        and hasattr(chunk.delta, "text")
+                    ):
                         collected_content.append(chunk.delta.text)
                         if callback:
                             callback(chunk.delta.text)
@@ -219,12 +221,16 @@ class AnthropicClient(LLMClient):
                 f"Anthropic rate limit exceeded: {error}",
                 service="Anthropic",
                 api_method="messages.create",
-                original_error=error
+                original_error=error,
             )
-        elif ("api_key" in error_str.lower() and (
-                "invalid" in error_str.lower() or "incorrect" in error_str.lower())) or \
-                ("invalid api key" in error_str.lower()) or \
-                ("authentication" in error_str.lower()):
+        elif (
+            (
+                "api_key" in error_str.lower()
+                and ("invalid" in error_str.lower() or "incorrect" in error_str.lower())
+            )
+            or ("invalid api key" in error_str.lower())
+            or ("authentication" in error_str.lower())
+        ):
             return QuackApiError(
                 f"Invalid Anthropic API key: {error}",
                 service="Anthropic",
@@ -247,10 +253,10 @@ class AnthropicClient(LLMClient):
             )
 
     def _chat_with_provider(
-            self,
-            messages: list[ChatMessage],
-            options: LLMOptions,
-            callback: Callable[[str], None] | None = None,
+        self,
+        messages: list[ChatMessage],
+        options: LLMOptions,
+        callback: Callable[[str], None] | None = None,
     ) -> IntegrationResult[str]:
         """
         Send a chat completion request to the Anthropic API.
@@ -320,14 +326,17 @@ class AnthropicClient(LLMClient):
                     system=system_message,
                     max_tokens=options.max_tokens or 1024,
                     temperature=options.temperature,
-                    **params
+                    **params,
                 )
 
                 # Process the response
-                if hasattr(response, 'content') and len(
-                        response.content) > 0 and hasattr(response.content[0], 'text'):
+                if (
+                    hasattr(response, "content")
+                    and len(response.content) > 0
+                    and hasattr(response.content[0], "text")
+                ):
                     result = response.content[0].text
-                elif hasattr(response, 'text'):
+                elif hasattr(response, "text"):
                     result = response.text
                 else:
                     # Fallback for mocks or unexpected response formats
@@ -339,8 +348,9 @@ class AnthropicClient(LLMClient):
             # Convert Anthropic errors to QuackApiError
             raise self._convert_error(e)
 
-    def _count_tokens_with_provider(self, messages: list[ChatMessage]) -> \
-    IntegrationResult[int]:
+    def _count_tokens_with_provider(
+        self, messages: list[ChatMessage]
+    ) -> IntegrationResult[int]:
         """
         Count the number of tokens in the messages using Anthropic's tokenizer.
 
@@ -367,20 +377,19 @@ class AnthropicClient(LLMClient):
 
                 # Use Anthropic's tokenizer API
                 count_result = client.count_tokens(
-                    model=self.model,
-                    messages=anthropic_messages,
-                    system=system_message
+                    model=self.model, messages=anthropic_messages, system=system_message
                 )
 
                 # Handle different response formats (API vs mock)
-                if hasattr(count_result, 'input_tokens'):
+                if hasattr(count_result, "input_tokens"):
                     token_count = count_result.input_tokens
                 elif isinstance(count_result, int):
                     token_count = count_result
                 else:
                     # Try to extract token count from response
-                    token_count = getattr(count_result, 'input_tokens',
-                                          getattr(count_result, 'tokens', 0))
+                    token_count = getattr(
+                        count_result, "input_tokens", getattr(count_result, "tokens", 0)
+                    )
 
                 return IntegrationResult.success_result(token_count)
 

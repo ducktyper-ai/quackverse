@@ -14,6 +14,8 @@ from googleapiclient.http import MediaInMemoryUpload
 
 from quackcore.errors import QuackApiError, QuackIntegrationError
 from quackcore.fs import service as fs
+from quackcore.integrations.core.results import IntegrationResult
+
 # Import the module directly to make mocking easier
 from quackcore.integrations.google.drive.operations import permissions
 from quackcore.integrations.google.drive.protocols import (
@@ -21,7 +23,6 @@ from quackcore.integrations.google.drive.protocols import (
     GoogleCredentials,
 )
 from quackcore.integrations.google.drive.utils.api import execute_api_request
-from quackcore.integrations.core.results import IntegrationResult
 from quackcore.paths import resolver
 
 
@@ -50,7 +51,7 @@ def initialize_drive_service(credentials: GoogleCredentials) -> DriveService:
 
 
 def resolve_file_details(
-        file_path: str, remote_path: str | None, parent_folder_id: str | None
+    file_path: str, remote_path: str | None, parent_folder_id: str | None
 ) -> tuple[str | Path, str, str | None, str]:
     """
     Resolve file details for upload.
@@ -161,9 +162,9 @@ def upload_file(
 
         # Extract link with explicit type annotation
         link: str = (
-                str(file.get("webViewLink", ""))
-                or str(file.get("webContentLink", ""))
-                or f"https://drive.google.com/file/d/{file_id}/view"
+            str(file.get("webViewLink", ""))
+            or str(file.get("webContentLink", ""))
+            or f"https://drive.google.com/file/d/{file_id}/view"
         )
 
         # Now the type checker knows link is a string

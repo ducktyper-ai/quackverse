@@ -14,14 +14,16 @@ from pathlib import Path
 from typing import Any
 
 from quackcore.config.models import QuackConfig
-from quackcore.errors import QuackConfigurationError
-# Import resolver at module level for better testability
-from quackcore.paths import resolver as path_resolver
+
 # Import config utility functions
 from quackcore.config.utils import load_env_config, normalize_paths
+from quackcore.errors import QuackConfigurationError
+
+# Import resolver at module level for better testability
+from quackcore.paths import resolver as path_resolver
 
 # Detect test environment - make this a module variable so it can be patched in tests
-is_test = 'pytest' in sys.modules or 'unittest' in sys.modules
+is_test = "pytest" in sys.modules or "unittest" in sys.modules
 
 
 def _is_test_path(path_str: str) -> bool:
@@ -34,7 +36,7 @@ def _is_test_path(path_str: str) -> bool:
     Returns:
         True if the path appears to be a test path
     """
-    return '/path/to/' in path_str
+    return "/path/to/" in path_str
 
 
 def _get_core_config(config_path: str | Path | None) -> QuackConfig:
@@ -62,7 +64,7 @@ def _get_core_config(config_path: str | Path | None) -> QuackConfig:
 
 
 def _merge_cli_overrides(
-        config: QuackConfig, cli_overrides: Mapping[str, Any]
+    config: QuackConfig, cli_overrides: Mapping[str, Any]
 ) -> QuackConfig:
     """
     Merge CLI overrides into the configuration.
@@ -97,9 +99,9 @@ def _merge_cli_overrides(
 
 
 def load_config(
-        config_path: str | Path | None = None,
-        cli_overrides: Mapping[str, Any] | None = None,
-        environment: str | None = None,
+    config_path: str | Path | None = None,
+    cli_overrides: Mapping[str, Any] | None = None,
+    environment: str | None = None,
 ) -> QuackConfig:
     """
     Load configuration with standard precedence:

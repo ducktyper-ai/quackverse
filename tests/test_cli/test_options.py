@@ -168,11 +168,11 @@ class TestResolveCliArgs:
     # Use a simplified approach for property-based testing to avoid order issues
     @given(
         st.lists(
-            st.sampled_from([
-                "--debug", "--verbose", "--quiet", "--no-color",
-                "-d", "-v", "-q"
-            ]),
-            min_size=0, max_size=5
+            st.sampled_from(
+                ["--debug", "--verbose", "--quiet", "--no-color", "-d", "-v", "-q"]
+            ),
+            min_size=0,
+            max_size=5,
         )
     )
     def test_property_based_flags(self, args: list[str]) -> None:
@@ -182,10 +182,10 @@ class TestResolveCliArgs:
         for flag in ["debug", "verbose", "quiet", "no-color"]:
             # Check if flag should be set (either via long or short form)
             should_be_set = (
-                    f"--{flag}" in args
-                    or (flag == "debug" and "-d" in args)
-                    or (flag == "verbose" and "-v" in args)
-                    or (flag == "quiet" and "-q" in args)
+                f"--{flag}" in args
+                or (flag == "debug" and "-d" in args)
+                or (flag == "verbose" and "-v" in args)
+                or (flag == "quiet" and "-q" in args)
             )
 
             if should_be_set:
@@ -197,7 +197,8 @@ class TestResolveCliArgs:
         st.dictionaries(
             st.sampled_from(["config", "log-level", "environment", "base-dir"]),
             st.text(min_size=1, max_size=20),
-            min_size=0, max_size=4
+            min_size=0,
+            max_size=4,
         )
     )
     def test_property_based_values(self, arg_dict: dict[str, str]) -> None:

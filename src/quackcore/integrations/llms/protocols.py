@@ -9,8 +9,8 @@ ensuring consistent behavior across different LLM providers.
 from collections.abc import Callable, Sequence
 from typing import Protocol, TypeVar, runtime_checkable
 
-from quackcore.integrations.llms.models import ChatMessage, LLMOptions
 from quackcore.integrations.core.results import IntegrationResult
+from quackcore.integrations.llms.models import ChatMessage, LLMOptions
 
 T = TypeVar("T")  # Generic type for result content
 

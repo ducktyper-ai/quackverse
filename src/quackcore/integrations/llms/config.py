@@ -23,7 +23,8 @@ class OpenAIConfig(BaseModel):
         None, description="OpenAI API key (or set OPENAI_API_KEY environment variable)"
     )
     organization: str | None = Field(
-        None, description="OpenAI organization ID (or set OPENAI_ORG_ID environment variable)"
+        None,
+        description="OpenAI organization ID (or set OPENAI_ORG_ID environment variable)",
     )
     api_base: str | None = Field(
         "https://api.openai.com/v1", description="OpenAI API base URL"
@@ -35,25 +36,32 @@ class AnthropicConfig(BaseModel):
     """Configuration for Anthropic API."""
 
     api_key: str | None = Field(
-        None, description="Anthropic API key (or set ANTHROPIC_API_KEY environment variable)"
+        None,
+        description="Anthropic API key (or set ANTHROPIC_API_KEY environment variable)",
     )
     api_base: str | None = Field(
         "https://api.anthropic.com", description="Anthropic API base URL"
     )
-    default_model: str = Field("claude-3-opus-20240229", description="Default model to use")
+    default_model: str = Field(
+        "claude-3-opus-20240229", description="Default model to use"
+    )
 
 
 class LLMConfig(BaseModel):
     """Main configuration for LLM integration."""
 
-    openai: OpenAIConfig = Field(default_factory=OpenAIConfig, description="OpenAI configuration")
+    openai: OpenAIConfig = Field(
+        default_factory=OpenAIConfig, description="OpenAI configuration"
+    )
     anthropic: AnthropicConfig = Field(
         default_factory=AnthropicConfig, description="Anthropic configuration"
     )
     default_provider: str = Field("openai", description="Default LLM provider to use")
     timeout: int = Field(60, description="Request timeout in seconds")
     retry_count: int = Field(3, description="Number of retries for failed requests")
-    initial_retry_delay: float = Field(1.0, description="Initial delay for exponential backoff")
+    initial_retry_delay: float = Field(
+        1.0, description="Initial delay for exponential backoff"
+    )
     max_retry_delay: float = Field(30.0, description="Maximum delay between retries")
     logging: LoggingConfig = Field(
         default_factory=LoggingConfig, description="Logging configuration"
@@ -74,6 +82,7 @@ class LLMConfig(BaseModel):
         if v <= 0:
             raise ValueError("timeout must be positive")
         return v
+
 
 class LLMConfigProvider(BaseConfigProvider):
     """Configuration provider for LLM integration."""

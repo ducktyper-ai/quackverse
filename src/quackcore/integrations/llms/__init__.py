@@ -7,6 +7,7 @@ offering a standardized interface for making chat completions across different
 LLM providers.
 """
 
+from quackcore.integrations.core.protocols import IntegrationProtocol
 from quackcore.integrations.llms.clients import (
     LLMClient,
     MockLLMClient,
@@ -24,7 +25,6 @@ from quackcore.integrations.llms.registry import (
     get_llm_client,
     register_llm_client,
 )
-from quackcore.integrations.core.protocols import IntegrationProtocol
 
 __all__ = [
     # Main client classes
@@ -48,7 +48,7 @@ __all__ = [
     "create_integration",
     # Module
     "get_mock_llm",
-    "create_integration"
+    "create_integration",
 ]
 
 
@@ -62,6 +62,7 @@ def create_integration() -> IntegrationProtocol:
         IntegrationProtocol: Configured LLM integration
     """
     from quackcore.integrations.llms.service import LLMIntegration
+
     return LLMIntegration()
 
 

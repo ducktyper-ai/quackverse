@@ -49,7 +49,7 @@ def supports_color() -> bool:
 
     # If running in CI that supports color, allow it
     in_ci_with_color = (
-            "CI" in os.environ and os.environ.get("CI_FORCE_COLORS", "0") == "1"
+        "CI" in os.environ and os.environ.get("CI_FORCE_COLORS", "0") == "1"
     )
 
     return is_tty or in_github_actions or in_ci_with_color

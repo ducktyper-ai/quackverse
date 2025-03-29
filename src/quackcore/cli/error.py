@@ -39,9 +39,9 @@ def format_cli_error(error: Exception) -> str:
                 parts.append(f"  {key}: {value}")
 
         if (
-                hasattr(error, "original_error")
-                and error.original_error
-                and error.original_error is not error
+            hasattr(error, "original_error")
+            and error.original_error
+            and error.original_error is not error
         ):
             parts.append(f"\nOriginal error: {error.original_error}")
 
@@ -55,10 +55,10 @@ from quackcore.cli.formatting import print_error as _print_error
 
 
 def handle_errors(
-        error_types: type[Exception] | tuple[type[Exception], ...] = Exception,
-        title: str | None = None,
-        show_traceback: bool = False,
-        exit_code: int | None = None,
+    error_types: type[Exception] | tuple[type[Exception], ...] = Exception,
+    title: str | None = None,
+    show_traceback: bool = False,
+    exit_code: int | None = None,
 ) -> Callable[[Callable[..., T]], Callable[..., T | None]]:
     """
     Decorator to handle errors in a function.
@@ -84,6 +84,7 @@ def handle_errors(
 
                 if show_traceback:
                     import traceback
+
                     traceback.print_exc()
 
                 if exit_code is not None:

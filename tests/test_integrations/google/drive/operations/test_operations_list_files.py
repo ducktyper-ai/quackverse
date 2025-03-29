@@ -225,7 +225,9 @@ class TestDriveOperationsListFiles:
         ) as mock_execute:
             mock_execute.return_value = {"files": file_list}
 
-            with patch("quackcore.integrations.google.drive.operations.list_files.build_query"):
+            with patch(
+                "quackcore.integrations.google.drive.operations.list_files.build_query"
+            ):
                 # Call the function
                 result = list_files.list_files(mock_drive_service)
 

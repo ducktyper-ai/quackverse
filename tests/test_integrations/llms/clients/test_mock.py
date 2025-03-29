@@ -124,18 +124,23 @@ class TestMockLLMClient:
 
         # Test with longer message
         messages = [
-            ChatMessage(role=RoleType.SYSTEM,
-                        content="This is a longer system message with more tokens"),
-            ChatMessage(role=RoleType.USER,
-                        content="And this is a user message that also has quite a few tokens"),
+            ChatMessage(
+                role=RoleType.SYSTEM,
+                content="This is a longer system message with more tokens",
+            ),
+            ChatMessage(
+                role=RoleType.USER,
+                content="And this is a user message that also has quite a few tokens",
+            ),
         ]
 
         result = client._count_tokens_with_provider(messages)
         assert result.success is True
         assert result.content > 0
         # Should have more tokens than the short message
-        assert result.content > client._count_tokens_with_provider(
-            [messages[0]]).content
+        assert (
+            result.content > client._count_tokens_with_provider([messages[0]]).content
+        )
 
     def test_set_responses(self) -> None:
         """Test setting custom responses."""
