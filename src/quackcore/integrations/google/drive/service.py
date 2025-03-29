@@ -16,7 +16,7 @@ from quackcore.errors import (
     QuackBaseAuthError,
     QuackIntegrationError,
 )
-from quackcore.fs import service as fs
+from quackcore.fs import service as fs, FileSystemOperations
 from quackcore.integrations.core.base import BaseIntegrationService
 from quackcore.integrations.google.auth import GoogleAuthProvider
 from quackcore.integrations.google.config import GoogleConfigProvider
@@ -354,6 +354,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
                 f"Failed to upload file to Google Drive: {e}"
             )
 
+    # Implementation for the download_file method in GoogleDriveService class
     def download_file(
             self, remote_id: str, local_path: str | None = None
     ) -> IntegrationResult[str]:
@@ -414,10 +415,11 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
                 ) from api_error
 
             fh.seek(0)
-            # Create FileSystemOperations instance to write the file
-            from quackcore.fs.operations import FileSystemOperations
+
+            # Create FileSystemOperations instance and use it to write the file
             fs_ops = FileSystemOperations()
             write_result = fs_ops.write_binary(download_path, fh.read())
+
             if not write_result.success:
                 return IntegrationResult.error_result(
                     f"Failed to write file: {write_result.error}"
@@ -431,9 +433,6 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
         except QuackApiError as e:
             self.logger.error(f"API error during file download: {e}")
             return IntegrationResult.error_result(f"API error: {e}")
-        except QuackBaseAuthError as e:
-            self.logger.error(f"Authentication error during file download: {e}")
-            return IntegrationResult.error_result(f"Authentication error: {e}")
         except Exception as e:
             self.logger.error(f"Failed to download file: {e}")
             return IntegrationResult.error_result(

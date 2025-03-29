@@ -18,11 +18,11 @@ from quackcore.integrations.core.results import IntegrationResult
 
 
 def create_folder(
-    drive_service: DriveService,
-    folder_name: str,
-    parent_id: str | None = None,
-    make_public: bool = True,
-    logger: logging.Logger | None = None,
+        drive_service: DriveService,
+        folder_name: str,
+        parent_id: str | None = None,
+        make_public: bool = True,
+        logger: logging.Logger | None = None,
 ) -> IntegrationResult[str]:
     """
     Create a folder in Google Drive.
@@ -48,7 +48,7 @@ def create_folder(
         if parent_id:
             folder_metadata["parents"] = [parent_id]
 
-        # Create folder
+        # Create folder using execute_api_request
         folder = execute_api_request(
             drive_service.files().create(
                 body=folder_metadata, fields="id, webViewLink"
@@ -57,17 +57,19 @@ def create_folder(
             "files.create",
         )
 
+        folder_id = str(folder["id"])
+
         # Set permissions if needed
         if make_public:
             perm_result = set_file_permissions(
-                drive_service, str(folder["id"]), "reader", "anyone", logger
+                drive_service, folder_id, "reader", "anyone", logger
             )
             if not perm_result.success:
                 logger.warning(f"Failed to set permissions: {perm_result.error}")
 
         return IntegrationResult.success_result(
-            content=str(folder["id"]),
-            message=f"Folder created successfully with ID: {folder['id']}",
+            content=folder_id,
+            message=f"Folder created successfully with ID: {folder_id}",
         )
 
     except QuackApiError as e:

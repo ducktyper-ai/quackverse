@@ -39,6 +39,7 @@ class MockDriveRequest(DriveRequest[R]):
         # Add attributes that MediaIoBaseDownload requires
         self.uri = "https://www.googleapis.com/drive/v3/files/mock-file-id?alt=media"
         self.headers = {"Content-Type": "application/octet-stream"}
+        self._body = {}  # Add _body attribute to simulate the body property
 
     def execute(self) -> R:
         """
@@ -54,7 +55,8 @@ class MockDriveRequest(DriveRequest[R]):
         if self.error:
             raise self.error
         return self.return_value
-    
+
+
 class MockDrivePermissionsResource(DrivePermissionsResource):
     """Mock permissions resource with configurable behavior."""
 
@@ -76,7 +78,7 @@ class MockDrivePermissionsResource(DrivePermissionsResource):
         self.create_call_count = 0
 
     def create(
-        self, file_id: str, body: dict[str, object], fields: str
+            self, file_id: str, body: dict[str, object], fields: str
     ) -> DriveRequest[dict[str, object]]:
         """
         Mock create method for creating a permission.
@@ -94,24 +96,26 @@ class MockDrivePermissionsResource(DrivePermissionsResource):
         self.last_permission_body = body
         self.last_fields = fields
 
-        return MockDriveRequest({"id": self.permission_id}, self.error)
+        request = MockDriveRequest({"id": self.permission_id}, self.error)
+        request._body = body
+        return request
 
 
 class MockDriveFilesResource(DriveFilesResource):
     """Mock files resource with configurable behavior."""
 
     def __init__(
-        self,
-        file_id: str = "file123",
-        file_metadata: dict[str, Any] | None = None,
-        file_list: list[dict[str, Any]] | None = None,
-        permissions_resource: DrivePermissionsResource | None = None,
-        create_error: Exception | None = None,
-        get_error: Exception | None = None,
-        get_media_error: Exception | None = None,
-        list_error: Exception | None = None,
-        update_error: Exception | None = None,
-        delete_error: Exception | None = None,
+            self,
+            file_id: str = "file123",
+            file_metadata: dict[str, Any] | None = None,
+            file_list: list[dict[str, Any]] | None = None,
+            permissions_resource: DrivePermissionsResource | None = None,
+            create_error: Exception | None = None,
+            get_error: Exception | None = None,
+            get_media_error: Exception | None = None,
+            list_error: Exception | None = None,
+            update_error: Exception | None = None,
+            delete_error: Exception | None = None,
     ):
         """
         Initialize mock files resource.
@@ -186,10 +190,10 @@ class MockDriveFilesResource(DriveFilesResource):
         self.last_delete_file_id: str | None = None
 
     def create(
-        self,
-        body: dict[str, object],
-        media_body: object = None,
-        fields: str = None,
+            self,
+            body: dict[str, object],
+            media_body: object | None = None,
+            fields: str | None = None,
     ) -> DriveRequest[dict[str, object]]:
         """
         Mock create method for creating a file.
@@ -207,9 +211,11 @@ class MockDriveFilesResource(DriveFilesResource):
         self.last_create_media_body = media_body
         self.last_create_fields = fields
 
-        return MockDriveRequest(self.file_metadata, self.create_error)
+        request = MockDriveRequest(self.file_metadata, self.create_error)
+        request._body = body
+        return request
 
-    def get(self, file_id: str, fields: str = None) -> DriveRequest[dict[str, object]]:
+    def get(self, file_id: str, fields: str | None = None) -> DriveRequest[dict[str, object]]:
         """
         Mock get method for retrieving a file's metadata.
 
@@ -247,7 +253,7 @@ class MockDriveFilesResource(DriveFilesResource):
         )
 
     def list(
-        self, q: str = None, fields: str = None, page_size: int = None
+            self, q: str | None = None, fields: str | None = None, page_size: int | None = None
     ) -> DriveRequest[dict[str, object]]:
         """
         Mock list method for listing files.
@@ -271,7 +277,7 @@ class MockDriveFilesResource(DriveFilesResource):
         return MockDriveRequest(response, self.list_error)
 
     def update(
-        self, file_id: str, body: dict[str, object], fields: str = None
+            self, file_id: str, body: dict[str, object], fields: str | None = None
     ) -> DriveRequest[dict[str, object]]:
         """
         Mock update method for updating a file's metadata.
@@ -293,7 +299,9 @@ class MockDriveFilesResource(DriveFilesResource):
         updated_metadata = self.file_metadata.copy()
         updated_metadata.update(body)  # type: ignore
 
-        return MockDriveRequest(updated_metadata, self.update_error)
+        request = MockDriveRequest(updated_metadata, self.update_error)
+        request._body = body
+        return request
 
     def delete(self, file_id: str) -> DriveRequest[None]:
         """
@@ -348,13 +356,13 @@ class MockGoogleCredentials(GoogleCredentials):
     """Mock Google credentials for authentication testing."""
 
     def __init__(
-        self,
-        token: str = "test_token",
-        refresh_token: str = "refresh_token",
-        token_uri: str = "https://oauth2.googleapis.com/token",
-        client_id: str = "client_id",
-        client_secret: str = "client_secret",
-        scopes: list[str] | None = None,
+            self,
+            token: str = "test_token",
+            refresh_token: str = "refresh_token",
+            token_uri: str = "https://oauth2.googleapis.com/token",
+            client_id: str = "client_id",
+            client_secret: str = "client_secret",
+            scopes: list[str] | None = None,
     ):
         """
         Initialize mock Google credentials.
@@ -379,9 +387,9 @@ class MockGoogleCredentials(GoogleCredentials):
 
 
 def create_mock_drive_service(
-    file_id: str = "file123",
-    file_metadata: dict[str, Any] | None = None,
-    file_list: list[dict[str, Any]] | None = None,
+        file_id: str = "file123",
+        file_metadata: dict[str, Any] | None = None,
+        file_list: list[dict[str, Any]] | None = None,
 ) -> DriveService:
     """
     Create and return a configurable mock Drive service.
@@ -403,13 +411,13 @@ def create_mock_drive_service(
 
 
 def create_error_drive_service(
-    create_error: Exception | None = None,
-    get_error: Exception | None = None,
-    get_media_error: Exception | None = None,
-    list_error: Exception | None = None,
-    update_error: Exception | None = None,
-    delete_error: Exception | None = None,
-    permission_error: Exception | None = None,
+        create_error: Exception | None = None,
+        get_error: Exception | None = None,
+        get_media_error: Exception | None = None,
+        list_error: Exception | None = None,
+        update_error: Exception | None = None,
+        delete_error: Exception | None = None,
+        permission_error: Exception | None = None,
 ) -> DriveService:
     """
     Create a Drive service mock that raises configurable exceptions.
@@ -471,7 +479,6 @@ def create_credentials() -> GoogleCredentials:
 
 # Additional utilities for media handling in tests
 
-
 def create_mock_media_io_base_download():
     """
     Create a mock for MediaIoBaseDownload class.
@@ -480,22 +487,42 @@ def create_mock_media_io_base_download():
         A factory function that produces configured download mock objects
     """
 
-    class MockMediaIoBaseDownload:
+    class MockDownloader:
+        """MockDownloader class with next_chunk method to simulate downloads."""
+
         def __init__(self, progress_sequence=None):
+            """Initialize with optional progress sequence."""
             self.progress_sequence = progress_sequence or [(0.5, False), (1.0, True)]
             self.call_count = 0
 
         def next_chunk(self):
+            """
+            Get the next chunk of the download.
+
+            Returns:
+                Tuple of (status, done) where status has a progress() method
+                and done is a boolean indicating if the download is complete.
+            """
             if self.call_count >= len(self.progress_sequence):
                 raise Exception("No more chunks available")
 
             progress, done = self.progress_sequence[self.call_count]
             self.call_count += 1
 
+            # Create status object with progress method
             status = type("Status", (), {"progress": lambda: progress})()
             return status, done
 
-    def create_mock(progress_sequence=None):
-        return MockMediaIoBaseDownload(progress_sequence)
+    def create_downloader_factory(progress_sequence=None):
+        """
+        Create a mock downloader with the specified progress sequence.
 
-    return create_mock
+        Args:
+            progress_sequence: Optional sequence of (progress, done) tuples
+
+        Returns:
+            MockDownloader: A mock downloader object with next_chunk method
+        """
+        return MockDownloader(progress_sequence)
+
+    return create_downloader_factory

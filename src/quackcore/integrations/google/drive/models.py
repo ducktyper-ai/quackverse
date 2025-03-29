@@ -94,6 +94,14 @@ class DriveFile(BaseModel):
                     )
                 )
 
+        # Convert size to int if present and handle possible strings
+        size = None
+        if "size" in response:
+            try:
+                size = int(response["size"])
+            except (ValueError, TypeError):
+                pass
+
         return cls(
             id=response.get("id", ""),
             name=response.get("name", ""),
@@ -101,7 +109,7 @@ class DriveFile(BaseModel):
             parents=response.get("parents", []),
             web_view_link=response.get("webViewLink"),
             web_content_link=response.get("webContentLink"),
-            size=int(response.get("size", 0)) if "size" in response else None,
+            size=size,
             created_time=created_time,
             modified_time=modified_time,
             permissions=permissions,

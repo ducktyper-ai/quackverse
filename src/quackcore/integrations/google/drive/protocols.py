@@ -6,7 +6,7 @@ This module defines protocol classes for Google Drive services and resources,
 ensuring proper typing throughout the codebase and avoiding the use of Any.
 """
 
-from typing import Protocol, TypeVar, runtime_checkable
+from typing import TypeVar, runtime_checkable, Protocol
 
 T = TypeVar("T")  # Generic type for result content
 R = TypeVar("R")  # Generic type for return values
@@ -54,8 +54,8 @@ class DriveFilesResource(Protocol):
     def create(
         self,
         body: dict[str, object],
-        media_body: object = None,
-        fields: str = None,
+        media_body: object | None = None,
+        fields: str | None = None,
     ) -> DriveRequest[dict[str, object]]:
         """
         Create a file.
@@ -70,7 +70,7 @@ class DriveFilesResource(Protocol):
         """
         ...
 
-    def get(self, file_id: str, fields: str = None) -> DriveRequest[dict[str, object]]:
+    def get(self, file_id: str, fields: str | None = None) -> DriveRequest[dict[str, object]]:
         """
         Get a file's metadata.
 
@@ -96,7 +96,7 @@ class DriveFilesResource(Protocol):
         ...
 
     def list(
-        self, q: str = None, fields: str = None, page_size: int = None
+        self, q: str | None = None, fields: str | None = None, page_size: int | None = None
     ) -> DriveRequest[dict[str, object]]:
         """
         List files.
@@ -112,7 +112,7 @@ class DriveFilesResource(Protocol):
         ...
 
     def update(
-        self, file_id: str, body: dict[str, object], fields: str = None
+        self, file_id: str, body: dict[str, object], fields: str | None = None
     ) -> DriveRequest[dict[str, object]]:
         """
         Update a file's metadata.

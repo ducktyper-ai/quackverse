@@ -44,6 +44,7 @@ class TestDriveOperationsFolder:
             with patch(
                 "quackcore.integrations.google.drive.operations.permissions.set_file_permissions"
             ) as mock_permissions:
+                # Set up the mock to return a successful result
                 mock_permissions.return_value.success = True
 
                 # Test successful folder creation

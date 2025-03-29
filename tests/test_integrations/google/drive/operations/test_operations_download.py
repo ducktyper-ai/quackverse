@@ -42,7 +42,7 @@ class TestDriveOperationsDownload:
         # Create a temporary patched version of the function that returns what we want
         def patched_resolve_download_path(metadata, path=None):
             if path and str(local_dir) in str(path):
-                return local_dir / "test_file.txt"
+                return str(local_dir / "test_file.txt")
             # Use the original function for other cases
             return download.resolve_download_path(metadata, path)
 
@@ -82,6 +82,15 @@ class TestDriveOperationsDownload:
             (MagicMock(progress=lambda: 1.0), True),
         ]
 
+        # Create a file_ops_mock that will be used by the patched FileSystemOperations
+        file_ops_mock = MagicMock()
+        file_ops_mock.write_binary.return_value = WriteResult(
+            success=True,
+            path="/tmp/test_file.txt",
+            bytes_written=len(b"file content"),
+            message="File written",
+        )
+
         # Setup BytesIO mock
         with patch("io.BytesIO") as mock_bytesio:
             mock_io = MagicMock()
@@ -102,29 +111,19 @@ class TestDriveOperationsDownload:
                         )
                         mock_mkdir.return_value = mkdir_result
 
-                        # Mock the FileSystemOperations instance and its write_binary method
+                        # Important change: Patch FileSystemOperations directly
                         with patch(
-                                "quackcore.fs.operations.FileSystemOperations") as mock_fs_ops_class:
-                            mock_fs_ops = MagicMock()
-                            mock_fs_ops_class.return_value = mock_fs_ops
-
-                            write_result = WriteResult(
-                                success=True,
-                                path="/tmp/test_file.txt",
-                                bytes_written=len(b"file content"),
-                                message="File written",
-                            )
-                            mock_fs_ops.write_binary.return_value = write_result
-
+                            "quackcore.integrations.google.drive.operations.download.FileSystemOperations",
+                            return_value=file_ops_mock
+                        ):
                             # Mock API Request execution
                             with patch(
-                                    "quackcore.integrations.google.drive.utils.api.execute_api_request"
+                                "quackcore.integrations.google.drive.utils.api.execute_api_request"
                             ) as mock_execute:
-                                mock_execute.side_effect = [
-                                    # First call for file metadata
-                                    {"name": "test_file.txt", "mimeType": "text/plain"},
-                                    # This would be for get_media but we're bypassing it with BytesIO mock
-                                ]
+                                mock_execute.return_value = {
+                                    "name": "test_file.txt",
+                                    "mimeType": "text/plain"
+                                }
 
                                 # Test successful download
                                 result = download.download_file(
@@ -133,8 +132,8 @@ class TestDriveOperationsDownload:
 
                                 assert result.success is True
                                 assert result.content == "/tmp/test_file.txt"
+
                                 # Verify that the proper methods were called
-                                # Use type casting to access mock-specific attributes
                                 from tests.test_integrations.google.drive.mocks import (
                                     MockDriveFilesResource,
                                     MockDriveService,
@@ -152,10 +151,10 @@ class TestDriveOperationsDownload:
                                 assert files_resource.get_call_count == 1
                                 assert files_resource.get_media_call_count == 1
                                 assert files_resource.last_get_file_id == "file123"
-                                assert (
-                                        files_resource.last_get_media_file_id == "file123"
-                                )
-                                mock_fs_ops.write_binary.assert_called_once()
+                                assert files_resource.last_get_media_file_id == "file123"
+
+                                # Verify that write_binary was called
+                                file_ops_mock.write_binary.assert_called_once()
 
     def test_download_file_api_error(self) -> None:
         """Test download file with API error."""
@@ -191,6 +190,15 @@ class TestDriveOperationsDownload:
         # Create mock drive service
         mock_drive_service = create_mock_drive_service()
 
+        # Create a file_ops_mock with write error
+        file_ops_mock = MagicMock()
+        file_ops_mock.write_binary.return_value = WriteResult(
+            success=False,
+            path="/tmp/test_file.txt",
+            error="Write error",
+            bytes_written=0,
+        )
+
         # Setup with patch pyramid
         with patch("googleapiclient.http.MediaIoBaseDownload") as mock_download:
             mock_downloader = MagicMock()
@@ -214,20 +222,11 @@ class TestDriveOperationsDownload:
                             )
                             mock_mkdir.return_value = mkdir_result
 
-                            # Mock FileSystemOperations instance with write error
+                            # Important change: Patch FileSystemOperations directly
                             with patch(
-                                    "quackcore.fs.operations.FileSystemOperations") as mock_fs_ops_class:
-                                mock_fs_ops = MagicMock()
-                                mock_fs_ops_class.return_value = mock_fs_ops
-
-                                write_result = WriteResult(
-                                    success=False,
-                                    path="/tmp/test_file.txt",
-                                    error="Write error",
-                                    bytes_written=0,
-                                )
-                                mock_fs_ops.write_binary.return_value = write_result
-
+                                "quackcore.integrations.google.drive.operations.download.FileSystemOperations",
+                                return_value=file_ops_mock
+                            ):
                                 # Mock API Request execution
                                 with patch(
                                         "quackcore.integrations.google.drive.utils.api.execute_api_request"
@@ -246,11 +245,22 @@ class TestDriveOperationsDownload:
 
                                     assert result.success is False
                                     assert "Write error" in result.error
+                                    # Verify write_binary was called
+                                    file_ops_mock.write_binary.assert_called_once()
 
     def test_download_file_with_mock_media_downloader(self) -> None:
         """Test downloading a file using the custom media downloader mock."""
         # Create mock drive service
         mock_drive_service = create_mock_drive_service()
+
+        # Create a file_ops_mock for write operations
+        file_ops_mock = MagicMock()
+        file_ops_mock.write_binary.return_value = WriteResult(
+            success=True,
+            path="/tmp/test_file.txt",
+            bytes_written=len(b"file content"),
+            message="File written",
+        )
 
         # Get the mock downloader factory
         create_downloader_mock = create_mock_media_io_base_download()
@@ -285,20 +295,11 @@ class TestDriveOperationsDownload:
                             )
                             mock_mkdir.return_value = mkdir_result
 
-                            # Mock FileSystemOperations instance
+                            # Important change: Patch FileSystemOperations directly
                             with patch(
-                                    "quackcore.fs.operations.FileSystemOperations") as mock_fs_ops_class:
-                                mock_fs_ops = MagicMock()
-                                mock_fs_ops_class.return_value = mock_fs_ops
-
-                                write_result = WriteResult(
-                                    success=True,
-                                    path="/tmp/test_file.txt",
-                                    bytes_written=len(b"file content"),
-                                    message="File written",
-                                )
-                                mock_fs_ops.write_binary.return_value = write_result
-
+                                "quackcore.integrations.google.drive.operations.download.FileSystemOperations",
+                                return_value=file_ops_mock
+                            ):
                                 # Mock API Request execution
                                 with patch(
                                         "quackcore.integrations.google.drive.utils.api.execute_api_request"
@@ -318,6 +319,6 @@ class TestDriveOperationsDownload:
                                     assert result.success is True
                                     assert result.content == "/tmp/test_file.txt"
                                     # Verify that our custom downloader was used correctly
-                                    assert (
-                                            mock_downloader.call_count == 4
-                                    )  # All 4 chunks were processed
+                                    assert mock_downloader.call_count == 4  # All 4 chunks were processed
+                                    # Verify that write_binary was called
+                                    file_ops_mock.write_binary.assert_called_once()

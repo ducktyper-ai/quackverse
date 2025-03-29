@@ -8,6 +8,7 @@ including handling file metadata and media download.
 
 import io
 import logging
+from pathlib import Path
 from typing import TypeVar
 
 from quackcore.errors import QuackApiError
@@ -51,8 +52,7 @@ def resolve_download_path(
         if file_info.is_dir:
             return fs.join_path(local_path_obj, file_name)
         # If it's a file, use it directly (user specified exact destination)
-        else:
-            return local_path_obj
+        return local_path_obj
 
     # If path doesn't exist, assume it's a file path the user wants to create
     return local_path_obj
@@ -93,19 +93,19 @@ def download_file(
         download_path = resolve_download_path(file_metadata, local_path)
 
         # Ensure parent directory exists
-        parent_dir = fs.join_path(download_path).parent
+        parent_dir = Path(fs.join_path(download_path)).parent
         parent_result = fs.create_directory(parent_dir, exist_ok=True)
         if not parent_result.success:
             return IntegrationResult.error_result(
                 f"Failed to create directory: {parent_result.error}"
             )
 
-        # Download file content
         try:
+            # Get media request
             request = files_resource.get_media(file_id=file_id)
             fh = io.BytesIO()
 
-            # Create MediaIoBaseDownload
+            # Import and create MediaIoBaseDownload
             from googleapiclient.http import MediaIoBaseDownload
             downloader = MediaIoBaseDownload(fh, request)
 
@@ -115,6 +115,25 @@ def download_file(
                 status, done = downloader.next_chunk()
                 logger.debug(f"Download progress: {int(status.progress() * 100)}%")
 
+            # Write file content to disk
+            fh.seek(0)
+            content = fh.read()
+
+            # Create a FileSystemOperations instance and use it to write the file
+            # This instance is created here to ensure it's available for the test to mock
+            fs_ops = FileSystemOperations()
+            write_result = fs_ops.write_binary(download_path, content)
+
+            if not write_result.success:
+                return IntegrationResult.error_result(
+                    f"Failed to write file: {write_result.error}"
+                )
+
+            return IntegrationResult.success_result(
+                content=download_path,
+                message=f"File downloaded successfully to {download_path}",
+            )
+
         except Exception as api_error:
             raise QuackApiError(
                 f"Failed to download file from Google Drive: {api_error}",
@@ -122,24 +141,6 @@ def download_file(
                 api_method="files.get_media",
                 original_error=api_error,
             ) from api_error
-
-        # Write file to disk using FileSystemOperations
-        fh.seek(0)
-
-        # Import and create FileSystemOperations here to match the test's patching structure
-        from quackcore.fs.operations import FileSystemOperations
-        fs_ops = FileSystemOperations()
-        write_result = fs_ops.write_binary(download_path, fh.read())
-
-        if not write_result.success:
-            return IntegrationResult.error_result(
-                f"Failed to write file: {write_result.error}"
-            )
-
-        return IntegrationResult.success_result(
-            content=download_path,
-            message=f"File downloaded successfully to {download_path}",
-        )
 
     except QuackApiError as e:
         logger.error(f"API error during file download: {e}")
