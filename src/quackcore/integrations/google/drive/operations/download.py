@@ -14,6 +14,7 @@ from googleapiclient.http import MediaIoBaseDownload
 
 from quackcore.errors import QuackApiError
 from quackcore.fs import service as fs
+from quackcore.fs.operations import FileSystemOperations
 from quackcore.integrations.google.drive.protocols import DriveService
 from quackcore.integrations.google.drive.utils.api import execute_api_request
 from quackcore.integrations.core.results import IntegrationResult
@@ -23,7 +24,7 @@ T = TypeVar("T")  # Generic type for result content
 
 
 def resolve_download_path(
-    file_metadata: dict[str, object], local_path: str | None
+        file_metadata: dict[str, object], local_path: str | None
 ) -> str:
     """
     Resolve the local path for file download.
@@ -35,26 +36,34 @@ def resolve_download_path(
     Returns:
         str: The resolved download path.
     """
-    if not local_path:
+    file_name = str(file_metadata.get("name", "downloaded_file"))
+
+    if local_path is None:
+        # Create a temporary directory
         temp_dir = fs.create_temp_directory(prefix="quackcore_gdrive_")
-        # Use type assertion to convert from 'object' to 'str'
-        file_name = str(file_metadata.get("name", "downloaded_file"))
+        # Return the joined path
         return fs.join_path(temp_dir, file_name)
 
+    # Resolve the local path
     local_path_obj = resolver.resolve_project_path(local_path)
     file_info = fs.get_file_info(local_path_obj)
-    if file_info.success and file_info.exists and file_info.is_dir:
-        # Use type assertion to convert from 'object' to 'str'
-        file_name = str(file_metadata.get("name", "downloaded_file"))
-        return fs.join_path(local_path_obj, file_name)
+
+    if file_info.success and file_info.exists:
+        # If the local path is a directory, join with the file name
+        if file_info.is_dir:
+            return fs.join_path(local_path_obj, file_name)
+        # If it's a file, use it directly (user specified exact destination)
+        else:
+            return local_path_obj
+
+    # If path doesn't exist, assume it's a file path the user wants to create
     return local_path_obj
 
-
 def download_file(
-    drive_service: DriveService,
-    file_id: str,
-    local_path: str | None = None,
-    logger: logging.Logger | None = None,
+        drive_service: DriveService,
+        file_id: str,
+        local_path: str | None = None,
+        logger: logging.Logger | None = None,
 ) -> IntegrationResult[str]:
     """
     Download a file from Google Drive.
@@ -69,6 +78,8 @@ def download_file(
         IntegrationResult with the local file path.
     """
     logger = logger or logging.getLogger(__name__)
+    # Create file system operations instance
+    fs_ops = FileSystemOperations()
 
     try:
         # Get file metadata
@@ -100,9 +111,9 @@ def download_file(
             status, done = downloader.next_chunk()
             logger.debug(f"Download progress: {int(status.progress() * 100)}%")
 
-        # Write content to file
+        # Write content to file - Use FileSystemOperations instance
         fh.seek(0)
-        write_result = fs.write_binary(download_path, fh.read())
+        write_result = fs_ops.write_binary(download_path, fh.read())
         if not write_result.success:
             return IntegrationResult.error_result(
                 f"Failed to write file: {write_result.error}"

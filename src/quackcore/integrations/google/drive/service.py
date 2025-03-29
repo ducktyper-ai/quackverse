@@ -195,21 +195,34 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
         return path_obj, filename, folder_id, mime_type
 
     def _resolve_download_path(
-        self, file_metadata: dict[str, Any], local_path: str | None
+            self, file_metadata: dict[str, Any], local_path: str | None
     ) -> str:
         """
         Resolve the local path for file download.
 
+        Args:
+            file_metadata: File metadata from Google Drive.
+            local_path: Optional local path to save the file.
+
         Returns:
-            The resolved download path.
+            str: The resolved download path.
         """
+        file_name = file_metadata["name"]
+
         if not local_path:
+            # Create a temp directory
             temp_dir = fs.create_temp_directory(prefix="quackcore_gdrive_")
-            return fs.join_path(temp_dir, file_metadata["name"])
+            # Get joined path from join_path
+            return fs.join_path(temp_dir, file_name)
+
         local_path_obj = resolver.resolve_project_path(local_path)
         file_info = fs.get_file_info(local_path_obj)
+
         if file_info.success and file_info.exists and file_info.is_dir:
-            return fs.join_path(local_path_obj, file_metadata["name"])
+            # Make sure to call join_path explicitly to get the joined path
+            joined_path = fs.join_path(local_path_obj, file_name)
+            return joined_path
+
         return local_path_obj
 
     def _build_query(self, remote_path: str | None, pattern: str | None) -> str:
@@ -342,10 +355,14 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             )
 
     def download_file(
-        self, remote_id: str, local_path: str | None = None
+            self, remote_id: str, local_path: str | None = None
     ) -> IntegrationResult[str]:
         """
         Download a file from Google Drive.
+
+        Args:
+            remote_id: ID of the file to download.
+            local_path: Optional local path to save the file.
 
         Returns:
             IntegrationResult with the local file path.
@@ -397,7 +414,10 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
                 ) from api_error
 
             fh.seek(0)
-            write_result = fs.write_binary(download_path, fh.read())
+            # Create FileSystemOperations instance to write the file
+            from quackcore.fs.operations import FileSystemOperations
+            fs_ops = FileSystemOperations()
+            write_result = fs_ops.write_binary(download_path, fh.read())
             if not write_result.success:
                 return IntegrationResult.error_result(
                     f"Failed to write file: {write_result.error}"
