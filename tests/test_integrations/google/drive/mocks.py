@@ -384,6 +384,19 @@ class MockGoogleCredentials(GoogleCredentials):
         self.client_secret = client_secret
         self.scopes = scopes or ["https://www.googleapis.com/auth/drive.file"]
 
+    def authorize(self, http):
+        """
+        Authorize an httplib2.Http instance with these credentials.
+
+        Args:
+            http: An httplib2.Http instance to authorize.
+
+        Returns:
+            The authorized http object.
+        """
+        # Just return the http object unchanged, as we're just mocking
+        return http
+
 
 # Helper factory functions
 

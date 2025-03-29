@@ -7,19 +7,21 @@ including setting permissions and retrieving sharing links.
 """
 
 import logging
+from typing import Any
 
 from quackcore.errors import QuackApiError
 from quackcore.integrations.google.drive.protocols import DriveService
-from quackcore.integrations.google.drive.utils.api import execute_api_request
+# Import the utils.api module itself, not just the function
+from quackcore.integrations.google.drive.utils import api
 from quackcore.integrations.core.results import IntegrationResult
 
 
 def set_file_permissions(
-    drive_service: DriveService,
-    file_id: str,
-    role: str = "reader",
-    type_: str = "anyone",
-    logger: logging.Logger | None = None,
+        drive_service: DriveService,
+        file_id: str,
+        role: str = "reader",
+        type_: str = "anyone",
+        logger: logging.Logger | None = None,
 ) -> IntegrationResult[bool]:
     """
     Set permissions for a file or folder in Google Drive.
@@ -38,17 +40,20 @@ def set_file_permissions(
 
     try:
         # Create permission object
-        permission: dict[str, object] = {
+        permission: dict[str, Any] = {
             "type": type_,
             "role": role,
             "allowFileDiscovery": True,
         }
 
-        # Execute permission creation
-        execute_api_request(
-            drive_service.files()
-            .permissions()
-            .create(file_id=file_id, body=permission, fields="id"),
+        # Create the request
+        request = drive_service.files().permissions().create(
+            file_id=file_id, body=permission, fields="id"
+        )
+
+        # Use the module import to call the function - this should make patching work
+        api.execute_api_request(
+            request,
             "Failed to set permissions in Google Drive",
             "permissions.create",
         )
@@ -68,9 +73,9 @@ def set_file_permissions(
 
 
 def get_sharing_link(
-    drive_service: DriveService,
-    file_id: str,
-    logger: logging.Logger | None = None,
+        drive_service: DriveService,
+        file_id: str,
+        logger: logging.Logger | None = None,
 ) -> IntegrationResult[str]:
     """
     Get the sharing link for a file in Google Drive.
@@ -87,7 +92,7 @@ def get_sharing_link(
 
     try:
         # Get file metadata with link information
-        file_metadata = execute_api_request(
+        file_metadata = api.execute_api_request(
             drive_service.files().get(
                 file_id=file_id, fields="webViewLink, webContentLink"
             ),
@@ -97,12 +102,11 @@ def get_sharing_link(
 
         # Extract link with explicit type annotation
         link: str = (
-            str(file_metadata.get("webViewLink", ""))
-            or str(file_metadata.get("webContentLink", ""))
-            or f"https://drive.google.com/file/d/{file_id}/view"
+                str(file_metadata.get("webViewLink", ""))
+                or str(file_metadata.get("webContentLink", ""))
+                or f"https://drive.google.com/file/d/{file_id}/view"
         )
 
-        # Using the explicit type annotation
         return IntegrationResult.success_result(
             content=link, message="Got sharing link successfully"
         )
