@@ -1,4 +1,4 @@
-# tests/test_integrations/test_results.py
+# tests/test_integrations/core/test_results.py
 """
 Tests for the integration result classes.
 """

@@ -1,4 +1,4 @@
-# tests/test_integrations/base/config_provider_impl.py
+# tests/test_integrations/core/base/config_provider_impl.py
 """
 Implementation classes for testing config providers.
 """

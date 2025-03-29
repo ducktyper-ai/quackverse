@@ -82,7 +82,7 @@ update: ## Update all dependencies
 test: install-dev ## Run tests with coverage
 	$(PYTHON) -m pytest $(TEST_PATH) $(PYTEST_ARGS) --cov=src --cov-report=term-missing
 
-.PHONY: test-integrations
+.PHONY: test-module
 test-integrations: install-dev ## Run only integration tests with coverage
 	$(PYTHON) -m pytest tests/test_integrations $(PYTEST_ARGS) --cov=src --cov-report=term-missing
 

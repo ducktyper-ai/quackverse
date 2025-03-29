@@ -1,4 +1,4 @@
-# tests/test_integrations/base/test_config_provider_discovery.py
+# tests/test_integrations/core/base/test_config_provider_discovery.py
 """
 Tests for the config discovery functionality in BaseConfigProvider.
 """
@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from quackcore.errors import QuackConfigurationError, QuackFileNotFoundError
-from tests.test_integrations.base.config_provider_impl import MockConfigProvider
+from tests.test_integrations.core.base.config_provider_impl import MockConfigProvider
 
 
 class TestBaseConfigProviderDiscovery:
@@ -162,7 +162,7 @@ class TestBaseConfigProviderDiscovery:
 
         # Test with project root resolver
         with patch(
-            "quackcore.integrations.base.resolver.resolve_project_path"
+            "quackcore.integrations.core.base.resolver.resolve_project_path"
         ) as mock_resolve:
             mock_resolve.return_value = "/resolved/path"
 
@@ -172,7 +172,7 @@ class TestBaseConfigProviderDiscovery:
 
         # Test with resolver exception
         with patch(
-            "quackcore.integrations.base.resolver.resolve_project_path"
+            "quackcore.integrations.core.base.resolver.resolve_project_path"
         ) as mock_resolve:
             mock_resolve.side_effect = Exception("Test error")
 

@@ -1,4 +1,4 @@
-# tests/test_integrations/base/test_integration_service.py
+# tests/test_integrations/core/base/test_integration_service.py
 """
 Tests for the BaseIntegrationService class.
 """
@@ -6,9 +6,9 @@ Tests for the BaseIntegrationService class.
 from unittest.mock import patch
 
 from quackcore.integrations.core.results import AuthResult, ConfigResult, IntegrationResult
-from tests.test_integrations.base.auth_provider_impl import MockAuthProvider
-from tests.test_integrations.base.config_provider_impl import MockConfigProvider
-from tests.test_integrations.base.integration_service_impl import MockIntegrationService
+from tests.test_integrations.core.base.auth_provider_impl import MockAuthProvider
+from tests.test_integrations.core.base.config_provider_impl import MockConfigProvider
+from tests.test_integrations.core.base.integration_service_impl import MockIntegrationService
 
 
 class TestBaseIntegrationService:

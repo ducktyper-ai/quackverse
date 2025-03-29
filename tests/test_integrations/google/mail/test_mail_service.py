@@ -172,7 +172,7 @@ class TestGoogleMailService:
     @patch(
         "quackcore.integrations.google.mail.operations.auth.initialize_gmail_service"
     )
-    @patch("quackcore.integrations.base.BaseIntegrationService.initialize")
+    @patch("quackcore.integrations.core.base.BaseIntegrationService.initialize")
     def test_initialize(
         self,
         mock_base_init: MagicMock,

@@ -1,4 +1,4 @@
-# tests/test_integrations/test_registry_discovery.py
+# tests/test_integrations/core/test_registry_discovery.py
 """
 Tests for the integration registry discovery features.
 

@@ -1,4 +1,4 @@
-# tests/test_integrations/base/auth_provider_impl.py
+# tests/test_integrations/core/base/auth_provider_impl.py
 """
 Implementation classes for testing auth providers.
 """

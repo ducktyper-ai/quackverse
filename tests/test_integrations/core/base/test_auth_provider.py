@@ -1,4 +1,4 @@
-# tests/test_integrations/base/test_auth_provider.py
+# tests/test_integrations/core/base/test_auth_provider.py
 """
 Tests for the BaseAuthProvider class.
 """
@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from quackcore.integrations.core.base import BaseAuthProvider
-from tests.test_integrations.base.auth_provider_impl import MockAuthProvider
+from tests.test_integrations.core.base.auth_provider_impl import MockAuthProvider
 
 
 class TestBaseAuthProvider:
@@ -40,7 +40,7 @@ class TestBaseAuthProvider:
 
         # Test with relative path (mocking resolver)
         with patch(
-            "quackcore.integrations.base.resolver.resolve_project_path"
+            "quackcore.integrations.core.base.resolver.resolve_project_path"
         ) as mock_resolve:
             mock_resolve.return_value = "/resolved/path"
             resolved = provider._resolve_path("relative/path")
@@ -49,7 +49,7 @@ class TestBaseAuthProvider:
 
         # Test with resolver exception
         with patch(
-            "quackcore.integrations.base.resolver.resolve_project_path"
+            "quackcore.integrations.core.base.resolver.resolve_project_path"
         ) as mock_resolve:
             mock_resolve.side_effect = Exception("Test error")
             with patch("quackcore.fs.service.normalize_path") as mock_normalize:

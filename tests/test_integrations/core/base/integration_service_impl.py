@@ -1,4 +1,4 @@
-# tests/test_integrations/base/integration_service_impl.py
+# tests/test_integrations/core/base/integration_service_impl.py
 """
 Implementation classes for testing integration services.
 """

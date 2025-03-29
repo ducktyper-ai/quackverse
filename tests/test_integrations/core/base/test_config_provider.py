@@ -1,17 +1,16 @@
-# tests/test_integrations/base/test_config_provider.py
+# tests/test_integrations/core/base/test_config_provider.py
 """
 Tests for the BaseConfigProvider class.
 """
 
-import os
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
-from quackcore.errors import QuackConfigurationError, QuackFileNotFoundError
+from quackcore.errors import QuackConfigurationError
 from quackcore.integrations.core.base import BaseConfigProvider
-from tests.test_integrations.base.config_provider_impl import MockConfigProvider
+from tests.test_integrations.core.base.config_provider_impl import MockConfigProvider
 
 
 class TestBaseConfigProvider:

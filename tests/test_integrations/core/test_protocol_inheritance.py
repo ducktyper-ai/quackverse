@@ -1,4 +1,4 @@
-# tests/test_integrations/test_protocol_inheritance.py
+# tests/test_integrations/core/test_protocol_inheritance.py
 """
 Tests for protocol inheritance and runtime protocol checking.
 

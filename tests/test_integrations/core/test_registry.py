@@ -1,4 +1,4 @@
-# tests/test_integrations/test_registry.py
+# tests/test_integrations/core/test_registry.py
 """
 Tests for the integration registry module.
 """
