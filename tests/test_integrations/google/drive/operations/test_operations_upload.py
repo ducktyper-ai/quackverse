@@ -163,16 +163,14 @@ class TestDriveOperationsUpload:
                 mock_fs.read_binary.return_value.success = True
                 mock_fs.read_binary.return_value.content = b"test content"
 
-                # Create a proper mock class for MediaInMemoryUpload instead of just returning a MagicMock
-                class MockMediaInMemoryUpload:
-                    def __init__(self, content, mimetype=None, resumable=False):
-                        self.content = content
-                        self.mimetype = mimetype
-                        self.resumable = resumable
+                # Instead of creating a mock class, use MagicMock for the instance
+                media_mock = MagicMock()
 
-                # Patch the MediaInMemoryUpload class with our mock implementation
-                with patch("googleapiclient.http.MediaInMemoryUpload",
-                           MockMediaInMemoryUpload):
+                # Patch the MediaInMemoryUpload class with our mock
+                with patch(
+                        "quackcore.integrations.google.drive.operations.upload.MediaInMemoryUpload",
+                        return_value=media_mock
+                ):
                     # Mock execute_api_request
                     with patch(
                             "quackcore.integrations.google.drive.utils.api.execute_api_request"
@@ -281,16 +279,14 @@ class TestDriveOperationsUpload:
                 mock_fs.read_binary.return_value.success = True
                 mock_fs.read_binary.return_value.content = b"test content"
 
-                # Create a proper mock class for MediaInMemoryUpload
-                class MockMediaInMemoryUpload:
-                    def __init__(self, content, mimetype=None, resumable=False):
-                        self.content = content
-                        self.mimetype = mimetype
-                        self.resumable = resumable
+                # Use MagicMock for MediaInMemoryUpload
+                media_mock = MagicMock()
 
-                # Patch MediaInMemoryUpload with our custom implementation
-                with patch("googleapiclient.http.MediaInMemoryUpload",
-                           MockMediaInMemoryUpload):
+                # Patch MediaInMemoryUpload with our mock
+                with patch(
+                        "quackcore.integrations.google.drive.operations.upload.MediaInMemoryUpload",
+                        return_value=media_mock
+                ):
                     # Mock execute_api_request to raise an error
                     with patch(
                             "quackcore.integrations.google.drive.utils.api.execute_api_request"
@@ -340,16 +336,14 @@ class TestDriveOperationsUpload:
                 mock_fs.read_binary.return_value.success = True
                 mock_fs.read_binary.return_value.content = b"PDF content"
 
-                # Create a proper mock class for MediaInMemoryUpload
-                class MockMediaInMemoryUpload:
-                    def __init__(self, content, mimetype=None, resumable=False):
-                        self.content = content
-                        self.mimetype = mimetype
-                        self.resumable = resumable
+                # Use MagicMock for MediaInMemoryUpload
+                media_mock = MagicMock()
 
-                # Patch MediaInMemoryUpload with our custom implementation
-                with patch("googleapiclient.http.MediaInMemoryUpload",
-                           MockMediaInMemoryUpload):
+                # Patch MediaInMemoryUpload with our mock
+                with patch(
+                        "quackcore.integrations.google.drive.operations.upload.MediaInMemoryUpload",
+                        return_value=media_mock
+                ):
                     # Mock execute_api_request
                     with patch(
                             "quackcore.integrations.google.drive.utils.api.execute_api_request"

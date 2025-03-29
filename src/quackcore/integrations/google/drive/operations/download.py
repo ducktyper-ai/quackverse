@@ -11,6 +11,8 @@ import logging
 from pathlib import Path
 from typing import TypeVar
 
+from googleapiclient.http import MediaIoBaseDownload
+
 from quackcore.errors import QuackApiError
 from quackcore.fs import service as fs
 from quackcore.fs.operations import FileSystemOperations
@@ -105,8 +107,7 @@ def download_file(
             request = files_resource.get_media(file_id=file_id)
             fh = io.BytesIO()
 
-            # Import and create MediaIoBaseDownload
-            from googleapiclient.http import MediaIoBaseDownload
+            # Create and use MediaIoBaseDownload
             downloader = MediaIoBaseDownload(fh, request)
 
             # Download in chunks
@@ -115,12 +116,13 @@ def download_file(
                 status, done = downloader.next_chunk()
                 logger.debug(f"Download progress: {int(status.progress() * 100)}%")
 
-            # Write file content to disk
+            # Reset buffer position to start
             fh.seek(0)
+
+            # Get content
             content = fh.read()
 
-            # Create a FileSystemOperations instance and use it to write the file
-            # This instance is created here to ensure it's available for the test to mock
+            # Create a FileSystemOperations instance to write the file
             fs_ops = FileSystemOperations()
             write_result = fs_ops.write_binary(download_path, content)
 

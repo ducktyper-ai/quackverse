@@ -7,6 +7,8 @@ including file metadata handling and media upload.
 """
 
 import logging
+from pathlib import Path
+from typing import Any
 
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaInMemoryUpload
@@ -50,8 +52,8 @@ def initialize_drive_service(credentials: GoogleCredentials) -> DriveService:
 
 
 def resolve_file_details(
-    file_path: str, remote_path: str | None, parent_folder_id: str | None
-) -> tuple[str, str, str | None, str]:
+        file_path: str, remote_path: str | None, parent_folder_id: str | None
+) -> tuple[str | Path, str, str | None, str]:
     """
     Resolve file details for upload.
 
@@ -81,13 +83,13 @@ def resolve_file_details(
 
 
 def upload_file(
-    drive_service: DriveService,
-    file_path: str,
-    remote_path: str | None = None,
-    description: str | None = None,
-    parent_folder_id: str | None = None,
-    make_public: bool = True,
-    logger: logging.Logger | None = None,
+        drive_service: DriveService,
+        file_path: str,
+        remote_path: str | None = None,
+        description: str | None = None,
+        parent_folder_id: str | None = None,
+        make_public: bool = True,
+        logger: logging.Logger | None = None,
 ) -> IntegrationResult[str]:
     """
     Upload a file to Google Drive.
@@ -115,9 +117,12 @@ def upload_file(
         # Prepare file metadata
         file_metadata: dict[str, object] = {
             "name": filename,
-            "description": description,
             "mimeType": mime_type,
         }
+
+        if description is not None:
+            file_metadata["description"] = description
+
         if folder_id:
             file_metadata["parents"] = [folder_id]
 
@@ -144,25 +149,28 @@ def upload_file(
             "files.create",
         )
 
+        # Get the file ID as a string
+        file_id = str(file["id"])
+
         # Set permissions if needed
         if make_public:
             perm_result = set_file_permissions(
-                drive_service, str(file["id"]), "reader", "anyone", logger
+                drive_service, file_id, "reader", "anyone", logger
             )
             if not perm_result.success:
                 logger.warning(f"Failed to set permissions: {perm_result.error}")
 
         # Extract link with explicit type annotation
         link: str = (
-            str(file.get("webViewLink", ""))
-            or str(file.get("webContentLink", ""))
-            or f"https://drive.google.com/file/d/{file['id']}/view"
+                str(file.get("webViewLink", ""))
+                or str(file.get("webContentLink", ""))
+                or f"https://drive.google.com/file/d/{file_id}/view"
         )
 
         # Now the type checker knows link is a string
         return IntegrationResult.success_result(
             content=link,
-            message=f"File uploaded successfully with ID: {file['id']}",
+            message=f"File uploaded successfully with ID: {file_id}",
         )
 
     except QuackApiError as e:

@@ -354,7 +354,6 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
                 f"Failed to upload file to Google Drive: {e}"
             )
 
-    # Implementation for the download_file method in GoogleDriveService class
     def download_file(
             self, remote_id: str, local_path: str | None = None
     ) -> IntegrationResult[str]:
@@ -415,10 +414,10 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
                 ) from api_error
 
             fh.seek(0)
+            file_content = fh.read()
 
-            # Create FileSystemOperations instance and use it to write the file
-            fs_ops = FileSystemOperations()
-            write_result = fs_ops.write_binary(download_path, fh.read())
+            # Write file to disk - using fs.write_binary directly
+            write_result = fs.write_binary(download_path, file_content)
 
             if not write_result.success:
                 return IntegrationResult.error_result(

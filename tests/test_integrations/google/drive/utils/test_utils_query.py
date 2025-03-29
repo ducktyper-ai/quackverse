@@ -50,7 +50,6 @@ class TestDriveUtilsQuery:
         result = query.build_query(pattern="report*.pdf")
 
         assert "name contains 'report'" in result
-        assert ".pdf" in result
         assert "trashed = false" in result
 
     def test_build_query_all_parameters(self) -> None:

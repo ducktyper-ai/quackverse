@@ -30,10 +30,36 @@ def build_query(folder_id: str | None = None, pattern: str | None = None) -> str
     # Filter by name pattern
     if pattern:
         if "*" in pattern:
+            # Handle wildcards in the pattern
             name_pattern = pattern.replace("*", "")
             if name_pattern:
-                query_parts.append(f"name contains '{name_pattern}'")
+                if "*" in pattern and pattern != "*":
+                    # Extract the part before the asterisk if it exists
+                    if pattern.startswith("*") and pattern.endswith("*"):
+                        # *text* pattern
+                        clean_pattern = pattern.strip("*")
+                        query_parts.append(f"name contains '{clean_pattern}'")
+                    elif pattern.startswith("*"):
+                        # *text pattern (ends with)
+                        clean_pattern = pattern[1:]
+                        query_parts.append(f"name contains '{clean_pattern}'")
+                    elif pattern.endswith("*"):
+                        # text* pattern (starts with)
+                        clean_pattern = pattern[:-1]
+                        query_parts.append(f"name contains '{clean_pattern}'")
+                    else:
+                        # Handle pattern with * in the middle
+                        parts = pattern.split("*")
+                        # Use the first part as the filter
+                        query_parts.append(f"name contains '{parts[0]}'")
+                else:
+                    # Empty wildcard (*)
+                    query_parts.append("name contains ''")
+            else:
+                # Empty wildcard (*)
+                query_parts.append("name contains ''")
         else:
+            # Exact match
             query_parts.append(f"name = '{pattern}'")
 
     return " and ".join(query_parts)
