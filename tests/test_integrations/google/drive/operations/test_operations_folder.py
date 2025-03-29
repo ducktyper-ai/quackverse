@@ -3,6 +3,7 @@
 Tests for Google Drive operations folder module.
 """
 
+import logging
 from unittest.mock import patch
 
 from quackcore.errors import QuackApiError
@@ -31,25 +32,26 @@ class TestDriveOperationsFolder:
             },
         )
 
-        # Mock API request execution
+        # Mock API request execution - make sure the path matches exactly what's in folder.py
         with patch(
-            "quackcore.integrations.google.drive.utils.api.execute_api_request"
+                "quackcore.integrations.google.drive.operations.folder.execute_api_request"
         ) as mock_execute:
             mock_execute.return_value = {
                 "id": "folder123",
                 "webViewLink": "https://drive.google.com/drive/folders/folder123",
             }
 
-            # Mock set_file_permissions
+            # Mock set_file_permissions - make sure the path matches exactly
             with patch(
-                "quackcore.integrations.google.drive.operations.permissions.set_file_permissions"
+                    "quackcore.integrations.google.drive.operations.folder.set_file_permissions"
             ) as mock_permissions:
                 # Set up the mock to return a successful result
                 mock_permissions.return_value.success = True
 
-                # Test successful folder creation
+                # Test successful folder creation with a None logger
                 result = folder.create_folder(
-                    mock_drive_service, "Test Folder", "parent123"
+                    mock_drive_service, "Test Folder", "parent123", make_public=True,
+                    logger=None
                 )
 
                 assert result.success is True
@@ -61,7 +63,7 @@ class TestDriveOperationsFolder:
                 assert call_args[1] == "Failed to create folder in Google Drive"
                 assert call_args[2] == "files.create"
 
-                # Check permissions was called
+                # Check permissions was called with None logger
                 mock_permissions.assert_called_once_with(
                     mock_drive_service, "folder123", "reader", "anyone", None
                 )
@@ -77,10 +79,45 @@ class TestDriveOperationsFolder:
                 assert files_resource.create_call_count == 1
                 assert files_resource.last_create_body["name"] == "Test Folder"
                 assert (
-                    files_resource.last_create_body["mimeType"]
-                    == "application/vnd.google-apps.folder"
+                        files_resource.last_create_body["mimeType"]
+                        == "application/vnd.google-apps.folder"
                 )
                 assert files_resource.last_create_body["parents"] == ["parent123"]
+
+    def test_create_folder_with_logger(self) -> None:
+        """Test creating a folder with an explicit logger."""
+        # Create mock drive service
+        mock_drive_service = create_mock_drive_service(file_id="folder456")
+
+        # Create a mock logger
+        mock_logger = logging.getLogger("test_logger")
+
+        # Mock API request execution
+        with patch(
+                "quackcore.integrations.google.drive.operations.folder.execute_api_request"
+        ) as mock_execute:
+            mock_execute.return_value = {
+                "id": "folder456",
+                "webViewLink": "https://drive.google.com/drive/folders/folder456",
+            }
+
+            # Mock set_file_permissions
+            with patch(
+                    "quackcore.integrations.google.drive.operations.folder.set_file_permissions"
+            ) as mock_permissions:
+                mock_permissions.return_value.success = True
+
+                # Test with explicit logger
+                result = folder.create_folder(
+                    mock_drive_service, "Test Folder", logger=mock_logger
+                )
+
+                assert result.success is True
+
+                # Verify the mock logger was passed through
+                mock_permissions.assert_called_once_with(
+                    mock_drive_service, "folder456", "reader", "anyone", mock_logger
+                )
 
     def test_create_folder_error(self) -> None:
         """Test error handling when creating a folder."""
@@ -91,9 +128,9 @@ class TestDriveOperationsFolder:
             )
         )
 
-        # Mock API error
+        # Mock API error - adjust path to match folder.py
         with patch(
-            "quackcore.integrations.google.drive.utils.api.execute_api_request"
+                "quackcore.integrations.google.drive.operations.folder.execute_api_request"
         ) as mock_execute:
             mock_execute.side_effect = QuackApiError(
                 "API error", service="Google Drive", api_method="files.create"
@@ -110,9 +147,9 @@ class TestDriveOperationsFolder:
         # Create mock drive service
         mock_drive_service = create_mock_drive_service(file_id="file123")
 
-        # Mock API request execution
+        # Mock API request execution - adjust path to match folder.py
         with patch(
-            "quackcore.integrations.google.drive.utils.api.execute_api_request"
+                "quackcore.integrations.google.drive.operations.folder.execute_api_request"
         ) as mock_execute:
             mock_execute.return_value = None
 
@@ -141,9 +178,9 @@ class TestDriveOperationsFolder:
         # Create mock drive service
         mock_drive_service = create_mock_drive_service(file_id="file123")
 
-        # Mock API request execution
+        # Mock API request execution - adjust path to match folder.py
         with patch(
-            "quackcore.integrations.google.drive.utils.api.execute_api_request"
+                "quackcore.integrations.google.drive.operations.folder.execute_api_request"
         ) as mock_execute:
             mock_execute.return_value = {"id": "file123", "trashed": True}
 
@@ -177,9 +214,9 @@ class TestDriveOperationsFolder:
             )
         )
 
-        # Mock API error
+        # Mock API error - adjust path to match folder.py
         with patch(
-            "quackcore.integrations.google.drive.utils.api.execute_api_request"
+                "quackcore.integrations.google.drive.operations.folder.execute_api_request"
         ) as mock_execute:
             mock_execute.side_effect = QuackApiError(
                 "API error", service="Google Drive", api_method="files.delete"
@@ -200,12 +237,12 @@ class TestDriveOperationsFolder:
         )
         mock_service = MockDriveService(files_resource)
 
-        # Mock API request execution - different approach from previous tests
+        # Mock API request execution - adjust path to match folder.py
         custom_api_response = {"id": "custom123", "trashed": True}
 
         with patch(
-            "quackcore.integrations.google.drive.utils.api.execute_api_request",
-            return_value=custom_api_response,
+                "quackcore.integrations.google.drive.operations.folder.execute_api_request",
+                return_value=custom_api_response,
         ):
             # Test deletion
             result = folder.delete_file(mock_service, "custom123")

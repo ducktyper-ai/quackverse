@@ -37,7 +37,8 @@ def create_folder(
     Returns:
         IntegrationResult with the folder ID.
     """
-    logger = logger or logging.getLogger(__name__)
+    # Create local logger variable instead of using module logger
+    local_logger = logger or logging.getLogger(__name__)
 
     try:
         # Prepare folder metadata
@@ -61,11 +62,12 @@ def create_folder(
 
         # Set permissions if needed
         if make_public:
+            # Pass the logger parameter directly - this is important for testing
             perm_result = set_file_permissions(
                 drive_service, folder_id, "reader", "anyone", logger
             )
             if not perm_result.success:
-                logger.warning(f"Failed to set permissions: {perm_result.error}")
+                local_logger.warning(f"Failed to set permissions: {perm_result.error}")
 
         return IntegrationResult.success_result(
             content=folder_id,
@@ -73,10 +75,10 @@ def create_folder(
         )
 
     except QuackApiError as e:
-        logger.error(f"API error during folder creation: {e}")
+        local_logger.error(f"API error during folder creation: {e}")
         return IntegrationResult.error_result(f"API error: {e}")
     except Exception as e:
-        logger.error(f"Failed to create folder: {e}")
+        local_logger.error(f"Failed to create folder: {e}")
         return IntegrationResult.error_result(
             f"Failed to create folder in Google Drive: {e}"
         )
@@ -100,7 +102,7 @@ def delete_file(
     Returns:
         IntegrationResult indicating success.
     """
-    logger = logger or logging.getLogger(__name__)
+    local_logger = logger or logging.getLogger(__name__)
 
     try:
         if permanent:
@@ -127,10 +129,10 @@ def delete_file(
         )
 
     except QuackApiError as e:
-        logger.error(f"API error during file deletion: {e}")
+        local_logger.error(f"API error during file deletion: {e}")
         return IntegrationResult.error_result(f"API error: {e}")
     except Exception as e:
-        logger.error(f"Failed to delete file: {e}")
+        local_logger.error(f"Failed to delete file: {e}")
         return IntegrationResult.error_result(
             f"Failed to delete file from Google Drive: {e}"
         )

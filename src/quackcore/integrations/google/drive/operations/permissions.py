@@ -34,7 +34,7 @@ def set_file_permissions(
     Returns:
         IntegrationResult indicating success.
     """
-    logger = logger or logging.getLogger(__name__)
+    local_logger = logger or logging.getLogger(__name__)
 
     try:
         # Create permission object
@@ -58,10 +58,10 @@ def set_file_permissions(
         )
 
     except QuackApiError as e:
-        logger.error(f"API error during setting permissions: {e}")
+        local_logger.error(f"API error during setting permissions: {e}")
         return IntegrationResult.error_result(f"API error: {e}")
     except Exception as e:
-        logger.error(f"Failed to set permissions: {e}")
+        local_logger.error(f"Failed to set permissions: {e}")
         return IntegrationResult.error_result(
             f"Failed to set permissions in Google Drive: {e}"
         )
@@ -83,7 +83,7 @@ def get_sharing_link(
     Returns:
         IntegrationResult with the sharing link.
     """
-    logger = logger or logging.getLogger(__name__)
+    local_logger = logger or logging.getLogger(__name__)
 
     try:
         # Get file metadata with link information
@@ -108,10 +108,10 @@ def get_sharing_link(
         )
 
     except QuackApiError as e:
-        logger.error(f"API error during getting sharing link: {e}")
+        local_logger.error(f"API error during getting sharing link: {e}")
         return IntegrationResult.error_result(f"API error: {e}")
     except Exception as e:
-        logger.error(f"Failed to get sharing link: {e}")
+        local_logger.error(f"Failed to get sharing link: {e}")
         return IntegrationResult.error_result(
             f"Failed to get sharing link from Google Drive: {e}"
         )

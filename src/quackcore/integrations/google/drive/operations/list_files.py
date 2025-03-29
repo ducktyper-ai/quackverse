@@ -35,7 +35,7 @@ def list_files(
     Returns:
         IntegrationResult containing a list of file information dictionaries.
     """
-    logger = logger or logging.getLogger(__name__)
+    local_logger = logger or logging.getLogger(__name__)
 
     try:
         # Build query string
@@ -81,10 +81,10 @@ def list_files(
         )
 
     except QuackApiError as e:
-        logger.error(f"API error during listing files: {e}")
+        local_logger.error(f"API error during listing files: {e}")
         return IntegrationResult.error_result(f"API error: {e}")
     except Exception as e:
-        logger.error(f"Failed to list files: {e}")
+        local_logger.error(f"Failed to list files: {e}")
         return IntegrationResult.error_result(
             f"Failed to list files from Google Drive: {e}"
         )

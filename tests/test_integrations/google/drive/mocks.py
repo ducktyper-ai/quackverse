@@ -215,7 +215,8 @@ class MockDriveFilesResource(DriveFilesResource):
         request._body = body
         return request
 
-    def get(self, file_id: str, fields: str | None = None) -> DriveRequest[dict[str, object]]:
+    def get(self, file_id: str, fields: str | None = None) -> DriveRequest[
+        dict[str, object]]:
         """
         Mock get method for retrieving a file's metadata.
 
@@ -253,7 +254,8 @@ class MockDriveFilesResource(DriveFilesResource):
         )
 
     def list(
-            self, q: str | None = None, fields: str | None = None, page_size: int | None = None
+            self, q: str | None = None, fields: str | None = None,
+            page_size: int | None = None
     ) -> DriveRequest[dict[str, object]]:
         """
         Mock list method for listing files.
@@ -495,9 +497,12 @@ def create_mock_media_io_base_download():
             self.progress_sequence = progress_sequence or [(0.5, False), (1.0, True)]
             self.call_count = 0
 
-        def next_chunk(self):
+        def next_chunk(self, num_retries=0):
             """
             Get the next chunk of the download.
+
+            Args:
+                num_retries: Number of retries (should be accepted but not used in mock)
 
             Returns:
                 Tuple of (status, done) where status has a progress() method
@@ -509,8 +514,12 @@ def create_mock_media_io_base_download():
             progress, done = self.progress_sequence[self.call_count]
             self.call_count += 1
 
-            # Create status object with progress method
-            status = type("Status", (), {"progress": lambda: progress})()
+            # Create status object with progress method that can accept args
+            class Status:
+                def progress(self, *args):
+                    return progress
+
+            status = Status()
             return status, done
 
     def create_downloader_factory(progress_sequence=None):
