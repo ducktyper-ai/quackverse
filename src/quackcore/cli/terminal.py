@@ -49,7 +49,7 @@ def supports_color() -> bool:
 
     # If running in CI that supports color, allow it
     in_ci_with_color = (
-        "CI" in os.environ and os.environ.get("CI_FORCE_COLORS", "0") == "1"
+            "CI" in os.environ and os.environ.get("CI_FORCE_COLORS", "0") == "1"
     )
 
     return is_tty or in_github_actions or in_ci_with_color
@@ -67,6 +67,11 @@ def truncate_text(text: str, max_length: int, indicator: str = "...") -> str:
     Returns:
         Truncated text
     """
+    # Handle case where indicator is longer than max_length
+    if len(indicator) >= max_length:
+        return indicator[:max_length]
+
     if len(text) <= max_length:
         return text
+
     return text[: max_length - len(indicator)] + indicator

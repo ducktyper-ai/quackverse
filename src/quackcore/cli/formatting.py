@@ -225,12 +225,13 @@ def table(
     if max_width is None or max_width > term_width:
         max_width = term_width
 
-    # Set minimum column width
-    min_column_width = 3
+    # Set minimum column width to ensure cell content is visible
+    min_column_width = 5
 
     # Calculate initial column widths based on content
     col_widths = [
-        max(len(str(row[i])) for row in all_rows) for i in range(len(headers))
+        max(min_column_width, max(len(str(row[i])) for row in all_rows))
+        for i in range(len(headers))
     ]
 
     # Calculate the space required for borders and padding
@@ -313,15 +314,12 @@ def table(
     else:
         result.append(separator)
 
-    # Create header row
-    header_row = (
-            "|"
-            + "|".join(
-        f" {truncate_text(h, w).ljust(w)} " for h, w in
-        zip(headers, col_widths, strict=True)
-    )
-            + "|"
-    )
+    # Create header row with complete header content
+    header_row = "|"
+    for h, w in zip(headers, col_widths, strict=True):
+        # Make sure each header is visible by using a shorter truncation if needed
+        header_text = truncate_text(h, w)
+        header_row += f" {header_text.ljust(w)} |"
 
     result.append(header_row)
     result.append(separator)
@@ -332,14 +330,10 @@ def table(
         while len(str_row) < len(col_widths):
             str_row.append("")
 
-        data_row = (
-                "|"
-                + "|".join(
-            f" {truncate_text(cell, w).ljust(w)} "
-            for cell, w in zip(str_row, col_widths, strict=True)
-        )
-                + "|"
-        )
+        data_row = "|"
+        for cell, w in zip(str_row, col_widths, strict=True):
+            cell_text = truncate_text(cell, w)
+            data_row += f" {cell_text.ljust(w)} |"
 
         result.append(data_row)
 
