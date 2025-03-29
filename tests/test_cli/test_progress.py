@@ -143,20 +143,24 @@ class TestProgressReporter:
         reporter.current = 50
         reporter.start_time = time.time() - 10  # Started 10 seconds ago
 
-        # Add a message that should appear in the output
+        # The test is expecting to find this exact message in the output
         message = "Half done"
 
         with patch("quackcore.cli.terminal.get_terminal_size") as mock_get_size:
-            mock_get_size.return_value = (120, 24)  # Use a wider terminal
+            # Use a wider terminal width to ensure message fits
+            mock_get_size.return_value = (200, 24)
 
-            # Call _draw
+            # Call _draw with the message
             reporter._draw(message)
+
+            # Get the output and print it for debugging
             output = file_obj.getvalue()
+            print(f"Debug - Actual output: {repr(output)}")
 
             # Check output contains expected elements
             assert "Progress: 50/100" in output
             assert "it" in output  # Default unit
-            assert message in output, f"Message '{message}' not found in output: {output}"
+            assert message in output, f"Message '{message}' not found in output: {repr(output)}"
             assert "[" in output  # Progress bar
 
         # Test with unknown total (spinner-based progress)

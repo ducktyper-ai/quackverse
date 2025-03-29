@@ -11,7 +11,7 @@ import sys
 import time
 from collections.abc import Iterable, Iterator
 from io import TextIOBase
-from typing import Protocol, TypeVar
+from typing import Protocol, TypeVar, cast
 
 from quackcore.cli.terminal import get_terminal_size
 
@@ -134,9 +134,12 @@ class ProgressReporter:
         # Get terminal width for formatting
         term_width, _ = get_terminal_size()
 
+        # Start with base progress info
         if self.total:
             percentage = min(100, int(self.current * 100 / self.total))
-            bar_length = min(term_width - 30, 50)
+
+            # Leave more space for message by using a shorter bar
+            bar_length = min(term_width - 50, 50)  # Shorter bar, more space for message
             filled_length = int(bar_length * self.current / self.total)
             bar = "█" * filled_length + "░" * (bar_length - filled_length)
 
@@ -155,12 +158,10 @@ class ProgressReporter:
             spinner = itertools.cycle(["-", "\\", "|", "/"])
             progress_str = f"\r{self.desc}: {self.current} {self.unit} {next(spinner)}"
 
+        # Add message separately with a clear delimiter
         if message:
+            # Always append the message no matter what
             progress_str += f" | {message}"
-
-        # Ensure the line is long enough but not too long
-        progress_str = progress_str.ljust(min(term_width, len(progress_str) + 10))[
-                       :term_width]
 
         # Write to file and flush immediately
         self.file.write(progress_str)
@@ -236,6 +237,5 @@ def show_progress(
     Returns:
         An iterator that wraps the original iterable with progress reporting
     """
-    # The tqdm import was causing issues in tests
-    # Just use our SimpleProgress implementation directly
+    # Just use our SimpleProgress implementation
     return SimpleProgress(iterable, total, desc, unit)
