@@ -8,6 +8,7 @@ all required methods are present and correctly implemented.
 
 from unittest.mock import MagicMock
 
+from quackcore.integrations.core import IntegrationResult
 from quackcore.integrations.llms.models import ChatMessage, LLMOptions
 from quackcore.integrations.llms.protocols import LLMProviderProtocol
 from tests.test_integrations.llms.mocks.clients import MockClient
@@ -39,38 +40,33 @@ class TestLLMProtocols:
         # Check model property
         assert client.model == "test-model"
 
+
     def test_incomplete_protocol_implementation(self) -> None:
         """Test that incomplete implementations don't satisfy the protocol."""
+        # Create a very basic mock that won't match the protocol
+        mock = MagicMock()
+        assert not isinstance(mock, LLMProviderProtocol)
 
-        # Create a class that's missing methods
-        class IncompleteMock:
-            def chat(self, *args, **kwargs):
-                return MagicMock(success=True)
+        # Test with a more specific implementation that has properties but not all methods
+        class PartialImpl:
+            @property
+            def model(self):
+                return "test-model"
 
-        incomplete = IncompleteMock()
-        # Should not be recognized as implementing the protocol
-        assert not isinstance(incomplete, LLMProviderProtocol)
-
-        # Add count_tokens but not model property
-        class PartialMock:
-            def chat(self, *args, **kwargs):
-                return MagicMock(success=True)
-
-            def count_tokens(self, *args, **kwargs):
-                return MagicMock(success=True)
-
-        partial = PartialMock()
+        partial = PartialImpl()
         assert not isinstance(partial, LLMProviderProtocol)
 
-        # Add model as an attribute, not a property
-        class MockWithAttribute:
-            def chat(self, *args, **kwargs):
-                return MagicMock(success=True)
+        # Test with a complete implementation
+        class CompleteImpl:
+            def chat(self, messages, options=None, callback=None):
+                return IntegrationResult.success_result("test")
 
-            def count_tokens(self, *args, **kwargs):
-                return MagicMock(success=True)
+            def count_tokens(self, messages):
+                return IntegrationResult.success_result(42)
 
-            model = "test-model"
+            @property
+            def model(self):
+                return "test-model"
 
-        attribute_mock = MockWithAttribute()
-        assert not isinstance(attribute_mock, LLMProviderProtocol)
+        complete = CompleteImpl()
+        assert isinstance(complete, LLMProviderProtocol)

@@ -222,7 +222,7 @@ class OpenAIClient(LLMClient):
         except Exception as e:
             # Convert OpenAI errors to QuackApiError
             raise self._convert_error(e)
-        
+
     def _convert_message_to_openai(self, message: ChatMessage) -> dict:
         """
         Convert a ChatMessage to the format expected by OpenAI.

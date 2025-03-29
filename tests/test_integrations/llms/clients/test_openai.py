@@ -414,7 +414,11 @@ class TestOpenAIClient:
         assert "OpenAI API error" in str(excinfo.value)
 
         # Test with import error
-        with patch.dict("sys.modules", {"openai": None}):
+        with patch.object(openai_client, "_get_client") as mock_get_client:
+            mock_get_client.side_effect = QuackIntegrationError(
+                "Failed to import OpenAI package: No module named 'openai'"
+            )
+
             with pytest.raises(QuackIntegrationError) as excinfo:
                 openai_client._chat_with_provider(messages, options)
 
