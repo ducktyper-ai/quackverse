@@ -6,7 +6,6 @@ This module provides the main DocumentConverter class that implements
 the document conversion functionality using Pandoc.
 """
 
-import logging
 from collections.abc import Sequence
 from datetime import datetime
 from pathlib import Path
@@ -29,8 +28,9 @@ from quackcore.integrations.pandoc.protocols import (
     BatchConverterProtocol,
     DocumentConverterProtocol,
 )
+from quackcore.logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):

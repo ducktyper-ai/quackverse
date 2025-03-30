@@ -7,11 +7,11 @@ in a QuackCore project, detecting project structure,
 and inferring context from file locations.
 """
 
-import logging
 from pathlib import Path
 from typing import TypeVar
 
 from quackcore.errors import QuackFileNotFoundError, wrap_io_errors
+from quackcore.logging import get_logger, LOG_LEVELS, LogLevel
 from quackcore.paths.context import ContentContext, ProjectContext
 from quackcore.paths.utils import (
     find_nearest_directory,
@@ -29,14 +29,14 @@ class PathResolver:
     and inferring context from file locations.
     """
 
-    def __init__(self, log_level: int = logging.INFO) -> None:
+    def __init__(self, log_level: int = LOG_LEVELS[LogLevel.INFO]) -> None:
         """
         Initialize the path resolver service.
 
         Args:
             log_level: Logging level for the service
         """
-        self.logger = logging.getLogger(__name__)
+        self.logger = get_logger(__name__)
         self.logger.setLevel(log_level)
         self._cache: dict[str, ProjectContext] = {}
 

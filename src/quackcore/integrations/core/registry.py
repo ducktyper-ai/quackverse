@@ -11,7 +11,6 @@ out helper functions to reduce complexity, in line with best practices for Pytho
 """
 
 import importlib
-import logging
 import sys
 from collections.abc import Iterable
 from importlib.metadata import EntryPoint  # type: ignore
@@ -20,6 +19,7 @@ from typing import Protocol, TypeVar, cast
 
 from quackcore.errors import QuackError
 from quackcore.integrations.core.protocols import IntegrationProtocol
+from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
 
 T = TypeVar("T", bound=IntegrationProtocol)
 
@@ -35,14 +35,14 @@ class PluginLoaderProtocol(Protocol):
 class IntegrationRegistry:
     """Registry for QuackCore integrations."""
 
-    def __init__(self, log_level: int = logging.INFO) -> None:
+    def __init__(self, log_level: int = LOG_LEVELS[LogLevel.INFO]) -> None:
         """
         Initialize the integration registry.
 
         Args:
             log_level: Logging level.
         """
-        self.logger = logging.getLogger(__name__)
+        self.logger = get_logger(__name__)
         self.logger.setLevel(log_level)
         self._integrations: dict[str, IntegrationProtocol] = {}
 

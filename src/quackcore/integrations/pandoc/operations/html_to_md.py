@@ -6,7 +6,6 @@ This module provides functions for converting HTML documents to Markdown
 using pandoc with optimized settings and error handling.
 """
 
-import logging
 import re
 import time
 from pathlib import Path
@@ -23,8 +22,9 @@ from quackcore.integrations.pandoc.operations.utils import (
     track_metrics,
     validate_html_structure,
 )
+from quackcore.logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def _validate_input(html_path: Path, config: PandocConfig) -> int:

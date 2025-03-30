@@ -6,7 +6,6 @@ This module provides helper functions for pandoc conversion operations,
 such as validation, metrics tracking, and pandoc installation verification.
 """
 
-import logging
 import time
 from pathlib import Path
 
@@ -14,8 +13,9 @@ from quackcore.errors import QuackIntegrationError
 from quackcore.fs import service as fs
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.models import ConversionMetrics, FileInfo
+from quackcore.logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def verify_pandoc() -> str:

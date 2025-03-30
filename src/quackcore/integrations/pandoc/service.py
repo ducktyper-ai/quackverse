@@ -6,7 +6,6 @@ This module provides the main service class for Pandoc integration,
 handling document conversion between various formats.
 """
 
-import logging
 from collections.abc import Sequence
 from datetime import datetime
 from pathlib import Path
@@ -27,9 +26,10 @@ from quackcore.integrations.pandoc.operations import (
     verify_pandoc,
 )
 from quackcore.integrations.pandoc.protocols import PandocConversionProtocol
+from quackcore.logging import get_logger, LOG_LEVELS, LogLevel
 from quackcore.paths import resolver
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
@@ -45,7 +45,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             self,
             config_path: str | Path | None = None,
             output_dir: str | Path | None = None,
-            log_level: int = logging.INFO,
+            log_level: int = LOG_LEVELS[LogLevel.INFO],
     ) -> None:
         """
         Initialize the Pandoc integration service.

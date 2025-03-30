@@ -11,11 +11,11 @@ for model validation, and favor collections.abc over typing where possible.
 
 import importlib
 import inspect
-import logging
 
 from pydantic import BaseModel, ValidationError
 
 from quackcore.errors import QuackPluginError
+from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
 from quackcore.plugins.protocols import QuackPluginProtocol
 
 
@@ -26,14 +26,14 @@ class PluginInfo(BaseModel):
 class PluginLoader:
     """Loader for QuackCore plugins."""
 
-    def __init__(self, log_level: int = logging.INFO) -> None:
+    def __init__(self, log_level: int = LOG_LEVELS[LogLevel.INFO]) -> None:
         """
         Initialize the plugin loader.
 
         Args:
             log_level: Logging level
         """
-        self.logger = logging.getLogger(__name__)
+        self.logger = get_logger(__name__)
         self.logger.setLevel(log_level)
 
     def _validate_plugin(

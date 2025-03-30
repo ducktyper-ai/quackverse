@@ -6,7 +6,6 @@ This module provides a registry for LLM clients, allowing for
 dynamic loading and access to different LLM implementations.
 """
 
-import logging
 from typing import Type
 
 from quackcore.errors import QuackIntegrationError
@@ -16,6 +15,7 @@ from quackcore.integrations.llms.clients import (
     MockLLMClient,
     OpenAIClient,
 )
+from quackcore.logging import get_logger
 
 # Global registry of LLM clients
 _LLM_REGISTRY: dict[str, Type[LLMClient]] = {
@@ -24,7 +24,7 @@ _LLM_REGISTRY: dict[str, Type[LLMClient]] = {
     "mock": MockLLMClient,
 }
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def register_llm_client(name: str, client_class: Type[LLMClient]) -> None:

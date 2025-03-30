@@ -1,8 +1,9 @@
 # src/quackcore/plugins/registry.py
-import logging
+
 from typing import TypeVar
 
 from quackcore.errors import QuackPluginError
+from quackcore.logging import get_logger, LOG_LEVELS, LogLevel
 from quackcore.plugins.protocols import (
     CommandPluginProtocol,
     ExtensionPluginProtocol,
@@ -17,9 +18,9 @@ T = TypeVar("T")  # Generic for return types
 class PluginRegistry:
     """Registry for QuackCore plugins."""
 
-    def __init__(self, log_level: int = logging.INFO) -> None:
+    def __init__(self, log_level: int = LOG_LEVELS[LogLevel.INFO]) -> None:
         """Initialize the plugin registry."""
-        self.logger = logging.getLogger(__name__)
+        self.logger = get_logger(__name__)
         self.logger.setLevel(log_level)
 
         # Main plugin registry

@@ -6,16 +6,17 @@ This module provides utility functions for path resolution,
 including functions for finding project roots and navigating directories.
 """
 
-import logging
 import os
 from pathlib import Path
 
 from pydantic import BaseModel, Field
 
 from quackcore.errors import QuackFileNotFoundError, wrap_io_errors
+# Replace standard logging with quackcore.logging
+from quackcore.logging import get_logger
 
-# Configure logging (if not configured elsewhere)
-logging.basicConfig(level=logging.INFO)
+# Get module-specific logger
+logger = get_logger(__name__)
 
 
 class ProjectConfig(BaseModel):
@@ -71,8 +72,8 @@ def find_project_root(
     except (FileNotFoundError, OSError):
         # Fallback to home directory if current directory doesn't exist
         current_dir = Path.home()
-        # Use the module-level logger that's defined at the top of the file
-        logging.getLogger(__name__).warning(
+        # Use the module logger instead of creating a new one
+        logger.warning(
             f"Current working directory not found, falling back to {current_dir}"
         )
 
@@ -193,8 +194,8 @@ def normalize_path(path: str | Path) -> Path:
         try:
             cwd = Path.cwd()
         except FileNotFoundError:
-            cwd = Path.home()  # Fallback to the user's
-            # home directory if cwd is missing.
+            cwd = Path.home()  # Fallback to the user's home directory if cwd is missing.
+            logger.debug(f"Current directory not found, using home directory: {cwd}")
 
         # If the path is not absolute, make it absolute relative to cwd.
         if not path_obj.is_absolute():
@@ -202,7 +203,9 @@ def normalize_path(path: str | Path) -> Path:
 
         # Use resolve(strict=False) to normalize the path without requiring existence.
         return path_obj.resolve(strict=False)
-    except Exception:
+    except Exception as ex:
+        # Log the exception with the logger
+        logger.warning(f"Error normalizing path, falling back to absolute(): {ex}")
         # Fallback: use absolute() (this still calls cwd, so in worst-case,
         # an exception will propagate)
         return path_obj.absolute()
@@ -274,11 +277,11 @@ def _resolve_project_root(path_obj: Path, project_root: str | Path | None) -> Pa
     try:
         return find_project_root()
     except QuackFileNotFoundError as e:
-        logging.error("Project root not found: %s", e)
+        logger.error(f"Project root not found: {e}")
         try:
             return Path.cwd()
         except Exception as ex:
-            logging.error("Error obtaining current working directory: %s", ex)
+            logger.error(f"Error obtaining current working directory: {ex}")
             return path_obj.parent if not path_obj.is_absolute() else Path("/")
 
 
@@ -320,17 +323,21 @@ def infer_module_from_path(
     # Ensure the path is absolute.
     if not path_obj.is_absolute():
         path_obj = resolved_root / path_obj
+        logger.debug(f"Converted relative path to absolute: {path_obj}")
 
     # Attempt to find the source directory ("src") within the project.
     try:
         src_dir: Path = find_nearest_directory("src", resolved_root)
+        logger.debug(f"Found source directory: {src_dir}")
     except QuackFileNotFoundError:
         src_dir = resolved_root
+        logger.debug(f"Source directory not found, using project root: {src_dir}")
 
     parts: list[str] | None = _get_relative_parts(path_obj, src_dir)
     if parts is None:
         parts = _get_relative_parts(path_obj, resolved_root)
     if parts is None:
+        logger.debug(f"Could not compute relative path, using file stem: {path_obj.stem}")
         return path_obj.stem
 
     # Remove file extension from the last part if it's a file.
@@ -342,6 +349,10 @@ def infer_module_from_path(
 
     # Special handling for paths outside the project.
     if "/outside/project/" in str(path_obj):
-        return parts[-1] if parts else path_obj.stem
+        result = parts[-1] if parts else path_obj.stem
+        logger.debug(f"Path is outside project, using: {result}")
+        return result
 
-    return ".".join(parts)
+    result = ".".join(parts)
+    logger.debug(f"Inferred module name: {result}")
+    return result

@@ -6,7 +6,6 @@ This module provides functions for converting Markdown documents to DOCX
 using pandoc with optimized settings and error handling.
 """
 
-import logging
 import time
 from pathlib import Path
 
@@ -22,8 +21,9 @@ from quackcore.integrations.pandoc.operations.utils import (
     track_metrics,
     validate_docx_structure,
 )
+from quackcore.logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def _validate_markdown_input(markdown_path: Path) -> int:
