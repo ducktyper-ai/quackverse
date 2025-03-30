@@ -12,14 +12,6 @@ from quackcore.errors import (
     QuackPermissionError,
 )
 from quackcore.fs.results import OperationResult, WriteResult
-from quackcore.fs.utils import (
-    atomic_write,
-    compute_checksum,
-    ensure_directory,
-    safe_copy,
-    safe_delete,
-    safe_move,
-)
 from quackcore.logging import get_logger
 
 # Set up logger
@@ -36,12 +28,12 @@ class WriteOperationsMixin:
         raise NotImplementedError("This method should be overridden")
 
     def write_text(
-            self,
-            path: str | Path,
-            content: str,
-            encoding: str = "utf-8",
-            atomic: bool = True,
-            calculate_checksum: bool = False,
+        self,
+        path: str | Path,
+        content: str,
+        encoding: str = "utf-8",
+        atomic: bool = True,
+        calculate_checksum: bool = False,
     ) -> WriteResult:
         """
         Write text to a file.
@@ -56,6 +48,10 @@ class WriteOperationsMixin:
         Returns:
             WriteResult with operation status
         """
+        # Import the utility functions to ensure we're using the patched version
+        # This is critical for testing
+        from quackcore.fs.operations import atomic_write, ensure_directory, compute_checksum
+
         resolved_path = self.resolve_path(path)
         logger.debug(
             f"Writing text to {resolved_path} with encoding {encoding}, "
@@ -123,11 +119,11 @@ class WriteOperationsMixin:
             return WriteResult(success=False, path=resolved_path, error=str(e))
 
     def write_binary(
-            self,
-            path: str | Path,
-            content: bytes,
-            atomic: bool = True,
-            calculate_checksum: bool = False,
+        self,
+        path: str | Path,
+        content: bytes,
+        atomic: bool = True,
+        calculate_checksum: bool = False,
     ) -> WriteResult:
         """
         Write binary data to a file.
@@ -141,6 +137,9 @@ class WriteOperationsMixin:
         Returns:
             WriteResult with operation status
         """
+        # Import the utility functions to ensure we're using the patched version
+        from quackcore.fs.operations import atomic_write, ensure_directory, compute_checksum
+
         resolved_path = self.resolve_path(path)
         logger.debug(
             f"Writing binary data to {resolved_path}, "
@@ -183,10 +182,10 @@ class WriteOperationsMixin:
             return WriteResult(success=False, path=resolved_path, error=str(e))
 
     def copy(
-            self,
-            src: str | Path,
-            dst: str | Path,
-            overwrite: bool = False,
+        self,
+        src: str | Path,
+        dst: str | Path,
+        overwrite: bool = False,
     ) -> WriteResult:
         """
         Copy a file or directory.
@@ -199,6 +198,9 @@ class WriteOperationsMixin:
         Returns:
             WriteResult with operation status
         """
+        # Import the utility functions to ensure we're using the patched version
+        from quackcore.fs.operations import safe_copy
+
         src_path = self.resolve_path(src)
         dst_path = self.resolve_path(dst)
         logger.debug(f"Copying from {src_path} to {dst_path}, overwrite={overwrite}")
@@ -216,10 +218,10 @@ class WriteOperationsMixin:
                 message=f"Successfully copied {src_path} to {dst_path}",
             )
         except (
-                QuackFileNotFoundError,
-                QuackFileExistsError,
-                QuackPermissionError,
-                QuackIOError,
+            QuackFileNotFoundError,
+            QuackFileExistsError,
+            QuackPermissionError,
+            QuackIOError,
         ) as e:
             logger.error(f"Error copying {src_path} to {dst_path}: {str(e)}")
             return WriteResult(
@@ -238,10 +240,10 @@ class WriteOperationsMixin:
             )
 
     def move(
-            self,
-            src: str | Path,
-            dst: str | Path,
-            overwrite: bool = False,
+        self,
+        src: str | Path,
+        dst: str | Path,
+        overwrite: bool = False,
     ) -> WriteResult:
         """
         Move a file or directory.
@@ -254,6 +256,9 @@ class WriteOperationsMixin:
         Returns:
             WriteResult with operation status
         """
+        # Import the utility functions to ensure we're using the patched version
+        from quackcore.fs.operations import safe_move
+
         src_path = self.resolve_path(src)
         dst_path = self.resolve_path(dst)
         logger.debug(f"Moving from {src_path} to {dst_path}, overwrite={overwrite}")
@@ -271,10 +276,10 @@ class WriteOperationsMixin:
                 message=f"Successfully moved {src_path} to {moved_path}",
             )
         except (
-                QuackFileNotFoundError,
-                QuackFileExistsError,
-                QuackPermissionError,
-                QuackIOError,
+            QuackFileNotFoundError,
+            QuackFileExistsError,
+            QuackPermissionError,
+            QuackIOError,
         ) as e:
             logger.error(f"Error moving {src_path} to {dst_path}: {str(e)}")
             return WriteResult(
@@ -303,6 +308,9 @@ class WriteOperationsMixin:
         Returns:
             OperationResult with operation status
         """
+        # Import the utility functions to ensure we're using the patched version
+        from quackcore.fs.operations import safe_delete
+
         resolved_path = self.resolve_path(path)
         logger.debug(f"Deleting {resolved_path}, missing_ok={missing_ok}")
 
@@ -339,7 +347,7 @@ class WriteOperationsMixin:
             )
 
     def create_directory(
-            self, path: str | Path, exist_ok: bool = True
+        self, path: str | Path, exist_ok: bool = True
     ) -> OperationResult:
         """
         Create a directory.
@@ -351,6 +359,9 @@ class WriteOperationsMixin:
         Returns:
             OperationResult with operation status
         """
+        # Import the utility functions to ensure we're using the patched version
+        from quackcore.fs.operations import ensure_directory
+
         resolved_path = self.resolve_path(path)
         logger.debug(f"Creating directory {resolved_path}, exist_ok={exist_ok}")
 

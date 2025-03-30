@@ -6,7 +6,6 @@ This service layer abstracts underlying filesystem operations and provides
 a clean, consistent API for all file operations in QuackCore.
 """
 
-import logging
 from pathlib import Path
 from typing import TypeVar
 
@@ -47,6 +46,7 @@ from quackcore.fs.utils import (
 
 T = TypeVar("T")  # Generic type for flexible typing
 
+from quackcore.logging import get_logger, LOG_LEVELS, LogLevel
 
 class FileSystemService:
     """
@@ -57,7 +57,7 @@ class FileSystemService:
     """
 
     def __init__(
-        self, base_dir: str | Path | None = None, log_level: int = logging.INFO
+        self, base_dir: str | Path | None = None, log_level: int = LOG_LEVELS[LogLevel.INFO]
     ) -> None:
         """
         Initialize the filesystem service.
@@ -67,7 +67,7 @@ class FileSystemService:
                         (default: current working directory)
             log_level: Logging level for the service
         """
-        self.logger = logging.getLogger(__name__)
+        self.logger = get_logger(__name__)
         self.logger.setLevel(log_level)
 
         # Initialize operations with base directory

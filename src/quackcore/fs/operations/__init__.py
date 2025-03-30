@@ -10,14 +10,74 @@ from typing import TypeVar
 
 from quackcore.logging import get_logger
 
-# Import the main class to maintain backward compatibility
-from .base import FileSystemOperations
-
-# Re-export the FileSystemOperations class
-__all__ = ["FileSystemOperations"]
-
-# Export TypeVar T for backward compatibility
-T = TypeVar("T")  # Generic type for flexible typing
+# Import utility functions directly into this namespace for backward compatibility
+# This will make patching work correctly in tests
+from quackcore.fs.utils import (
+    atomic_write,
+    compute_checksum,
+    ensure_directory,
+    safe_copy,
+    safe_delete,
+    safe_move,
+)
 
 # Set up module-level logger
 logger = get_logger(__name__)
+
+# Import all the mixins we need
+from .core import initialize_mime_types, resolve_path
+from .directory_ops import DirectoryOperationsMixin
+from .file_info import FileInfoOperationsMixin
+from .find_ops import FindOperationsMixin
+from .read_ops import ReadOperationsMixin
+from .serialization_ops import SerializationOperationsMixin
+from .write_ops import WriteOperationsMixin
+
+# Define the FileSystemOperations class properly with all mixins
+class FileSystemOperations(
+    ReadOperationsMixin,
+    WriteOperationsMixin,
+    FileInfoOperationsMixin,
+    DirectoryOperationsMixin,
+    FindOperationsMixin,
+    SerializationOperationsMixin,
+):
+    """Core implementation of filesystem operations."""
+
+    def __init__(self, base_dir=None) -> None:
+        """
+        Initialize filesystem operations.
+
+        Args:
+            base_dir: Optional base directory for relative paths
+        """
+        from pathlib import Path
+        self.base_dir = Path(base_dir) if base_dir else Path.cwd()
+        logger.debug(f"Initialized FileSystemOperations with base_dir: {self.base_dir}")
+        initialize_mime_types()
+
+    def resolve_path(self, path):
+        """
+        Resolve a path relative to the base directory.
+
+        Args:
+            path: Path to resolve
+
+        Returns:
+            Resolved Path object
+        """
+        return resolve_path(self.base_dir, path)
+
+# Re-export the FileSystemOperations class and utility functions for backward compatibility
+__all__ = [
+    "FileSystemOperations",
+    "atomic_write",
+    "compute_checksum",
+    "ensure_directory",
+    "safe_copy",
+    "safe_delete",
+    "safe_move",
+]
+
+# Export TypeVar T for backward compatibility
+T = TypeVar("T")  # Generic type for flexible typing

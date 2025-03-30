@@ -21,9 +21,9 @@ Example:
         logger.info("[Teaching Mode] This explains how the algorithm works")
 """
 
-from .config import configure_logger, LOG_LEVELS, logging
+from .config import configure_logger, LOG_LEVELS, logging, LogLevel
 
-__all__ = ["logger", "get_logger", "LOG_LEVELS"]
+__all__ = ["logger", "get_logger", "LOG_LEVELS", "LogLevel"]
 
 # Default logger for general quackcore usage
 logger = configure_logger("quackcore")
