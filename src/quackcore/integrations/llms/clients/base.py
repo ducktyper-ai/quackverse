@@ -1,3 +1,4 @@
+# src/quackcore/integrations/llms/clients/base.py
 """
 Base LLM client implementation.
 
