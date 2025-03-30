@@ -40,7 +40,6 @@ class TestLLMProtocols:
         # Check model property
         assert client.model == "test-model"
 
-
     def test_incomplete_protocol_implementation(self) -> None:
         """Test that incomplete implementations don't satisfy the protocol."""
         # Create a very basic mock that won't match the protocol

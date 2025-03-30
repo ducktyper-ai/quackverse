@@ -6,7 +6,7 @@ This module tests the integration between different components of the LLM module
 ensuring they work together properly in real-world scenarios.
 """
 
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -26,7 +26,7 @@ class TestLLMIntegration:
     def test_create_integration(self) -> None:
         """Test the create_integration factory function."""
         with patch(
-                "quackcore.integrations.llms.service.LLMIntegration"
+            "quackcore.integrations.llms.service.LLMIntegration"
         ) as mock_service:
             # Create a simple mock that matches what create_integration returns
             mock_instance = MagicMock()
@@ -43,9 +43,9 @@ class TestLLMIntegration:
             mock_service.assert_called_once()
 
             # Check integration protocol - use duck typing instead of isinstance
-            assert hasattr(integration, 'name')
-            assert hasattr(integration, 'version')
-            assert hasattr(integration, 'initialize')
+            assert hasattr(integration, "name")
+            assert hasattr(integration, "version")
+            assert hasattr(integration, "initialize")
 
     def test_get_mock_llm(self) -> None:
         """Test the get_mock_llm helper function."""

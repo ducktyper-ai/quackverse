@@ -174,12 +174,12 @@ class OpenAIClient(LLMClient):
     # src/quackcore/integrations/llms/clients/openai.py
 
     def _handle_streaming(
-            self,
-            client: Any,
-            model: str,
-            messages: list[dict],
-            params: dict,
-            callback: Callable[[str], None] | None,
+        self,
+        client: Any,
+        model: str,
+        messages: list[dict],
+        params: dict,
+        callback: Callable[[str], None] | None,
     ) -> str:
         """
         Handle streaming responses from the OpenAI API.
@@ -209,8 +209,11 @@ class OpenAIClient(LLMClient):
                     if not hasattr(chunk, "choices") or not chunk.choices:
                         continue
 
-                    delta = chunk.choices[0].delta if hasattr(chunk.choices[0],
-                                                              "delta") else {}
+                    delta = (
+                        chunk.choices[0].delta
+                        if hasattr(chunk.choices[0], "delta")
+                        else {}
+                    )
                     content = delta.content if hasattr(delta, "content") else None
 
                 if content:

@@ -80,12 +80,12 @@ class MockOpenAIStreamingResponse(MockStreamingGenerator):
     """A generator that yields chunks in OpenAI streaming format."""
 
     def __init__(
-            self,
-            content: str = "This is a mock response",
-            chunk_size: int = 5,
-            model: str = "mock-model",
-            error: Exception | None = None,
-            error_after: int | None = None,
+        self,
+        content: str = "This is a mock response",
+        chunk_size: int = 5,
+        model: str = "mock-model",
+        error: Exception | None = None,
+        error_after: int | None = None,
     ):
         """Initialize with content to stream in chunks."""
         super().__init__(
@@ -103,7 +103,7 @@ class MockOpenAIStreamingResponse(MockStreamingGenerator):
         """Generate all chunks at once."""
         # Split the response into chunks
         chunks = [
-            self.content[i:i + self.chunk_size]
+            self.content[i : i + self.chunk_size]
             for i in range(0, len(self.content), self.chunk_size)
         ]
 
@@ -117,25 +117,18 @@ class MockOpenAIStreamingResponse(MockStreamingGenerator):
                     {
                         "delta": {
                             "content": chunk,
-                            "role": "assistant" if i == 0 else None
+                            "role": "assistant" if i == 0 else None,
                         },
-                        "finish_reason": None
+                        "finish_reason": None,
                     }
                 ],
-                "model": self.model
+                "model": self.model,
             }
 
         # Add final chunk with finish_reason
         yield {
-            "choices": [
-                {
-                    "delta": {
-                        "content": None
-                    },
-                    "finish_reason": "stop"
-                }
-            ],
-            "model": self.model
+            "choices": [{"delta": {"content": None}, "finish_reason": "stop"}],
+            "model": self.model,
         }
 
     def __iter__(self):
@@ -150,6 +143,7 @@ class MockOpenAIStreamingResponse(MockStreamingGenerator):
             self.current_index += 1
             return chunk
         raise StopIteration
+
 
 class MockOpenAIErrorResponse:
     """A mock error response mimicking OpenAI API errors."""

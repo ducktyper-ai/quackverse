@@ -119,7 +119,8 @@ class TestLLMConfigProvider:
         """Test loading configuration from different sources."""
         # Directly patch the BaseConfigProvider's load_config method
         with patch(
-                "quackcore.integrations.llms.config.BaseConfigProvider.load_config") as mock_load:
+            "quackcore.integrations.llms.config.BaseConfigProvider.load_config"
+        ) as mock_load:
             mock_load.return_value = ConfigResult(
                 success=True,
                 source="test-file",
@@ -132,7 +133,8 @@ class TestLLMConfigProvider:
             )
 
             with patch(
-                    "quackcore.integrations.llms.config.LLMConfigProvider._extract_config") as mock_extract:
+                "quackcore.integrations.llms.config.LLMConfigProvider._extract_config"
+            ) as mock_extract:
                 mock_extract.return_value = {
                     "default_provider": "anthropic",
                     "timeout": 30,

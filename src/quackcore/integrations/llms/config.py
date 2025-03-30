@@ -13,6 +13,7 @@ from typing import Any
 from pydantic import BaseModel, Field, field_validator
 
 from quackcore.config.models import LoggingConfig
+from quackcore.integrations.core import ConfigResult
 from quackcore.integrations.core.base import BaseConfigProvider
 
 
@@ -167,3 +168,27 @@ class LLMConfigProvider(BaseConfigProvider):
             default_config["anthropic"]["api_key"] = anthropic_api_key
 
         return default_config
+
+    def load_config(self, config_path: str | None = None) -> ConfigResult:
+        """
+        Load configuration from a file.
+
+        Args:
+            config_path: Path to configuration file.
+
+        Returns:
+            ConfigResult: Result containing configuration data.
+        """
+        result = super().load_config(config_path)
+
+        if result.success and result.content:
+            # Extract and return LLM-specific config
+            llm_config = self._extract_config(result.content)
+            return ConfigResult(
+                success=True,
+                source=result.source,
+                content=llm_config,
+                config_path=result.config_path,
+            )
+
+        return result

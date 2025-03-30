@@ -16,7 +16,6 @@ from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.llms.clients import LLMClient
 from quackcore.integrations.llms.config import LLMConfig, LLMConfigProvider
 from quackcore.integrations.llms.models import ChatMessage, LLMOptions
-from quackcore.integrations.llms.registry import get_llm_client
 
 
 class LLMIntegration(BaseIntegrationService):
@@ -110,6 +109,9 @@ class LLMIntegration(BaseIntegrationService):
             elif provider == "anthropic":
                 client_args["api_base"] = provider_config.get("api_base")
 
+            # Import here to avoid circular import
+            from quackcore.integrations.llms.registry import get_llm_client
+
             self.client = get_llm_client(**client_args)
             self._initialized = True
 
@@ -141,11 +143,16 @@ class LLMIntegration(BaseIntegrationService):
             if not self.config_provider:
                 raise QuackIntegrationError("Configuration provider not initialized")
 
-            config_result = self.config_provider.load_config(self.config_path)
-            if not config_result.success or not config_result.content:
+            try:
+                config_result = self.config_provider.load_config(self.config_path)
+                if not config_result.success or not config_result.content:
+                    self.config = self.config_provider.get_default_config()
+                else:
+                    self.config = config_result.content
+            except Exception as e:
+                # If loading fails, use default config
+                self.logger.warning(f"Failed to load config, using defaults: {e}")
                 self.config = self.config_provider.get_default_config()
-            else:
-                self.config = config_result.content
 
         # Validate configuration
         try:

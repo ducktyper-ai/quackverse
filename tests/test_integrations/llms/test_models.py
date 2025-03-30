@@ -224,7 +224,7 @@ class TestLLMModels:
         with pytest.raises(ValidationError):
             ToolCall(
                 id="call_1",
-                type="function"
+                type="function",
                 # Missing function field
             )
 
@@ -243,7 +243,7 @@ class TestLLMModels:
                     id="call_1",
                     type="function",
                     function=FunctionCall(name="test_function", arguments="{}"),
-                    extra_field="should not be allowed"
+                    extra_field="should not be allowed",
                 )
 
     def test_llm_options(self) -> None:

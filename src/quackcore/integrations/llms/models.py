@@ -94,9 +94,8 @@ class ToolCall(BaseModel):
     type: str = Field("function", description="Tool type")
     function: FunctionCall = Field(..., description="Function call")
 
-    model_config = {
-        "extra": "forbid"
-    }
+    model_config = {"extra": "forbid"}
+
 
 class LLMOptions(BaseModel):
     """Model for additional options for LLM requests."""

@@ -71,7 +71,11 @@ def get_llm_client(
     client_class = _LLM_REGISTRY[provider_lower]
 
     try:
-        return client_class(model=model, api_key=api_key, **kwargs)
+        # Pass provider-specific kwargs correctly
+        client_kwargs = {"model": model, "api_key": api_key}
+        client_kwargs.update(kwargs)
+
+        return client_class(**client_kwargs)
     except Exception as e:
         raise QuackIntegrationError(
             f"Failed to initialize {provider} client: {e}",
