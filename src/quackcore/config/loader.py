@@ -6,7 +6,6 @@ This module provides utilities for loading and merging configurations
 from various sources, with support for environment-specific overrides.
 """
 
-import logging
 import os
 from pathlib import Path
 from typing import Any, TypeVar
@@ -16,6 +15,7 @@ import yaml
 from quackcore.config.models import QuackConfig
 from quackcore.errors import QuackConfigurationError, wrap_io_errors
 from quackcore.paths import resolver
+from quackcore.logging import get_logger
 
 T = TypeVar("T")  # Generic type for flexible typing
 
@@ -45,7 +45,7 @@ DEFAULT_CONFIG_LOCATIONS = [
 
 ENV_PREFIX = "QUACK_"
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @wrap_io_errors
