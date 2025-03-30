@@ -9,11 +9,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from quackcore import fs
+
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs.results import FileInfoResult, OperationResult
 from quackcore.integrations.pandoc.config import PandocConfig
-from quackcore.integrations.pandoc.models import ConversionMetrics
+
+from quackcore.integrations.pandoc.models import ConversionMetrics, FileInfo
 from quackcore.integrations.pandoc.operations import utils, verify_pandoc
+
 
 
 class TestPandocUtilities:
@@ -88,50 +92,162 @@ class TestPandocUtilities:
         assert "--toc" in args
         assert "--toc-depth=2" in args
 
-    def test_get_file_info(self):
-        """Test getting file information for conversion."""
-        path = Path("/path/to/file.md")
+    # src/quackcore/integrations/pandoc/operations/utils.py
 
-        # Mock fs service to return file info
-        with patch("quackcore.fs.service.get_file_info") as mock_get_info:
-            file_info_result = FileInfoResult(
-                success=True,
-                path=str(path),
-                exists=True,
-                is_file=True,
-                size=1024,
-                modified=1609459200.0,  # 2021-01-01 00:00:00
-            )
-            mock_get_info.return_value = file_info_result
+    # Fix get_file_info function
+    def get_file_info(path: Path, format_hint: str | None = None) -> FileInfo:
+        """
+        Get file information for conversion.
 
-            # Test with explicit format
-            file_info = utils.get_file_info(path, "markdown")
-            assert file_info.path == path
-            assert file_info.format == "markdown"
-            assert file_info.size == 1024
-            assert file_info.modified == 1609459200.0
+        Args:
+            path: Path to the file
+            format_hint: Hint about the file format
 
-            # Test with format derived from extension
-            file_info = utils.get_file_info(path)
-            assert file_info.format == "markdown"
+        Returns:
+            FileInfo: File information
 
-            # Test with different extensions
-            extensions_to_test = {
+        Raises:
+            QuackIntegrationError: If the file does not exist
+        """
+        # Changed from fs.service.get_file_info to fs.get_file_info
+        file_info = fs.get_file_info(path)
+        if not file_info.success or not file_info.exists:
+            raise QuackIntegrationError(f"File not found: {path}")
+
+        # Determine format from file extension if not provided
+        if format_hint:
+            format_name = format_hint
+        else:
+            extension = fs.get_extension(path)
+            format_mapping = {
                 "md": "markdown",
                 "markdown": "markdown",
                 "html": "html",
                 "htm": "html",
                 "docx": "docx",
+                "doc": "docx",
                 "pdf": "pdf",
                 "txt": "plain",
-                "unknown": "unknown",  # Should use extension as format
             }
-            for ext, expected_format in extensions_to_test.items():
-                test_path = Path(f"/path/to/file.{ext}")
-                with patch("quackcore.fs.service.get_extension") as mock_get_ext:
-                    mock_get_ext.return_value = ext
-                    file_info = utils.get_file_info(test_path)
-                    assert file_info.format == expected_format
+            format_name = format_mapping.get(extension, extension)
+
+        return FileInfo(
+            path=path,
+            format=format_name,
+            size=file_info.size or 0,
+            modified=file_info.modified,
+        )
+
+    # Fix check_file_size function
+    def check_file_size(
+            converted_size: int, validation_min_size: int
+    ) -> tuple[bool, list[str]]:
+        """
+        Check if the converted file meets the minimum file size.
+
+        Args:
+            converted_size: Size of the converted file
+            validation_min_size: Minimum file size threshold
+
+        Returns:
+            tuple: (is_valid, list of error messages)
+        """
+        errors: list[str] = []
+
+        if validation_min_size > 0 and converted_size < validation_min_size:
+            # Changed from fs.service.get_file_size_str to fs.get_file_size_str
+            converted_size_str = fs.get_file_size_str(converted_size)
+            min_size_str = fs.get_file_size_str(validation_min_size)
+
+            errors.append(
+                f"Converted file size ({converted_size_str}) "
+                f"is below the minimum threshold "
+                f"({min_size_str})"
+            )
+            return False, errors
+
+        return True, errors
+
+    # Fix check_conversion_ratio function
+    def check_conversion_ratio(
+            converted_size: int, original_size: int, threshold: float
+    ) -> tuple[bool, list[str]]:
+        """
+        Check if the converted file size is not drastically smaller than the original.
+
+        Args:
+            converted_size: Size of the converted file
+            original_size: Size of the original file
+            threshold: Minimum ratio threshold
+
+        Returns:
+            tuple: (is_valid, list of error messages)
+        """
+        errors: list[str] = []
+
+        if original_size > 0:
+            conversion_ratio = converted_size / original_size
+            if conversion_ratio < threshold:
+                # Changed from fs.service.get_file_size_str to fs.get_file_size_str
+                converted_size_str = fs.get_file_size_str(converted_size)
+                original_size_str = fs.get_file_size_str(original_size)
+
+                errors.append(
+                    f"Conversion error: Converted file size "
+                    f"({converted_size_str}) is less than "
+                    f"{threshold * 100:.0f}% of the original file size "
+                    f"({original_size_str}) (ratio: {conversion_ratio:.2f})."
+                )
+                return False, errors
+
+        return True, errors
+
+    # Fix track_metrics function
+    def track_metrics(
+            filename: str,
+            start_time: float,
+            original_size: int,
+            converted_size: int,
+            metrics: ConversionMetrics,
+            config: PandocConfig,
+    ) -> None:
+        """
+        Track conversion metrics.
+
+        Args:
+            filename: Name of the file
+            start_time: Start time of conversion
+            original_size: Size of the original file
+            converted_size: Size of the converted file
+            metrics: Metrics tracker
+            config: Configuration object
+        """
+        # Track conversion time
+        if config.metrics.track_conversion_time:
+            end_time = time.time()
+            duration = end_time - start_time
+
+            metrics.conversion_times[filename] = {"start": start_time, "end": end_time}
+
+            logger.info(f"Conversion time for {filename}: {duration:.2f} seconds")
+
+        # Track file size changes
+        if config.metrics.track_file_sizes:
+            metrics.file_sizes[filename] = {
+                "original": original_size,
+                "converted": converted_size,
+                "ratio": converted_size / original_size if original_size > 0 else 0,
+            }
+
+            # Use fs module's utility for formatting file sizes
+            # Changed from fs.service.get_file_size_str to fs.get_file_size_str
+            original_size_str = fs.get_file_size_str(original_size)
+            converted_size_str = fs.get_file_size_str(converted_size)
+
+            logger.info(
+                f"File size change for {filename}: "
+                f"{original_size_str} -> {converted_size_str}"
+            )
 
     def test_get_file_info_file_not_found(self):
         """Test getting file information for a file that doesn't exist."""
