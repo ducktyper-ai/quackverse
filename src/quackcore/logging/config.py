@@ -1,3 +1,4 @@
+# src/quackcore/logging/config.py
 """
 Logger configuration for quackcore.
 

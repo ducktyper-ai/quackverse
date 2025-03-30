@@ -1,3 +1,4 @@
+# src/quackcore/logging/__init__.py
 """
 Centralized logging module for quackcore.
 
