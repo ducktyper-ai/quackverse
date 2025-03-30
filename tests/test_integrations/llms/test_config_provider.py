@@ -141,7 +141,7 @@ class TestLLMConfigProvider:
         finally:
             # Restore the original method
             config_provider.load_config = original_load_config
-            
+
     def test_no_path_resolution_needed(
         self, config_provider: LLMConfigProvider
     ) -> None:
