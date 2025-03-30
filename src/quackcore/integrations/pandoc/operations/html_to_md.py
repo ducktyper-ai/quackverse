@@ -41,7 +41,7 @@ def _validate_input(html_path: Path, config: PandocConfig) -> int:
     Raises:
         QuackIntegrationError: If the input file is missing or has invalid structure.
     """
-    file_info = fs.get_file_info(html_path)
+    file_info = fs.service.get_file_info(html_path)
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(f"Input file not found: {html_path}")
 
@@ -49,7 +49,12 @@ def _validate_input(html_path: Path, config: PandocConfig) -> int:
 
     if config.validation.verify_structure:
         try:
-            html_content: str = html_path.read_text(encoding="utf-8")
+            read_result = fs.service.read_text(html_path)
+            if not read_result.success:
+                raise QuackIntegrationError(
+                    f"Could not read HTML file: {read_result.error}")
+
+            html_content = read_result.content
             is_valid, html_errors = validate_html_structure(
                 html_content, config.validation.check_links
             )
@@ -63,6 +68,7 @@ def _validate_input(html_path: Path, config: PandocConfig) -> int:
                 logger.warning(f"Could not validate HTML structure: {str(e)}")
             else:
                 raise
+
     return original_size
 
 
@@ -100,12 +106,12 @@ def _attempt_conversion(html_path: Path, config: PandocConfig) -> str:
 
 
 def _write_and_validate_output(
-    cleaned_markdown: str,
-    output_path: Path,
-    input_path: Path,
-    original_size: int,
-    config: PandocConfig,
-    attempt_start: float,
+        cleaned_markdown: str,
+        output_path: Path,
+        input_path: Path,
+        original_size: int,
+        config: PandocConfig,
+        attempt_start: float,
 ) -> tuple[float, int, list[str]]:
     """
     Write the converted markdown to the output file and validate the conversion.
@@ -121,9 +127,15 @@ def _write_and_validate_output(
     Returns:
         tuple: (conversion_time, output_size, validation_errors)
     """
-    fs.create_directory(output_path.parent, exist_ok=True)
+    # Create output directory if it doesn't exist
+    dir_result = fs.service.create_directory(output_path.parent, exist_ok=True)
+    if not dir_result.success:
+        raise QuackIntegrationError(
+            f"Failed to create output directory: {dir_result.error}")
 
-    write_result = fs.write_text(output_path, cleaned_markdown, encoding="utf-8")
+    # Write the content
+    write_result = fs.service.write_text(output_path, cleaned_markdown,
+                                         encoding="utf-8")
     if not write_result.success:
         raise QuackIntegrationError(
             f"Failed to write output file: {write_result.error}"
@@ -131,13 +143,15 @@ def _write_and_validate_output(
 
     conversion_time: float = time.time() - attempt_start
 
-    output_info = fs.get_file_info(output_path)
+    # Get output file info
+    output_info = fs.service.get_file_info(output_path)
     if not output_info.success:
         raise QuackIntegrationError(
             f"Failed to get info for converted file: {output_path}"
         )
     output_size: int = output_info.size or 0
 
+    # Validate the conversion
     validation_errors: list[str] = validate_conversion(
         output_path, input_path, original_size, config
     )
@@ -146,10 +160,10 @@ def _write_and_validate_output(
 
 
 def convert_html_to_markdown(
-    html_path: Path,
-    output_path: Path,
-    config: PandocConfig,
-    metrics: ConversionMetrics | None = None,
+        html_path: Path,
+        output_path: Path,
+        config: PandocConfig,
+        metrics: ConversionMetrics | None = None,
 ) -> IntegrationResult[tuple[Path, ConversionDetails]]:
     """
     Convert an HTML file to Markdown.
@@ -259,10 +273,10 @@ def post_process_markdown(markdown_content: str) -> str:
 
 
 def validate_conversion(
-    output_path: Path,
-    input_path: Path,
-    original_size: int,
-    config: PandocConfig,
+        output_path: Path,
+        input_path: Path,
+        original_size: int,
+        config: PandocConfig,
 ) -> list[str]:
     """
     Validate the converted markdown document.
@@ -277,27 +291,37 @@ def validate_conversion(
         list[str]: List of validation error messages (empty if valid).
     """
     validation_errors: list[str] = []
-    output_info = fs.get_file_info(output_path)
+
+    # Get info about output file
+    output_info = fs.service.get_file_info(output_path)
     if not output_info.success or not output_info.exists:
         validation_errors.append(f"Output file does not exist: {output_path}")
         return validation_errors
 
     output_size: int = output_info.size or 0
 
+    # Check file size
     valid_size, size_errors = check_file_size(
         output_size, config.validation.min_file_size
     )
     if not valid_size:
         validation_errors.extend(size_errors)
 
+    # Check conversion ratio
     valid_ratio, ratio_errors = check_conversion_ratio(
         output_size, original_size, config.validation.conversion_ratio_threshold
     )
     if not valid_ratio:
         validation_errors.extend(ratio_errors)
 
+    # Check content
     try:
-        content: str = output_path.read_text(encoding="utf-8")
+        read_result = fs.service.read_text(output_path, encoding="utf-8")
+        if not read_result.success:
+            validation_errors.append(f"Error reading output file: {read_result.error}")
+            return validation_errors
+
+        content = read_result.content
         if not content.strip():
             validation_errors.append("Output file is empty")
         elif len(content.strip()) < 10:

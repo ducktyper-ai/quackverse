@@ -49,10 +49,10 @@ def verify_pandoc() -> str:
 
 
 def prepare_pandoc_args(
-    config: PandocConfig,
-    source_format: str,
-    target_format: str,
-    extra_args: list[str] | None = None,
+        config: PandocConfig,
+        source_format: str,
+        target_format: str,
+        extra_args: list[str] | None = None,
 ) -> list[str]:
     """
     Prepare pandoc conversion arguments.
@@ -98,7 +98,7 @@ def prepare_pandoc_args(
 
 
 def validate_html_structure(
-    content: str, check_links: bool = False
+        content: str, check_links: bool = False
 ) -> tuple[bool, list[str]]:
     """
     Validate HTML document structure.
@@ -142,7 +142,7 @@ def validate_html_structure(
 
 
 def validate_docx_structure(
-    docx_path: Path, check_links: bool = False
+        docx_path: Path, check_links: bool = False
 ) -> tuple[bool, list[str]]:
     """
     Validate DOCX document structure.
@@ -184,12 +184,12 @@ def validate_docx_structure(
 
 
 def track_metrics(
-    filename: str,
-    start_time: float,
-    original_size: int,
-    converted_size: int,
-    metrics: ConversionMetrics,
-    config: PandocConfig,
+        filename: str,
+        start_time: float,
+        original_size: int,
+        converted_size: int,
+        metrics: ConversionMetrics,
+        config: PandocConfig,
 ) -> None:
     """
     Track conversion metrics.
@@ -219,9 +219,13 @@ def track_metrics(
             "ratio": converted_size / original_size if original_size > 0 else 0,
         }
 
+        # Use fs module's utility for formatting file sizes
+        original_size_str = fs.service.get_file_size_str(original_size)
+        converted_size_str = fs.service.get_file_size_str(converted_size)
+
         logger.info(
             f"File size change for {filename}: "
-            f"{original_size / 1024:.2f}KB -> {converted_size / 1024:.2f}KB"
+            f"{original_size_str} -> {converted_size_str}"
         )
 
 
@@ -239,7 +243,7 @@ def get_file_info(path: Path, format_hint: str | None = None) -> FileInfo:
     Raises:
         QuackIntegrationError: If the file does not exist
     """
-    file_info = fs.get_file_info(path)
+    file_info = fs.service.get_file_info(path)
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(f"File not found: {path}")
 
@@ -247,7 +251,7 @@ def get_file_info(path: Path, format_hint: str | None = None) -> FileInfo:
     if format_hint:
         format_name = format_hint
     else:
-        extension = path.suffix.lower().lstrip(".")
+        extension = fs.service.get_extension(path)
         format_mapping = {
             "md": "markdown",
             "markdown": "markdown",
@@ -269,7 +273,7 @@ def get_file_info(path: Path, format_hint: str | None = None) -> FileInfo:
 
 
 def check_file_size(
-    converted_size: int, validation_min_size: int
+        converted_size: int, validation_min_size: int
 ) -> tuple[bool, list[str]]:
     """
     Check if the converted file meets the minimum file size.
@@ -284,10 +288,13 @@ def check_file_size(
     errors: list[str] = []
 
     if validation_min_size > 0 and converted_size < validation_min_size:
+        converted_size_str = fs.service.get_file_size_str(converted_size)
+        min_size_str = fs.service.get_file_size_str(validation_min_size)
+
         errors.append(
-            f"Converted file size ({converted_size} bytes) "
+            f"Converted file size ({converted_size_str}) "
             f"is below the minimum threshold "
-            f"({validation_min_size} bytes)"
+            f"({min_size_str})"
         )
         return False, errors
 
@@ -295,7 +302,7 @@ def check_file_size(
 
 
 def check_conversion_ratio(
-    converted_size: int, original_size: int, threshold: float
+        converted_size: int, original_size: int, threshold: float
 ) -> tuple[bool, list[str]]:
     """
     Check if the converted file size is not drastically smaller than the original.
@@ -313,11 +320,14 @@ def check_conversion_ratio(
     if original_size > 0:
         conversion_ratio = converted_size / original_size
         if conversion_ratio < threshold:
+            converted_size_str = fs.service.get_file_size_str(converted_size)
+            original_size_str = fs.service.get_file_size_str(original_size)
+
             errors.append(
                 f"Conversion error: Converted file size "
-                f"({converted_size} bytes) is less than "
+                f"({converted_size_str}) is less than "
                 f"{threshold * 100:.0f}% of the original file size "
-                f"({original_size} bytes) (ratio: {conversion_ratio:.2f})."
+                f"({original_size_str}) (ratio: {conversion_ratio:.2f})."
             )
             return False, errors
 

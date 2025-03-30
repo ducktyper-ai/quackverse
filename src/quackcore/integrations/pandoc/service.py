@@ -7,9 +7,9 @@ handling document conversion between various formats.
 """
 
 import logging
+from collections.abc import Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import cast
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs import service as fs
@@ -42,10 +42,10 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
     """
 
     def __init__(
-        self,
-        config_path: str | Path | None = None,
-        output_dir: str | Path | None = None,
-        log_level: int = logging.INFO,
+            self,
+            config_path: str | Path | None = None,
+            output_dir: str | Path | None = None,
+            log_level: int = logging.INFO,
     ) -> None:
         """
         Initialize the Pandoc integration service.
@@ -117,7 +117,11 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             self.converter = DocumentConverter(conversion_config)
 
             # Ensure output directory exists
-            fs.create_directory(conversion_config.output_dir, exist_ok=True)
+            result = fs.create_directory(conversion_config.output_dir, exist_ok=True)
+            if not result.success:
+                return IntegrationResult.error_result(
+                    f"Failed to create output directory: {result.error}"
+                )
 
             self._initialized = True
             logger.info(
@@ -126,7 +130,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
             return IntegrationResult.success_result(
                 message=f"Pandoc integration initialized successfully. "
-                f"Version: {self._pandoc_version}"
+                        f"Version: {self._pandoc_version}"
             )
 
         except Exception as e:
@@ -136,7 +140,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
     def html_to_markdown(
-        self, html_path: Path, output_path: Path | None = None
+            self, html_path: Path, output_path: Path | None = None
     ) -> IntegrationResult[Path]:
         """
         Convert HTML to Markdown.
@@ -149,7 +153,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             IntegrationResult[Path]: Result of the conversion
         """
         if init_error := self._ensure_initialized():
-            return cast(IntegrationResult[Path], init_error)
+            return init_error  # Type narrowing handled by _ensure_initialized
 
         try:
             html_path = resolver.resolve_project_path(html_path)
@@ -157,8 +161,13 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             # Determine output path if not provided
             if output_path is None and self.converter:
                 # Use converter's config to determine output path
-                config = cast(PandocConfig, getattr(self.converter, "config", None))
-                output_path = config.output_dir / f"{html_path.stem}.md"
+                config = getattr(self.converter, "config", None)
+                if isinstance(config, PandocConfig):
+                    output_path = config.output_dir / f"{html_path.stem}.md"
+                else:
+                    return IntegrationResult.error_result(
+                        "Cannot determine output path, invalid converter configuration"
+                    )
             elif output_path:
                 output_path = resolver.resolve_project_path(output_path)
             else:
@@ -179,7 +188,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
     def markdown_to_docx(
-        self, markdown_path: Path, output_path: Path | None = None
+            self, markdown_path: Path, output_path: Path | None = None
     ) -> IntegrationResult[Path]:
         """
         Convert Markdown to DOCX.
@@ -192,7 +201,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             IntegrationResult[Path]: Result of the conversion
         """
         if init_error := self._ensure_initialized():
-            return cast(IntegrationResult[Path], init_error)
+            return init_error  # Type narrowing handled by _ensure_initialized
 
         try:
             markdown_path = resolver.resolve_project_path(markdown_path)
@@ -200,8 +209,13 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             # Determine output path if not provided
             if output_path is None and self.converter:
                 # Use converter's config to determine output path
-                config = cast(PandocConfig, getattr(self.converter, "config", None))
-                output_path = config.output_dir / f"{markdown_path.stem}.docx"
+                config = getattr(self.converter, "config", None)
+                if isinstance(config, PandocConfig):
+                    output_path = config.output_dir / f"{markdown_path.stem}.docx"
+                else:
+                    return IntegrationResult.error_result(
+                        "Cannot determine output path, invalid converter configuration"
+                    )
             elif output_path:
                 output_path = resolver.resolve_project_path(output_path)
             else:
@@ -222,12 +236,12 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
     def convert_directory(
-        self,
-        input_dir: Path,
-        output_format: str,
-        output_dir: Path | None = None,
-        file_pattern: str | None = None,
-        recursive: bool = False,
+            self,
+            input_dir: Path,
+            output_format: str,
+            output_dir: Path | None = None,
+            file_pattern: str | None = None,
+            recursive: bool = False,
     ) -> IntegrationResult[list[Path]]:
         """
         Convert all files in a directory.
@@ -243,27 +257,40 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             IntegrationResult[list[Path]]: Result of the conversion
         """
         if init_error := self._ensure_initialized():
-            return cast(IntegrationResult[list[Path]], init_error)
+            return init_error  # Type narrowing handled by _ensure_initialized
 
         try:
             input_dir = resolver.resolve_project_path(input_dir)
-            if not (input_dir.exists() and input_dir.is_dir()):
+
+            # Check if input directory exists
+            input_dir_info = fs.service.get_file_info(input_dir)
+            if not input_dir_info.success or not input_dir_info.exists or not input_dir_info.is_dir:
                 return IntegrationResult.error_result(
                     f"Input directory does not exist or is not a directory: {input_dir}"
                 )
 
             # Resolve output directory
             if self.converter:
-                config = cast(PandocConfig, getattr(self.converter, "config", None))
-                output_dir = (
-                    resolver.resolve_project_path(output_dir)
-                    if output_dir
-                    else config.output_dir
-                )
+                config = getattr(self.converter, "config", None)
+                if isinstance(config, PandocConfig):
+                    output_dir = (
+                        resolver.resolve_project_path(output_dir)
+                        if output_dir
+                        else config.output_dir
+                    )
+                else:
+                    return IntegrationResult.error_result(
+                        "Invalid converter configuration"
+                    )
             else:
                 return IntegrationResult.error_result("Converter not initialized")
 
-            fs.create_directory(output_dir, exist_ok=True)
+            # Create output directory if it doesn't exist
+            dir_result = fs.service.create_directory(output_dir, exist_ok=True)
+            if not dir_result.success:
+                return IntegrationResult.error_result(
+                    f"Failed to create output directory: {dir_result.error}"
+                )
 
             # Determine source format and file extension pattern based on output_format
             params = self._determine_conversion_params(output_format, file_pattern)
@@ -274,7 +301,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             source_format, extension_pattern = params
 
             # Find files to convert
-            find_result = fs.find_files(input_dir, extension_pattern, recursive)
+            find_result = fs.service.find_files(input_dir, extension_pattern, recursive)
             if not find_result.success or not find_result.files:
                 msg = (
                     f"No matching files found in {input_dir}"
@@ -305,7 +332,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
     def _determine_conversion_params(
-        self, output_format: str, file_pattern: str | None
+            self, output_format: str, file_pattern: str | None
     ) -> tuple[str, str] | None:
         """
         Determine the source format and file extension pattern
@@ -326,11 +353,11 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
         return None
 
     def _create_conversion_tasks(
-        self,
-        files: list[Path],
-        source_format: str,
-        output_format: str,
-        output_dir: Path,
+            self,
+            files: Sequence[Path],
+            source_format: str,
+            output_format: str,
+            output_dir: Path,
     ) -> list[ConversionTask]:
         """
         Create a list of conversion tasks from the found files.

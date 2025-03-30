@@ -7,6 +7,7 @@ the document conversion functionality using Pandoc.
 """
 
 import logging
+from collections.abc import Sequence
 from datetime import datetime
 from pathlib import Path
 
@@ -60,7 +61,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
         return self._pandoc_version
 
     def convert_file(
-        self, input_path: Path, output_path: Path, output_format: str
+            self, input_path: Path, output_path: Path, output_format: str
     ) -> IntegrationResult[Path]:
         """
         Convert a file from one format to another.
@@ -81,7 +82,11 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             input_info = get_file_info(input_path)
 
             # Ensure output directory exists
-            fs.create_directory(output_path.parent, exist_ok=True)
+            dir_result = fs.service.create_directory(output_path.parent, exist_ok=True)
+            if not dir_result.success:
+                return IntegrationResult.error_result(
+                    f"Failed to create output directory: {dir_result.error}"
+                )
 
             # Perform conversion based on source and target formats
             if input_info.format == "html" and output_format == "markdown":
@@ -121,7 +126,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             return IntegrationResult.error_result(f"Conversion error: {str(e)}")
 
     def convert_batch(
-        self, tasks: list[ConversionTask], output_dir: Path | None = None
+            self, tasks: Sequence[ConversionTask], output_dir: Path | None = None
     ) -> IntegrationResult[list[Path]]:
         """
         Convert a batch of files.
@@ -134,7 +139,13 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             IntegrationResult[list[Path]]: Result of the batch conversion
         """
         output_directory = output_dir or self.config.output_dir
-        fs.create_directory(output_directory, exist_ok=True)
+
+        # Create output directory
+        dir_result = fs.service.create_directory(output_directory, exist_ok=True)
+        if not dir_result.success:
+            return IntegrationResult.error_result(
+                f"Failed to create output directory: {dir_result.error}"
+            )
 
         successful_files: list[Path] = []
         failed_files: list[Path] = []
@@ -206,7 +217,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             return IntegrationResult.error_result(
                 error=error_msg,
                 message=f"All {len(failed_files)} conversion "
-                f"tasks failed. See logs for details.",
+                        f"tasks failed. See logs for details.",
             )
 
     def validate_conversion(self, output_path: Path, input_path: Path) -> bool:
@@ -221,9 +232,9 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             bool: True if validation passed, False otherwise
         """
         try:
-            # Get file info - actually use input_info for validation
-            input_info = fs.get_file_info(input_path)
-            output_info = fs.get_file_info(output_path)
+            # Get file info for validation
+            output_info = fs.service.get_file_info(output_path)
+            input_info = fs.service.get_file_info(input_path)
 
             if not output_info.success or not output_info.exists:
                 logger.error(f"Output file does not exist: {output_path}")
@@ -246,17 +257,21 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             )
 
             # Validate based on file format
-            extension = output_path.suffix.lower()
+            extension = fs.service.get_extension(output_path)
 
-            if extension in (".md", ".markdown"):
+            if extension in ("md", "markdown"):
                 # For markdown, we can read the content and validate
                 try:
-                    content = output_path.read_text(encoding="utf-8")
-                    return len(content.strip()) > 0
+                    read_result = fs.service.read_text(output_path, encoding="utf-8")
+                    if not read_result.success:
+                        logger.error(
+                            f"Failed to read markdown file: {read_result.error}")
+                        return False
+                    return len(read_result.content.strip()) > 0
                 except Exception as e:
                     logger.error(f"Failed to read markdown file: {e}")
                     return False
-            elif extension == ".docx":
+            elif extension == "docx":
                 from quackcore.integrations.pandoc.operations.utils import (
                     validate_docx_structure,
                 )

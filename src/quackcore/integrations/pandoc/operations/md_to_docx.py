@@ -39,7 +39,7 @@ def _validate_markdown_input(markdown_path: Path) -> int:
     Raises:
         QuackIntegrationError: If the input file is missing or empty.
     """
-    file_info = fs.get_file_info(markdown_path)
+    file_info = fs.service.get_file_info(markdown_path)
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(
             f"Input file not found: {markdown_path}",
@@ -48,7 +48,14 @@ def _validate_markdown_input(markdown_path: Path) -> int:
     original_size: int = file_info.size or 0
 
     try:
-        markdown_content: str = markdown_path.read_text(encoding="utf-8")
+        read_result = fs.service.read_text(markdown_path, encoding="utf-8")
+        if not read_result.success:
+            raise QuackIntegrationError(
+                f"Could not read Markdown file: {read_result.error}",
+                {"path": str(markdown_path)},
+            )
+
+        markdown_content = read_result.content
         if not markdown_content.strip():
             raise QuackIntegrationError(
                 f"Markdown file is empty: {markdown_path}",
@@ -63,7 +70,7 @@ def _validate_markdown_input(markdown_path: Path) -> int:
 
 
 def _convert_markdown_to_docx_once(
-    markdown_path: Path, output_path: Path, config: PandocConfig
+        markdown_path: Path, output_path: Path, config: PandocConfig
 ) -> None:
     """
     Perform a single conversion attempt from Markdown to DOCX using pandoc.
@@ -79,7 +86,15 @@ def _convert_markdown_to_docx_once(
     extra_args: list[str] = prepare_pandoc_args(
         config, "markdown", "docx", config.md_to_docx_extra_args
     )
-    fs.create_directory(output_path.parent, exist_ok=True)
+
+    # Create output directory if it doesn't exist
+    dir_result = fs.service.create_directory(output_path.parent, exist_ok=True)
+    if not dir_result.success:
+        raise QuackIntegrationError(
+            f"Failed to create output directory: {dir_result.error}",
+            {"path": str(output_path.parent), "operation": "create_directory"},
+        )
+
     logger.debug(f"Converting {markdown_path} to DOCX with args: {extra_args}")
     try:
         import pypandoc
@@ -113,7 +128,7 @@ def _get_conversion_output(output_path: Path, start_time: float) -> tuple[float,
         QuackIntegrationError: If output file info cannot be retrieved.
     """
     conversion_time: float = time.time() - start_time
-    output_info = fs.get_file_info(output_path)
+    output_info = fs.service.get_file_info(output_path)
     if not output_info.success:
         raise QuackIntegrationError(
             f"Failed to get info for converted file: {output_path}",
@@ -124,10 +139,10 @@ def _get_conversion_output(output_path: Path, start_time: float) -> tuple[float,
 
 
 def convert_markdown_to_docx(
-    markdown_path: Path,
-    output_path: Path,
-    config: PandocConfig,
-    metrics: ConversionMetrics | None = None,
+        markdown_path: Path,
+        output_path: Path,
+        config: PandocConfig,
+        metrics: ConversionMetrics | None = None,
 ) -> IntegrationResult[tuple[Path, ConversionDetails]]:
     """
     Convert a Markdown file to DOCX.
@@ -203,7 +218,7 @@ def convert_markdown_to_docx(
 
 
 def validate_conversion(
-    output_path: Path, input_path: Path, original_size: int, config: PandocConfig
+        output_path: Path, input_path: Path, original_size: int, config: PandocConfig
 ) -> list[str]:
     """
     Validate the converted DOCX document.
@@ -220,22 +235,27 @@ def validate_conversion(
     validation_errors: list[str] = []
     validation = config.validation
 
-    output_info = fs.get_file_info(output_path)
+    # Get info about output file
+    output_info = fs.service.get_file_info(output_path)
     if not output_info.success or not output_info.exists:
         validation_errors.append(f"Output file does not exist: {output_path}")
         return validation_errors
 
     output_size: int = output_info.size or 0
+
+    # Check file size
     valid_size, size_errors = check_file_size(output_size, validation.min_file_size)
     if not valid_size:
         validation_errors.extend(size_errors)
 
+    # Check conversion ratio
     valid_ratio, ratio_errors = check_conversion_ratio(
         output_size, original_size, validation.conversion_ratio_threshold
     )
     if not valid_ratio:
         validation_errors.extend(ratio_errors)
 
+    # Check document structure
     if validation.verify_structure and output_path.exists():
         is_valid, structure_errors = validate_docx_structure(
             output_path, validation.check_links
@@ -270,21 +290,21 @@ def _check_docx_metadata(docx_path: Path, source_path: Path, check_links: bool) 
 
         if hasattr(doc, "core_properties"):
             if (
-                hasattr(doc.core_properties, "title")
-                and doc.core_properties.title
-                and source_filename in doc.core_properties.title
+                    hasattr(doc.core_properties, "title")
+                    and doc.core_properties.title
+                    and source_filename in doc.core_properties.title
             ):
                 source_found = True
             elif (
-                hasattr(doc.core_properties, "comments")
-                and doc.core_properties.comments
-                and source_filename in doc.core_properties.comments
+                    hasattr(doc.core_properties, "comments")
+                    and doc.core_properties.comments
+                    and source_filename in doc.core_properties.comments
             ):
                 source_found = True
             elif (
-                hasattr(doc.core_properties, "subject")
-                and doc.core_properties.subject
-                and source_filename in doc.core_properties.subject
+                    hasattr(doc.core_properties, "subject")
+                    and doc.core_properties.subject
+                    and source_filename in doc.core_properties.subject
             ):
                 source_found = True
 
