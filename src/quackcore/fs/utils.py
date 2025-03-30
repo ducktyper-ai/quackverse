@@ -62,14 +62,21 @@ def normalize_path(path: str | Path) -> Path:
         Normalized Path object
     """
     path_obj = Path(path).expanduser()
+
+    # If path is already absolute, no need for getcwd() which might fail
+    if path_obj.is_absolute():
+        return path_obj
+
     try:
-        # If the path doesn't exist, make it absolute without resolving
+        # Try to make it absolute or resolve it
         if not path_obj.exists():
-            return path_obj.absolute() if not path_obj.is_absolute() else path_obj
+            return path_obj.absolute()
         return path_obj.resolve()
-    except FileNotFoundError:
-        # If the path doesn't exist, just make it absolute
-        return path_obj.absolute() if not path_obj.is_absolute() else path_obj
+    except (FileNotFoundError, OSError) as e:
+        # If any OS error occurs (including getcwd() failing),
+        # just return the path as is, with a warning
+        logger.warning(f"Could not normalize path '{path}': {str(e)}")
+        return path_obj
 
 
 def is_same_file(path1: str | Path, path2: str | Path) -> bool:

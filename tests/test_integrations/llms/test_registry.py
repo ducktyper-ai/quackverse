@@ -120,7 +120,7 @@ class TestLLMRegistry:
             mock_client_class.assert_called_once_with(
                 model="claude-3-opus", api_key="test-key"
             )
-            
+
     def test_get_llm_client_mock(self) -> None:
         """Test getting the Mock client."""
         client = get_llm_client("mock", script=["Test response"])

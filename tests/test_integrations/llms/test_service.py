@@ -5,7 +5,7 @@ Tests for the LLM integration service.
 This module tests the main service class for LLM integration, including
 initialization, configuration, and client communication.
 """
-
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -67,25 +67,32 @@ class TestLLMService:
         assert service.client is None
         assert service._initialized is False
 
-        # Test with custom parameters
-        with patch("quackcore.fs.service.get_file_info") as mock_file_info:
-            # No need to check for file existence when config_path is explicitly provided
-            mock_file_info.return_value.success = True
-            mock_file_info.return_value.exists = True
+        # Test with custom parameters - patch at the lowest level to avoid multiple issues
+        with patch("quackcore.fs.utils.normalize_path") as mock_normalize_path:
+            # Mock normalize_path to return a Path object
+            mock_normalize_path.return_value = Path("config.yaml")
 
-            service = LLMIntegration(
-                provider="anthropic",
-                model="claude-3-opus",
-                api_key="test-key",
-                config_path="config.yaml",
-                log_level=20,
-            )
-            assert service.provider == "anthropic"
-            assert service.model == "claude-3-opus"
-            assert service.api_key == "test-key"
-            # config_path might be resolved, so don't test exact equality
-            assert "config.yaml" in service.config_path
-            assert service.logger.level == 20
+            # Also patch file_info to avoid filesystem errors
+            with patch("quackcore.fs.service.get_file_info") as mock_file_info:
+                # Create a proper mock FileInfoResult
+                mock_result = MagicMock()
+                mock_result.success = True
+                mock_result.exists = True
+                mock_file_info.return_value = mock_result
+
+                service = LLMIntegration(
+                    provider="anthropic",
+                    model="claude-3-opus",
+                    api_key="test-key",
+                    config_path="config.yaml",
+                    log_level=20,
+                )
+
+                assert service.provider == "anthropic"
+                assert service.model == "claude-3-opus"
+                assert service.api_key == "test-key"
+                assert service.config_path == "config.yaml"
+                assert service.logger.level == 20
 
     def test_name_and_version(self, llm_service: LLMIntegration) -> None:
         """Test the name and version properties."""
