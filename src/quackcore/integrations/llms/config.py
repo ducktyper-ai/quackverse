@@ -169,7 +169,6 @@ class LLMConfigProvider(BaseConfigProvider):
 
         return default_config
 
-
     def load_config(self, config_path: str | None = None) -> ConfigResult:
         """
         Load configuration from a file.
@@ -180,14 +179,14 @@ class LLMConfigProvider(BaseConfigProvider):
         Returns:
             ConfigResult: Result containing configuration data.
         """
+        # Use the base implementation to load raw config
         result = super().load_config(config_path)
 
         if result.success and result.content:
-            # Extract and return LLM-specific config
+            # Extract LLM-specific config
             llm_config = self._extract_config(result.content)
             return ConfigResult(
                 success=True,
-                # Don't try to access source, just pass content and config_path
                 content=llm_config,
                 config_path=result.config_path
             )

@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.integrations.core import BaseIntegrationService
+from quackcore.fs import FileInfoResult, DataResult
 from quackcore.integrations.core.results import ConfigResult, IntegrationResult
 from quackcore.integrations.llms.models import ChatMessage, LLMOptions, RoleType
 from quackcore.integrations.llms.service import LLMIntegration
@@ -27,26 +27,34 @@ class TestLLMService:
         # Create a service
         service = LLMIntegration()
 
-        # Skip actual file loading
+        # Mock the file operations using our fs module
         with patch("quackcore.fs.service.get_file_info") as mock_file_info:
-            mock_file_info.return_value.success = True
-            mock_file_info.return_value.exists = True
+            file_info_result = FileInfoResult(
+                success=True,
+                path="./config/llm_config.yaml",
+                exists=True,
+                is_file=True,
+            )
+            mock_file_info.return_value = file_info_result
 
             with patch("quackcore.fs.service.read_yaml") as mock_read_yaml:
-                mock_read_yaml.return_value = ConfigResult(
+                yaml_result = DataResult(
                     success=True,
-                    content={
+                    path="./config/llm_config.yaml",
+                    data={
                         "default_provider": "openai",
                         "timeout": 60,
-                        "openai": {"api_key": "test-key"},
+                        "openai": {"api_key": "test-key"}
                     },
+                    format="yaml"
                 )
+                mock_read_yaml.return_value = yaml_result
 
                 # Set the config directly
                 service.config = {
                     "default_provider": "openai",
                     "timeout": 60,
-                    "openai": {"api_key": "test-key"},
+                    "openai": {"api_key": "test-key"}
                 }
 
                 # Mark as initialized to skip initialization
@@ -67,18 +75,20 @@ class TestLLMService:
         assert service.client is None
         assert service._initialized is False
 
-        # Test with custom parameters - patch at the lowest level to avoid multiple issues
-        with patch("quackcore.fs.utils.normalize_path") as mock_normalize_path:
-            # Mock normalize_path to return a Path object
-            mock_normalize_path.return_value = Path("config.yaml")
+        # Test with custom parameters
+        with patch("quackcore.fs.service.get_file_info") as mock_file_info:
+            # Create a proper FileInfoResult
+            file_info_result = FileInfoResult(
+                success=True,
+                path="config.yaml",
+                exists=True,
+                is_file=True,
+            )
+            mock_file_info.return_value = file_info_result
 
-            # Also patch file_info to avoid filesystem errors
-            with patch("quackcore.fs.service.get_file_info") as mock_file_info:
-                # Create a proper mock FileInfoResult
-                mock_result = MagicMock()
-                mock_result.success = True
-                mock_result.exists = True
-                mock_file_info.return_value = mock_result
+            # Also patch normalize_path to handle the config path
+            with patch("quackcore.fs.utils.normalize_path") as mock_normalize_path:
+                mock_normalize_path.return_value = Path("config.yaml")
 
                 service = LLMIntegration(
                     provider="anthropic",
@@ -93,7 +103,6 @@ class TestLLMService:
                 assert service.api_key == "test-key"
                 assert service.config_path == "config.yaml"
                 assert service.logger.level == 20
-
     def test_name_and_version(self, llm_service: LLMIntegration) -> None:
         """Test the name and version properties."""
         assert llm_service.name == "LLM"
@@ -133,9 +142,16 @@ class TestLLMService:
         mock_provider = test_service.config_provider
 
         # Set up for success case
-        mock_provider.load_config.return_value = ConfigResult(
-            success=True, content={"default_provider": "anthropic", "timeout": 30}
+        # Use ConfigResult instead of DataResult to match what's expected
+        config_result = ConfigResult(
+            success=True,
+            content={"default_provider": "anthropic", "timeout": 30}
         )
+        mock_provider.load_config.return_value = config_result
+
+        # Also mock get_default_config since it's called if load_config fails
+        default_config = {"default_provider": "mock", "timeout": 10}
+        mock_provider.get_default_config.return_value = default_config
 
         config1 = test_service._extract_config()
         assert config1["default_provider"] == "anthropic"

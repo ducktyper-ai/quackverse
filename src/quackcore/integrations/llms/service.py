@@ -145,10 +145,18 @@ class LLMIntegration(BaseIntegrationService):
 
             try:
                 config_result = self.config_provider.load_config(self.config_path)
-                if not config_result.success or not config_result.content:
-                    self.config = self.config_provider.get_default_config()
+
+                # Handle both ConfigResult and DataResult
+                if config_result.success:
+                    if hasattr(config_result, "content") and config_result.content:
+                        self.config = config_result.content
+                    elif hasattr(config_result, "data") and config_result.data:
+                        self.config = config_result.data
+                    else:
+                        self.config = self.config_provider.get_default_config()
                 else:
-                    self.config = config_result.content
+                    self.config = self.config_provider.get_default_config()
+
             except Exception as e:
                 # If loading fails, use default config
                 self.logger.warning(f"Failed to load config, using defaults: {e}")
