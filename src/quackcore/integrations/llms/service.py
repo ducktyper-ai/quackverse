@@ -109,7 +109,7 @@ class LLMIntegration(BaseIntegrationService):
             elif provider == "anthropic":
                 client_args["api_base"] = provider_config.get("api_base")
 
-            # Import here to avoid circular import
+            # Import the registry functions for getting an LLM client
             from quackcore.integrations.llms.registry import get_llm_client
 
             self.client = get_llm_client(**client_args)

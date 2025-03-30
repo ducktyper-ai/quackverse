@@ -96,7 +96,7 @@ class TestLLMService:
         """Test initializing the LLM integration."""
         # Test successful initialization
         with patch(
-            "quackcore.integrations.llms.service.get_llm_client"
+                "quackcore.integrations.llms.registry.get_llm_client"
         ) as mock_get_client:
             mock_client = MagicMock()
             mock_get_client.return_value = mock_client

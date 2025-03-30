@@ -95,21 +95,32 @@ class TestLLMRegistry:
 
     def test_get_llm_client_anthropic(self) -> None:
         """Test getting the Anthropic client."""
+        # Patch where the AnthropicClient is *imported* in the registry module
         with patch(
-            "quackcore.integrations.llms.registry.get_llm_client"
-        ) as mock_get_client:
+                "quackcore.integrations.llms.registry._LLM_REGISTRY"
+        ) as mock_registry:
+            # Create a mock client instance
             mock_instance = MagicMock()
-            mock_get_client.return_value = mock_instance
+            mock_client_class = MagicMock(return_value=mock_instance)
 
+            # Set up the dictionary-like behavior correctly
+            mock_registry.__getitem__.return_value = mock_client_class
+            mock_registry.__contains__.return_value = True  # Make 'in' operator work
+
+            # Import the real function
+            from quackcore.integrations.llms.registry import get_llm_client
+
+            # Call get_llm_client with the "anthropic" provider
             client = get_llm_client(
                 "anthropic", model="claude-3-opus", api_key="test-key"
             )
 
+            # Check if our mock was returned and the class was called with correct args
             assert client == mock_instance
-            mock_get_client.assert_called_once_with(
-                "anthropic", model="claude-3-opus", api_key="test-key"
+            mock_client_class.assert_called_once_with(
+                model="claude-3-opus", api_key="test-key"
             )
-
+            
     def test_get_llm_client_mock(self) -> None:
         """Test getting the Mock client."""
         client = get_llm_client("mock", script=["Test response"])
