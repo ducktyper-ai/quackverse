@@ -83,8 +83,8 @@ test: install-dev ## Run tests with coverage
 	$(PYTHON) -m pytest $(TEST_PATH) $(PYTEST_ARGS) --cov=src --cov-report=term-missing
 
 .PHONY: test-module
-test-integrations: install-dev ## Run only integration tests with coverage
-	$(PYTHON) -m pytest tests/test_integrations $(PYTEST_ARGS) --cov=src --cov-report=term-missing
+test-module: install-dev ## Run only integration tests with coverage
+	$(PYTHON) -m pytest tests/test_integrations/pandoc $(PYTEST_ARGS) --cov=src --cov-report=term-missing
 
 .PHONY: format
 format: ## Format code with ruff
