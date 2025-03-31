@@ -7,27 +7,55 @@ handling configuration, client initialization, and conversation management.
 """
 
 import logging
+import importlib.util
 from collections.abc import Callable, Sequence
 from typing import cast
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.integrations.core.base import BaseIntegrationService
 from quackcore.integrations.core.results import IntegrationResult
-from quackcore.integrations.llms.clients import LLMClient
+from quackcore.integrations.llms.clients import LLMClient, MockLLMClient
 from quackcore.integrations.llms.config import LLMConfig, LLMConfigProvider
 from quackcore.integrations.llms.models import ChatMessage, LLMOptions
+
+
+def check_llm_dependencies() -> tuple[bool, str, list[str]]:
+    """
+    Check if LLM dependencies are available.
+
+    Returns:
+        tuple[bool, str, list[str]]: Success status, message, and list of available providers
+    """
+    available_providers = []
+
+    # Check for OpenAI
+    if importlib.util.find_spec("openai") is not None:
+        available_providers.append("openai")
+
+    # Check for Anthropic
+    if importlib.util.find_spec("anthropic") is not None:
+        available_providers.append("anthropic")
+
+    # Always add MockLLM as it has no external dependencies
+    available_providers.append("mock")
+
+    if not available_providers or (
+            len(available_providers) == 1 and available_providers[0] == "mock"):
+        return False, "No LLM providers available. Install OpenAI or Anthropic package.", available_providers
+
+    return True, f"Available LLM providers: {', '.join(available_providers)}", available_providers
 
 
 class LLMIntegration(BaseIntegrationService):
     """Integration service for LLMs."""
 
     def __init__(
-        self,
-        provider: str | None = None,
-        model: str | None = None,
-        api_key: str | None = None,
-        config_path: str | None = None,
-        log_level: int = logging.INFO,
+            self,
+            provider: str | None = None,
+            model: str | None = None,
+            api_key: str | None = None,
+            config_path: str | None = None,
+            log_level: int = logging.INFO,
     ) -> None:
         """
         Initialize the LLM integration service.
@@ -46,6 +74,7 @@ class LLMIntegration(BaseIntegrationService):
         self.model = model
         self.api_key = api_key
         self.client: LLMClient | None = None
+        self._using_mock = False
 
     @property
     def name(self) -> str:
@@ -81,11 +110,37 @@ class LLMIntegration(BaseIntegrationService):
             if not init_result.success:
                 return init_result
 
+            # Check available LLM providers
+            deps_available, deps_message, available_providers = check_llm_dependencies()
+            self.logger.info(deps_message)
+
             # Extract and validate config
             llm_config = self._extract_config()
 
             # Determine provider
-            provider = self.provider or llm_config.get("default_provider", "openai")
+            requested_provider = self.provider or llm_config.get("default_provider",
+                                                                 "openai")
+
+            # Fall back to an available provider if the requested one is not available
+            provider = requested_provider
+            if provider not in available_providers:
+                # If we have any real providers, use the first one
+                for p in ["openai", "anthropic"]:
+                    if p in available_providers:
+                        provider = p
+                        self.logger.warning(
+                            f"Requested provider '{requested_provider}' not available. "
+                            f"Using '{provider}' instead."
+                        )
+                        break
+                else:
+                    # Fall back to mock if no real providers are available
+                    provider = "mock"
+                    self._using_mock = True
+                    self.logger.warning(
+                        f"Requested provider '{requested_provider}' not available and no "
+                        f"other LLM providers found. Using MockLLMClient instead."
+                    )
 
             # Get provider-specific config
             provider_config = cast(dict, llm_config.get(provider, {}))
@@ -109,14 +164,26 @@ class LLMIntegration(BaseIntegrationService):
             elif provider == "anthropic":
                 client_args["api_base"] = provider_config.get("api_base")
 
-            # Import the registry functions for getting an LLM client
-            from quackcore.integrations.llms.registry import get_llm_client
+            try:
+                # Import the registry functions for getting an LLM client
+                from quackcore.integrations.llms.registry import get_llm_client
+                self.client = get_llm_client(**client_args)
+            except QuackIntegrationError as e:
+                # If we can't initialize the requested client, fall back to MockLLMClient
+                self.logger.warning(f"Failed to initialize {provider} client: {e}")
+                self.logger.warning("Falling back to MockLLMClient")
 
-            self.client = get_llm_client(**client_args)
+                # Create a mock client with default responses
+                self.client = MockLLMClient()
+                self._using_mock = True
+
             self._initialized = True
 
             return IntegrationResult.success_result(
-                message=f"LLM integration initialized successfully with provider: {provider}"
+                message=(
+                    f"LLM integration initialized successfully with provider: {provider}"
+                    f"{' (using mock client)' if self._using_mock else ''}"
+                )
             )
 
         except QuackIntegrationError as e:
@@ -170,10 +237,10 @@ class LLMIntegration(BaseIntegrationService):
             raise QuackIntegrationError(f"Invalid LLM configuration: {e}")
 
     def chat(
-        self,
-        messages: Sequence[ChatMessage] | Sequence[dict],
-        options: LLMOptions | None = None,
-        callback: Callable[[str], None] | None = None,
+            self,
+            messages: Sequence[ChatMessage] | Sequence[dict],
+            options: LLMOptions | None = None,
+            callback: Callable[[str], None] | None = None,
     ) -> IntegrationResult[str]:
         """
         Send a chat completion request to the LLM.
@@ -192,10 +259,16 @@ class LLMIntegration(BaseIntegrationService):
         if not self.client:
             return IntegrationResult.error_result("LLM client not initialized")
 
-        return self.client.chat(messages, options, callback)
+        result = self.client.chat(messages, options, callback)
+
+        # Add a note if we're using the mock client
+        if self._using_mock and result.success:
+            result.message = f"{result.message or 'Success'} (using mock LLM)"
+
+        return result
 
     def count_tokens(
-        self, messages: Sequence[ChatMessage] | Sequence[dict]
+            self, messages: Sequence[ChatMessage] | Sequence[dict]
     ) -> IntegrationResult[int]:
         """
         Count the number of tokens in the messages.
@@ -212,7 +285,13 @@ class LLMIntegration(BaseIntegrationService):
         if not self.client:
             return IntegrationResult.error_result("LLM client not initialized")
 
-        return self.client.count_tokens(messages)
+        result = self.client.count_tokens(messages)
+
+        # Add a note if we're using the mock client
+        if self._using_mock and result.success:
+            result.message = f"{result.message or 'Success'} (using mock estimation)"
+
+        return result
 
     def get_client(self) -> LLMClient:
         """
@@ -228,3 +307,13 @@ class LLMIntegration(BaseIntegrationService):
             raise QuackIntegrationError("LLM client not initialized")
 
         return self.client
+
+    @property
+    def is_using_mock(self) -> bool:
+        """
+        Check if the service is using a mock client.
+
+        Returns:
+            bool: True if using a mock client, False otherwise
+        """
+        return self._using_mock

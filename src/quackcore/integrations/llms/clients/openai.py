@@ -9,6 +9,7 @@ and token counting with proper error handling and retry logic.
 import logging
 import os
 import sys
+import importlib.util
 from collections.abc import Callable
 from typing import Any
 
@@ -22,17 +23,17 @@ class OpenAIClient(LLMClient):
     """OpenAI LLM client implementation."""
 
     def __init__(
-        self,
-        model: str | None = None,
-        api_key: str | None = None,
-        api_base: str | None = None,
-        organization: str | None = None,
-        timeout: int = 60,
-        retry_count: int = 3,
-        initial_retry_delay: float = 1.0,
-        max_retry_delay: float = 30.0,
-        log_level: int = logging.INFO,
-        **kwargs: Any,
+            self,
+            model: str | None = None,
+            api_key: str | None = None,
+            api_base: str | None = None,
+            organization: str | None = None,
+            timeout: int = 60,
+            retry_count: int = 3,
+            initial_retry_delay: float = 1.0,
+            max_retry_delay: float = 30.0,
+            log_level: int = logging.INFO,
+            **kwargs: Any,
     ) -> None:
         """
         Initialize the OpenAI client.
@@ -51,6 +52,26 @@ class OpenAIClient(LLMClient):
         self._organization = organization
         self._client = None
 
+        # Check at initialization time if the OpenAI package is available
+        self._check_openai_package()
+
+    def _check_openai_package(self) -> None:
+        """
+        Check if the OpenAI package is installed and available.
+
+        Raises:
+            QuackIntegrationError: If OpenAI package is not installed
+        """
+        # Use importlib.util to check if the package is available
+        openai_spec = importlib.util.find_spec("openai")
+        if openai_spec is None:
+            self.logger.error("OpenAI package not installed")
+            raise QuackIntegrationError(
+                "OpenAI package not installed. Please install it with: pip install openai"
+            )
+        else:
+            self.logger.debug("OpenAI package is available")
+
     def _get_client(self) -> Any:
         """
         Get the OpenAI client instance.
@@ -63,9 +84,18 @@ class OpenAIClient(LLMClient):
             try:
                 # Ensure the openai module is available
                 if "openai" not in sys.modules or sys.modules["openai"] is None:
-                    raise ImportError(
-                        "OpenAI package not installed. Please install it with: pip install openai"
-                    )
+                    # Try to import it explicitly
+                    try:
+                        import openai
+                    except ImportError:
+                        raise ImportError(
+                            "OpenAI package not installed. Please install it with: pip install openai"
+                        )
+                else:
+                    # If it's already imported, get it from sys.modules
+                    import openai
+
+                # Import OpenAI client
                 from openai import OpenAI
 
                 # Get API key from provided value or from environment variable
@@ -81,8 +111,15 @@ class OpenAIClient(LLMClient):
 
                 self._client = OpenAI(**kwargs)
             except ImportError as e:
+                self.logger.error(f"Failed to import OpenAI package: {e}")
                 raise QuackIntegrationError(
-                    f"Failed to import OpenAI package: {e}",
+                    f"Failed to import OpenAI package: {e}. Please install it with: pip install openai",
+                    original_error=e,
+                ) from e
+            except Exception as e:
+                self.logger.error(f"Error initializing OpenAI client: {e}")
+                raise QuackIntegrationError(
+                    f"Error initializing OpenAI client: {e}",
                     original_error=e,
                 ) from e
 
@@ -98,6 +135,7 @@ class OpenAIClient(LLMClient):
         """
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
+            self.logger.error("OpenAI API key not provided in environment")
             raise QuackIntegrationError(
                 "OpenAI API key not provided. "
                 "Please provide it as an argument or set the OPENAI_API_KEY environment variable."
@@ -117,10 +155,10 @@ class OpenAIClient(LLMClient):
         return self._model
 
     def _chat_with_provider(
-        self,
-        messages: list[ChatMessage],
-        options: LLMOptions,
-        callback: Callable[[str], None] | None = None,
+            self,
+            messages: list[ChatMessage],
+            options: LLMOptions,
+            callback: Callable[[str], None] | None = None,
     ) -> IntegrationResult[str]:
         """
         Send a chat completion request to the OpenAI API.
@@ -163,23 +201,22 @@ class OpenAIClient(LLMClient):
                 return IntegrationResult.success_result(result)
 
         except ImportError as e:
+            self.logger.error(f"Failed to import OpenAI package: {e}")
             raise QuackIntegrationError(
-                f"Failed to import OpenAI package: {e}",
+                f"Failed to import OpenAI package: {e}. Please install it with: pip install openai",
                 original_error=e,
             ) from e
         except Exception as e:
             # Convert OpenAI errors to QuackApiError
             raise self._convert_error(e)
 
-    # src/quackcore/integrations/llms/clients/openai.py
-
     def _handle_streaming(
-        self,
-        client: Any,
-        model: str,
-        messages: list[dict],
-        params: dict,
-        callback: Callable[[str], None] | None,
+            self,
+            client: Any,
+            model: str,
+            messages: list[dict],
+            params: dict,
+            callback: Callable[[str], None] | None,
     ) -> str:
         """
         Handle streaming responses from the OpenAI API.
@@ -311,13 +348,18 @@ class OpenAIClient(LLMClient):
             )
 
     def _count_tokens_with_provider(
-        self, messages: list[ChatMessage]
+            self, messages: list[ChatMessage]
     ) -> IntegrationResult[int]:
         """
         Count the number of tokens in the messages using OpenAI's tokenizer.
         """
         try:
             try:
+                # Check if tiktoken is available
+                tiktoken_spec = importlib.util.find_spec("tiktoken")
+                if tiktoken_spec is None:
+                    raise ImportError("tiktoken package not installed")
+
                 import tiktoken
 
                 model = self.model
@@ -355,9 +397,9 @@ class OpenAIClient(LLMClient):
 
                 return IntegrationResult.success_result(token_count)
 
-            except ImportError:
+            except ImportError as e:
                 self.logger.warning(
-                    "tiktoken not installed. Using simple token estimation. "
+                    f"tiktoken not installed or error importing: {e}. Using simple token estimation. "
                     "Install tiktoken for more accurate counts: pip install tiktoken"
                 )
                 total_text = ""
