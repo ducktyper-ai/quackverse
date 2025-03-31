@@ -26,7 +26,7 @@ from quackcore.integrations.pandoc.operations import (
     verify_pandoc,
 )
 from quackcore.integrations.pandoc.protocols import PandocConversionProtocol
-from quackcore.logging import get_logger, LOG_LEVELS, LogLevel
+from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
 from quackcore.paths import resolver
 
 logger = get_logger(__name__)
@@ -42,10 +42,10 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
     """
 
     def __init__(
-            self,
-            config_path: str | Path | None = None,
-            output_dir: str | Path | None = None,
-            log_level: int = LOG_LEVELS[LogLevel.INFO],
+        self,
+        config_path: str | Path | None = None,
+        output_dir: str | Path | None = None,
+        log_level: int = LOG_LEVELS[LogLevel.INFO],
     ) -> None:
         """
         Initialize the Pandoc integration service.
@@ -130,7 +130,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
             return IntegrationResult.success_result(
                 message=f"Pandoc integration initialized successfully. "
-                        f"Version: {self._pandoc_version}"
+                f"Version: {self._pandoc_version}"
             )
 
         except Exception as e:
@@ -140,7 +140,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
     def html_to_markdown(
-            self, html_path: Path, output_path: Path | None = None
+        self, html_path: Path, output_path: Path | None = None
     ) -> IntegrationResult[Path]:
         """
         Convert HTML to Markdown.
@@ -188,7 +188,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
     def markdown_to_docx(
-            self, markdown_path: Path, output_path: Path | None = None
+        self, markdown_path: Path, output_path: Path | None = None
     ) -> IntegrationResult[Path]:
         """
         Convert Markdown to DOCX.
@@ -236,12 +236,12 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
     def convert_directory(
-            self,
-            input_dir: Path,
-            output_format: str,
-            output_dir: Path | None = None,
-            file_pattern: str | None = None,
-            recursive: bool = False,
+        self,
+        input_dir: Path,
+        output_format: str,
+        output_dir: Path | None = None,
+        file_pattern: str | None = None,
+        recursive: bool = False,
     ) -> IntegrationResult[list[Path]]:
         """
         Convert all files in a directory.
@@ -264,7 +264,11 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
 
             # Check if input directory exists
             input_dir_info = fs.service.get_file_info(input_dir)
-            if not input_dir_info.success or not input_dir_info.exists or not input_dir_info.is_dir:
+            if (
+                not input_dir_info.success
+                or not input_dir_info.exists
+                or not input_dir_info.is_dir
+            ):
                 return IntegrationResult.error_result(
                     f"Input directory does not exist or is not a directory: {input_dir}"
                 )
@@ -332,7 +336,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
     def _determine_conversion_params(
-            self, output_format: str, file_pattern: str | None
+        self, output_format: str, file_pattern: str | None
     ) -> tuple[str, str] | None:
         """
         Determine the source format and file extension pattern
@@ -353,11 +357,11 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
         return None
 
     def _create_conversion_tasks(
-            self,
-            files: Sequence[Path],
-            source_format: str,
-            output_format: str,
-            output_dir: Path,
+        self,
+        files: Sequence[Path],
+        source_format: str,
+        output_format: str,
+        output_dir: Path,
     ) -> list[ConversionTask]:
         """
         Create a list of conversion tasks from the found files.

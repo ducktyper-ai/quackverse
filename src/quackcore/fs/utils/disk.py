@@ -63,7 +63,7 @@ def is_path_writeable(path: str | Path) -> bool:
                 path_obj.rmdir()  # Clean up
             logger.debug(f"Path {path} is writeable (created and removed test objects)")
             return True
-        except (Exception) as e:
+        except Exception as e:
             logger.debug(f"Path {path} is not writeable: {e}")
             return False
 
@@ -78,7 +78,9 @@ def is_path_writeable(path: str | Path) -> bool:
             with open(test_file, "w") as _:
                 pass
             test_file.unlink()  # Clean up
-            logger.debug(f"Directory {path} is writeable (created and removed test file)")
+            logger.debug(
+                f"Directory {path} is writeable (created and removed test file)"
+            )
             return True
         except Exception as e:
             logger.debug(f"Directory {path} is not writeable: {e}")

@@ -152,8 +152,11 @@ class TestPandocModels:
         metrics.successful_conversions += 1
         metrics.total_attempts += 1
         metrics.conversion_times["file1.html"] = {"start": 1000.0, "end": 1002.5}
-        metrics.file_sizes["file1.html"] = {"original": 1024, "converted": 512,
-                                            "ratio": 0.5}
+        metrics.file_sizes["file1.html"] = {
+            "original": 1024,
+            "converted": 512,
+            "ratio": 0.5,
+        }
 
         assert metrics.total_attempts == 1
         assert metrics.successful_conversions == 1

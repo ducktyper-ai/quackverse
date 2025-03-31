@@ -12,6 +12,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from quackcore.errors import QuackFileNotFoundError, wrap_io_errors
+
 # Replace standard logging with quackcore.logging
 from quackcore.logging import get_logger
 
@@ -194,7 +195,9 @@ def normalize_path(path: str | Path) -> Path:
         try:
             cwd = Path.cwd()
         except FileNotFoundError:
-            cwd = Path.home()  # Fallback to the user's home directory if cwd is missing.
+            cwd = (
+                Path.home()
+            )  # Fallback to the user's home directory if cwd is missing.
             logger.debug(f"Current directory not found, using home directory: {cwd}")
 
         # If the path is not absolute, make it absolute relative to cwd.
@@ -337,7 +340,9 @@ def infer_module_from_path(
     if parts is None:
         parts = _get_relative_parts(path_obj, resolved_root)
     if parts is None:
-        logger.debug(f"Could not compute relative path, using file stem: {path_obj.stem}")
+        logger.debug(
+            f"Could not compute relative path, using file stem: {path_obj.stem}"
+        )
         return path_obj.stem
 
     # Remove file extension from the last part if it's a file.

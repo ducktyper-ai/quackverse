@@ -27,11 +27,11 @@ class FindOperationsMixin:
         raise NotImplementedError("This method should be overridden")
 
     def find_files(
-            self,
-            path: str | Path,
-            pattern: str,
-            recursive: bool = True,
-            include_hidden: bool = False,
+        self,
+        path: str | Path,
+        pattern: str,
+        recursive: bool = True,
+        include_hidden: bool = False,
     ) -> FindResult:
         """
         Find files matching a pattern.
@@ -63,7 +63,7 @@ class FindOperationsMixin:
                     pattern=pattern,
                     recursive=recursive,
                     error=f"Directory does not exist or "
-                          f"is not a directory: {resolved_path}",
+                    f"is not a directory: {resolved_path}",
                 )
 
             # Perform the search
@@ -87,7 +87,7 @@ class FindOperationsMixin:
                 directories=directories,
                 total_matches=total_matches,
                 message=f"Found {len(files)} files and {len(directories)} "
-                        f"directories matching '{pattern}'",
+                f"directories matching '{pattern}'",
             )
         except (QuackFileNotFoundError, QuackPermissionError, QuackIOError) as e:
             logger.error(f"Error finding files in {resolved_path}: {str(e)}")
@@ -126,7 +126,7 @@ class FindOperationsMixin:
         return valid
 
     def _perform_pattern_search(
-            self, directory: Path, pattern: str, recursive: bool, include_hidden: bool
+        self, directory: Path, pattern: str, recursive: bool, include_hidden: bool
     ) -> tuple[list[Path], list[Path]]:
         """
         Perform the actual search for files and directories matching a pattern.

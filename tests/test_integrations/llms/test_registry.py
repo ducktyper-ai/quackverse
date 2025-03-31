@@ -97,7 +97,7 @@ class TestLLMRegistry:
         """Test getting the Anthropic client."""
         # Patch where the AnthropicClient is *imported* in the registry module
         with patch(
-                "quackcore.integrations.llms.registry._LLM_REGISTRY"
+            "quackcore.integrations.llms.registry._LLM_REGISTRY"
         ) as mock_registry:
             # Create a mock client instance
             mock_instance = MagicMock()

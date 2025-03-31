@@ -79,12 +79,14 @@ class TestPandocService:
 
         # Setup mock for base class initialize
         with patch(
-                "quackcore.integrations.core.base.BaseIntegrationService.initialize") as mock_base_init:
+            "quackcore.integrations.core.base.BaseIntegrationService.initialize"
+        ) as mock_base_init:
             mock_base_init.return_value = IntegrationResult.success_result()
 
             # Setup mock for verify_pandoc
             with patch(
-                    "quackcore.integrations.pandoc.operations.verify_pandoc") as mock_verify:
+                "quackcore.integrations.pandoc.operations.verify_pandoc"
+            ) as mock_verify:
                 mock_verify.return_value = "2.11.4"
 
                 # Test initialization
@@ -103,12 +105,14 @@ class TestPandocService:
         """Test initialization with invalid configuration."""
         # Create a mock for base class initialize
         with patch(
-                "quackcore.integrations.core.base.BaseIntegrationService.initialize") as mock_base_init:
+            "quackcore.integrations.core.base.BaseIntegrationService.initialize"
+        ) as mock_base_init:
             mock_base_init.return_value = IntegrationResult.success_result()
 
             # Setup mock for PandocConfig to raise an exception
             with patch(
-                    "quackcore.integrations.pandoc.service.PandocConfig") as mock_config:
+                "quackcore.integrations.pandoc.service.PandocConfig"
+            ) as mock_config:
                 mock_config.side_effect = Exception("Invalid configuration")
 
                 # Test initialization
@@ -123,12 +127,14 @@ class TestPandocService:
         """Test initialization when pandoc verification fails."""
         # Create a mock for base class initialize
         with patch(
-                "quackcore.integrations.core.base.BaseIntegrationService.initialize") as mock_base_init:
+            "quackcore.integrations.core.base.BaseIntegrationService.initialize"
+        ) as mock_base_init:
             mock_base_init.return_value = IntegrationResult.success_result()
 
             # Setup mock for verify_pandoc to raise an error
             with patch(
-                    "quackcore.integrations.pandoc.operations.verify_pandoc") as mock_verify:
+                "quackcore.integrations.pandoc.operations.verify_pandoc"
+            ) as mock_verify:
                 mock_verify.side_effect = QuackIntegrationError("Pandoc not found")
 
                 # Test initialization
@@ -143,12 +149,14 @@ class TestPandocService:
         """Test initialization when directory creation fails."""
         # Create a mock for base class initialize
         with patch(
-                "quackcore.integrations.core.base.BaseIntegrationService.initialize") as mock_base_init:
+            "quackcore.integrations.core.base.BaseIntegrationService.initialize"
+        ) as mock_base_init:
             mock_base_init.return_value = IntegrationResult.success_result()
 
             # Setup mock for verify_pandoc
             with patch(
-                    "quackcore.integrations.pandoc.operations.verify_pandoc") as mock_verify:
+                "quackcore.integrations.pandoc.operations.verify_pandoc"
+            ) as mock_verify:
                 mock_verify.return_value = "2.11.4"
 
                 # Setup mock for directory creation to fail
@@ -287,11 +295,7 @@ class TestPandocService:
 
         # Test the method
         result = service.convert_directory(
-            Path("input_dir"),
-            "markdown",
-            Path("output_dir"),
-            "*.html",
-            True
+            Path("input_dir"), "markdown", Path("output_dir"), "*.html", True
         )
 
         # Assertions
@@ -303,10 +307,7 @@ class TestPandocService:
     def test_convert_directory_not_initialized(self):
         """Test directory conversion when service is not initialized."""
         service = PandocIntegration()
-        result = service.convert_directory(
-            Path("input_dir"),
-            "markdown"
-        )
+        result = service.convert_directory(Path("input_dir"), "markdown")
 
         assert result.success is False
         assert "not initialized" in result.error
@@ -317,10 +318,7 @@ class TestPandocService:
         service = self._create_initialized_service()
 
         # Test with invalid format
-        result = service.convert_directory(
-            Path("input_dir"),
-            "invalid_format"
-        )
+        result = service.convert_directory(Path("input_dir"), "invalid_format")
 
         # Assertions
         assert result.success is False
@@ -339,10 +337,7 @@ class TestPandocService:
         )
 
         # Test the method
-        result = service.convert_directory(
-            Path("input_dir"),
-            "markdown"
-        )
+        result = service.convert_directory(Path("input_dir"), "markdown")
 
         # Assertions
         assert result.success is False
@@ -354,7 +349,8 @@ class TestPandocService:
 
         # Test when pandoc is available
         with patch(
-                "quackcore.integrations.pandoc.operations.verify_pandoc") as mock_verify:
+            "quackcore.integrations.pandoc.operations.verify_pandoc"
+        ) as mock_verify:
             mock_verify.return_value = "2.11.4"
             assert service.is_pandoc_available() is True
 
@@ -373,7 +369,8 @@ class TestPandocService:
         # Test when version is not known and must be retrieved
         service._pandoc_version = None
         with patch(
-                "quackcore.integrations.pandoc.operations.verify_pandoc") as mock_verify:
+            "quackcore.integrations.pandoc.operations.verify_pandoc"
+        ) as mock_verify:
             mock_verify.return_value = "2.11.4"
             assert service.get_pandoc_version() == "2.11.4"
 

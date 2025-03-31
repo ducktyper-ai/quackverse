@@ -23,7 +23,7 @@ logger = get_logger(__name__)
 
 @wrap_io_errors
 def get_unique_filename(
-        directory: str | Path, filename: str, raise_if_exists: bool = False
+    directory: str | Path, filename: str, raise_if_exists: bool = False
 ) -> Path:
     """
     Generate a unique filename in the given directory.
@@ -159,7 +159,7 @@ def atomic_write(path: str | Path, content: str | bytes) -> Path:
 
 @wrap_io_errors
 def find_files_by_content(
-        directory: str | Path, text_pattern: str, recursive: bool = True
+    directory: str | Path, text_pattern: str, recursive: bool = True
 ) -> list[Path]:
     """
     Find files containing the given text pattern.

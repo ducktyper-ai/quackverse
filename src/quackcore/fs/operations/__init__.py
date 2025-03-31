@@ -8,8 +8,6 @@ with proper error handling and consistent return values.
 
 from typing import TypeVar
 
-from quackcore.logging import get_logger
-
 # Import utility functions directly into this namespace for backward compatibility
 # This will make patching work correctly in tests
 from quackcore.fs.utils import (
@@ -20,6 +18,7 @@ from quackcore.fs.utils import (
     safe_delete,
     safe_move,
 )
+from quackcore.logging import get_logger
 
 # Set up module-level logger
 logger = get_logger(__name__)
@@ -32,6 +31,7 @@ from .find_ops import FindOperationsMixin
 from .read_ops import ReadOperationsMixin
 from .serialization_ops import SerializationOperationsMixin
 from .write_ops import WriteOperationsMixin
+
 
 # Define the FileSystemOperations class properly with all mixins
 class FileSystemOperations(
@@ -52,6 +52,7 @@ class FileSystemOperations(
             base_dir: Optional base directory for relative paths
         """
         from pathlib import Path
+
         self.base_dir = Path(base_dir) if base_dir else Path.cwd()
         logger.debug(f"Initialized FileSystemOperations with base_dir: {self.base_dir}")
         initialize_mime_types()
@@ -67,6 +68,7 @@ class FileSystemOperations(
             Resolved Path object
         """
         return resolve_path(self.base_dir, path)
+
 
 # Re-export the FileSystemOperations class and utility functions for backward compatibility
 __all__ = [

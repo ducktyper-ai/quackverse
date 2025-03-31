@@ -56,6 +56,7 @@ class FileInfoOperationsMixin:
             owner = None
             try:
                 import pwd
+
                 owner = pwd.getpwuid(stats.st_uid).pw_name
                 logger.debug(f"Determined file owner for {resolved_path}: {owner}")
             except (ImportError, KeyError) as e:

@@ -10,14 +10,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from quackcore import fs
-
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs.results import FileInfoResult, OperationResult
 from quackcore.integrations.pandoc.config import PandocConfig
-
 from quackcore.integrations.pandoc.models import ConversionMetrics, FileInfo
 from quackcore.integrations.pandoc.operations import utils, verify_pandoc
-
 
 
 class TestPandocUtilities:
@@ -140,7 +137,7 @@ class TestPandocUtilities:
 
     # Fix check_file_size function
     def check_file_size(
-            converted_size: int, validation_min_size: int
+        converted_size: int, validation_min_size: int
     ) -> tuple[bool, list[str]]:
         """
         Check if the converted file meets the minimum file size.
@@ -170,7 +167,7 @@ class TestPandocUtilities:
 
     # Fix check_conversion_ratio function
     def check_conversion_ratio(
-            converted_size: int, original_size: int, threshold: float
+        converted_size: int, original_size: int, threshold: float
     ) -> tuple[bool, list[str]]:
         """
         Check if the converted file size is not drastically smaller than the original.
@@ -204,12 +201,12 @@ class TestPandocUtilities:
 
     # Fix track_metrics function
     def track_metrics(
-            filename: str,
-            start_time: float,
-            original_size: int,
-            converted_size: int,
-            metrics: ConversionMetrics,
-            config: PandocConfig,
+        filename: str,
+        start_time: float,
+        original_size: int,
+        converted_size: int,
+        metrics: ConversionMetrics,
+        config: PandocConfig,
     ) -> None:
         """
         Track conversion metrics.
@@ -290,8 +287,9 @@ class TestPandocUtilities:
             <a>No href</a>
         </body></html>
         """
-        is_valid, errors = utils.validate_html_structure(html_with_links,
-                                                         check_links=True)
+        is_valid, errors = utils.validate_html_structure(
+            html_with_links, check_links=True
+        )
         assert is_valid is False
         assert len(errors) == 1
         assert "Found 2 empty links in document" in errors[0]
@@ -330,8 +328,9 @@ class TestPandocUtilities:
             # Test with links check and incomplete document
             mock_doc.paragraphs = [MagicMock()]
             mock_doc.part = None
-            is_valid, errors = utils.validate_docx_structure(docx_path,
-                                                             check_links=True)
+            is_valid, errors = utils.validate_docx_structure(
+                docx_path, check_links=True
+            )
             assert is_valid is False
             assert len(errors) == 1
             assert "Document structure appears incomplete" in errors[0]
@@ -340,7 +339,9 @@ class TestPandocUtilities:
         with patch("docx.Document", side_effect=ImportError("No module named 'docx'")):
             docx_path = Path("/path/to/valid.docx")
             is_valid, errors = utils.validate_docx_structure(docx_path)
-            assert is_valid is True  # Shouldn't fail validation if module isn't installed
+            assert (
+                is_valid is True
+            )  # Shouldn't fail validation if module isn't installed
             assert len(errors) == 0
 
         # Test with other exceptions
@@ -448,8 +449,9 @@ class TestPandocUtilities:
         original_size = 1000
         threshold = 0.1  # 10%
 
-        is_valid, errors = utils.check_conversion_ratio(converted_size, original_size,
-                                                        threshold)
+        is_valid, errors = utils.check_conversion_ratio(
+            converted_size, original_size, threshold
+        )
         assert is_valid is True
         assert len(errors) == 0
 
@@ -458,8 +460,9 @@ class TestPandocUtilities:
         original_size = 1000
         threshold = 0.1  # 10%
 
-        is_valid, errors = utils.check_conversion_ratio(converted_size, original_size,
-                                                        threshold)
+        is_valid, errors = utils.check_conversion_ratio(
+            converted_size, original_size, threshold
+        )
         assert is_valid is False
         assert len(errors) == 1
         assert "less than 10% of the original file size" in errors[0]
@@ -469,7 +472,8 @@ class TestPandocUtilities:
         original_size = 0
         threshold = 0.1
 
-        is_valid, errors = utils.check_conversion_ratio(converted_size, original_size,
-                                                        threshold)
+        is_valid, errors = utils.check_conversion_ratio(
+            converted_size, original_size, threshold
+        )
         assert is_valid is True
         assert len(errors) == 0

@@ -73,7 +73,7 @@ class TeachingAwareFormatter(logging.Formatter):
         self,
         fmt: str | None = None,
         datefmt: str | None = None,
-        color_enabled: bool = True
+        color_enabled: bool = True,
     ):
         """
         Initialize the formatter with optional custom formats.
@@ -83,10 +83,7 @@ class TeachingAwareFormatter(logging.Formatter):
             datefmt: Custom date format string (optional)
             color_enabled: Whether to use ANSI color codes (default: True)
         """
-        super().__init__(
-            fmt or self.DEFAULT_FORMAT,
-            datefmt or self.DATE_FORMAT
-        )
+        super().__init__(fmt or self.DEFAULT_FORMAT, datefmt or self.DATE_FORMAT)
         self.color_enabled = color_enabled
 
     def format(self, record: logging.LogRecord) -> str:

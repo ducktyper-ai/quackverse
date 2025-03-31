@@ -186,9 +186,7 @@ class LLMConfigProvider(BaseConfigProvider):
             # Extract LLM-specific config
             llm_config = self._extract_config(result.content)
             return ConfigResult(
-                success=True,
-                content=llm_config,
-                config_path=result.config_path
+                success=True, content=llm_config, config_path=result.config_path
             )
 
         return result

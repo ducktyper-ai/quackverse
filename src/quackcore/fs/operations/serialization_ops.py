@@ -42,7 +42,7 @@ class SerializationOperationsMixin:
         raise NotImplementedError("This method should be overridden")
 
     def write_text(
-            self, path: str | Path, content: str, encoding: str = "utf-8", **kwargs
+        self, path: str | Path, content: str, encoding: str = "utf-8", **kwargs
     ):
         """Write text to a file."""
         # This method is implemented in WriteOperationsMixin
@@ -116,7 +116,7 @@ class SerializationOperationsMixin:
                 data=data,
                 format="yaml",
                 message=f"Successfully parsed YAML data "
-                        f"with {len(data)} top-level keys",
+                f"with {len(data)} top-level keys",
             )
         except (QuackFormatError, QuackValidationError, QuackIOError) as e:
             logger.error(f"Error reading YAML file {resolved_path}: {str(e)}")
@@ -140,7 +140,7 @@ class SerializationOperationsMixin:
             )
 
     def write_yaml(
-            self, path: str | Path, data: dict, atomic: bool = True
+        self, path: str | Path, data: dict, atomic: bool = True
     ) -> WriteResult:
         """
         Write data to a YAML file.
@@ -157,9 +157,7 @@ class SerializationOperationsMixin:
             error_msg = "PyYAML library not available. Cannot write YAML file."
             logger.error(error_msg)
             return WriteResult(
-                success=False,
-                path=self.resolve_path(path),
-                error=error_msg
+                success=False, path=self.resolve_path(path), error=error_msg
             )
 
         resolved_path = self.resolve_path(path)
@@ -246,7 +244,7 @@ class SerializationOperationsMixin:
                 data=data,
                 format="json",
                 message=f"Successfully parsed JSON data "
-                        f"with {len(data)} top-level keys",
+                f"with {len(data)} top-level keys",
             )
         except (QuackFormatError, QuackValidationError, QuackIOError) as e:
             logger.error(f"Error reading JSON file {resolved_path}: {str(e)}")
@@ -270,11 +268,11 @@ class SerializationOperationsMixin:
             )
 
     def write_json(
-            self,
-            path: str | Path,
-            data: dict,
-            atomic: bool = True,
-            indent: int = 2,
+        self,
+        path: str | Path,
+        data: dict,
+        atomic: bool = True,
+        indent: int = 2,
     ) -> WriteResult:
         """
         Write data to a JSON file.

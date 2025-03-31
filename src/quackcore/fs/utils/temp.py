@@ -43,9 +43,9 @@ def create_temp_directory(prefix: str = "quackcore_", suffix: str = "") -> Path:
 
 @wrap_io_errors
 def create_temp_file(
-        suffix: str = ".txt",
-        prefix: str = "quackcore_",
-        directory: str | Path | None = None,
+    suffix: str = ".txt",
+    prefix: str = "quackcore_",
+    directory: str | Path | None = None,
 ) -> Path:
     """
     Create a temporary file.

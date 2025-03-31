@@ -49,10 +49,10 @@ def verify_pandoc() -> str:
 
 
 def prepare_pandoc_args(
-        config: PandocConfig,
-        source_format: str,
-        target_format: str,
-        extra_args: list[str] | None = None,
+    config: PandocConfig,
+    source_format: str,
+    target_format: str,
+    extra_args: list[str] | None = None,
 ) -> list[str]:
     """
     Prepare pandoc conversion arguments.
@@ -98,7 +98,7 @@ def prepare_pandoc_args(
 
 
 def validate_html_structure(
-        content: str, check_links: bool = False
+    content: str, check_links: bool = False
 ) -> tuple[bool, list[str]]:
     """
     Validate HTML document structure.
@@ -142,7 +142,7 @@ def validate_html_structure(
 
 
 def validate_docx_structure(
-        docx_path: Path, check_links: bool = False
+    docx_path: Path, check_links: bool = False
 ) -> tuple[bool, list[str]]:
     """
     Validate DOCX document structure.
@@ -184,12 +184,12 @@ def validate_docx_structure(
 
 
 def track_metrics(
-        filename: str,
-        start_time: float,
-        original_size: int,
-        converted_size: int,
-        metrics: ConversionMetrics,
-        config: PandocConfig,
+    filename: str,
+    start_time: float,
+    original_size: int,
+    converted_size: int,
+    metrics: ConversionMetrics,
+    config: PandocConfig,
 ) -> None:
     """
     Track conversion metrics.
@@ -273,7 +273,7 @@ def get_file_info(path: Path, format_hint: str | None = None) -> FileInfo:
 
 
 def check_file_size(
-        converted_size: int, validation_min_size: int
+    converted_size: int, validation_min_size: int
 ) -> tuple[bool, list[str]]:
     """
     Check if the converted file meets the minimum file size.
@@ -302,7 +302,7 @@ def check_file_size(
 
 
 def check_conversion_ratio(
-        converted_size: int, original_size: int, threshold: float
+    converted_size: int, original_size: int, threshold: float
 ) -> tuple[bool, list[str]]:
     """
     Check if the converted file size is not drastically smaller than the original.

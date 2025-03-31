@@ -50,7 +50,11 @@ class WriteOperationsMixin:
         """
         # Import the utility functions to ensure we're using the patched version
         # This is critical for testing
-        from quackcore.fs.operations import atomic_write, ensure_directory, compute_checksum
+        from quackcore.fs.operations import (
+            atomic_write,
+            compute_checksum,
+            ensure_directory,
+        )
 
         resolved_path = self.resolve_path(path)
         logger.debug(
@@ -138,7 +142,11 @@ class WriteOperationsMixin:
             WriteResult with operation status
         """
         # Import the utility functions to ensure we're using the patched version
-        from quackcore.fs.operations import atomic_write, ensure_directory, compute_checksum
+        from quackcore.fs.operations import (
+            atomic_write,
+            compute_checksum,
+            ensure_directory,
+        )
 
         resolved_path = self.resolve_path(path)
         logger.debug(

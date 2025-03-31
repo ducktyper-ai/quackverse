@@ -217,7 +217,13 @@ class TestPandocConfigProvider:
         with patch("quackcore.integrations.pandoc.config.PandocConfig") as mock_config:
             mock_config.side_effect = ValidationError.from_exception_data(
                 "ValidationError",
-                [{"loc": ("output_dir",), "msg": "Invalid path", "type": "value_error"}],
+                [
+                    {
+                        "loc": ("output_dir",),
+                        "msg": "Invalid path",
+                        "type": "value_error",
+                    }
+                ],
             )
             assert provider.validate_config(valid_config) is False
 
@@ -245,17 +251,23 @@ class TestPandocConfigProvider:
         assert default_config["output_dir"] == Path("./output")
 
         # Verify default HTML to MD args
-        assert default_config["html_to_md_extra_args"] == ["--strip-comments", "--no-highlight"]
+        assert default_config["html_to_md_extra_args"] == [
+            "--strip-comments",
+            "--no-highlight",
+        ]
 
     def test_env_vars_override(self):
         """Test configuration from environment variables."""
         provider = PandocConfigProvider()
 
         # Set environment variables
-        with patch.dict(os.environ, {
-            "QUACK_PANDOC_OUTPUT_DIR": "/env/output",
-            "QUACK_PANDOC_HTML_TO_MD_EXTRA_ARGS": '["--env-arg"]',
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                "QUACK_PANDOC_OUTPUT_DIR": "/env/output",
+                "QUACK_PANDOC_HTML_TO_MD_EXTRA_ARGS": '["--env-arg"]',
+            },
+        ):
             # Mock load_from_environment to capture the environment variables
             with patch.object(provider, "load_from_environment") as mock_load_env:
                 mock_load_env.return_value = {
@@ -264,13 +276,15 @@ class TestPandocConfigProvider:
                 }
 
                 # Mock the base class's load_config method to use our mocked environment
-                with patch("quackcore.config.provider.BaseConfigProvider.load_config") as mock_load:
+                with patch(
+                    "quackcore.config.provider.BaseConfigProvider.load_config"
+                ) as mock_load:
                     mock_load.return_value = MagicMock(
                         success=True,
                         content={
                             "output_dir": "/env/output",
                             "html_to_md_extra_args": ["--env-arg"],
-                        }
+                        },
                     )
 
                     # Call load_config and check the result

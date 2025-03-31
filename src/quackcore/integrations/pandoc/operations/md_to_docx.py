@@ -70,7 +70,7 @@ def _validate_markdown_input(markdown_path: Path) -> int:
 
 
 def _convert_markdown_to_docx_once(
-        markdown_path: Path, output_path: Path, config: PandocConfig
+    markdown_path: Path, output_path: Path, config: PandocConfig
 ) -> None:
     """
     Perform a single conversion attempt from Markdown to DOCX using pandoc.
@@ -139,10 +139,10 @@ def _get_conversion_output(output_path: Path, start_time: float) -> tuple[float,
 
 
 def convert_markdown_to_docx(
-        markdown_path: Path,
-        output_path: Path,
-        config: PandocConfig,
-        metrics: ConversionMetrics | None = None,
+    markdown_path: Path,
+    output_path: Path,
+    config: PandocConfig,
+    metrics: ConversionMetrics | None = None,
 ) -> IntegrationResult[tuple[Path, ConversionDetails]]:
     """
     Convert a Markdown file to DOCX.
@@ -218,7 +218,7 @@ def convert_markdown_to_docx(
 
 
 def validate_conversion(
-        output_path: Path, input_path: Path, original_size: int, config: PandocConfig
+    output_path: Path, input_path: Path, original_size: int, config: PandocConfig
 ) -> list[str]:
     """
     Validate the converted DOCX document.
@@ -290,21 +290,21 @@ def _check_docx_metadata(docx_path: Path, source_path: Path, check_links: bool) 
 
         if hasattr(doc, "core_properties"):
             if (
-                    hasattr(doc.core_properties, "title")
-                    and doc.core_properties.title
-                    and source_filename in doc.core_properties.title
+                hasattr(doc.core_properties, "title")
+                and doc.core_properties.title
+                and source_filename in doc.core_properties.title
             ):
                 source_found = True
             elif (
-                    hasattr(doc.core_properties, "comments")
-                    and doc.core_properties.comments
-                    and source_filename in doc.core_properties.comments
+                hasattr(doc.core_properties, "comments")
+                and doc.core_properties.comments
+                and source_filename in doc.core_properties.comments
             ):
                 source_found = True
             elif (
-                    hasattr(doc.core_properties, "subject")
-                    and doc.core_properties.subject
-                    and source_filename in doc.core_properties.subject
+                hasattr(doc.core_properties, "subject")
+                and doc.core_properties.subject
+                and source_filename in doc.core_properties.subject
             ):
                 source_found = True
 

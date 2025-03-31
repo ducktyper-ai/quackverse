@@ -15,6 +15,7 @@ from typing import Any
 
 from .formatter import TeachingAwareFormatter
 
+
 # Define log levels enum for easy reference
 class LogLevel(str, Enum):
     DEBUG = "DEBUG"
@@ -57,7 +58,7 @@ def configure_logger(
     name: str | None = None,
     level: int | None = None,
     log_file: str | Path | None = None,
-    teaching_to_stdout: bool = True
+    teaching_to_stdout: bool = True,
 ) -> logging.Logger:
     """
     Configure and return a logger with the specified name.
@@ -83,7 +84,9 @@ def configure_logger(
         logger.setLevel(logger_level)
 
         # Console handler (stderr by default)
-        console_handler = logging.StreamHandler(sys.stdout if teaching_to_stdout else sys.stderr)
+        console_handler = logging.StreamHandler(
+            sys.stdout if teaching_to_stdout else sys.stderr
+        )
         console_handler.setFormatter(TeachingAwareFormatter())
         logger.addHandler(console_handler)
 

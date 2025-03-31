@@ -18,8 +18,8 @@ from quackcore.integrations.llms.models import (
     ChatMessage,
     FunctionCall,
     LLMOptions,
-    ToolCall,
     RoleType,
+    ToolCall,
 )
 from quackcore.integrations.llms.protocols import LLMProviderProtocol
 from quackcore.integrations.llms.registry import (

@@ -40,7 +40,8 @@ class ReadOperationsMixin:
                 content = f.read()
 
             logger.debug(
-                f"Successfully read {len(content)} characters from {resolved_path}")
+                f"Successfully read {len(content)} characters from {resolved_path}"
+            )
             return ReadResult(
                 success=True,
                 path=resolved_path,

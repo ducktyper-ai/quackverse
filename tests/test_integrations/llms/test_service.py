@@ -5,13 +5,14 @@ Tests for the LLM integration service.
 This module tests the main service class for LLM integration, including
 initialization, configuration, and client communication.
 """
+
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.fs import FileInfoResult, DataResult
+from quackcore.fs import DataResult, FileInfoResult
 from quackcore.integrations.core.results import ConfigResult, IntegrationResult
 from quackcore.integrations.llms.models import ChatMessage, LLMOptions, RoleType
 from quackcore.integrations.llms.service import LLMIntegration
@@ -44,9 +45,9 @@ class TestLLMService:
                     data={
                         "default_provider": "openai",
                         "timeout": 60,
-                        "openai": {"api_key": "test-key"}
+                        "openai": {"api_key": "test-key"},
                     },
-                    format="yaml"
+                    format="yaml",
                 )
                 mock_read_yaml.return_value = yaml_result
 
@@ -54,7 +55,7 @@ class TestLLMService:
                 service.config = {
                     "default_provider": "openai",
                     "timeout": 60,
-                    "openai": {"api_key": "test-key"}
+                    "openai": {"api_key": "test-key"},
                 }
 
                 # Mark as initialized to skip initialization
@@ -103,6 +104,7 @@ class TestLLMService:
                 assert service.api_key == "test-key"
                 assert service.config_path == "config.yaml"
                 assert service.logger.level == 20
+
     def test_name_and_version(self, llm_service: LLMIntegration) -> None:
         """Test the name and version properties."""
         assert llm_service.name == "LLM"
@@ -112,7 +114,7 @@ class TestLLMService:
         """Test initializing the LLM integration."""
         # Test successful initialization
         with patch(
-                "quackcore.integrations.llms.registry.get_llm_client"
+            "quackcore.integrations.llms.registry.get_llm_client"
         ) as mock_get_client:
             mock_client = MagicMock()
             mock_get_client.return_value = mock_client
@@ -144,8 +146,7 @@ class TestLLMService:
         # Set up for success case
         # Use ConfigResult instead of DataResult to match what's expected
         config_result = ConfigResult(
-            success=True,
-            content={"default_provider": "anthropic", "timeout": 30}
+            success=True, content={"default_provider": "anthropic", "timeout": 30}
         )
         mock_provider.load_config.return_value = config_result
 

@@ -121,7 +121,7 @@ class TestLLMConfigProvider:
             content={
                 "default_provider": "anthropic",
                 "timeout": 30,
-            }
+            },
         )
 
         # Replace the load_config method temporarily

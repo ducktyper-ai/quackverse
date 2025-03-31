@@ -46,7 +46,8 @@ from quackcore.fs.utils import (
 
 T = TypeVar("T")  # Generic type for flexible typing
 
-from quackcore.logging import get_logger, LOG_LEVELS, LogLevel
+from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
+
 
 class FileSystemService:
     """
@@ -57,7 +58,9 @@ class FileSystemService:
     """
 
     def __init__(
-        self, base_dir: str | Path | None = None, log_level: int = LOG_LEVELS[LogLevel.INFO]
+        self,
+        base_dir: str | Path | None = None,
+        log_level: int = LOG_LEVELS[LogLevel.INFO],
     ) -> None:
         """
         Initialize the filesystem service.

@@ -3,7 +3,7 @@
 from typing import TypeVar
 
 from quackcore.errors import QuackPluginError
-from quackcore.logging import get_logger, LOG_LEVELS, LogLevel
+from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
 from quackcore.plugins.protocols import (
     CommandPluginProtocol,
     ExtensionPluginProtocol,

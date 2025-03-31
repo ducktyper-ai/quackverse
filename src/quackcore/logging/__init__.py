@@ -21,7 +21,7 @@ Example:
         logger.info("[Teaching Mode] This explains how the algorithm works")
 """
 
-from .config import configure_logger, LOG_LEVELS, logging, LogLevel
+from .config import LOG_LEVELS, LogLevel, configure_logger, logging
 
 __all__ = ["logger", "get_logger", "LOG_LEVELS", "LogLevel"]
 

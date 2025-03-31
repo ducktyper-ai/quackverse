@@ -17,8 +17,11 @@ from quackcore.fs.results import FileInfoResult, OperationResult
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.converter import DocumentConverter
-from quackcore.integrations.pandoc.models import ConversionMetrics, ConversionTask, \
-    FileInfo
+from quackcore.integrations.pandoc.models import (
+    ConversionMetrics,
+    ConversionTask,
+    FileInfo,
+)
 
 
 class TestDocumentConverter:
@@ -57,7 +60,8 @@ class TestDocumentConverter:
     def converter(self, config, mock_fs):
         """Fixture to create a DocumentConverter instance for testing."""
         with patch(
-                "quackcore.integrations.pandoc.converter.verify_pandoc") as mock_verify:
+            "quackcore.integrations.pandoc.converter.verify_pandoc"
+        ) as mock_verify:
             mock_verify.return_value = "2.11.4"
 
             converter = DocumentConverter(config)
@@ -66,7 +70,8 @@ class TestDocumentConverter:
     def test_init(self, config, mock_fs):
         """Test initialization of the DocumentConverter."""
         with patch(
-                "quackcore.integrations.pandoc.converter.verify_pandoc") as mock_verify:
+            "quackcore.integrations.pandoc.converter.verify_pandoc"
+        ) as mock_verify:
             mock_verify.return_value = "2.11.4"
 
             converter = DocumentConverter(config)
@@ -79,7 +84,8 @@ class TestDocumentConverter:
     def test_init_pandoc_not_available(self, config):
         """Test initialization when pandoc is not available."""
         with patch(
-                "quackcore.integrations.pandoc.converter.verify_pandoc") as mock_verify:
+            "quackcore.integrations.pandoc.converter.verify_pandoc"
+        ) as mock_verify:
             mock_verify.side_effect = QuackIntegrationError("Pandoc not found")
 
             with pytest.raises(QuackIntegrationError) as excinfo:
@@ -95,7 +101,8 @@ class TestDocumentConverter:
 
         # Mock the get_file_info function to handle the input file
         with patch(
-                "quackcore.integrations.pandoc.operations.get_file_info") as mock_get_info:
+            "quackcore.integrations.pandoc.operations.get_file_info"
+        ) as mock_get_info:
             mock_get_info.return_value = FileInfo(
                 path=input_path,
                 format="html",
@@ -104,7 +111,8 @@ class TestDocumentConverter:
 
             # Mock the convert_html_to_markdown function
             with patch(
-                    "quackcore.integrations.pandoc.converter.convert_html_to_markdown") as mock_convert:
+                "quackcore.integrations.pandoc.converter.convert_html_to_markdown"
+            ) as mock_convert:
                 mock_convert.return_value = IntegrationResult.success_result(
                     (output_path, None),
                     message="Successfully converted HTML to Markdown",
@@ -120,7 +128,8 @@ class TestDocumentConverter:
                 mock_get_info.assert_called_once_with(input_path)
                 mock_convert.assert_called_once()
                 mock_fs.service.create_directory.assert_called_once_with(
-                    output_path.parent, exist_ok=True)
+                    output_path.parent, exist_ok=True
+                )
 
     def test_convert_file_markdown_to_docx(self, converter, mock_fs):
         """Test converting a Markdown file to DOCX."""
@@ -130,7 +139,8 @@ class TestDocumentConverter:
 
         # Mock the get_file_info function to handle the input file
         with patch(
-                "quackcore.integrations.pandoc.operations.get_file_info") as mock_get_info:
+            "quackcore.integrations.pandoc.operations.get_file_info"
+        ) as mock_get_info:
             mock_get_info.return_value = FileInfo(
                 path=input_path,
                 format="markdown",
@@ -139,7 +149,8 @@ class TestDocumentConverter:
 
             # Mock the convert_markdown_to_docx function
             with patch(
-                    "quackcore.integrations.pandoc.converter.convert_markdown_to_docx") as mock_convert:
+                "quackcore.integrations.pandoc.converter.convert_markdown_to_docx"
+            ) as mock_convert:
                 mock_convert.return_value = IntegrationResult.success_result(
                     (output_path, None),
                     message="Successfully converted Markdown to DOCX",
@@ -155,7 +166,8 @@ class TestDocumentConverter:
                 mock_get_info.assert_called_once_with(input_path)
                 mock_convert.assert_called_once()
                 mock_fs.service.create_directory.assert_called_once_with(
-                    output_path.parent, exist_ok=True)
+                    output_path.parent, exist_ok=True
+                )
 
     def test_convert_file_unsupported_format(self, converter, mock_fs):
         """Test converting to an unsupported format."""
@@ -165,7 +177,8 @@ class TestDocumentConverter:
 
         # Mock the get_file_info function to handle the input file
         with patch(
-                "quackcore.integrations.pandoc.operations.get_file_info") as mock_get_info:
+            "quackcore.integrations.pandoc.operations.get_file_info"
+        ) as mock_get_info:
             mock_get_info.return_value = FileInfo(
                 path=input_path,
                 format="markdown",
@@ -195,7 +208,8 @@ class TestDocumentConverter:
 
         # Mock the get_file_info function to handle the input file
         with patch(
-                "quackcore.integrations.pandoc.operations.get_file_info") as mock_get_info:
+            "quackcore.integrations.pandoc.operations.get_file_info"
+        ) as mock_get_info:
             mock_get_info.return_value = FileInfo(
                 path=input_path,
                 format="html",
@@ -209,8 +223,9 @@ class TestDocumentConverter:
             assert result.success is False
             assert "Failed to create output directory" in result.error
             mock_get_info.assert_called_once_with(input_path)
-            mock_fs.service.create_directory.assert_called_once_with(output_path.parent,
-                                                                     exist_ok=True)
+            mock_fs.service.create_directory.assert_called_once_with(
+                output_path.parent, exist_ok=True
+            )
 
     def test_convert_file_integration_error(self, converter, mock_fs):
         """Test conversion when an integration error occurs."""
@@ -220,7 +235,8 @@ class TestDocumentConverter:
 
         # Mock the get_file_info function to raise an error
         with patch(
-                "quackcore.integrations.pandoc.operations.get_file_info") as mock_get_info:
+            "quackcore.integrations.pandoc.operations.get_file_info"
+        ) as mock_get_info:
             mock_get_info.side_effect = QuackIntegrationError("File not found")
 
             # Test the conversion
@@ -315,8 +331,9 @@ class TestDocumentConverter:
             assert result.success is True
             assert len(result.content) == 2
             assert mock_convert.call_count == 2
-            mock_fs.service.create_directory.assert_called_with(output_dir,
-                                                                exist_ok=True)
+            mock_fs.service.create_directory.assert_called_with(
+                output_dir, exist_ok=True
+            )
 
     def test_convert_batch_partial_success(self, converter, mock_fs):
         """Test batch conversion with partial success."""
@@ -416,7 +433,9 @@ class TestDocumentConverter:
             assert result.success is False
             assert "All 1 conversion tasks failed" in result.message
             assert converter.metrics.successful_conversions == 0
-            assert converter.metrics.failed_conversions == 0  # Not incremented for unexpected errors
+            assert (
+                converter.metrics.failed_conversions == 0
+            )  # Not incremented for unexpected errors
             assert "file1.html" in converter.metrics.errors
 
     def test_validate_conversion_markdown(self, converter, mock_fs):
@@ -436,7 +455,9 @@ class TestDocumentConverter:
 
         # Mock read_text to return content for the Markdown file
         mock_fs.service.read_text.return_value.success = True
-        mock_fs.service.read_text.return_value.content = "# Sample Markdown\n\nThis is a sample markdown file."
+        mock_fs.service.read_text.return_value.content = (
+            "# Sample Markdown\n\nThis is a sample markdown file."
+        )
 
         # Get the extension
         mock_fs.get_extension.return_value = "md"
@@ -469,7 +490,8 @@ class TestDocumentConverter:
 
         # Mock validate_docx_structure
         with patch(
-                "quackcore.integrations.pandoc.operations.utils.validate_docx_structure") as mock_validate:
+            "quackcore.integrations.pandoc.operations.utils.validate_docx_structure"
+        ) as mock_validate:
             mock_validate.return_value = (True, [])
 
             # Test validation
@@ -478,8 +500,9 @@ class TestDocumentConverter:
             # Assertions
             assert result is True
             mock_fs.service.get_file_info.assert_called_with(output_path)
-            mock_validate.assert_called_once_with(output_path,
-                                                  converter.config.validation.check_links)
+            mock_validate.assert_called_once_with(
+                output_path, converter.config.validation.check_links
+            )
 
     def test_validate_conversion_output_not_exists(self, converter, mock_fs):
         """Test validation when output file doesn't exist."""

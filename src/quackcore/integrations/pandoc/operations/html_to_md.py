@@ -52,7 +52,8 @@ def _validate_input(html_path: Path, config: PandocConfig) -> int:
             read_result = fs.service.read_text(html_path)
             if not read_result.success:
                 raise QuackIntegrationError(
-                    f"Could not read HTML file: {read_result.error}")
+                    f"Could not read HTML file: {read_result.error}"
+                )
 
             html_content = read_result.content
             is_valid, html_errors = validate_html_structure(
@@ -106,12 +107,12 @@ def _attempt_conversion(html_path: Path, config: PandocConfig) -> str:
 
 
 def _write_and_validate_output(
-        cleaned_markdown: str,
-        output_path: Path,
-        input_path: Path,
-        original_size: int,
-        config: PandocConfig,
-        attempt_start: float,
+    cleaned_markdown: str,
+    output_path: Path,
+    input_path: Path,
+    original_size: int,
+    config: PandocConfig,
+    attempt_start: float,
 ) -> tuple[float, int, list[str]]:
     """
     Write the converted markdown to the output file and validate the conversion.
@@ -131,11 +132,13 @@ def _write_and_validate_output(
     dir_result = fs.service.create_directory(output_path.parent, exist_ok=True)
     if not dir_result.success:
         raise QuackIntegrationError(
-            f"Failed to create output directory: {dir_result.error}")
+            f"Failed to create output directory: {dir_result.error}"
+        )
 
     # Write the content
-    write_result = fs.service.write_text(output_path, cleaned_markdown,
-                                         encoding="utf-8")
+    write_result = fs.service.write_text(
+        output_path, cleaned_markdown, encoding="utf-8"
+    )
     if not write_result.success:
         raise QuackIntegrationError(
             f"Failed to write output file: {write_result.error}"
@@ -160,10 +163,10 @@ def _write_and_validate_output(
 
 
 def convert_html_to_markdown(
-        html_path: Path,
-        output_path: Path,
-        config: PandocConfig,
-        metrics: ConversionMetrics | None = None,
+    html_path: Path,
+    output_path: Path,
+    config: PandocConfig,
+    metrics: ConversionMetrics | None = None,
 ) -> IntegrationResult[tuple[Path, ConversionDetails]]:
     """
     Convert an HTML file to Markdown.
@@ -273,10 +276,10 @@ def post_process_markdown(markdown_content: str) -> str:
 
 
 def validate_conversion(
-        output_path: Path,
-        input_path: Path,
-        original_size: int,
-        config: PandocConfig,
+    output_path: Path,
+    input_path: Path,
+    original_size: int,
+    config: PandocConfig,
 ) -> list[str]:
     """
     Validate the converted markdown document.

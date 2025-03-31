@@ -27,8 +27,7 @@ class DirectoryOperationsMixin:
         raise NotImplementedError("This method should be overridden")
 
     def list_directory(
-            self, path: str | Path, pattern: str | None = None,
-            include_hidden: bool = False
+        self, path: str | Path, pattern: str | None = None, include_hidden: bool = False
     ) -> DirectoryInfoResult:
         """
         List contents of a directory.

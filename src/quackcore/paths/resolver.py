@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import TypeVar
 
 from quackcore.errors import QuackFileNotFoundError, wrap_io_errors
-from quackcore.logging import get_logger, LOG_LEVELS, LogLevel
+from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
 from quackcore.paths.context import ContentContext, ProjectContext
 from quackcore.paths.utils import (
     find_nearest_directory,

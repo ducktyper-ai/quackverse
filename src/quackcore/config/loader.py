@@ -14,8 +14,8 @@ import yaml
 
 from quackcore.config.models import QuackConfig
 from quackcore.errors import QuackConfigurationError, wrap_io_errors
-from quackcore.paths import resolver
 from quackcore.logging import get_logger
+from quackcore.paths import resolver
 
 T = TypeVar("T")  # Generic type for flexible typing
 

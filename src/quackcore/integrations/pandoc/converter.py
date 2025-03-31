@@ -61,7 +61,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
         return self._pandoc_version
 
     def convert_file(
-            self, input_path: Path, output_path: Path, output_format: str
+        self, input_path: Path, output_path: Path, output_format: str
     ) -> IntegrationResult[Path]:
         """
         Convert a file from one format to another.
@@ -126,7 +126,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             return IntegrationResult.error_result(f"Conversion error: {str(e)}")
 
     def convert_batch(
-            self, tasks: Sequence[ConversionTask], output_dir: Path | None = None
+        self, tasks: Sequence[ConversionTask], output_dir: Path | None = None
     ) -> IntegrationResult[list[Path]]:
         """
         Convert a batch of files.
@@ -217,7 +217,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             return IntegrationResult.error_result(
                 error=error_msg,
                 message=f"All {len(failed_files)} conversion "
-                        f"tasks failed. See logs for details.",
+                f"tasks failed. See logs for details.",
             )
 
     def validate_conversion(self, output_path: Path, input_path: Path) -> bool:
@@ -265,7 +265,8 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
                     read_result = fs.service.read_text(output_path, encoding="utf-8")
                     if not read_result.success:
                         logger.error(
-                            f"Failed to read markdown file: {read_result.error}")
+                            f"Failed to read markdown file: {read_result.error}"
+                        )
                         return False
                     return len(read_result.content.strip()) > 0
                 except Exception as e:
