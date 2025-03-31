@@ -16,7 +16,6 @@ from quackcore.errors import (
     QuackBaseAuthError,
     QuackIntegrationError,
 )
-from quackcore.fs import FileSystemOperations
 from quackcore.fs import service as fs
 from quackcore.integrations.core.base import BaseIntegrationService
 from quackcore.integrations.core.protocols import StorageIntegrationProtocol
@@ -34,6 +33,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
     """Integration service for Google Drive."""
 
     SCOPES: list[str] = [
+        "https://www.googleapis.com/auth/drive",
         "https://www.googleapis.com/auth/drive.file",
         "https://www.googleapis.com/auth/drive.metadata.readonly",
     ]
@@ -131,6 +131,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
 
             try:
                 credentials = self.auth_provider.get_credentials()
+
             except QuackBaseAuthError as auth_error:
                 self.logger.error(f"Authentication failed: {auth_error}")
                 return IntegrationResult.error_result(
@@ -375,7 +376,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             try:
                 file_metadata = (
                     self.drive_service.files()
-                    .get(file_id=remote_id, fields="name, mimeType")
+                    .get(fileId=remote_id, fields="name, mimeType")
                     .execute()
                 )
             except Exception as api_error:
@@ -395,7 +396,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
                 )
 
             try:
-                request = self.drive_service.files().get_media(file_id=remote_id)
+                request = self.drive_service.files().get_media(fileId=remote_id)
                 from googleapiclient.http import MediaIoBaseDownload
 
                 fh = io.BytesIO()
@@ -574,7 +575,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             permission = {"type": type_, "role": role, "allowFileDiscovery": True}
             try:
                 self.drive_service.permissions().create(
-                    file_id=file_id, body=permission, fields="id"
+                    fileId=file_id, body=permission, fields="id"
                 ).execute()
             except Exception as api_error:
                 raise QuackApiError(
@@ -614,7 +615,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             try:
                 file_metadata = (
                     self.drive_service.files()
-                    .get(file_id=file_id, fields="webViewLink, webContentLink")
+                    .get(fileId=file_id, fields="webViewLink, webContentLink")
                     .execute()
                 )
             except Exception as api_error:
@@ -661,10 +662,10 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
         try:
             try:
                 if permanent:
-                    self.drive_service.files().delete(file_id=file_id).execute()
+                    self.drive_service.files().delete(fileId=file_id).execute()
                 else:
                     self.drive_service.files().update(
-                        file_id=file_id, body={"trashed": True}
+                        fileId=file_id, body={"trashed": True}
                     ).execute()
             except Exception as api_error:
                 api_method = "files.delete" if permanent else "files.update"
@@ -689,4 +690,44 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             self.logger.error(f"Failed to delete file: {e}")
             return IntegrationResult.error_result(
                 f"Failed to delete file from Google Drive: {e}"
+            )
+
+    def get_file_info(
+            self, remote_id: str, fields: str | None = None
+    ) -> IntegrationResult[dict[str, Any]]:
+        """
+        Retrieve file metadata from Google Drive.
+
+        Args:
+            remote_id: The ID of the file in Google Drive
+            fields: Optional fields to retrieve (defaults to basic metadata)
+
+        Returns:
+            IntegrationResult containing file metadata
+        """
+        if init_error := self._ensure_initialized():
+            return init_error
+
+        try:
+            # Default fields if not specified
+            default_fields = (
+                "id,name,mimeType,parents,webViewLink,webContentLink,"
+                "size,createdTime,modifiedTime,shared,trashed"
+            )
+
+            file_metadata = (
+                self.drive_service.files()
+                .get(fileId=remote_id, fields=fields or default_fields)
+                .execute()
+            )
+
+            return IntegrationResult.success_result(
+                content=file_metadata,
+                message="File metadata retrieved successfully"
+            )
+
+        except Exception as api_error:
+            self.logger.error(f"Failed to retrieve file metadata: {api_error}")
+            return IntegrationResult.error_result(
+                f"Failed to retrieve file metadata: {api_error}"
             )
