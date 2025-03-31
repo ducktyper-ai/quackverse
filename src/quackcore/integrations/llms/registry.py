@@ -9,23 +9,19 @@ dynamic loading and access to different LLM implementations.
 from typing import Type
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.integrations.llms.clients import (
-    LLMClient,
-    MockLLMClient,
-)
 from quackcore.integrations.llms.clients.anthropic import AnthropicClient
+from quackcore.integrations.llms.clients.base import LLMClient
+from quackcore.integrations.llms.clients.mock import MockLLMClient
 from quackcore.integrations.llms.clients.ollama import OllamaClient
 from quackcore.integrations.llms.clients.openai import OpenAIClient
-from quackcore.integrations.llms.fallback import FallbackLLMClient
 from quackcore.logging import get_logger
 
 # Global registry of LLM clients
 _LLM_REGISTRY: dict[str, Type[LLMClient]] = {
     "openai": OpenAIClient,
     "anthropic": AnthropicClient,
-    "ollama": OllamaClient,  # Add Ollama to the registry
+    "ollama": OllamaClient,
     "mock": MockLLMClient,
-    "fallback": FallbackLLMClient,  # Add FallbackLLMClient to the registry
 }
 
 logger = get_logger(__name__)

@@ -14,7 +14,7 @@ from quackcore.integrations.core.base import BaseIntegrationService
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.llms.clients import LLMClient, MockLLMClient
 from quackcore.integrations.llms.config import LLMConfig, LLMConfigProvider
-from quackcore.integrations.llms.fallback import FallbackConfig, FallbackLLMClient
+from quackcore.integrations.llms.fallback import FallbackConfig
 from quackcore.integrations.llms.models import ChatMessage, LLMOptions
 from quackcore.logging import LogLevel, LOG_LEVELS
 
@@ -65,6 +65,7 @@ def check_llm_dependencies() -> tuple[bool, str, list[str]]:
 class LLMIntegration(BaseIntegrationService):
     """Integration service for LLMs."""
 
+
     def __init__(
             self,
             provider: str | None = None,
@@ -94,7 +95,7 @@ class LLMIntegration(BaseIntegrationService):
         self.client: LLMClient | None = None
         self._using_mock = False
         self._enable_fallback = enable_fallback
-        self._fallback_client: FallbackLLMClient | None = None
+        self._fallback_client = None  # Type hint removed to avoid circular imports
 
     @property
     def name(self) -> str:
@@ -310,7 +311,7 @@ class LLMIntegration(BaseIntegrationService):
         # Prepare model and API key maps
         model_map = {}
         api_key_map = {}
-        api_base_map = {}
+        provider_args = {}
 
         for provider in fallback_providers:
             provider_config = llm_config.get(provider, {})
@@ -331,8 +332,18 @@ class LLMIntegration(BaseIntegrationService):
                 # Otherwise, use the API key from the config
                 api_key_map[provider] = provider_config.get("api_key")
 
-            # Set API base for this provider
-            api_base_map[provider] = provider_config.get("api_base")
+            # Set provider-specific config
+            provider_args[provider] = {}
+
+            if provider == "openai":
+                provider_args[provider] = {
+                    "api_base": provider_config.get("api_base"),
+                    "organization": provider_config.get("organization"),
+                }
+            elif provider in ["anthropic", "ollama"]:
+                provider_args[provider] = {
+                    "api_base": provider_config.get("api_base"),
+                }
 
         # Common args for all providers
         common_args = {
@@ -344,6 +355,9 @@ class LLMIntegration(BaseIntegrationService):
 
         # Initialize the fallback client
         try:
+            # Import here to avoid circular imports
+            from quackcore.integrations.llms.fallback import FallbackLLMClient
+
             self._fallback_client = FallbackLLMClient(
                 fallback_config=fallback_config,
                 model_map=model_map,
@@ -352,19 +366,8 @@ class LLMIntegration(BaseIntegrationService):
                 **common_args,
             )
 
-            # Add provider-specific configurations via provider initialization
-            # This initializes individual providers upfront to catch any early errors
-            for provider in fallback_providers:
-                if provider == "openai":
-                    self._fallback_client._provider_args = {
-                        "api_base": api_base_map.get(provider),
-                        "organization": llm_config.get(provider, {}).get(
-                            "organization"),
-                    }
-                elif provider == "anthropic" or provider == "ollama":
-                    self._fallback_client._provider_args = {
-                        "api_base": api_base_map.get(provider),
-                    }
+            # Set provider-specific args
+            self._fallback_client._provider_args = provider_args
 
             # Set the fallback client as the main client
             self.client = self._fallback_client

@@ -8,6 +8,7 @@ degradation when primary providers are unavailable or fail.
 
 import time
 from collections.abc import Callable
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -15,8 +16,7 @@ from quackcore.errors import QuackApiError, QuackIntegrationError
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.llms.clients.base import LLMClient
 from quackcore.integrations.llms.models import ChatMessage, LLMOptions
-from quackcore.integrations.llms.registry import get_llm_client
-from quackcore.logging import LogLevel, LOG_LEVELS
+from quackcore.logging import get_logger, LogLevel, LOG_LEVELS
 
 
 class FallbackConfig(BaseModel):
@@ -68,7 +68,7 @@ class FallbackLLMClient(LLMClient):
             model_map: dict[str, str] | None = None,
             api_key_map: dict[str, str] | None = None,
             log_level: int = LOG_LEVELS[LogLevel.INFO],
-            **kwargs: object,
+            **kwargs: Any,
     ) -> None:
         """
         Initialize the fallback LLM client.
@@ -88,6 +88,10 @@ class FallbackLLMClient(LLMClient):
             **kwargs,
         )
 
+        self.logger = get_logger(
+            f"{self.__class__.__module__}.{self.__class__.__name__}")
+        self.logger.setLevel(log_level)
+
         # Use default config if none is provided
         self._fallback_config = fallback_config or FallbackConfig()
 
@@ -95,6 +99,7 @@ class FallbackLLMClient(LLMClient):
         self._model_map = model_map or {}
         self._api_key_map = api_key_map or {}
         self._common_kwargs = kwargs
+        self._provider_args = {}
 
         # Initialize client cache and provider status tracking
         self._client_cache: dict[str, LLMClient] = {}
@@ -173,20 +178,26 @@ class FallbackLLMClient(LLMClient):
         if provider in self._client_cache:
             return self._client_cache[provider]
 
-        # Initialize client arguments
-        client_args = {
-            "provider": provider,
-            "model": self._model_map.get(provider),
-            "api_key": self._api_key_map.get(provider),
-            "log_level": self.logger.level,  # Use the logger's level directly
-        }
-
-        # Add common arguments
-        client_args.update(self._common_kwargs)
-
         try:
+            # Import registry function inside method to avoid circular imports
+            from quackcore.integrations.llms.registry import get_llm_client
+
+            # Initialize client arguments
+            client_args = {
+                "model": self._model_map.get(provider),
+                "api_key": self._api_key_map.get(provider),
+                "log_level": self.logger.level,  # Use the logger's level directly
+            }
+
+            # Add common arguments
+            client_args.update(self._common_kwargs)
+
+            # Add provider-specific arguments
+            if provider in self._provider_args:
+                client_args.update(self._provider_args[provider])
+
             # Create client
-            client = get_llm_client(**client_args)
+            client = get_llm_client(provider=provider, **client_args)
 
             # Cache client
             self._client_cache[provider] = client
