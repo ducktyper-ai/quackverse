@@ -121,7 +121,13 @@ class LLMConfigProvider(BaseConfigProvider):
         Returns:
             dict[str, Any]: LLM-specific configuration
         """
-        # Look for llm section first
+        # Look for llm section in integrations section first
+        if "integrations" in config_data and isinstance(config_data["integrations"],
+                                                        dict):
+            if "llm" in config_data["integrations"]:
+                return config_data["integrations"]["llm"]
+
+        # Then look for llm section directly
         if "llm" in config_data:
             return config_data["llm"]
 
@@ -185,8 +191,56 @@ class LLMConfigProvider(BaseConfigProvider):
         if result.success and result.content:
             # Extract LLM-specific config
             llm_config = self._extract_config(result.content)
+
+            # Set up environment variables from config
+            self._setup_environment_variables(llm_config)
+
             return ConfigResult(
                 success=True, content=llm_config, config_path=result.config_path
             )
 
         return result
+
+    def _setup_environment_variables(self, config: dict[str, Any]) -> None:
+        """
+        Set up environment variables from configuration.
+
+        This ensures that API keys from the configuration are available
+        to the LLM providers' SDKs via environment variables.
+
+        Args:
+            config: LLM configuration dictionary
+        """
+        try:
+            # Set OpenAI API key in environment if provided and not already set
+            if "openai" in config and isinstance(config["openai"], dict):
+                openai_config = config["openai"]
+
+                if "api_key" in openai_config and openai_config["api_key"]:
+                    api_key = openai_config["api_key"]
+                    if not os.environ.get("OPENAI_API_KEY"):
+                        os.environ["OPENAI_API_KEY"] = api_key
+                        self.logger.debug(
+                            "Set OPENAI_API_KEY in environment from config")
+
+                if "organization" in openai_config and openai_config["organization"]:
+                    org_id = openai_config["organization"]
+                    if not os.environ.get("OPENAI_ORGANIZATION"):
+                        os.environ["OPENAI_ORGANIZATION"] = org_id
+                        self.logger.debug(
+                            "Set OPENAI_ORGANIZATION in environment from config")
+
+            # Set Anthropic API key in environment if provided and not already set
+            if "anthropic" in config and isinstance(config["anthropic"], dict):
+                anthropic_config = config["anthropic"]
+
+                if "api_key" in anthropic_config and anthropic_config["api_key"]:
+                    api_key = anthropic_config["api_key"]
+                    if not os.environ.get("ANTHROPIC_API_KEY"):
+                        os.environ["ANTHROPIC_API_KEY"] = api_key
+                        self.logger.debug(
+                            "Set ANTHROPIC_API_KEY in environment from config")
+
+        except Exception as e:
+            self.logger.warning(f"Error setting up environment variables: {e}")
+            # Non-fatal error - continue without environment variables

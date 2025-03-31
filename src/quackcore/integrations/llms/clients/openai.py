@@ -9,7 +9,6 @@ and token counting with proper error handling and retry logic.
 import logging
 import os
 import sys
-import importlib.util
 from collections.abc import Callable
 from typing import Any
 
@@ -52,25 +51,17 @@ class OpenAIClient(LLMClient):
         self._organization = organization
         self._client = None
 
-        # Check at initialization time if the OpenAI package is available
-        self._check_openai_package()
+        # If API key is provided, set it in environment so the OpenAI SDK can find it
+        if api_key and not os.environ.get("OPENAI_API_KEY"):
+            os.environ["OPENAI_API_KEY"] = api_key
+            self.logger.debug(
+                "Set OPENAI_API_KEY in environment from provided argument")
 
-    def _check_openai_package(self) -> None:
-        """
-        Check if the OpenAI package is installed and available.
-
-        Raises:
-            QuackIntegrationError: If OpenAI package is not installed
-        """
-        # Use importlib.util to check if the package is available
-        openai_spec = importlib.util.find_spec("openai")
-        if openai_spec is None:
-            self.logger.error("OpenAI package not installed")
-            raise QuackIntegrationError(
-                "OpenAI package not installed. Please install it with: pip install openai"
-            )
-        else:
-            self.logger.debug("OpenAI package is available")
+        # Set organization in environment if provided
+        if organization and not os.environ.get("OPENAI_ORGANIZATION"):
+            os.environ["OPENAI_ORGANIZATION"] = organization
+            self.logger.debug(
+                "Set OPENAI_ORGANIZATION in environment from provided argument")
 
     def _get_client(self) -> Any:
         """
@@ -84,18 +75,9 @@ class OpenAIClient(LLMClient):
             try:
                 # Ensure the openai module is available
                 if "openai" not in sys.modules or sys.modules["openai"] is None:
-                    # Try to import it explicitly
-                    try:
-                        import openai
-                    except ImportError:
-                        raise ImportError(
-                            "OpenAI package not installed. Please install it with: pip install openai"
-                        )
-                else:
-                    # If it's already imported, get it from sys.modules
-                    import openai
-
-                # Import OpenAI client
+                    raise ImportError(
+                        "OpenAI package not installed. Please install it with: pip install openai"
+                    )
                 from openai import OpenAI
 
                 # Get API key from provided value or from environment variable
@@ -111,15 +93,8 @@ class OpenAIClient(LLMClient):
 
                 self._client = OpenAI(**kwargs)
             except ImportError as e:
-                self.logger.error(f"Failed to import OpenAI package: {e}")
                 raise QuackIntegrationError(
-                    f"Failed to import OpenAI package: {e}. Please install it with: pip install openai",
-                    original_error=e,
-                ) from e
-            except Exception as e:
-                self.logger.error(f"Error initializing OpenAI client: {e}")
-                raise QuackIntegrationError(
-                    f"Error initializing OpenAI client: {e}",
+                    f"Failed to import OpenAI package: {e}",
                     original_error=e,
                 ) from e
 
@@ -135,7 +110,6 @@ class OpenAIClient(LLMClient):
         """
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
-            self.logger.error("OpenAI API key not provided in environment")
             raise QuackIntegrationError(
                 "OpenAI API key not provided. "
                 "Please provide it as an argument or set the OPENAI_API_KEY environment variable."
@@ -201,9 +175,8 @@ class OpenAIClient(LLMClient):
                 return IntegrationResult.success_result(result)
 
         except ImportError as e:
-            self.logger.error(f"Failed to import OpenAI package: {e}")
             raise QuackIntegrationError(
-                f"Failed to import OpenAI package: {e}. Please install it with: pip install openai",
+                f"Failed to import OpenAI package: {e}",
                 original_error=e,
             ) from e
         except Exception as e:
@@ -355,11 +328,6 @@ class OpenAIClient(LLMClient):
         """
         try:
             try:
-                # Check if tiktoken is available
-                tiktoken_spec = importlib.util.find_spec("tiktoken")
-                if tiktoken_spec is None:
-                    raise ImportError("tiktoken package not installed")
-
                 import tiktoken
 
                 model = self.model
@@ -397,9 +365,9 @@ class OpenAIClient(LLMClient):
 
                 return IntegrationResult.success_result(token_count)
 
-            except ImportError as e:
+            except ImportError:
                 self.logger.warning(
-                    f"tiktoken not installed or error importing: {e}. Using simple token estimation. "
+                    "tiktoken not installed. Using simple token estimation. "
                     "Install tiktoken for more accurate counts: pip install tiktoken"
                 )
                 total_text = ""
