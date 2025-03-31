@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field, field_validator
 from quackcore.config.models import LoggingConfig
 from quackcore.integrations.core import ConfigResult
 from quackcore.integrations.core.base import BaseConfigProvider
+from quackcore.integrations.llms.fallback import FallbackConfig
 
 
 class OpenAIConfig(BaseModel):
@@ -48,6 +49,15 @@ class AnthropicConfig(BaseModel):
     )
 
 
+class OllamaConfig(BaseModel):
+    """Configuration for Ollama API."""
+
+    api_base: str = Field(
+        "http://localhost:11434", description="Ollama API base URL"
+    )
+    default_model: str = Field("llama3", description="Default model to use")
+
+
 class LLMConfig(BaseModel):
     """Main configuration for LLM integration."""
 
@@ -57,7 +67,16 @@ class LLMConfig(BaseModel):
     anthropic: AnthropicConfig = Field(
         default_factory=AnthropicConfig, description="Anthropic configuration"
     )
+    ollama: OllamaConfig = Field(
+        default_factory=OllamaConfig, description="Ollama configuration"
+    )
     default_provider: str = Field("openai", description="Default LLM provider to use")
+    fallback: FallbackConfig | None = Field(
+        None, description="Configuration for fallback behavior"
+    )
+    enable_fallback: bool = Field(
+        True, description="Whether to enable fallback between providers"
+    )
     timeout: int = Field(60, description="Request timeout in seconds")
     retry_count: int = Field(3, description="Number of retries for failed requests")
     initial_retry_delay: float = Field(

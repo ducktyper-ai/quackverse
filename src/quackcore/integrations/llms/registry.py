@@ -10,18 +10,22 @@ from typing import Type
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.integrations.llms.clients import (
-    AnthropicClient,
     LLMClient,
     MockLLMClient,
-    OpenAIClient,
 )
+from quackcore.integrations.llms.clients.anthropic import AnthropicClient
+from quackcore.integrations.llms.clients.ollama import OllamaClient
+from quackcore.integrations.llms.clients.openai import OpenAIClient
+from quackcore.integrations.llms.fallback import FallbackLLMClient
 from quackcore.logging import get_logger
 
 # Global registry of LLM clients
 _LLM_REGISTRY: dict[str, Type[LLMClient]] = {
     "openai": OpenAIClient,
     "anthropic": AnthropicClient,
+    "ollama": OllamaClient,  # Add Ollama to the registry
     "mock": MockLLMClient,
+    "fallback": FallbackLLMClient,  # Add FallbackLLMClient to the registry
 }
 
 logger = get_logger(__name__)
@@ -40,16 +44,16 @@ def register_llm_client(name: str, client_class: Type[LLMClient]) -> None:
 
 
 def get_llm_client(
-    provider: str = "openai",
-    model: str | None = None,
-    api_key: str | None = None,
-    **kwargs,
+        provider: str = "openai",
+        model: str | None = None,
+        api_key: str | None = None,
+        **kwargs,
 ) -> LLMClient:
     """
     Get an LLM client instance.
 
     Args:
-        provider: Provider name (e.g., "openai", "anthropic", "mock")
+        provider: Provider name (e.g., "openai", "anthropic", "ollama", "mock")
         model: Model name to use
         api_key: API key for authentication
         **kwargs: Additional provider-specific arguments

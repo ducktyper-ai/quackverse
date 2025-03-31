@@ -6,13 +6,15 @@ This module provides a lightweight integration with Large Language Models (LLMs)
 offering a standardized interface for making chat completions across different
 LLM providers.
 """
-
-from quackcore.integrations.core.protocols import IntegrationProtocol
+from quackcore.integrations.core import IntegrationProtocol
 from quackcore.integrations.llms.clients import (
     LLMClient,
     MockLLMClient,
     OpenAIClient,
 )
+from quackcore.integrations.llms.clients.anthropic import AnthropicClient
+from quackcore.integrations.llms.clients.ollama import OllamaClient
+from quackcore.integrations.llms.fallback import FallbackConfig, FallbackLLMClient
 from quackcore.integrations.llms.config import LLMConfig, LLMConfigProvider
 from quackcore.integrations.llms.models import (
     ChatMessage,
@@ -31,10 +33,14 @@ __all__ = [
     # Main client classes
     "LLMClient",
     "OpenAIClient",
+    "AnthropicClient",
+    "OllamaClient",
     "MockLLMClient",
+    "FallbackLLMClient",
     # Configuration
     "LLMConfig",
     "LLMConfigProvider",
+    "FallbackConfig",
     # Models
     "ChatMessage",
     "FunctionCall",
