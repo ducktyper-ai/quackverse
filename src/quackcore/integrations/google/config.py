@@ -116,12 +116,14 @@ class GoogleConfigProvider(BaseConfigProvider):
             dict[str, Any]: Google service-specific configuration
         """
         result_config = {}
+        found_config = False
 
         # First check for nested integrations.google structure (shared settings)
         if "integrations" in config_data and "google" in config_data["integrations"]:
             base_google_config = config_data["integrations"]["google"]
             # Start with the shared Google configuration
             result_config.update(base_google_config)
+            found_config = True
 
             # Look for service-specific settings inside integrations.google.<service>
             service_specific = base_google_config.get(self.service, {})
@@ -135,10 +137,12 @@ class GoogleConfigProvider(BaseConfigProvider):
             service_config = config_data[service_key]
             # Override with direct service config
             result_config.update(service_config)
+            found_config = True
 
         # If not found, check top-level google section
         if "google" in config_data:
             google_config = config_data["google"]
+            found_config = True
 
             # Extract any shared Google settings not already in result_config
             for key, value in google_config.items():
@@ -151,6 +155,11 @@ class GoogleConfigProvider(BaseConfigProvider):
                 if isinstance(service_config, dict):
                     # Override with service-specific settings
                     result_config.update(service_config)
+
+        # If no configuration was found at all, return an empty dict
+        # This matches the expectation in the test case
+        if not found_config:
+            return {}
 
         # Ensure we have the required fields, or use defaults
         if not self._ensure_required_fields(result_config):
@@ -209,7 +218,7 @@ class GoogleConfigProvider(BaseConfigProvider):
         """
         required_fields = ["client_secrets_file", "credentials_file"]
         return all(field in config for field in required_fields)
-    
+
     def validate_config(self, config: dict[str, Any]) -> bool:
         """
         Validate Google service configuration using Pydantic models.
