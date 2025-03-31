@@ -73,12 +73,16 @@ class OpenAIClient(LLMClient):
         """
         if self._client is None:
             try:
-                # Ensure the openai module is available
-                if "openai" not in sys.modules or sys.modules["openai"] is None:
-                    raise ImportError(
-                        "OpenAI package not installed. Please install it with: pip install openai"
+                # More robust way to check if openai module is available
+                try:
+                    import openai
+                    from openai import OpenAI
+                except ImportError as e:
+                    raise QuackIntegrationError(
+                        f"OpenAI package not installed or cannot be imported: {e}. "
+                        "Please install it with: pip install openai",
+                        original_error=e,
                     )
-                from openai import OpenAI
 
                 # Get API key from provided value or from environment variable
                 if not self._api_key:
@@ -91,10 +95,25 @@ class OpenAIClient(LLMClient):
                 if self._organization:
                     kwargs["organization"] = self._organization
 
+                # Ensure the API key is also set in the environment
+                # This helps with certain OpenAI SDK versions/implementations
+                import os
+                if self._api_key and "OPENAI_API_KEY" not in os.environ:
+                    os.environ["OPENAI_API_KEY"] = self._api_key
+                    self.logger.debug("Set OPENAI_API_KEY in environment")
+
                 self._client = OpenAI(**kwargs)
+                self.logger.debug(
+                    f"Successfully created OpenAI client with model: {self.model}")
             except ImportError as e:
                 raise QuackIntegrationError(
-                    f"Failed to import OpenAI package: {e}",
+                    f"Failed to import OpenAI package: {e}. "
+                    "Please install it with: pip install openai",
+                    original_error=e,
+                ) from e
+            except Exception as e:
+                raise QuackIntegrationError(
+                    f"Failed to initialize OpenAI client: {e}",
                     original_error=e,
                 ) from e
 
