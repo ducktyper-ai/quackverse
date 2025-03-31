@@ -57,9 +57,9 @@ class GoogleAuthProvider(BaseAuthProvider):
             creds = self._load_existing_credentials()
 
             if (
-                creds
-                and getattr(creds, "expired", False)
-                and getattr(creds, "refresh_token", None)
+                    creds
+                    and getattr(creds, "expired", False)
+                    and getattr(creds, "refresh_token", None)
             ):
                 creds.refresh(Request())
                 self._save_credentials_to_file(creds)
@@ -74,10 +74,28 @@ class GoogleAuthProvider(BaseAuthProvider):
                     "No valid credentials found, starting authentication flow"
                 )
 
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    self.client_secrets_file, self.scopes
-                )
-                creds = flow.run_local_server(port=0)
+                # Extract the redirect URI from the client secrets file
+                redirect_uri = self._extract_redirect_uri_from_secrets()
+
+                if redirect_uri:
+                    # Use the configured redirect URI
+                    flow = InstalledAppFlow.from_client_secrets_file(
+                        self.client_secrets_file, self.scopes
+                    )
+
+                    # Parse the redirect URI to get the port
+                    import urllib.parse
+                    parsed_uri = urllib.parse.urlparse(redirect_uri)
+                    port = parsed_uri.port or 8080  # Default to 8080 if no port specified
+
+                    creds = flow.run_local_server(port=port)
+                else:
+                    # Fallback to default behavior if redirect URI can't be extracted
+                    flow = InstalledAppFlow.from_client_secrets_file(
+                        self.client_secrets_file, self.scopes
+                    )
+                    creds = flow.run_local_server(port=0)
+
                 self._save_credentials_to_file(creds)
 
             self.auth = creds
@@ -94,6 +112,39 @@ class GoogleAuthProvider(BaseAuthProvider):
                 message=None,
                 error=f"Failed to authenticate with Google: {str(e)}",
             )
+
+    def _extract_redirect_uri_from_secrets(self) -> str | None:
+        """
+        Extract the redirect URI from the client secrets file.
+
+        Returns:
+            str | None: The redirect URI or None if it couldn't be extracted
+        """
+        try:
+            json_result = fs.read_json(self.client_secrets_file)
+            if not json_result.success:
+                self.logger.warning(
+                    f"Failed to read client secrets: {json_result.error}")
+                return None
+
+            # Try web client configuration first (most common for installed apps)
+            if "web" in json_result.data and "redirect_uris" in json_result.data["web"]:
+                redirect_uris = json_result.data["web"]["redirect_uris"]
+                if redirect_uris and len(redirect_uris) > 0:
+                    return redirect_uris[0]
+
+            # Try installed client configuration
+            if "installed" in json_result.data and "redirect_uris" in json_result.data[
+                "installed"]:
+                redirect_uris = json_result.data["installed"]["redirect_uris"]
+                if redirect_uris and len(redirect_uris) > 0:
+                    return redirect_uris[0]
+
+            return None
+        except Exception as e:
+            self.logger.warning(
+                f"Failed to extract redirect URI from client secrets: {e}")
+            return None
 
     def _load_existing_credentials(self) -> Credentials | None:
         if not self.credentials_file:

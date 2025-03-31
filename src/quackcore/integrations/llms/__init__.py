@@ -19,6 +19,7 @@ from quackcore.integrations.llms.models import (
     FunctionCall,
     LLMOptions,
     ToolCall,
+    RoleType,
 )
 from quackcore.integrations.llms.protocols import LLMProviderProtocol
 from quackcore.integrations.llms.registry import (
@@ -39,6 +40,7 @@ __all__ = [
     "FunctionCall",
     "LLMOptions",
     "ToolCall",
+    "RoleType",
     # Protocols
     "LLMProviderProtocol",
     # Registry
