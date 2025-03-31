@@ -106,36 +106,110 @@ class GoogleConfigProvider(BaseConfigProvider):
         """
         Extract Google service configuration from the full config data.
 
+        Handles both shared Google settings and service-specific configuration
+        for services like Drive and Mail.
+
         Args:
             config_data: Full configuration data
 
         Returns:
             dict[str, Any]: Google service-specific configuration
         """
-        # Look for google_<service> section first
+        result_config = {}
+
+        # First check for nested integrations.google structure (shared settings)
+        if "integrations" in config_data and "google" in config_data["integrations"]:
+            base_google_config = config_data["integrations"]["google"]
+            # Start with the shared Google configuration
+            result_config.update(base_google_config)
+
+            # Look for service-specific settings inside integrations.google.<service>
+            service_specific = base_google_config.get(self.service, {})
+            if service_specific and isinstance(service_specific, dict):
+                # Override shared settings with service-specific ones
+                result_config.update(service_specific)
+
+        # Look for direct google_<service> section next
         service_key = f"google_{self.service}"
         if service_key in config_data:
-            return config_data[service_key]
+            service_config = config_data[service_key]
+            # Override with direct service config
+            result_config.update(service_config)
 
-        # If not found, look for general google section
-        google_config = config_data.get("google", {})
-        service_config = google_config.get(self.service, {})
+        # If not found, check top-level google section
+        if "google" in config_data:
+            google_config = config_data["google"]
 
-        # If service config exists as a subsection, merge it with google config
-        if service_config and isinstance(service_config, dict):
-            # Copy shared Google config
-            merged_config = {
-                k: v
-                for k, v in google_config.items()
-                if k != self.service and k not in ["mail", "drive"]
+            # Extract any shared Google settings not already in result_config
+            for key, value in google_config.items():
+                if key not in result_config and key != "mail" and key != "drive":
+                    result_config[key] = value
+
+            # Look for service-specific subkey (e.g., google.drive or google.mail)
+            if self.service in google_config:
+                service_config = google_config[self.service]
+                if isinstance(service_config, dict):
+                    # Override with service-specific settings
+                    result_config.update(service_config)
+
+        # Ensure we have the required fields, or use defaults
+        if not self._ensure_required_fields(result_config):
+            default_config = self.get_default_config()
+
+            # Only add defaults for missing fields
+            for key, value in default_config.items():
+                if key not in result_config:
+                    result_config[key] = value
+
+        # Add service-specific defaults if needed
+        self._add_service_specific_defaults(result_config)
+
+        return result_config
+
+    def _add_service_specific_defaults(self, config: dict[str, Any]) -> None:
+        """
+        Add service-specific default settings if they're missing.
+
+        Args:
+            config: Configuration dictionary to enhance
+        """
+        if self.service == "drive":
+            defaults = {
+                "shared_folder_id": None,
+                "team_drive_id": None,
+                "default_share_access": "reader",
+                "public_sharing": True,
             }
-            # Override with service-specific config
-            merged_config.update(service_config)
-            return merged_config
+        elif self.service == "mail":
+            defaults = {
+                "gmail_labels": [],
+                "gmail_days_back": 7,
+                "gmail_user_id": "me",
+                "storage_path": "output/gmail",
+                "include_subject": False,
+                "include_sender": False,
+            }
+        else:
+            return
 
-        # If it's not a nested config, just return the google section
-        return google_config
+        # Only add defaults for missing keys
+        for key, value in defaults.items():
+            if key not in config:
+                config[key] = value
 
+    def _ensure_required_fields(self, config: dict[str, Any]) -> bool:
+        """
+        Ensure that the configuration has the required fields.
+
+        Args:
+            config: Configuration dictionary to check
+
+        Returns:
+            bool: True if the configuration has all required fields
+        """
+        required_fields = ["client_secrets_file", "credentials_file"]
+        return all(field in config for field in required_fields)
+    
     def validate_config(self, config: dict[str, Any]) -> bool:
         """
         Validate Google service configuration using Pydantic models.
