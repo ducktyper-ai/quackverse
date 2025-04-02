@@ -10,6 +10,7 @@ from quackcore.fs.service.base import FileSystemService as BaseFileSystemService
 from quackcore.fs.service.directory_operations import DirectoryOperationsMixin
 from quackcore.fs.service.file_operations import FileOperationsMixin
 from quackcore.fs.service.path_operations import PathOperationsMixin
+from quackcore.fs.service.path_validation import PathValidationMixin
 from quackcore.fs.service.structured_data import StructuredDataMixin
 from quackcore.fs.service.utility_operations import UtilityOperationsMixin
 
@@ -20,6 +21,7 @@ class FileSystemService(
     DirectoryOperationsMixin,
     StructuredDataMixin,
     PathOperationsMixin,
+    PathValidationMixin,
     UtilityOperationsMixin,
 ):
     """

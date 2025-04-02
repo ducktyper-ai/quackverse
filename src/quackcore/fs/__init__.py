@@ -6,6 +6,7 @@ This package provides a robust filesystem abstraction with proper error handling
 standardized result objects, and comprehensive file operation capabilities.
 """
 
+# Import core components
 from quackcore.fs.operations import FileSystemOperations
 from quackcore.fs.results import (
     DataResult,
@@ -18,6 +19,8 @@ from quackcore.fs.results import (
 )
 from quackcore.fs.service.full_class import FileSystemService
 from quackcore.fs.service import service, create_service
+
+# Import utility functions
 from quackcore.fs.utils import (
     atomic_write,
     compute_checksum,
@@ -45,9 +48,24 @@ from quackcore.fs.utils import (
     split_path,
 )
 
-# Import these functions back from service package to maintain compatibility
-# with direct imports from fs package
+# Import standalone functions from service package
 from quackcore.fs.service.standalone import create_directory, get_file_info, read_yaml
+
+# Import path validation components
+from quackcore.fs.service.path_validation import PathInfo
+
+# Define path validation functions directly here for backward compatibility
+def get_path_info(path):
+    """Get information about a path's validity and format."""
+    return service.get_path_info(path)
+
+def is_valid_path(path):
+    """Check if a path has valid syntax."""
+    return service.is_valid_path(path)
+
+def normalize_path_with_info(path):
+    """Normalize a path and return detailed information."""
+    return service.normalize_path_with_info(path)
 
 __all__ = [
     # Main service class
@@ -94,4 +112,9 @@ __all__ = [
     "get_file_info",
     "create_directory",
     "read_yaml",
+    # Compatibility methods
+    "PathInfo",
+    "get_path_info",
+    "is_valid_path",
+    "normalize_path_with_info",
 ]
