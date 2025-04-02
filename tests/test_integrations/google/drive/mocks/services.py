@@ -3,8 +3,13 @@
 Mock service objects for Google Drive testing.
 """
 
-from typing import Any
+import io
+import logging
+from pathlib import Path
+from typing import Any, Optional
 
+from quackcore.fs.results import OperationResult, WriteResult
+from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.google.drive.protocols import (
     DriveFilesResource,
     DriveService,
@@ -27,6 +32,8 @@ class MockDriveService(DriveService):
         """
         self._files = files_resource or MockDriveFilesResource()
         self.files_call_count = 0
+        self._initialized = True  # Default to initialized for testing
+        self.logger = logging.getLogger("mock_drive_service")
 
     def files(self) -> DriveFilesResource:
         """
@@ -38,11 +45,95 @@ class MockDriveService(DriveService):
         self.files_call_count += 1
         return self._files
 
+    def _ensure_initialized(self) -> IntegrationResult | None:
+        """
+        Check if the service is initialized.
+
+        Returns:
+            IntegrationResult: Error result if not initialized, None otherwise.
+        """
+        if not self._initialized:
+            return IntegrationResult.error_result("Service not initialized")
+        return None
+
+    def download_file(
+            self, remote_id: str, local_path: Optional[str] = None
+    ) -> IntegrationResult[str]:
+        """
+        Mock implementation of download_file to match the real service.
+
+        Args:
+            remote_id: ID of the file to download.
+            local_path: Optional local path to save the file.
+
+        Returns:
+            IntegrationResult with the local file path.
+        """
+        if init_error := self._ensure_initialized():
+            return init_error
+
+        try:
+            # Get metadata using the mock files resource
+            try:
+                file_metadata = self.files().get(fileId=remote_id).execute()
+            except Exception as api_error:
+                return IntegrationResult.error_result(
+                    f"Failed to get file metadata: {api_error}"
+                )
+
+            # Set default download path if not provided
+            if not local_path:
+                local_path = f"/tmp/{file_metadata.get('name', 'downloaded_file')}"
+
+            # Get file content using get_media
+            try:
+                request = self.files().get_media(fileId=remote_id)
+                # In a real implementation, we'd download the file,
+                # but for the mock we'll just simulate it
+                mock_content = b"Mock file content for testing"
+
+                # Return success result
+                return IntegrationResult.success_result(
+                    content=local_path,
+                    message=f"File downloaded successfully to {local_path}",
+                )
+            except Exception as download_error:
+                return IntegrationResult.error_result(
+                    f"Failed to download file: {download_error}"
+                )
+
+        except Exception as e:
+            return IntegrationResult.error_result(
+                f"Failed to download file: {e}"
+            )
+
+    def _resolve_download_path(
+            self, file_metadata: dict[str, Any], local_path: str | None
+    ) -> str:
+        """
+        Mock implementation of _resolve_download_path to match the real service.
+
+        Args:
+            file_metadata: File metadata from Google Drive.
+            local_path: Optional local path to save the file.
+
+        Returns:
+            str: The resolved download path.
+        """
+        file_name = file_metadata.get("name", "downloaded_file")
+
+        if not local_path:
+            # Create a fake temp directory path
+            return f"/tmp/{file_name}"
+
+        # Simple path resolution for testing
+        return f"{local_path}/{file_name}" if "/" in local_path else local_path
+
 
 def create_mock_drive_service(
-    file_id: str = "file123",
-    file_metadata: dict[str, Any] | None = None,
-    file_list: list[dict[str, Any]] | None = None,
+        file_id: str = "file123",
+        file_metadata: dict[str, Any] | None = None,
+        file_list: list[dict[str, Any]] | None = None,
 ) -> DriveService:
     """
     Create and return a configurable mock Drive service.
@@ -57,20 +148,26 @@ def create_mock_drive_service(
     """
     files_resource = MockDriveFilesResource(
         file_id=file_id,
-        file_metadata=file_metadata,
+        file_metadata=file_metadata or {
+            "id": file_id,
+            "name": "test_file.txt",
+            "mimeType": "text/plain",
+            "webViewLink": f"https://drive.google.com/file/d/{file_id}/view",
+            "webContentLink": f"https://drive.google.com/uc?id={file_id}",
+        },
         file_list=file_list,
     )
     return MockDriveService(files_resource)
 
 
 def create_error_drive_service(
-    create_error: Exception | None = None,
-    get_error: Exception | None = None,
-    get_media_error: Exception | None = None,
-    list_error: Exception | None = None,
-    update_error: Exception | None = None,
-    delete_error: Exception | None = None,
-    permission_error: Exception | None = None,
+        create_error: Exception | None = None,
+        get_error: Exception | None = None,
+        get_media_error: Exception | None = None,
+        list_error: Exception | None = None,
+        update_error: Exception | None = None,
+        delete_error: Exception | None = None,
+        permission_error: Exception | None = None,
 ) -> DriveService:
     """
     Create a Drive service mock that raises configurable exceptions.

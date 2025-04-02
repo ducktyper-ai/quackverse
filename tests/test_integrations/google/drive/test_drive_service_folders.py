@@ -115,14 +115,14 @@ class TestGoogleDriveServiceFolders:
         # Test permanent deletion
         result = service.delete_file("file_id", permanent=True)
         assert result.success is True
-        service.drive_service.files().delete.assert_called_once_with(file_id="file_id")
+        service.drive_service.files().delete.assert_called_once_with(fileId="file_id")
 
         # Test move to trash
         service.drive_service.files().update.reset_mock()
         result = service.delete_file("file_id", permanent=False)
         assert result.success is True
         service.drive_service.files().update.assert_called_once_with(
-            file_id="file_id", body={"trashed": True}
+            fileId="file_id", body={"trashed": True}
         )
 
         # Test API error

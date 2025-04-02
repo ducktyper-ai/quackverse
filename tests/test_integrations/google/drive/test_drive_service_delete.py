@@ -36,7 +36,7 @@ class TestGoogleDriveServiceDelete:
 
         assert result.success is True
         assert result.content is True
-        service.drive_service.files().delete.assert_called_once_with(file_id="file123")
+        service.drive_service.files().delete.assert_called_once_with(fileId="file123")
         service.drive_service.files().update.assert_not_called()
 
         # Test moving to trash (default)
@@ -49,7 +49,7 @@ class TestGoogleDriveServiceDelete:
         assert result.content is True
         service.drive_service.files().delete.assert_not_called()
         service.drive_service.files().update.assert_called_once_with(
-            file_id="file123", body={"trashed": True}
+            fileId="file123", body={"trashed": True}
         )
 
         # Test API error (delete)
