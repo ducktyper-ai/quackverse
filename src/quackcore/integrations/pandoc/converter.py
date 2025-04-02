@@ -9,9 +9,10 @@ the document conversion functionality using Pandoc.
 from collections.abc import Sequence
 from datetime import datetime
 from pathlib import Path
+from typing import cast
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.fs import service as fs
+from quackcore.fs import service as fs_service
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.models import (
@@ -61,7 +62,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
         return self._pandoc_version
 
     def convert_file(
-        self, input_path: Path, output_path: Path, output_format: str
+            self, input_path: Path, output_path: Path, output_format: str
     ) -> IntegrationResult[Path]:
         """
         Convert a file from one format to another.
@@ -82,11 +83,12 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             input_info = get_file_info(input_path)
 
             # Ensure output directory exists
-            dir_result = fs.service.create_directory(output_path.parent, exist_ok=True)
+            dir_result = fs_service.create_directory(output_path.parent, exist_ok=True)
             if not dir_result.success:
-                return IntegrationResult.error_result(
-                    f"Failed to create output directory: {dir_result.error}"
-                )
+                return cast(IntegrationResult[Path],
+                            IntegrationResult.error_result(
+                                f"Failed to create output directory: {dir_result.error}"
+                            ))
 
             # Perform conversion based on source and target formats
             if input_info.format == "html" and output_format == "markdown":
@@ -94,39 +96,45 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
                     input_path, output_path, self.config, self.metrics
                 )
                 if result.success and result.content:
-                    return IntegrationResult.success_result(
-                        result.content[0],  # Extract just the Path
-                        message=f"Successfully converted {input_path} to Markdown",
-                    )
-                return IntegrationResult.error_result(
-                    result.error or "Conversion failed",
-                )
+                    return cast(IntegrationResult[Path],
+                                IntegrationResult.success_result(
+                                    result.content[0],  # Extract just the Path
+                                    message=f"Successfully converted {input_path} to Markdown",
+                                ))
+                return cast(IntegrationResult[Path],
+                            IntegrationResult.error_result(
+                                result.error or "Conversion failed",
+                            ))
             elif input_info.format == "markdown" and output_format == "docx":
                 result = convert_markdown_to_docx(
                     input_path, output_path, self.config, self.metrics
                 )
                 if result.success and result.content:
-                    return IntegrationResult.success_result(
-                        result.content[0],  # Extract just the Path
-                        message=f"Successfully converted {input_path} to DOCX",
-                    )
-                return IntegrationResult.error_result(
-                    result.error or "Conversion failed",
-                )
+                    return cast(IntegrationResult[Path],
+                                IntegrationResult.success_result(
+                                    result.content[0],  # Extract just the Path
+                                    message=f"Successfully converted {input_path} to DOCX",
+                                ))
+                return cast(IntegrationResult[Path],
+                            IntegrationResult.error_result(
+                                result.error or "Conversion failed",
+                            ))
             else:
-                return IntegrationResult.error_result(
-                    f"Unsupported conversion: {input_info.format} to {output_format}"
-                )
+                return cast(IntegrationResult[Path],
+                            IntegrationResult.error_result(
+                                f"Unsupported conversion: {input_info.format} to {output_format}"
+                            ))
 
         except QuackIntegrationError as e:
             logger.error(f"Integration error during conversion: {str(e)}")
-            return IntegrationResult.error_result(str(e))
+            return cast(IntegrationResult[Path], IntegrationResult.error_result(str(e)))
         except Exception as e:
             logger.error(f"Unexpected error during conversion: {str(e)}")
-            return IntegrationResult.error_result(f"Conversion error: {str(e)}")
+            return cast(IntegrationResult[Path],
+                        IntegrationResult.error_result(f"Conversion error: {str(e)}"))
 
     def convert_batch(
-        self, tasks: Sequence[ConversionTask], output_dir: Path | None = None
+            self, tasks: Sequence[ConversionTask], output_dir: Path | None = None
     ) -> IntegrationResult[list[Path]]:
         """
         Convert a batch of files.
@@ -141,11 +149,12 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
         output_directory = output_dir or self.config.output_dir
 
         # Create output directory
-        dir_result = fs.service.create_directory(output_directory, exist_ok=True)
+        dir_result = fs_service.create_directory(output_directory, exist_ok=True)
         if not dir_result.success:
-            return IntegrationResult.error_result(
-                f"Failed to create output directory: {dir_result.error}"
-            )
+            return cast(IntegrationResult[list[Path]],
+                        IntegrationResult.error_result(
+                            f"Failed to create output directory: {dir_result.error}"
+                        ))
 
         successful_files: list[Path] = []
         failed_files: list[Path] = []
@@ -186,26 +195,32 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
                 failed_files.append(task.source.path)
                 logger.error(f"Error processing task for {task.source.path}: {str(e)}")
                 self.metrics.errors[str(task.source.path)] = str(e)
+                self.metrics.failed_conversions += 1
 
         # Update metrics
         self.metrics.successful_conversions = len(successful_files)
-        self.metrics.failed_conversions = len(failed_files)
+
+        # Only update failed_conversions if it hasn't been incremented by exceptions
+        if len(failed_files) > self.metrics.failed_conversions:
+            self.metrics.failed_conversions = len(failed_files)
 
         # Return batch result
         if not failed_files:
-            return IntegrationResult.success_result(
-                successful_files,
-                message=f"Successfully converted {len(successful_files)} files",
-            )
+            return cast(IntegrationResult[list[Path]],
+                        IntegrationResult.success_result(
+                            successful_files,
+                            message=f"Successfully converted {len(successful_files)} files",
+                        ))
         elif successful_files:
-            return IntegrationResult.success_result(
-                successful_files,
-                message=(
-                    f"Partially successful: "
-                    f"converted {len(successful_files)} files, "
-                    f"failed to convert {len(failed_files)} files"
-                ),
-            )
+            return cast(IntegrationResult[list[Path]],
+                        IntegrationResult.success_result(
+                            successful_files,
+                            message=(
+                                f"Partially successful: "
+                                f"converted {len(successful_files)} files, "
+                                f"failed to convert {len(failed_files)} files"
+                            ),
+                        ))
         else:
             # Create a detailed error message that includes the failed files information
             failed_files_str = ", ".join([str(f) for f in failed_files[:5]])
@@ -214,11 +229,12 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
 
             error_msg = f"Failed to convert any files. Failed files: {failed_files_str}"
 
-            return IntegrationResult.error_result(
-                error=error_msg,
-                message=f"All {len(failed_files)} conversion "
-                f"tasks failed. See logs for details.",
-            )
+            return cast(IntegrationResult[list[Path]],
+                        IntegrationResult.error_result(
+                            error=error_msg,
+                            message=f"All {len(failed_files)} conversion "
+                                    f"tasks failed. See logs for details.",
+                        ))
 
     def validate_conversion(self, output_path: Path, input_path: Path) -> bool:
         """
@@ -233,8 +249,8 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
         """
         try:
             # Get file info for validation
-            output_info = fs.service.get_file_info(output_path)
-            input_info = fs.service.get_file_info(input_path)
+            output_info = fs_service.get_file_info(output_path)
+            input_info = fs_service.get_file_info(input_path)
 
             if not output_info.success or not output_info.exists:
                 logger.error(f"Output file does not exist: {output_path}")
@@ -257,12 +273,12 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             )
 
             # Validate based on file format
-            extension = fs.service.get_extension(output_path)
+            extension = fs_service.get_extension(output_path)
 
             if extension in ("md", "markdown"):
                 # For markdown, we can read the content and validate
                 try:
-                    read_result = fs.service.read_text(output_path, encoding="utf-8")
+                    read_result = fs_service.read_text(output_path, encoding="utf-8")
                     if not read_result.success:
                         logger.error(
                             f"Failed to read markdown file: {read_result.error}"

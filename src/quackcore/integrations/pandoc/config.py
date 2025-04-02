@@ -6,14 +6,17 @@ This module provides Pydantic models and configuration provider for the Pandoc
 integration, handling settings for document conversion between various formats.
 """
 
+import json
 import logging
+import os
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any, ClassVar, cast
 
 from pydantic import BaseModel, Field, field_validator
 
 from quackcore.config.models import LoggingConfig
 from quackcore.integrations.core.base import BaseConfigProvider
+from quackcore.logging import get_logger
 
 
 class PandocOptions(BaseModel):
@@ -123,6 +126,8 @@ class PandocConfigProvider(BaseConfigProvider):
     ]
     ENV_PREFIX: ClassVar[str] = "QUACK_PANDOC_"
 
+    logger = get_logger(__name__)
+
     def __init__(self, log_level: int = logging.INFO) -> None:
         """
         Initialize the Pandoc configuration provider.
@@ -184,3 +189,27 @@ class PandocConfigProvider(BaseConfigProvider):
         """
         default_config = PandocConfig().model_dump()
         return default_config
+
+    def load_from_environment(self) -> dict[str, Any]:
+        """
+        Load configuration from environment variables.
+
+        Returns:
+            dict[str, Any]: Configuration from environment variables
+        """
+        config: dict[str, Any] = {}
+
+        for key, value in os.environ.items():
+            if key.startswith(self.ENV_PREFIX):
+                config_key = key[len(self.ENV_PREFIX):].lower()
+
+                # Try to parse as JSON if it looks like a complex value
+                if value.startswith(('[', '{')) or value.lower() in ('true', 'false'):
+                    try:
+                        config[config_key] = json.loads(value)
+                    except json.JSONDecodeError:
+                        config[config_key] = value
+                else:
+                    config[config_key] = value
+
+        return config

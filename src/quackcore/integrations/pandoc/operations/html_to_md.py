@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.fs import service as fs
+from quackcore.fs import service as fs_service
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.models import ConversionDetails, ConversionMetrics
@@ -41,7 +41,7 @@ def _validate_input(html_path: Path, config: PandocConfig) -> int:
     Raises:
         QuackIntegrationError: If the input file is missing or has invalid structure.
     """
-    file_info = fs.service.get_file_info(html_path)
+    file_info = fs_service.get_file_info(html_path)
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(f"Input file not found: {html_path}")
 
@@ -49,7 +49,7 @@ def _validate_input(html_path: Path, config: PandocConfig) -> int:
 
     if config.validation.verify_structure:
         try:
-            read_result = fs.service.read_text(html_path)
+            read_result = fs_service.read_text(html_path)
             if not read_result.success:
                 raise QuackIntegrationError(
                     f"Could not read HTML file: {read_result.error}"
@@ -107,12 +107,12 @@ def _attempt_conversion(html_path: Path, config: PandocConfig) -> str:
 
 
 def _write_and_validate_output(
-    cleaned_markdown: str,
-    output_path: Path,
-    input_path: Path,
-    original_size: int,
-    config: PandocConfig,
-    attempt_start: float,
+        cleaned_markdown: str,
+        output_path: Path,
+        input_path: Path,
+        original_size: int,
+        config: PandocConfig,
+        attempt_start: float,
 ) -> tuple[float, int, list[str]]:
     """
     Write the converted markdown to the output file and validate the conversion.
@@ -129,14 +129,14 @@ def _write_and_validate_output(
         tuple: (conversion_time, output_size, validation_errors)
     """
     # Create output directory if it doesn't exist
-    dir_result = fs.service.create_directory(output_path.parent, exist_ok=True)
+    dir_result = fs_service.create_directory(output_path.parent, exist_ok=True)
     if not dir_result.success:
         raise QuackIntegrationError(
             f"Failed to create output directory: {dir_result.error}"
         )
 
     # Write the content
-    write_result = fs.service.write_text(
+    write_result = fs_service.write_text(
         output_path, cleaned_markdown, encoding="utf-8"
     )
     if not write_result.success:
@@ -147,7 +147,7 @@ def _write_and_validate_output(
     conversion_time: float = time.time() - attempt_start
 
     # Get output file info
-    output_info = fs.service.get_file_info(output_path)
+    output_info = fs_service.get_file_info(output_path)
     if not output_info.success:
         raise QuackIntegrationError(
             f"Failed to get info for converted file: {output_path}"
@@ -163,10 +163,10 @@ def _write_and_validate_output(
 
 
 def convert_html_to_markdown(
-    html_path: Path,
-    output_path: Path,
-    config: PandocConfig,
-    metrics: ConversionMetrics | None = None,
+        html_path: Path,
+        output_path: Path,
+        config: PandocConfig,
+        metrics: ConversionMetrics | None = None,
 ) -> IntegrationResult[tuple[Path, ConversionDetails]]:
     """
     Convert an HTML file to Markdown.
@@ -182,78 +182,85 @@ def convert_html_to_markdown(
     """
     filename: str = html_path.name
 
-    # Validate input file and get its size.
-    original_size: int = _validate_input(html_path, config)
+    if metrics is None:
+        metrics = ConversionMetrics()
 
-    max_retries: int = config.retry_mechanism.max_conversion_retries
-    for attempt in range(1, max_retries + 1):
-        attempt_start: float = time.time()
-        try:
-            cleaned_markdown: str = _attempt_conversion(html_path, config)
-            conversion_time, output_size, validation_errors = (
-                _write_and_validate_output(
-                    cleaned_markdown,
-                    output_path,
-                    html_path,
-                    original_size,
-                    config,
-                    attempt_start,
-                )
-            )
+    try:
+        # Validate input file and get its size.
+        original_size: int = _validate_input(html_path, config)
 
-            if validation_errors:
-                error_str: str = "; ".join(validation_errors)
-                logger.error(
-                    f"Conversion validation failed on attempt {attempt}: {error_str}"
+        max_retries: int = config.retry_mechanism.max_conversion_retries
+        for attempt in range(1, max_retries + 1):
+            attempt_start: float = time.time()
+            try:
+                cleaned_markdown: str = _attempt_conversion(html_path, config)
+                conversion_time, output_size, validation_errors = (
+                    _write_and_validate_output(
+                        cleaned_markdown,
+                        output_path,
+                        html_path,
+                        original_size,
+                        config,
+                        attempt_start,
+                    )
                 )
-                if attempt == max_retries:
-                    if metrics:
+
+                if validation_errors:
+                    error_str: str = "; ".join(validation_errors)
+                    logger.error(
+                        f"Conversion validation failed on attempt {attempt}: {error_str}"
+                    )
+                    if attempt == max_retries:
                         metrics.failed_conversions += 1
                         metrics.errors[str(html_path)] = error_str
-                    return IntegrationResult.error_result(
-                        "Conversion validation "
-                        "failed after maximum retries: " + error_str
-                    )
-                time.sleep(config.retry_mechanism.conversion_retry_delay)
-                continue
+                        return IntegrationResult.error_result(
+                            "Conversion validation "
+                            "failed after maximum retries: " + error_str
+                        )
+                    time.sleep(config.retry_mechanism.conversion_retry_delay)
+                    continue
 
-            if metrics:
                 track_metrics(
                     filename, attempt_start, original_size, output_size, metrics, config
                 )
                 metrics.successful_conversions += 1
 
-            # Create conversion details
-            details = ConversionDetails(
-                source_format="html",
-                target_format="markdown",
-                conversion_time=conversion_time,
-                output_size=output_size,
-                input_size=original_size,
-            )
+                # Create conversion details
+                details = ConversionDetails(
+                    source_format="html",
+                    target_format="markdown",
+                    conversion_time=conversion_time,
+                    output_size=output_size,
+                    input_size=original_size,
+                )
 
-            return IntegrationResult.success_result(
-                (output_path, details),
-                message=f"Successfully converted {html_path} to Markdown",
-            )
+                return IntegrationResult.success_result(
+                    (output_path, details),
+                    message=f"Successfully converted {html_path} to Markdown",
+                )
 
-        except Exception as e:
-            error_msg: str = (
-                f"Integration error: {str(e)}"
-                if isinstance(e, QuackIntegrationError)
-                else f"Failed to convert HTML to Markdown: {str(e)}"
-            )
-            logger.warning(
-                f"HTML to Markdown conversion attempt {attempt} failed: {str(e)}"
-            )
-            if attempt == max_retries:
-                if metrics:
+            except Exception as e:
+                error_msg: str = (
+                    f"Integration error: {str(e)}"
+                    if isinstance(e, QuackIntegrationError)
+                    else f"Failed to convert HTML to Markdown: {str(e)}"
+                )
+                logger.warning(
+                    f"HTML to Markdown conversion attempt {attempt} failed: {str(e)}"
+                )
+                if attempt == max_retries:
                     metrics.failed_conversions += 1
                     metrics.errors[str(html_path)] = str(e)
-                return IntegrationResult.error_result(error_msg)
-            time.sleep(config.retry_mechanism.conversion_retry_delay)
+                    return IntegrationResult.error_result(error_msg)
+                time.sleep(config.retry_mechanism.conversion_retry_delay)
 
-    return IntegrationResult.error_result("Conversion failed after maximum retries")
+        return IntegrationResult.error_result("Conversion failed after maximum retries")
+
+    except Exception as e:
+        metrics.failed_conversions += 1
+        metrics.errors[str(html_path)] = str(e)
+        return IntegrationResult.error_result(
+            f"Failed to convert HTML to Markdown: {str(e)}")
 
 
 def post_process_markdown(markdown_content: str) -> str:
@@ -276,10 +283,10 @@ def post_process_markdown(markdown_content: str) -> str:
 
 
 def validate_conversion(
-    output_path: Path,
-    input_path: Path,
-    original_size: int,
-    config: PandocConfig,
+        output_path: Path,
+        input_path: Path,
+        original_size: int,
+        config: PandocConfig,
 ) -> list[str]:
     """
     Validate the converted markdown document.
@@ -296,7 +303,7 @@ def validate_conversion(
     validation_errors: list[str] = []
 
     # Get info about output file
-    output_info = fs.service.get_file_info(output_path)
+    output_info = fs_service.get_file_info(output_path)
     if not output_info.success or not output_info.exists:
         validation_errors.append(f"Output file does not exist: {output_path}")
         return validation_errors
@@ -319,7 +326,7 @@ def validate_conversion(
 
     # Check content
     try:
-        read_result = fs.service.read_text(output_path, encoding="utf-8")
+        read_result = fs_service.read_text(output_path, encoding="utf-8")
         if not read_result.success:
             validation_errors.append(f"Error reading output file: {read_result.error}")
             return validation_errors

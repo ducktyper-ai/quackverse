@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.fs import service as fs
+from quackcore.fs import service as fs_service
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.models import ConversionDetails, ConversionMetrics
@@ -39,7 +39,7 @@ def _validate_markdown_input(markdown_path: Path) -> int:
     Raises:
         QuackIntegrationError: If the input file is missing or empty.
     """
-    file_info = fs.service.get_file_info(markdown_path)
+    file_info = fs_service.get_file_info(markdown_path)
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(
             f"Input file not found: {markdown_path}",
@@ -48,7 +48,7 @@ def _validate_markdown_input(markdown_path: Path) -> int:
     original_size: int = file_info.size or 0
 
     try:
-        read_result = fs.service.read_text(markdown_path, encoding="utf-8")
+        read_result = fs_service.read_text(markdown_path, encoding="utf-8")
         if not read_result.success:
             raise QuackIntegrationError(
                 f"Could not read Markdown file: {read_result.error}",
@@ -64,13 +64,12 @@ def _validate_markdown_input(markdown_path: Path) -> int:
     except Exception as e:
         if not isinstance(e, QuackIntegrationError):
             logger.warning(f"Could not validate markdown content: {str(e)}")
-        else:
-            raise
+
     return original_size
 
 
 def _convert_markdown_to_docx_once(
-    markdown_path: Path, output_path: Path, config: PandocConfig
+        markdown_path: Path, output_path: Path, config: PandocConfig
 ) -> None:
     """
     Perform a single conversion attempt from Markdown to DOCX using pandoc.
@@ -88,7 +87,7 @@ def _convert_markdown_to_docx_once(
     )
 
     # Create output directory if it doesn't exist
-    dir_result = fs.service.create_directory(output_path.parent, exist_ok=True)
+    dir_result = fs_service.create_directory(output_path.parent, exist_ok=True)
     if not dir_result.success:
         raise QuackIntegrationError(
             f"Failed to create output directory: {dir_result.error}",
@@ -128,7 +127,7 @@ def _get_conversion_output(output_path: Path, start_time: float) -> tuple[float,
         QuackIntegrationError: If output file info cannot be retrieved.
     """
     conversion_time: float = time.time() - start_time
-    output_info = fs.service.get_file_info(output_path)
+    output_info = fs_service.get_file_info(output_path)
     if not output_info.success:
         raise QuackIntegrationError(
             f"Failed to get info for converted file: {output_path}",
@@ -139,10 +138,10 @@ def _get_conversion_output(output_path: Path, start_time: float) -> tuple[float,
 
 
 def convert_markdown_to_docx(
-    markdown_path: Path,
-    output_path: Path,
-    config: PandocConfig,
-    metrics: ConversionMetrics | None = None,
+        markdown_path: Path,
+        output_path: Path,
+        config: PandocConfig,
+        metrics: ConversionMetrics | None = None,
 ) -> IntegrationResult[tuple[Path, ConversionDetails]]:
     """
     Convert a Markdown file to DOCX.
@@ -157,68 +156,77 @@ def convert_markdown_to_docx(
         IntegrationResult[tuple[Path, ConversionDetails]]: Result of the conversion.
     """
     filename: str = markdown_path.name
-    original_size: int = _validate_markdown_input(markdown_path)
-    max_retries: int = config.retry_mechanism.max_conversion_retries
-    retry_count: int = 0
-    start_time: float = time.time()
 
-    while retry_count < max_retries:
-        try:
-            _convert_markdown_to_docx_once(markdown_path, output_path, config)
-            conversion_time, output_size = _get_conversion_output(
-                output_path, start_time
-            )
+    if metrics is None:
+        metrics = ConversionMetrics()
 
-            validation_errors: list[str] = validate_conversion(
-                output_path, markdown_path, original_size, config
-            )
-            if validation_errors:
-                error_str: str = "; ".join(validation_errors)
-                logger.error(f"Conversion validation failed: {error_str}")
-                raise QuackIntegrationError(error_str)
+    try:
+        original_size: int = _validate_markdown_input(markdown_path)
+        max_retries: int = config.retry_mechanism.max_conversion_retries
+        retry_count: int = 0
 
-            if metrics:
+        while retry_count < max_retries:
+            start_time: float = time.time()
+            try:
+                _convert_markdown_to_docx_once(markdown_path, output_path, config)
+                conversion_time, output_size = _get_conversion_output(
+                    output_path, start_time
+                )
+
+                validation_errors: list[str] = validate_conversion(
+                    output_path, markdown_path, original_size, config
+                )
+                if validation_errors:
+                    error_str: str = "; ".join(validation_errors)
+                    logger.error(f"Conversion validation failed: {error_str}")
+                    raise QuackIntegrationError(error_str)
+
                 track_metrics(
                     filename, start_time, original_size, output_size, metrics, config
                 )
                 metrics.successful_conversions += 1
 
-            # Create conversion details
-            details = ConversionDetails(
-                source_format="markdown",
-                target_format="docx",
-                conversion_time=conversion_time,
-                output_size=output_size,
-                input_size=original_size,
-            )
+                # Create conversion details
+                details = ConversionDetails(
+                    source_format="markdown",
+                    target_format="docx",
+                    conversion_time=conversion_time,
+                    output_size=output_size,
+                    input_size=original_size,
+                )
 
-            return IntegrationResult.success_result(
-                (output_path, details),
-                message=f"Successfully converted {markdown_path} to DOCX",
-            )
+                return IntegrationResult.success_result(
+                    (output_path, details),
+                    message=f"Successfully converted {markdown_path} to DOCX",
+                )
 
-        except Exception as e:
-            retry_count += 1
-            logger.warning(
-                f"Markdown to DOCX conversion attempt {retry_count} failed: {str(e)}"
-            )
-            if retry_count >= max_retries:
-                if metrics:
+            except Exception as e:
+                retry_count += 1
+                logger.warning(
+                    f"Markdown to DOCX conversion attempt {retry_count} failed: {str(e)}"
+                )
+                if retry_count >= max_retries:
                     metrics.failed_conversions += 1
                     metrics.errors[str(markdown_path)] = str(e)
-                error_msg: str = (
-                    f"Integration error: {str(e)}"
-                    if isinstance(e, QuackIntegrationError)
-                    else f"Failed to convert Markdown to DOCX: {str(e)}"
-                )
-                return IntegrationResult.error_result(error_msg)
-            time.sleep(config.retry_mechanism.conversion_retry_delay)
+                    error_msg: str = (
+                        f"Integration error: {str(e)}"
+                        if isinstance(e, QuackIntegrationError)
+                        else f"Failed to convert Markdown to DOCX: {str(e)}"
+                    )
+                    return IntegrationResult.error_result(error_msg)
+                time.sleep(config.retry_mechanism.conversion_retry_delay)
 
-    return IntegrationResult.error_result("Conversion failed after maximum retries")
+        return IntegrationResult.error_result("Conversion failed after maximum retries")
+
+    except Exception as e:
+        metrics.failed_conversions += 1
+        metrics.errors[str(markdown_path)] = str(e)
+        return IntegrationResult.error_result(
+            f"Failed to convert Markdown to DOCX: {str(e)}")
 
 
 def validate_conversion(
-    output_path: Path, input_path: Path, original_size: int, config: PandocConfig
+        output_path: Path, input_path: Path, original_size: int, config: PandocConfig
 ) -> list[str]:
     """
     Validate the converted DOCX document.
@@ -236,7 +244,7 @@ def validate_conversion(
     validation = config.validation
 
     # Get info about output file
-    output_info = fs.service.get_file_info(output_path)
+    output_info = fs_service.get_file_info(output_path)
     if not output_info.success or not output_info.exists:
         validation_errors.append(f"Output file does not exist: {output_path}")
         return validation_errors
@@ -278,6 +286,7 @@ def _check_docx_metadata(docx_path: Path, source_path: Path, check_links: bool) 
         check_links: Whether to check for links/references.
     """
     try:
+        import docx
         from docx import Document
     except ImportError:
         logger.debug("python-docx not available for detailed metadata check")
@@ -290,21 +299,21 @@ def _check_docx_metadata(docx_path: Path, source_path: Path, check_links: bool) 
 
         if hasattr(doc, "core_properties"):
             if (
-                hasattr(doc.core_properties, "title")
-                and doc.core_properties.title
-                and source_filename in doc.core_properties.title
+                    hasattr(doc.core_properties, "title")
+                    and doc.core_properties.title
+                    and source_filename in doc.core_properties.title
             ):
                 source_found = True
             elif (
-                hasattr(doc.core_properties, "comments")
-                and doc.core_properties.comments
-                and source_filename in doc.core_properties.comments
+                    hasattr(doc.core_properties, "comments")
+                    and doc.core_properties.comments
+                    and source_filename in doc.core_properties.comments
             ):
                 source_found = True
             elif (
-                hasattr(doc.core_properties, "subject")
-                and doc.core_properties.subject
-                and source_filename in doc.core_properties.subject
+                    hasattr(doc.core_properties, "subject")
+                    and doc.core_properties.subject
+                    and source_filename in doc.core_properties.subject
             ):
                 source_found = True
 
