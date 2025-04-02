@@ -54,7 +54,7 @@ class LLMIntegration(BaseIntegrationService):
     @property
     def name(self) -> str:
         """Get the name of the integration."""
-        return "LLMIntegration"
+        return "LLM"
 
     def _extract_config(self) -> dict:
         """
