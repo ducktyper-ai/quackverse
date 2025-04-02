@@ -1,3 +1,4 @@
+# src/quackcore/integrations/llms/service/operations.py
 """
 LLM operations for the integration service.
 
