@@ -5,9 +5,7 @@ Provider initialization logic for LLM integration.
 This module provides functions for initializing single providers and fallback configurations.
 """
 
-from quackcore.errors import QuackIntegrationError
 from quackcore.integrations.core.results import IntegrationResult
-from quackcore.integrations.llms.clients import MockLLMClient
 from quackcore.integrations.llms.fallback import FallbackConfig
 
 
@@ -75,22 +73,22 @@ def initialize_single_provider(self, llm_config: dict, available_providers: list
         # Import the registry functions for getting an LLM client
         from quackcore.integrations.llms.registry import get_llm_client
         self.client = get_llm_client(**client_args)
-    except QuackIntegrationError as e:
+    except Exception as e:
         # If we can't initialize the requested client, fall back to MockLLMClient
         self.logger.warning(f"Failed to initialize {provider} client: {e}")
         self.logger.warning("Falling back to MockLLMClient")
 
         # Create a mock client with default responses
+        from quackcore.integrations.llms.clients.mock import MockLLMClient
         self.client = MockLLMClient(log_level=self.log_level)
         self._using_mock = True
 
     self._initialized = True
 
-    return IntegrationResult.success_result(
-        message=(
-            f"LLM integration initialized successfully with provider: {provider}"
-            f"{' (using mock client)' if self._using_mock else ''}"
-        )
+    return IntegrationResult(
+        success=True,
+        message=f"LLM integration initialized successfully with provider: {provider}"
+               f"{' (using mock client)' if self._using_mock else ''}",
     )
 
 
@@ -191,12 +189,13 @@ def initialize_with_fallback(
 
         self._initialized = True
 
-        return IntegrationResult.success_result(
+        return IntegrationResult(
+            success=True,
             message=(
                 f"LLM integration initialized successfully with fallback support. "
                 f"Providers: {', '.join(fallback_providers)}"
                 f"{' (may use mock client as fallback)' if not self._using_mock else ' (using mock client only)'}"
-            )
+            ),
         )
     except Exception as e:
         self.logger.error(f"Failed to initialize fallback LLM client: {e}")

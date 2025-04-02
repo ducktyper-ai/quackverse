@@ -1,14 +1,5 @@
 # tests/test_integrations/llms/service/test_dependencies.py
-"""
-Tests for LLM integration dependency checking.
-
-This module tests the functions that check for available LLM providers
-and their dependencies.
-"""
-
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from quackcore.integrations.llms.service.dependencies import check_llm_dependencies
 
@@ -69,11 +60,8 @@ class TestDependencies:
     def test_check_ollama_connection_failure(self) -> None:
         """Test dependency checking with Ollama connection failure."""
         with patch("importlib.util.find_spec", return_value=MagicMock()):
-            # Use a MagicMock for requests
-            mock_requests = MagicMock()
-            mock_requests.get.side_effect = Exception("Connection failed")
-
-            with patch.dict("sys.modules", {"requests": mock_requests}):
+            # Create a real mock for requests that has the Exception attributes
+            with patch("requests.get", side_effect=Exception("Connection failed")):
                 success, message, providers = check_llm_dependencies()
 
                 assert success is True  # Still true if at least one real provider

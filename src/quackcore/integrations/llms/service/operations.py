@@ -33,7 +33,7 @@ def chat(
         return init_error
 
     if not self.client:
-        return IntegrationResult.error_result("LLM client not initialized")
+        return IntegrationResult(success=False, error="LLM client not initialized")
 
     result = self.client.chat(messages, options, callback)
 
@@ -62,7 +62,7 @@ def count_tokens(
         return init_error
 
     if not self.client:
-        return IntegrationResult.error_result("LLM client not initialized")
+        return IntegrationResult(success=False, error="LLM client not initialized")
 
     result = self.client.count_tokens(messages)
 

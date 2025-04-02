@@ -6,7 +6,7 @@ This module provides complete test coverage for the service/operations.py file,
 which contains the chat and token counting operations.
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -40,15 +40,15 @@ class TestLLMOperationsComplete:
         integration._initialized = False
         integration.client = None
         integration._using_mock = False
-        integration._ensure_initialized.return_value = IntegrationResult.error_result(
-            "Not initialized")
+        integration._ensure_initialized.return_value = IntegrationResult(
+            success=False, error="Not initialized")
         return integration
 
     def test_chat_success(self, mock_integration: MagicMock) -> None:
         """Test successful chat operation."""
         # Set up mock client's chat method
-        mock_integration.client.chat.return_value = IntegrationResult.success_result(
-            "Response")
+        mock_integration.client.chat.return_value = IntegrationResult(
+            success=True, content="Response")
 
         # Call chat operation
         messages = [ChatMessage(role=RoleType.USER, content="Test message")]
@@ -75,10 +75,10 @@ class TestLLMOperationsComplete:
         assert result.success is False
         assert result.error == "Not initialized"
 
-        # Verify ensure_initialized was called but not client.chat
+        # Verify ensure_initialized was called
         mock_uninitialized_integration._ensure_initialized.assert_called_once()
-        assert not hasattr(mock_uninitialized_integration,
-                           "client.chat.assert_not_called")
+        # Don't try to use assert_not_called on a property path that doesn't exist
+        assert mock_uninitialized_integration.client is None
 
     def test_chat_no_client(self, mock_integration: MagicMock) -> None:
         """Test chat operation with no client."""
@@ -97,8 +97,8 @@ class TestLLMOperationsComplete:
         """Test chat operation with mock client."""
         # Set using mock flag
         mock_integration._using_mock = True
-        mock_integration.client.chat.return_value = IntegrationResult.success_result(
-            "Mock response")
+        mock_integration.client.chat.return_value = IntegrationResult(
+            success=True, content="Mock response")
 
         # Call chat operation
         messages = [ChatMessage(role=RoleType.USER, content="Test message")]
@@ -112,8 +112,8 @@ class TestLLMOperationsComplete:
     def test_chat_failure(self, mock_integration: MagicMock) -> None:
         """Test chat operation handling errors from client."""
         # Set up mock client's chat method to return an error
-        mock_integration.client.chat.return_value = IntegrationResult.error_result(
-            "API error")
+        mock_integration.client.chat.return_value = IntegrationResult(
+            success=False, error="API error")
 
         # Call chat operation
         messages = [ChatMessage(role=RoleType.USER, content="Test message")]
@@ -129,8 +129,8 @@ class TestLLMOperationsComplete:
     def test_count_tokens_success(self, mock_integration: MagicMock) -> None:
         """Test successful token counting operation."""
         # Set up mock client's count_tokens method
-        mock_integration.client.count_tokens.return_value = IntegrationResult.success_result(
-            42)
+        mock_integration.client.count_tokens.return_value = IntegrationResult(
+            success=True, content=42)
 
         # Call count_tokens operation
         messages = [ChatMessage(role=RoleType.USER, content="Test message")]
@@ -146,16 +146,8 @@ class TestLLMOperationsComplete:
     def test_count_tokens_not_initialized(self,
                                           mock_uninitialized_integration: MagicMock) -> None:
         """Test count_tokens operation when not initialized."""
-        # Call count_tokens operation
-        messages = [ChatMessage(role=RoleType.USER, content="Test message")]
-
-        result = count_tokens(mock_uninitialized_integration, messages)
-
-        assert result.success is False
-        assert result.error == "Not initialized"
-
-        # Verify ensure_initialized was called but not client.count_tokens
-        mock_uninitialized_integration
+        # Reset the mock so it's only called once in this test
+        mock_uninitialized_integration._ensure_initialized.reset_mock()
 
         # Call count_tokens operation
         messages = [ChatMessage(role=RoleType.USER, content="Test message")]
@@ -165,10 +157,8 @@ class TestLLMOperationsComplete:
         assert result.success is False
         assert result.error == "Not initialized"
 
-        # Verify ensure_initialized was called but not client.count_tokens
+        # Verify ensure_initialized was called
         mock_uninitialized_integration._ensure_initialized.assert_called_once()
-        # Can't call assert_not_called on a non-existent attribute
-        # So we just check that client is None
         assert mock_uninitialized_integration.client is None
 
     def test_count_tokens_no_client(self, mock_integration: MagicMock) -> None:
@@ -188,8 +178,8 @@ class TestLLMOperationsComplete:
         """Test count_tokens operation with mock client."""
         # Set using mock flag
         mock_integration._using_mock = True
-        mock_integration.client.count_tokens.return_value = IntegrationResult.success_result(
-            42)
+        mock_integration.client.count_tokens.return_value = IntegrationResult(
+            success=True, content=42)
 
         # Call count_tokens operation
         messages = [ChatMessage(role=RoleType.USER, content="Test message")]
@@ -203,8 +193,8 @@ class TestLLMOperationsComplete:
     def test_count_tokens_failure(self, mock_integration: MagicMock) -> None:
         """Test count_tokens operation handling errors from client."""
         # Set up mock client's count_tokens method to return an error
-        mock_integration.client.count_tokens.return_value = IntegrationResult.error_result(
-            "Token counting error")
+        mock_integration.client.count_tokens.return_value = IntegrationResult(
+            success=False, error="Token counting error")
 
         # Call count_tokens operation
         messages = [ChatMessage(role=RoleType.USER, content="Test message")]
@@ -279,8 +269,8 @@ class TestLLMOperationsComplete:
     def test_chat_with_dict_messages(self, mock_integration: MagicMock) -> None:
         """Test chat operation with dictionary messages."""
         # Set up mock client's chat method
-        mock_integration.client.chat.return_value = IntegrationResult.success_result(
-            "Response")
+        mock_integration.client.chat.return_value = IntegrationResult(
+            success=True, content="Response")
 
         # Call chat operation with dict messages
         dict_messages = [
@@ -300,8 +290,8 @@ class TestLLMOperationsComplete:
     def test_count_tokens_with_dict_messages(self, mock_integration: MagicMock) -> None:
         """Test count_tokens operation with dictionary messages."""
         # Set up mock client's count_tokens method
-        mock_integration.client.count_tokens.return_value = IntegrationResult.success_result(
-            42)
+        mock_integration.client.count_tokens.return_value = IntegrationResult(
+            success=True, content=42)
 
         # Call count_tokens operation with dict messages
         dict_messages = [

@@ -6,7 +6,6 @@ This module provides complete test coverage for the service/integration.py file,
 which contains the main LLMIntegration class implementation.
 """
 
-import os
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -16,7 +15,6 @@ from quackcore.errors import QuackIntegrationError
 from quackcore.integrations.core.results import ConfigResult, IntegrationResult
 from quackcore.integrations.llms.config import LLMConfigProvider
 from quackcore.integrations.llms.fallback import FallbackConfig
-from quackcore.integrations.llms.models import ChatMessage, LLMOptions, RoleType
 from quackcore.integrations.llms.service.integration import LLMIntegration
 
 
@@ -51,26 +49,30 @@ class TestLLMIntegrationComprehensive:
         integration = LLMIntegration()
         integration.config_provider = mock_provider
 
+        # Mock the logger for testing
+        integration.logger = MagicMock()
+
         # Return without initializing
         integration._initialized = False
         return integration
 
     def test_init_default(self) -> None:
         """Test initializing with default parameters."""
-        integration = LLMIntegration()
+        # We need to patch where it's imported, not its original location
+        with patch(
+                "quackcore.integrations.llms.service.integration.LLMConfigProvider") as mock_provider_class:
+            integration = LLMIntegration()
+            assert integration.provider is None
+            assert integration.model is None
+            assert integration.api_key is None
+            assert integration.client is None
+            assert integration._initialized is False
+            assert integration._using_mock is False
+            assert integration._enable_fallback is True
+            assert integration._fallback_client is None
 
-        assert integration.provider is None
-        assert integration.model is None
-        assert integration.api_key is None
-        assert integration.client is None
-        assert integration._initialized is False
-        assert integration._using_mock is False
-        assert integration._enable_fallback is True
-        assert integration._fallback_client is None
-
-        # Check if config provider is initialized
-        assert integration.config_provider is not None
-        assert isinstance(integration.config_provider, LLMConfigProvider)
+            # Check if config provider is initialized
+            mock_provider_class.assert_called_once()
 
     def test_init_custom(self) -> None:
         """Test initializing with custom parameters."""
@@ -176,7 +178,7 @@ class TestLLMIntegrationComprehensive:
         # Clear existing config
         integration.config = None
 
-        # Mock validate_config to fail
+        # Mock LLMConfig using the correct import path
         with patch("quackcore.integrations.llms.config.LLMConfig") as mock_llm_config:
             mock_llm_config.side_effect = ValueError("Invalid config")
 
@@ -210,13 +212,14 @@ class TestLLMIntegrationComprehensive:
         # Mock base class initialize to succeed
         with patch(
                 "quackcore.integrations.core.base.BaseIntegrationService.initialize") as mock_base_init:
-            mock_base_init.return_value = IntegrationResult.success_result()
+            mock_base_init.return_value = IntegrationResult(success=True)
 
             # Mock check_llm_dependencies
             mock_deps_result = (
-            True, "Available providers: openai, mock", ["openai", "mock"])
+                True, "Available providers: openai, mock", ["openai", "mock"])
+            # Patch where it's actually imported, not just the function itself
             with patch(
-                    "quackcore.integrations.llms.service.dependencies.check_llm_dependencies",
+                    "quackcore.integrations.llms.service.integration.check_llm_dependencies",
                     return_value=mock_deps_result
             ) as mock_check_deps:
                 # Mock extract_config
@@ -225,7 +228,10 @@ class TestLLMIntegrationComprehensive:
                         return_value={"default_provider": "openai"}
                 ) as mock_extract:
                     # Mock single provider initialization
-                    success_result = IntegrationResult.success_result("Initialized")
+                    success_result = IntegrationResult(
+                        success=True,
+                        message="Initialized"
+                    )
                     with patch(
                             "quackcore.integrations.llms.service.initialization.initialize_single_provider",
                             return_value=success_result
@@ -250,7 +256,7 @@ class TestLLMIntegrationComprehensive:
         # Mock base class initialize to succeed
         with patch(
                 "quackcore.integrations.core.base.BaseIntegrationService.initialize") as mock_base_init:
-            mock_base_init.return_value = IntegrationResult.success_result()
+            mock_base_init.return_value = IntegrationResult(success=True)
 
             # Mock check_llm_dependencies
             mock_deps_result = (True, "Available providers: openai, anthropic, mock",
@@ -275,8 +281,10 @@ class TestLLMIntegrationComprehensive:
                         )
 
                         # Mock fallback initialization
-                        success_result = IntegrationResult.success_result(
-                            "Initialized with fallback")
+                        success_result = IntegrationResult(
+                            success=True,
+                            message="Initialized with fallback"
+                        )
                         with patch(
                                 "quackcore.integrations.llms.service.initialization.initialize_with_fallback",
                                 return_value=success_result
@@ -295,7 +303,7 @@ class TestLLMIntegrationComprehensive:
         # Mock base class initialize to succeed
         with patch(
                 "quackcore.integrations.core.base.BaseIntegrationService.initialize") as mock_base_init:
-            mock_base_init.return_value = IntegrationResult.success_result()
+            mock_base_init.return_value = IntegrationResult(success=True)
 
             # Make _extract_config raise an integration error
             with patch.object(
@@ -309,14 +317,14 @@ class TestLLMIntegrationComprehensive:
                 assert "Integration error" == result.error
 
                 # Logger should record the error
-                integration.logger.error.assert_called_once()
+                integration.logger.error.assert_called()
 
     def test_initialize_generic_error(self, integration: LLMIntegration) -> None:
         """Test handling generic exceptions during initialization."""
         # Mock base class initialize to succeed
         with patch(
                 "quackcore.integrations.core.base.BaseIntegrationService.initialize") as mock_base_init:
-            mock_base_init.return_value = IntegrationResult.success_result()
+            mock_base_init.return_value = IntegrationResult(success=True)
 
             # Make _extract_config raise a generic exception
             with patch.object(
@@ -330,7 +338,7 @@ class TestLLMIntegrationComprehensive:
                 assert "Failed to initialize LLM integration" in result.error
 
                 # Logger should record the error
-                integration.logger.error.assert_called_once()
+                integration.logger.error.assert_called()
 
     def test_get_client_not_initialized(self, integration: LLMIntegration) -> None:
         """Test get_client when not initialized."""

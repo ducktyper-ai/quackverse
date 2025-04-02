@@ -5,14 +5,14 @@ Core LLM integration class.
 This module provides the main LLMIntegration class which serves as the entry point
 for using different LLM providers.
 """
-from collections.abc import Sequence, Callable
+from collections.abc import Callable, Sequence
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.integrations.core.base import BaseIntegrationService
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.llms import ChatMessage, LLMOptions
 from quackcore.integrations.llms.clients import LLMClient
-from quackcore.integrations.llms.config import LLMConfig, LLMConfigProvider
+from quackcore.integrations.llms.config import LLMConfigProvider
 from quackcore.integrations.llms.fallback import FallbackConfig
 from quackcore.integrations.llms.service.dependencies import check_llm_dependencies
 from quackcore.logging import LogLevel, LOG_LEVELS
@@ -57,6 +57,7 @@ class LLMIntegration(BaseIntegrationService):
         """Get the name of the integration."""
         return "LLM"
 
+    # src/quackcore/integrations/llms/service/integration.py (update for _extract_config method)
     def _extract_config(self) -> dict:
         """
         Extract and validate the LLM configuration.
@@ -93,9 +94,11 @@ class LLMIntegration(BaseIntegrationService):
 
         # Validate configuration
         try:
+            from quackcore.integrations.llms.config import LLMConfig
             LLMConfig(**self.config)
             return self.config
         except Exception as e:
+            # Make sure we explicitly raise QuackIntegrationError for validation errors
             raise QuackIntegrationError(f"Invalid LLM configuration: {e}")
 
     def initialize(self) -> IntegrationResult:
@@ -148,11 +151,12 @@ class LLMIntegration(BaseIntegrationService):
 
         except QuackIntegrationError as e:
             self.logger.error(f"Integration error during initialization: {e}")
-            return IntegrationResult.error_result(str(e))
+            return IntegrationResult(success=False, error=str(e))
         except Exception as e:
             self.logger.error(f"Failed to initialize LLM integration: {e}")
-            return IntegrationResult.error_result(
-                f"Failed to initialize LLM integration: {e}"
+            return IntegrationResult(
+                success=False,
+                error=f"Failed to initialize LLM integration: {e}"
             )
 
     def get_client(self) -> LLMClient:
@@ -179,8 +183,6 @@ class LLMIntegration(BaseIntegrationService):
             bool: True if using a mock client, False otherwise
         """
         return self._using_mock
-
-    # Add to the LLMIntegration class in integration.py
 
     def chat(
             self,
