@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.fs import service as fs_service
+from quackcore.fs import service as fs
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.models import ConversionDetails, ConversionMetrics
@@ -41,7 +41,7 @@ def _validate_input(html_path: Path, config: PandocConfig) -> int:
     Raises:
         QuackIntegrationError: If the input file is missing or has invalid structure.
     """
-    file_info = fs_service.get_file_info(html_path)
+    file_info = fs.get_file_info(html_path)
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(f"Input file not found: {html_path}")
 
@@ -49,7 +49,7 @@ def _validate_input(html_path: Path, config: PandocConfig) -> int:
 
     if config.validation.verify_structure:
         try:
-            read_result = fs_service.read_text(html_path)
+            read_result = fs.read_text(html_path)
             if not read_result.success:
                 raise QuackIntegrationError(
                     f"Could not read HTML file: {read_result.error}"
@@ -129,14 +129,14 @@ def _write_and_validate_output(
         tuple: (conversion_time, output_size, validation_errors)
     """
     # Create output directory if it doesn't exist
-    dir_result = fs_service.create_directory(output_path.parent, exist_ok=True)
+    dir_result = fs.create_directory(output_path.parent, exist_ok=True)
     if not dir_result.success:
         raise QuackIntegrationError(
             f"Failed to create output directory: {dir_result.error}"
         )
 
     # Write the content
-    write_result = fs_service.write_text(
+    write_result = fs.write_text(
         output_path, cleaned_markdown, encoding="utf-8"
     )
     if not write_result.success:
@@ -147,7 +147,7 @@ def _write_and_validate_output(
     conversion_time: float = time.time() - attempt_start
 
     # Get output file info
-    output_info = fs_service.get_file_info(output_path)
+    output_info = fs.get_file_info(output_path)
     if not output_info.success:
         raise QuackIntegrationError(
             f"Failed to get info for converted file: {output_path}"
@@ -303,7 +303,7 @@ def validate_conversion(
     validation_errors: list[str] = []
 
     # Get info about output file
-    output_info = fs_service.get_file_info(output_path)
+    output_info = fs.get_file_info(output_path)
     if not output_info.success or not output_info.exists:
         validation_errors.append(f"Output file does not exist: {output_path}")
         return validation_errors
@@ -326,7 +326,7 @@ def validate_conversion(
 
     # Check content
     try:
-        read_result = fs_service.read_text(output_path, encoding="utf-8")
+        read_result = fs.read_text(output_path, encoding="utf-8")
         if not read_result.success:
             validation_errors.append(f"Error reading output file: {read_result.error}")
             return validation_errors

@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.fs import service as fs_service
+from quackcore.fs import service as fs
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.models import ConversionMetrics, FileInfo
 from quackcore.logging import get_logger
@@ -220,8 +220,8 @@ def track_metrics(
         }
 
         # Use fs module's utility for formatting file sizes
-        original_size_str = fs_service.get_file_size_str(original_size)
-        converted_size_str = fs_service.get_file_size_str(converted_size)
+        original_size_str = fs.get_file_size_str(original_size)
+        converted_size_str = fs.get_file_size_str(converted_size)
 
         logger.info(
             f"File size change for {filename}: "
@@ -243,7 +243,7 @@ def get_file_info(path: Path, format_hint: str | None = None) -> FileInfo:
     Raises:
         QuackIntegrationError: If the file does not exist
     """
-    file_info = fs_service.get_file_info(path)
+    file_info = fs.get_file_info(path)
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(f"File not found: {path}")
 
@@ -251,7 +251,7 @@ def get_file_info(path: Path, format_hint: str | None = None) -> FileInfo:
     if format_hint:
         format_name = format_hint
     else:
-        extension = fs_service.get_extension(path)
+        extension = fs.get_extension(path)
         format_mapping = {
             "md": "markdown",
             "markdown": "markdown",
@@ -288,8 +288,8 @@ def check_file_size(
     errors: list[str] = []
 
     if validation_min_size > 0 and converted_size < validation_min_size:
-        converted_size_str = fs_service.get_file_size_str(converted_size)
-        min_size_str = fs_service.get_file_size_str(validation_min_size)
+        converted_size_str = fs.get_file_size_str(converted_size)
+        min_size_str = fs.get_file_size_str(validation_min_size)
 
         errors.append(
             f"Converted file size ({converted_size_str}) "
@@ -320,8 +320,8 @@ def check_conversion_ratio(
     if original_size > 0:
         conversion_ratio = converted_size / original_size
         if conversion_ratio < threshold:
-            converted_size_str = fs_service.get_file_size_str(converted_size)
-            original_size_str = fs_service.get_file_size_str(original_size)
+            converted_size_str = fs.get_file_size_str(converted_size)
+            original_size_str = fs.get_file_size_str(original_size)
 
             errors.append(
                 f"Conversion error: Converted file size "

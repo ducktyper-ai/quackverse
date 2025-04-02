@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.fs import service as fs_service
+from quackcore.fs import service as fs
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.models import ConversionDetails, ConversionMetrics
@@ -39,7 +39,7 @@ def _validate_markdown_input(markdown_path: Path) -> int:
     Raises:
         QuackIntegrationError: If the input file is missing or empty.
     """
-    file_info = fs_service.get_file_info(markdown_path)
+    file_info = fs.get_file_info(markdown_path)
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(
             f"Input file not found: {markdown_path}",
@@ -48,7 +48,7 @@ def _validate_markdown_input(markdown_path: Path) -> int:
     original_size: int = file_info.size or 0
 
     try:
-        read_result = fs_service.read_text(markdown_path, encoding="utf-8")
+        read_result = fs.read_text(markdown_path, encoding="utf-8")
         if not read_result.success:
             raise QuackIntegrationError(
                 f"Could not read Markdown file: {read_result.error}",
@@ -87,7 +87,7 @@ def _convert_markdown_to_docx_once(
     )
 
     # Create output directory if it doesn't exist
-    dir_result = fs_service.create_directory(output_path.parent, exist_ok=True)
+    dir_result = fs.create_directory(output_path.parent, exist_ok=True)
     if not dir_result.success:
         raise QuackIntegrationError(
             f"Failed to create output directory: {dir_result.error}",
@@ -127,7 +127,7 @@ def _get_conversion_output(output_path: Path, start_time: float) -> tuple[float,
         QuackIntegrationError: If output file info cannot be retrieved.
     """
     conversion_time: float = time.time() - start_time
-    output_info = fs_service.get_file_info(output_path)
+    output_info = fs.get_file_info(output_path)
     if not output_info.success:
         raise QuackIntegrationError(
             f"Failed to get info for converted file: {output_path}",
@@ -244,7 +244,7 @@ def validate_conversion(
     validation = config.validation
 
     # Get info about output file
-    output_info = fs_service.get_file_info(output_path)
+    output_info = fs.get_file_info(output_path)
     if not output_info.success or not output_info.exists:
         validation_errors.append(f"Output file does not exist: {output_path}")
         return validation_errors

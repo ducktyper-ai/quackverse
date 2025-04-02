@@ -16,12 +16,8 @@ from quackcore.fs.results import (
     ReadResult,
     WriteResult,
 )
-from quackcore.fs.service import (
-    FileSystemService,
-    create_directory,
-    get_file_info,
-    read_yaml,
-)
+from quackcore.fs.service.full_class import FileSystemService
+from quackcore.fs.service import service, create_service
 from quackcore.fs.utils import (
     atomic_write,
     compute_checksum,
@@ -49,12 +45,15 @@ from quackcore.fs.utils import (
     split_path,
 )
 
-# Create a global instance for convenience
-service = FileSystemService()
+# Import these functions back from service package to maintain compatibility
+# with direct imports from fs package
+from quackcore.fs.service.standalone import create_directory, get_file_info, read_yaml
 
 __all__ = [
     # Main service class
     "FileSystemService",
+    # Factory function
+    "create_service",
     # Global instance
     "service",
     # Core operations class
@@ -92,7 +91,7 @@ __all__ = [
     "safe_copy",
     "safe_move",
     "safe_delete",
-    "get_file_info",  # Added to make it accessible through fs package
-    "create_directory",  # Added to make it accessible through fs package
-    "read_yaml",  # Added to make it accessible through fs package
+    "get_file_info",
+    "create_directory",
+    "read_yaml",
 ]

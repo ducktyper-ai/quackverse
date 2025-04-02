@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import cast
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.fs import service as fs_service
+from quackcore.fs import service as fs
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.models import (
@@ -83,7 +83,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             input_info = get_file_info(input_path)
 
             # Ensure output directory exists
-            dir_result = fs_service.create_directory(output_path.parent, exist_ok=True)
+            dir_result = fs.create_directory(output_path.parent, exist_ok=True)
             if not dir_result.success:
                 return cast(IntegrationResult[Path],
                             IntegrationResult.error_result(
@@ -149,7 +149,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
         output_directory = output_dir or self.config.output_dir
 
         # Create output directory
-        dir_result = fs_service.create_directory(output_directory, exist_ok=True)
+        dir_result = fs.create_directory(output_directory, exist_ok=True)
         if not dir_result.success:
             return cast(IntegrationResult[list[Path]],
                         IntegrationResult.error_result(
@@ -249,8 +249,8 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
         """
         try:
             # Get file info for validation
-            output_info = fs_service.get_file_info(output_path)
-            input_info = fs_service.get_file_info(input_path)
+            output_info = fs.get_file_info(output_path)
+            input_info = fs.get_file_info(input_path)
 
             if not output_info.success or not output_info.exists:
                 logger.error(f"Output file does not exist: {output_path}")
@@ -273,12 +273,12 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             )
 
             # Validate based on file format
-            extension = fs_service.get_extension(output_path)
+            extension = fs.get_extension(output_path)
 
             if extension in ("md", "markdown"):
                 # For markdown, we can read the content and validate
                 try:
-                    read_result = fs_service.read_text(output_path, encoding="utf-8")
+                    read_result = fs.read_text(output_path, encoding="utf-8")
                     if not read_result.success:
                         logger.error(
                             f"Failed to read markdown file: {read_result.error}"
