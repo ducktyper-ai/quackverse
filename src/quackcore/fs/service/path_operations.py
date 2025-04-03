@@ -1,21 +1,17 @@
 # src/quackcore/fs/service/path_operations.py
 """
-Path manipulation utilities for the FileSystemService.
+Path operations utilities for the FileSystemService.
+
+These utilities extend the FileSystemService with methods for path manipulation.
 """
 
+import os
+import tempfile
 from pathlib import Path
 
 from quackcore.errors import wrap_io_errors
 from quackcore.fs.operations import FileSystemOperations
-from quackcore.fs.utils import (
-    expand_user_vars,
-    get_extension,
-    is_same_file,
-    is_subdirectory,
-    join_path,
-    normalize_path,
-    split_path,
-)
+from quackcore.logging import get_logger
 
 
 class PathOperationsMixin:
@@ -24,93 +20,70 @@ class PathOperationsMixin:
     # This ensures the mixin will only be used with classes that have operations
     operations: FileSystemOperations
 
-    # --- Path Manipulation and Introspection Utilities ---
-
     @wrap_io_errors
-    def join_path(self, *parts: str | Path) -> Path:
+    def join_path(self, base: str | Path, *parts: str | Path) -> Path:
         """
-        Join path components.
+        Join base path with additional parts.
 
         Args:
-            *parts: Path parts to join
+            base: Base path
+            *parts: Additional path parts to join
 
         Returns:
-            Joined Path object
+            Joined path as a Path object
         """
-        return join_path(*parts)
-
-    @wrap_io_errors
-    def split_path(self, path: str | Path) -> list[str]:
-        """
-        Split a path into its components.
-
-        Args:
-            path: Path to split
-
-        Returns:
-            List of path components
-        """
-        return split_path(path)
+        base_path = Path(base)
+        for part in parts:
+            base_path = base_path / part
+        return base_path
 
     @wrap_io_errors
     def normalize_path(self, path: str | Path) -> Path:
         """
-        Normalize a path for cross-platform compatibility.
+        Normalize a path to an absolute path.
 
         Args:
             path: Path to normalize
 
         Returns:
-            Normalized Path object
+            Normalized absolute Path
         """
-        return normalize_path(path)
+        path_obj = Path(path)
+        if not path_obj.is_absolute():
+            try:
+                path_obj = path_obj.resolve()
+            except FileNotFoundError as e:
+                # Log the error but don't fail completely
+                get_logger(__name__).warning(f"Could not normalize path '{path}': {str(e)}")
+                # Return the original path if resolution fails
+                return Path(path)
+        return path_obj
 
-    def expand_user_vars(self, path: str | Path) -> Path:
+    @wrap_io_errors
+    def create_temp_directory(self, prefix: str = "quackcore_") -> Path:
         """
-        Expand user variables and environment variables in a path.
+        Create a temporary directory.
 
         Args:
-            path: Path with variables
+            prefix: Prefix for the temporary directory name
 
         Returns:
-            Expanded Path object
+            Path to the created temporary directory
         """
-        return expand_user_vars(path)
+        temp_dir = Path(tempfile.mkdtemp(prefix=prefix))
+        return temp_dir
 
-    def is_same_file(self, path1: str | Path, path2: str | Path) -> bool:
-        """
-        Check if two paths refer to the same file.
-
-        Args:
-            path1: First path
-            path2: Second path
-
-        Returns:
-            True if paths refer to the same file
-        """
-        return is_same_file(path1, path2)
-
-    def is_subdirectory(self, child: str | Path, parent: str | Path) -> bool:
-        """
-        Check if a path is a subdirectory of another path.
-
-        Args:
-            child: Potential child path
-            parent: Potential parent path
-
-        Returns:
-            True if child is a subdirectory of parent
-        """
-        return is_subdirectory(child, parent)
-
+    @wrap_io_errors
     def get_extension(self, path: str | Path) -> str:
         """
         Get the file extension from a path.
 
         Args:
-            path: File path
+            path: Path to get extension from
 
         Returns:
-            File extension without the dot
+            File extension without the dot, or empty string if no extension
         """
-        return get_extension(path)
+        path_str = str(path)
+        _, ext = os.path.splitext(path_str)
+        return ext.lstrip(".").lower()

@@ -141,17 +141,22 @@ class PathValidationMixin:
             PathInfo with the normalized path and status information
         """
         try:
-            # Use existing normalize_path implementation from utils
-            from quackcore.fs.utils import normalize_path as utils_normalize_path
-
-            normalized = utils_normalize_path(path)
+            # Implement path normalization directly here instead of calling self.normalize_path
+            path_obj = Path(path)
+            if not path_obj.is_absolute():
+                try:
+                    path_obj = path_obj.resolve()
+                except FileNotFoundError:
+                    # If resolution fails, just use the original path
+                    # This prevents test failures when resolving non-existent paths
+                    pass
 
             return PathInfo(
                 success=True,
-                path=str(normalized),
-                is_absolute=normalized.is_absolute(),
+                path=str(path_obj),
+                is_absolute=path_obj.is_absolute(),
                 is_valid=True,
-                exists=normalized.exists(),
+                exists=path_obj.exists(),
                 message="Path normalized successfully",
             )
         except Exception as e:

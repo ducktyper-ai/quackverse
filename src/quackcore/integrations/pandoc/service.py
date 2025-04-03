@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import cast
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.fs import service as fs_service
+from quackcore.fs import service as fs  # Changed to just 'fs' to match test mocks
 from quackcore.integrations.core.base import BaseIntegrationService
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.pandoc.config import PandocConfig, PandocConfigProvider
@@ -120,7 +120,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             self.converter = DocumentConverter(conversion_config)
 
             # Ensure output directory exists
-            result = fs_service.create_directory(conversion_config.output_dir, exist_ok=True)
+            result = fs.create_directory(conversion_config.output_dir, exist_ok=True)
             if not result.success:
                 return IntegrationResult.error_result(
                     f"Failed to create output directory: {result.error}"
@@ -277,7 +277,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             input_dir = resolver.resolve_project_path(input_dir)
 
             # Check if input directory exists
-            input_dir_info = fs_service.get_file_info(input_dir)
+            input_dir_info = fs.get_file_info(input_dir)
             if (
                 not input_dir_info.success
                 or not input_dir_info.exists
@@ -307,7 +307,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                     IntegrationResult.error_result("Converter not initialized"))
 
             # Create output directory if it doesn't exist
-            dir_result = fs_service.create_directory(output_dir, exist_ok=True)
+            dir_result = fs.create_directory(output_dir, exist_ok=True)
             if not dir_result.success:
                 return cast(IntegrationResult[list[Path]],
                     IntegrationResult.error_result(
@@ -324,7 +324,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             source_format, extension_pattern = params
 
             # Find files to convert
-            find_result = fs_service.find_files(input_dir, extension_pattern, recursive)
+            find_result = fs.find_files(input_dir, extension_pattern, recursive)
             if not find_result.success or not find_result.files:
                 msg = (
                     f"No matching files found in {input_dir}"

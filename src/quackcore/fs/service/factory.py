@@ -5,7 +5,8 @@ Factory functions for creating FileSystemService instances.
 
 from pathlib import Path
 
-from quackcore.fs.service.base import FileSystemService
+# Import the full FileSystemService with all mixins
+from quackcore.fs.service.full_class import FileSystemService
 from quackcore.logging import LOG_LEVELS, LogLevel
 
 

@@ -217,7 +217,7 @@ class PandocConfigProvider(BaseConfigProvider):
         output_dir = default_config.get("output_dir")
         if output_dir:
             # Use fs_service to normalize the path
-            normalized_path = fs.normalize_path(str(output_dir))
+            normalized_path = fs.normalize_path_with_info(str(output_dir))
             if normalized_path.success:
                 default_config["output_dir"] = normalized_path.path
 
