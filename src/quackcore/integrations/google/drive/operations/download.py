@@ -6,19 +6,19 @@ This module provides robust file download functionality with improved error hand
 """
 
 import io
-from typing import Any
+import logging
+from collections.abc import Mapping
 
-from quackcore import QuackApiError
+from quackcore.errors import QuackApiError
 from quackcore.fs import service as fs
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.google.drive.protocols import DriveService
 from quackcore.integrations.google.drive.utils.api import execute_api_request
 from quackcore.paths import resolver
-from quackcore.logging import get_logger
 
 
 def resolve_download_path(
-    file_metadata: dict[str, Any], local_path: str | None = None
+        file_metadata: Mapping[str, object], local_path: str | None = None
 ) -> str:
     """
     Resolve the local path for file download with enhanced path handling.
@@ -33,8 +33,7 @@ def resolve_download_path(
     file_name = str(file_metadata.get("name", "downloaded_file"))
 
     if local_path is None:
-        # Create a temporary directory using fs.create_temp_directory
-        # Make sure we're using the specific import that's being patched in tests
+        # Create a temp directory using fs.create_temp_directory
         temp_dir = fs.create_temp_directory(prefix="gdrive_download_")
         # Use fs.join_path for path joining
         return str(fs.join_path(temp_dir, file_name))
@@ -61,7 +60,7 @@ def download_file(
         drive_service: DriveService,
         remote_id: str,
         local_path: str | None = None,
-        logger: str | None = None
+        logger: logging.Logger | None = None
 ) -> IntegrationResult[str]:
     """
     Download a file from Google Drive.
@@ -75,7 +74,7 @@ def download_file(
     Returns:
         IntegrationResult with the local file path.
     """
-    local_logger = get_logger(__name__)
+    local_logger = logger or logging.getLogger(__name__)
 
     try:
         # Get file metadata

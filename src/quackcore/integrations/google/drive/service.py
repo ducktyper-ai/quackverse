@@ -39,13 +39,13 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
     ]
 
     def __init__(
-        self,
-        client_secrets_file: str | None = None,
-        credentials_file: str | None = None,
-        shared_folder_id: str | None = None,
-        config_path: str | None = None,
-        scopes: list[str] | None = None,
-        log_level: int = logging.INFO,
+            self,
+            client_secrets_file: str | None = None,
+            credentials_file: str | None = None,
+            shared_folder_id: str | None = None,
+            config_path: str | None = None,
+            scopes: list[str] | None = None,
+            log_level: int = logging.INFO,
     ) -> None:
         """
         Initialize the Google Drive integration service.
@@ -80,13 +80,21 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
         return "GoogleDrive"
 
     def _initialize_config(
-        self,
-        client_secrets_file: str | None,
-        credentials_file: str | None,
-        shared_folder_id: str | None,
+            self,
+            client_secrets_file: str | None,
+            credentials_file: str | None,
+            shared_folder_id: str | None,
     ) -> dict[str, Any]:
         """
         Initialize configuration from parameters or config file.
+
+        Args:
+            client_secrets_file: Path to client secrets file.
+            credentials_file: Path to credentials file.
+            shared_folder_id: ID of shared folder.
+
+        Returns:
+            dict: Configuration dictionary.
 
         Raises:
             QuackIntegrationError: If configuration initialization fails.
@@ -170,10 +178,15 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
     # --- Helper Methods for Refactoring ---
 
     def _resolve_file_details(
-        self, file_path: str, remote_path: str | None, parent_folder_id: str | None
+            self, file_path: str, remote_path: str | None, parent_folder_id: str | None
     ) -> tuple[Any, str, str | None, str]:
         """
         Resolve file details for upload.
+
+        Args:
+            file_path: Path to the file to upload.
+            remote_path: Optional remote path or name.
+            parent_folder_id: Optional parent folder ID.
 
         Returns:
             A tuple containing the resolved path object,
@@ -211,9 +224,8 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
         """
         file_name = str(file_metadata.get("name", "downloaded_file"))
 
-        if not local_path:
+        if local_path is None:
             # Create a temp directory using fs.create_temp_directory
-            # This needs to match how the tests are patching it
             temp_dir = fs.create_temp_directory(prefix="quackcore_gdrive_")
             # Use fs.join_path for path joining
             return str(fs.join_path(temp_dir, file_name))
@@ -239,8 +251,12 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
         """
         Build the query string for listing files.
 
+        Args:
+            remote_path: Optional folder ID to list files from.
+            pattern: Optional filename pattern to filter results.
+
         Returns:
-            The query string.
+            str: The query string.
         """
         query_parts: list[str] = []
         folder_id = remote_path or self.shared_folder_id
@@ -257,13 +273,20 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
         return " and ".join(query_parts)
 
     def _execute_upload(
-        self, file_metadata: dict[str, Any], media: T
+            self, file_metadata: dict[str, Any], media: Any
     ) -> dict[str, Any]:
         """
         Execute the file upload to Google Drive.
 
+        Args:
+            file_metadata: File metadata for upload.
+            media: Media content to upload.
+
         Returns:
-            The API response as a dict.
+            dict: The API response.
+
+        Raises:
+            QuackApiError: If upload fails.
         """
         try:
             file = (
@@ -287,15 +310,22 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
     # --- End of Helper Methods ---
 
     def upload_file(
-        self,
-        file_path: str,
-        remote_path: str | None = None,
-        description: str | None = None,
-        parent_folder_id: str | None = None,
-        public: bool | None = None,
+            self,
+            file_path: str,
+            remote_path: str | None = None,
+            description: str | None = None,
+            parent_folder_id: str | None = None,
+            public: bool | None = None,
     ) -> IntegrationResult[str]:
         """
         Upload a file to Google Drive.
+
+        Args:
+            file_path: Path to the file to upload.
+            remote_path: Optional remote path or name.
+            description: Optional file description.
+            parent_folder_id: Optional parent folder ID.
+            public: Whether to make the file publicly accessible.
 
         Returns:
             IntegrationResult with the file ID or sharing link.
@@ -313,9 +343,12 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
 
             file_metadata: dict[str, Any] = {
                 "name": filename,
-                "description": description,
                 "mimeType": mime_type,
             }
+
+            if description:
+                file_metadata["description"] = description
+
             if folder_id:
                 file_metadata["parents"] = [folder_id]
 
@@ -343,9 +376,9 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
                     )
 
             link = (
-                file.get("webViewLink")
-                or file.get("webContentLink")
-                or f"https://drive.google.com/file/d/{file['id']}/view"
+                    file.get("webViewLink")
+                    or file.get("webContentLink")
+                    or f"https://drive.google.com/file/d/{file['id']}/view"
             )
             return IntegrationResult.success_result(
                 content=link,
@@ -448,10 +481,14 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             )
 
     def list_files(
-        self, remote_path: str | None = None, pattern: str | None = None
+            self, remote_path: str | None = None, pattern: str | None = None
     ) -> IntegrationResult[list[Mapping]]:
         """
         List files in Google Drive.
+
+        Args:
+            remote_path: Optional folder ID to list files from.
+            pattern: Optional filename pattern to filter results.
 
         Returns:
             IntegrationResult with the list of files.
@@ -507,10 +544,14 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             )
 
     def create_folder(
-        self, folder_name: str, parent_path: str | None = None
+            self, folder_name: str, parent_path: str | None = None
     ) -> IntegrationResult[str]:
         """
         Create a folder in Google Drive.
+
+        Args:
+            folder_name: Name of the folder to create.
+            parent_path: Optional parent folder ID.
 
         Returns:
             IntegrationResult with the folder ID.
@@ -566,10 +607,15 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             )
 
     def set_file_permissions(
-        self, file_id: str, role: str | None = None, type_: str = "anyone"
+            self, file_id: str, role: str | None = None, type_: str = "anyone"
     ) -> IntegrationResult[bool]:
         """
         Set permissions for a file or folder.
+
+        Args:
+            file_id: ID of the file or folder.
+            role: Permission role (e.g., "reader", "writer").
+            type_: Permission type (e.g., "anyone", "user").
 
         Returns:
             IntegrationResult indicating success.
@@ -612,6 +658,9 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
         """
         Get the sharing link for a file.
 
+        Args:
+            file_id: ID of the file.
+
         Returns:
             IntegrationResult with the sharing link.
         """
@@ -634,9 +683,9 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
                 ) from api_error
 
             link = (
-                file_metadata.get("webViewLink")
-                or file_metadata.get("webContentLink")
-                or f"https://drive.google.com/file/d/{file_id}/view"
+                    file_metadata.get("webViewLink")
+                    or file_metadata.get("webContentLink")
+                    or f"https://drive.google.com/file/d/{file_id}/view"
             )
             return IntegrationResult.success_result(
                 content=link, message="Got sharing link successfully"
@@ -655,10 +704,14 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             )
 
     def delete_file(
-        self, file_id: str, permanent: bool = False
+            self, file_id: str, permanent: bool = False
     ) -> IntegrationResult[bool]:
         """
         Delete a file from Google Drive.
+
+        Args:
+            file_id: ID of the file or folder.
+            permanent: Whether to permanently delete or move to trash.
 
         Returns:
             IntegrationResult indicating success.
