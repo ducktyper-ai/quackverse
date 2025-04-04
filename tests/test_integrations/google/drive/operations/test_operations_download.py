@@ -29,12 +29,12 @@ class TestDriveOperationsDownload:
             patch("googleapiclient.http.MediaIoBaseDownload") as mock_download_class,
             patch("io.BytesIO") as mock_bytesio,
             patch.object(download, "resolve_download_path") as mock_resolve,
-            patch("quackcore.fs.join_path") as mock_join,
-            patch("quackcore.fs.create_directory") as mock_mkdir,
+            patch("quackcore.fs.service.join_path") as mock_join,
+            patch("quackcore.fs.service.create_directory") as mock_mkdir,
             patch(
                 "quackcore.integrations.google.drive.utils.api.execute_api_request"
             ) as mock_execute,
-            patch("quackcore.fs.write_binary") as mock_write,  # Correct patch
+            patch("quackcore.fs.service.write_binary") as mock_write,  # Correct patch for service
         ):
             # Configure basic mocks
             mock_resolve.return_value = "/tmp/test_file.txt"
@@ -98,7 +98,7 @@ class TestDriveOperationsDownload:
         # Test with no local path (should create temp directory)
         file_metadata = {"name": "test_file.txt"}
 
-        # Patch the service module since that's how it's imported in the implementation
+        # Patch service module, not direct fs module
         with patch("quackcore.fs.service.create_temp_directory") as mock_temp:
             # Setup the mock to return what the test expects
             mock_temp.return_value = tmp_path / "temp_dir"
@@ -206,9 +206,9 @@ class TestDriveOperationsDownload:
             patch("googleapiclient.http.MediaIoBaseDownload") as mock_download,
             patch("io.BytesIO") as mock_bytesio,
             patch.object(download, "resolve_download_path") as mock_resolve,
-            patch("quackcore.fs.join_path") as mock_join,
-            patch("quackcore.fs.create_directory") as mock_mkdir,
-            patch("quackcore.fs.write_binary") as mock_write,  # Correct patch
+            patch("quackcore.fs.service.join_path") as mock_join,
+            patch("quackcore.fs.service.create_directory") as mock_mkdir,
+            patch("quackcore.fs.service.write_binary") as mock_write,  # Correct service patch
             patch(
                 "quackcore.integrations.google.drive.utils.api.execute_api_request"
             ) as mock_execute,

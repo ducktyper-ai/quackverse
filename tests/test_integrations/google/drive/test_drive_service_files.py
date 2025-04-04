@@ -142,7 +142,7 @@ class TestGoogleDriveServiceFiles:
         # Test with no local path specified (should create temp dir)
         file_metadata = {"name": "test_file.txt"}
 
-        # Patch the fs module as imported in the GoogleDriveService class
+        # Patch the fs service module as per best practices, not direct fs module
         with patch("quackcore.fs.service.create_temp_directory") as mock_temp:
             # Setup the mock to return a specific path
             mock_temp.return_value = tmp_path / "temp_dir"
