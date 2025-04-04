@@ -4,7 +4,6 @@ Mock classes for Google Drive download operations.
 """
 
 import logging
-from pathlib import Path
 from typing import Any, Optional
 
 from quackcore.integrations.core.results import IntegrationResult
@@ -73,8 +72,8 @@ class MockDownloadOperations:
     def download_file(
             drive_service: DriveService,
             remote_id: str,
-            local_path: Optional[str] = None,
-            logger: Optional[logging.Logger] = None
+            local_path: str | None = None,
+            logger: str | None = None
     ) -> IntegrationResult[str]:
         """
         Mock implementation for download_file.
@@ -88,4 +87,11 @@ class MockDownloadOperations:
         Returns:
             IntegrationResult with the local file path.
         """
-        return mock_download_file(drive_service, remote_id, local_path, logger)
+        # Default path if not provided
+        result_path = local_path or f"/tmp/mock_file_{remote_id}.txt"
+
+        # Return success result
+        return IntegrationResult.success_result(
+            content=result_path,
+            message=f"Mock file downloaded successfully to {result_path}"
+        )

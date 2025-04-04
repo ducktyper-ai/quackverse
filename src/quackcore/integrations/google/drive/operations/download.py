@@ -6,20 +6,15 @@ This module provides robust file download functionality with improved error hand
 """
 
 import io
-import logging
-from collections.abc import Callable
-from pathlib import Path
 from typing import Any
 
-from googleapiclient.http import MediaIoBaseDownload
-
-from quackcore.errors import QuackApiError
+from quackcore import QuackApiError
 from quackcore.fs import service as fs
-from quackcore.fs.operations import FileSystemOperations
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.google.drive.protocols import DriveService
 from quackcore.integrations.google.drive.utils.api import execute_api_request
 from quackcore.paths import resolver
+from quackcore.logging import get_logger
 
 
 def resolve_download_path(
@@ -38,90 +33,103 @@ def resolve_download_path(
     file_name = str(file_metadata.get("name", "downloaded_file"))
 
     if local_path is None:
-        # Create a temporary directory with a more descriptive prefix
+        # Create a temporary directory using fs.create_temp_directory
+        # The key fix is using fs.create_temp_directory directly, not fs module
         temp_dir = fs.create_temp_directory(prefix="gdrive_download_")
-        return fs.join_path(temp_dir, file_name)
+        # Use fs.join_path to join paths correctly
+        return str(fs.join_path(temp_dir, file_name))
 
-    # Resolve the local path with more robust handling
+    # Resolve the local path
     local_path_obj = resolver.resolve_project_path(local_path)
     file_info = fs.get_file_info(local_path_obj)
 
     if file_info.success and file_info.exists:
-        return (
-            fs.join_path(local_path_obj, file_name)
-            if file_info.is_dir
-            else local_path_obj
-        )
+        # Handle different cases depending on whether local_path is a directory or file
+        if file_info.is_dir:
+            # If it's a directory, join the file name to it
+            joined_path = fs.join_path(local_path_obj, file_name)
+            return str(joined_path)
+        else:
+            # If it's a file, use the path as is
+            return str(local_path_obj)
 
-    # If path doesn't exist, assume it's a file path the user wants to create
-    return local_path_obj
+    # If the path doesn't exist, assume it's a file path the user wants to create
+    return str(local_path_obj)
 
 
 def download_file(
-        self, remote_id: str, local_path: str | None = None
+        drive_service: DriveService,
+        remote_id: str,
+        local_path: str | None = None,
+        logger: str | None = None
 ) -> IntegrationResult[str]:
-    if init_error := self._ensure_initialized():
-        return init_error
+    """
+    Download a file from Google Drive.
+
+    Args:
+        drive_service: Google Drive service object.
+        remote_id: ID of the file to download.
+        local_path: Optional local path to save the file.
+        logger: Optional logger instance.
+
+    Returns:
+        IntegrationResult with the local file path.
+    """
+    local_logger = get_logger(__name__)
 
     try:
+        # Get file metadata
         try:
-            # First, check file permissions and metadata
             file_metadata = execute_api_request(
-                self.drive_service.files().get(
-                    fileId=remote_id,
-                    fields="id,name,mimeType,permissions,shared"
+                drive_service.files().get(
+                    file_id=remote_id,
+                    fields="name, mimeType"
                 ),
                 "Failed to get file metadata from Google Drive",
                 "files.get"
             )
-        except Exception as metadata_error:
-            self.logger.error(f"Metadata retrieval failed: {metadata_error}")
+        except QuackApiError as metadata_error:
+            local_logger.error(f"Metadata retrieval failed: {metadata_error}")
             return IntegrationResult.error_result(
-                f"Metadata retrieval failed: {metadata_error}"
+                f"Failed to get file metadata: {metadata_error}"
             )
 
-        # Log permission details for debugging
-        self.logger.info(f"File metadata: {file_metadata}")
-        self.logger.info(f"Permissions: {file_metadata.get('permissions', [])}")
-
-        try:
-            # Attempt media download with explicit handling
-            request = self.drive_service.files().get_media(fileId=remote_id)
-            fh = io.BytesIO()
-
-            downloader = MediaIoBaseDownload(fh, request)
-            done = False
-            while not done:
-                status, done = downloader.next_chunk()
-
-            fh.seek(0)
-            file_content = fh.read()
-        except HttpError as http_error:
-            # More detailed error logging
-            self.logger.error(f"HttpError during download: {http_error}")
-            self.logger.error(f"Error details: {http_error.resp}")
-            self.logger.error(f"Error content: {http_error.content}")
-
-            # Specific handling for authorization errors
-            if http_error.resp.status == 403:
-                return IntegrationResult.error_result(
-                    "Authorization failed. Ensure the file is shared and the app has permissions. "
-                    f"Error details: {http_error}"
-                )
-            raise
-
-        # Resolve download path
-        download_path = self._resolve_download_path(file_metadata, local_path)
+        # Resolve the download path
+        download_path = resolve_download_path(file_metadata, local_path)
 
         # Ensure parent directory exists
-        parent_dir = Path(download_path).parent
+        parent_dir = fs.join_path(download_path).parent
         parent_result = fs.create_directory(parent_dir, exist_ok=True)
         if not parent_result.success:
             return IntegrationResult.error_result(
-                f"Directory creation failed: {parent_result.error}"
+                f"Failed to create directory: {parent_result.error}"
             )
 
-        # Write file
+        # Download the file content
+        try:
+            request = drive_service.files().get_media(file_id=remote_id)
+            from googleapiclient.http import MediaIoBaseDownload
+
+            fh = io.BytesIO()
+            downloader = MediaIoBaseDownload(fh, request)
+
+            done = False
+            while not done:
+                status, done = downloader.next_chunk()
+                local_logger.debug(
+                    f"Download progress: {int(status.progress() * 100)}%"
+                )
+        except Exception as download_error:
+            local_logger.error(f"Failed to download file: {download_error}")
+            return IntegrationResult.error_result(
+                f"Failed to download file from Google Drive: {download_error}"
+            )
+
+        # Reset pointer to beginning of the buffer and read content
+        fh.seek(0)
+        file_content = fh.read()
+
+        # Write file to disk
         write_result = fs.write_binary(download_path, file_content)
         if not write_result.success:
             return IntegrationResult.error_result(
@@ -134,7 +142,7 @@ def download_file(
         )
 
     except Exception as e:
-        self.logger.exception("Comprehensive download error")
+        local_logger.error(f"Unexpected error during file download: {e}")
         return IntegrationResult.error_result(
-            f"Comprehensive download failure: {e}"
+            f"Failed to download file from Google Drive: {e}"
         )

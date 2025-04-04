@@ -197,7 +197,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
         return path_obj, filename, folder_id, mime_type
 
     def _resolve_download_path(
-        self, file_metadata: dict[str, Any], local_path: str | None
+            self, file_metadata: dict[str, Any], local_path: str | None
     ) -> str:
         """
         Resolve the local path for file download.
@@ -209,23 +209,25 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
         Returns:
             str: The resolved download path.
         """
-        file_name = file_metadata["name"]
+        file_name = str(file_metadata.get("name", "downloaded_file"))
 
         if not local_path:
-            # Create a temp directory
+            # Create a temp directory using fs.create_temp_directory directly
             temp_dir = fs.create_temp_directory(prefix="quackcore_gdrive_")
-            # Get joined path from join_path
-            return fs.join_path(temp_dir, file_name)
+            # Use fs.join_path for path joining
+            return str(fs.join_path(temp_dir, file_name))
 
+        # Resolve the local path
         local_path_obj = resolver.resolve_project_path(local_path)
         file_info = fs.get_file_info(local_path_obj)
 
         if file_info.success and file_info.exists and file_info.is_dir:
-            # Make sure to call join_path explicitly to get the joined path
+            # If local_path is a directory, join file_name to it
             joined_path = fs.join_path(local_path_obj, file_name)
-            return joined_path
+            return str(joined_path)
 
-        return local_path_obj
+        # If local_path is a file or doesn't exist, return it directly
+        return str(local_path_obj)
 
     def _build_query(self, remote_path: str | None, pattern: str | None) -> str:
         """
@@ -357,7 +359,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             )
 
     def download_file(
-        self, remote_id: str, local_path: str | None = None
+            self, remote_id: str, local_path: str | None = None
     ) -> IntegrationResult[str]:
         """
         Download a file from Google Drive.
@@ -373,6 +375,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             return init_error
 
         try:
+            # First, get file metadata to determine filename
             try:
                 file_metadata = (
                     self.drive_service.files()
@@ -380,14 +383,15 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
                     .execute()
                 )
             except Exception as api_error:
-                raise QuackApiError(
-                    f"Failed to get file metadata from Google Drive: {api_error}",
-                    service="Google Drive",
-                    api_method="files.get",
-                    original_error=api_error,
-                ) from api_error
+                self.logger.error(f"Failed to get file metadata: {api_error}")
+                return IntegrationResult.error_result(
+                    f"Failed to get file metadata from Google Drive: {api_error}"
+                )
 
+            # Resolve the download path
             download_path = self._resolve_download_path(file_metadata, local_path)
+
+            # Ensure parent directory exists
             parent_dir = fs.join_path(download_path).parent
             parent_result = fs.create_directory(parent_dir, exist_ok=True)
             if not parent_result.success:
@@ -395,32 +399,32 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
                     f"Failed to create directory: {parent_result.error}"
                 )
 
+            # Download the file content
             try:
                 request = self.drive_service.files().get_media(fileId=remote_id)
                 from googleapiclient.http import MediaIoBaseDownload
 
                 fh = io.BytesIO()
                 downloader = MediaIoBaseDownload(fh, request)
+
                 done = False
                 while not done:
                     status, done = downloader.next_chunk()
                     self.logger.debug(
                         f"Download progress: {int(status.progress() * 100)}%"
                     )
-            except Exception as api_error:
-                raise QuackApiError(
-                    f"Failed to download file from Google Drive: {api_error}",
-                    service="Google Drive",
-                    api_method="files.get_media",
-                    original_error=api_error,
-                ) from api_error
+            except Exception as download_error:
+                self.logger.error(f"Failed to download file: {download_error}")
+                return IntegrationResult.error_result(
+                    f"Failed to download file from Google Drive: {download_error}"
+                )
 
+            # Reset pointer to beginning of the buffer and read content
             fh.seek(0)
             file_content = fh.read()
 
-            # Write file to disk - using fs.write_binary directly
+            # Write file to disk using fs module
             write_result = fs.write_binary(download_path, file_content)
-
             if not write_result.success:
                 return IntegrationResult.error_result(
                     f"Failed to write file: {write_result.error}"
@@ -431,11 +435,8 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
                 message=f"File downloaded successfully to {download_path}",
             )
 
-        except QuackApiError as e:
-            self.logger.error(f"API error during file download: {e}")
-            return IntegrationResult.error_result(f"API error: {e}")
         except Exception as e:
-            self.logger.error(f"Failed to download file: {e}")
+            self.logger.error(f"Unexpected error during file download: {e}")
             return IntegrationResult.error_result(
                 f"Failed to download file from Google Drive: {e}"
             )

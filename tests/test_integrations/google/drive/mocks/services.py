@@ -3,12 +3,9 @@
 Mock service objects for Google Drive testing.
 """
 
-import io
 import logging
-from pathlib import Path
 from typing import Any, Optional
 
-from quackcore.fs.results import OperationResult, WriteResult
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.google.drive.protocols import (
     DriveFilesResource,
@@ -57,7 +54,7 @@ class MockDriveService(DriveService):
         return None
 
     def download_file(
-            self, remote_id: str, local_path: Optional[str] = None
+            self, remote_id: str, local_path: str | None = None
     ) -> IntegrationResult[str]:
         """
         Mock implementation of download_file to match the real service.
@@ -75,7 +72,7 @@ class MockDriveService(DriveService):
         try:
             # Get metadata using the mock files resource
             try:
-                file_metadata = self.files().get(fileId=remote_id).execute()
+                file_metadata = self.files().get(file_id=remote_id).execute()
             except Exception as api_error:
                 return IntegrationResult.error_result(
                     f"Failed to get file metadata: {api_error}"
@@ -85,23 +82,11 @@ class MockDriveService(DriveService):
             if not local_path:
                 local_path = f"/tmp/{file_metadata.get('name', 'downloaded_file')}"
 
-            # Get file content using get_media
-            try:
-                request = self.files().get_media(fileId=remote_id)
-                # In a real implementation, we'd download the file,
-                # but for the mock we'll just simulate it
-                mock_content = b"Mock file content for testing"
-
-                # Return success result
-                return IntegrationResult.success_result(
-                    content=local_path,
-                    message=f"File downloaded successfully to {local_path}",
-                )
-            except Exception as download_error:
-                return IntegrationResult.error_result(
-                    f"Failed to download file: {download_error}"
-                )
-
+            # For mock implementation, just return success with the path
+            return IntegrationResult.success_result(
+                content=local_path,
+                message=f"File downloaded successfully to {local_path}",
+            )
         except Exception as e:
             return IntegrationResult.error_result(
                 f"Failed to download file: {e}"
