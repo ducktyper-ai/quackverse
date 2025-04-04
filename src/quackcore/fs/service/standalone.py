@@ -97,6 +97,43 @@ def write_binary(
     return _service.write_binary(path, content, atomic)
 
 
+def read_lines(path: str | Path, encoding: str = "utf-8") -> ReadResult[list[str]]:
+    """
+    Read lines from a text file.
+
+    Args:
+        path: Path to the file
+        encoding: Text encoding
+
+    Returns:
+        ReadResult with the file content as a list of lines
+    """
+    return _service.read_lines(path, encoding)
+
+
+def write_lines(
+    path: str | Path,
+    lines: list[str],
+    encoding: str = "utf-8",
+    atomic: bool = True,
+    line_ending: str = "\n",
+) -> WriteResult:
+    """
+    Write lines to a text file.
+
+    Args:
+        path: Path to the file
+        lines: Lines to write
+        encoding: Text encoding
+        atomic: Whether to use atomic writing
+        line_ending: Line ending to use
+
+    Returns:
+        WriteResult with operation status
+    """
+    return _service.write_lines(path, lines, encoding, atomic, line_ending)
+
+
 def create_directory(path: str | Path, exist_ok: bool = True) -> OperationResult:
     """
     Create a directory if it doesn't exist.
@@ -277,6 +314,32 @@ def delete(path: str | Path, missing_ok: bool = True) -> OperationResult:
         OperationResult with operation status
     """
     return _service.delete(path, missing_ok)
+
+
+def split_path(path: str | Path) -> list[str]:
+    """
+    Split a path into its components.
+
+    Args:
+        path: Path to split
+
+    Returns:
+        List of path components
+    """
+    return _service.split_path(path)
+
+
+def join_path(*parts: str | Path) -> Path:
+    """
+    Join path components.
+
+    Args:
+        *parts: Path parts to join
+
+    Returns:
+        Joined Path object
+    """
+    return _service.join_path(*parts)
 
 
 # Path utility functions

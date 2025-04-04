@@ -12,7 +12,7 @@ from typing import Any
 
 from quackcore.errors import wrap_io_errors
 from quackcore.fs.operations import FileSystemOperations
-from quackcore.fs.types import ReadResult, WriteResult, FileInfoResult
+from quackcore.fs.results import ReadResult, WriteResult, FileInfoResult, OperationResult
 
 
 class FileOperationsMixin:
@@ -219,3 +219,116 @@ class FileOperationsMixin:
             FileInfoResult with the file information
         """
         return self.operations.get_file_info(path)
+
+    @wrap_io_errors
+    def read_lines(
+            self, path: str | Path, encoding: str = "utf-8"
+    ) -> ReadResult[list[str]]:
+        """
+        Read lines from a text file.
+
+        Args:
+            path: Path to the file
+            encoding: Text encoding
+
+        Returns:
+            ReadResult with the file content as a list of lines
+        """
+        result = self.operations.read_text(path, encoding)
+        if result.success:
+            lines = result.content.splitlines()
+            return ReadResult(
+                success=True,
+                path=result.path,
+                content=lines,
+                encoding=encoding,
+                message=f"Successfully read {len(lines)} lines",
+            )
+        return ReadResult(
+            success=False,
+            path=result.path,
+            content=[],
+            encoding=encoding,
+            error=result.error,
+        )
+
+    @wrap_io_errors
+    def write_lines(
+            self,
+            path: str | Path,
+            lines: list[str],
+            encoding: str = "utf-8",
+            atomic: bool = True,
+            line_ending: str = "\n",
+    ) -> WriteResult:
+        """
+        Write lines to a text file.
+
+        This method explicitly joins the lines using the specified line ending.
+        When a non-default line ending is provided, the content is encoded and written
+        in binary mode to prevent any unwanted normalization.
+
+        Args:
+            path: Path to the file.
+            lines: Lines to write.
+            encoding: Text encoding to use.
+            atomic: Whether to write the file atomically.
+            line_ending: The line ending to use.
+
+        Returns:
+            WriteResult indicating the outcome of the write operation.
+        """
+        content = line_ending.join(lines)
+
+        # For non-default line endings, encode and write in binary mode
+        if line_ending != "\n":
+            bytes_content = content.encode(encoding)
+            return self.operations.write_binary(path, bytes_content, atomic)
+        else:
+            return self.operations.write_text(path, content, encoding, atomic)
+
+    # File management operations
+    def copy(
+            self, src: str | Path, dst: str | Path, overwrite: bool = False
+    ) -> WriteResult:
+        """
+        Copy a file or directory.
+
+        Args:
+            src: Source path
+            dst: Destination path
+            overwrite: Whether to overwrite if destination exists
+
+        Returns:
+            WriteResult with operation status
+        """
+        return self.operations.copy(src, dst, overwrite)
+
+    def move(
+            self, src: str | Path, dst: str | Path, overwrite: bool = False
+    ) -> WriteResult:
+        """
+        Move a file or directory.
+
+        Args:
+            src: Source path
+            dst: Destination path
+            overwrite: Whether to overwrite if destination exists
+
+        Returns:
+            WriteResult with operation status
+        """
+        return self.operations.move(src, dst, overwrite)
+
+    def delete(self, path: str | Path, missing_ok: bool = True) -> OperationResult:
+        """
+        Delete a file or directory.
+
+        Args:
+            path: Path to delete
+            missing_ok: Whether to ignore if the path doesn't exist
+
+        Returns:
+            OperationResult with operation status
+        """
+        return self.operations.delete(path, missing_ok)

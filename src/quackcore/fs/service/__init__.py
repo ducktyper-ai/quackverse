@@ -300,6 +300,43 @@ def delete(path: str | Path, missing_ok: bool = True) -> OperationResult:
     return service.delete(path, missing_ok)
 
 
+def read_lines(path: str | Path, encoding: str = "utf-8") -> ReadResult[list[str]]:
+    """
+    Read lines from a text file.
+
+    Args:
+        path: Path to the file
+        encoding: Text encoding
+
+    Returns:
+        ReadResult with the file content as a list of lines
+    """
+    return service.read_lines(path, encoding)
+
+
+def write_lines(
+    path: str | Path,
+    lines: list[str],
+    encoding: str = "utf-8",
+    atomic: bool = True,
+    line_ending: str = "\n",
+) -> WriteResult:
+    """
+    Write lines to a text file.
+
+    Args:
+        path: Path to the file
+        lines: Lines to write
+        encoding: Text encoding
+        atomic: Whether to write the file atomically
+        line_ending: The line ending to use
+
+    Returns:
+        WriteResult indicating the outcome of the operation
+    """
+    return service.write_lines(path, lines, encoding, atomic, line_ending)
+
+
 def normalize_path_with_info(path: str | Path) -> PathInfo:
     """
     Normalize a path and return detailed information.
@@ -357,6 +394,8 @@ __all__ = [
     "write_yaml",
     "read_json",
     "write_json",
+    "read_lines",
+    "write_lines",
     "list_directory",
     "find_files",
     "copy",

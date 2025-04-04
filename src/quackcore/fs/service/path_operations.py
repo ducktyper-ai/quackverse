@@ -11,6 +11,12 @@ from pathlib import Path
 
 from quackcore.errors import wrap_io_errors
 from quackcore.fs.operations import FileSystemOperations
+from quackcore.fs.utils import (
+    expand_user_vars,
+    is_same_file,
+    is_subdirectory,
+    split_path,
+)
 from quackcore.logging import get_logger
 
 
@@ -21,56 +27,119 @@ class PathOperationsMixin:
     operations: FileSystemOperations
 
     @wrap_io_errors
-    def join_path(self, base: str | Path, *parts: str | Path) -> Path:
+    def join_path(self, *parts: str | Path) -> Path:
         """
-        Join base path with additional parts.
+        Join path components.
 
         Args:
-            base: Base path
-            *parts: Additional path parts to join
+            *parts: Path parts to join
 
         Returns:
-            Joined path as a Path object
+            Joined Path object
         """
-        base_path = Path(base)
-        for part in parts:
+        if not parts:
+            return Path()
+
+        base_path = Path(parts[0])
+        for part in parts[1:]:
             base_path = base_path / part
         return base_path
 
     @wrap_io_errors
+    def split_path(self, path: str | Path) -> list[str]:
+        """
+        Split a path into its components.
+
+        Args:
+            path: Path to split
+
+        Returns:
+            List of path components
+        """
+        return split_path(path)
+
+    @wrap_io_errors
     def normalize_path(self, path: str | Path) -> Path:
         """
-        Normalize a path to an absolute path.
+        Normalize a path for cross-platform compatibility.
+
+        This does not check if the path exists.
 
         Args:
             path: Path to normalize
 
         Returns:
-            Normalized absolute Path
+            Normalized Path object
         """
-        path_obj = Path(path)
-        if not path_obj.is_absolute():
-            try:
-                path_obj = path_obj.resolve()
-            except FileNotFoundError as e:
-                # Log the error but don't fail completely
-                get_logger(__name__).warning(f"Could not normalize path '{path}': {str(e)}")
-                # Return the original path if resolution fails
-                return Path(path)
-        return path_obj
+        path_obj = Path(path).expanduser()
+
+        # If path is already absolute, no need for getcwd() which might fail
+        if path_obj.is_absolute():
+            return path_obj
+
+        try:
+            # Try to make it absolute or resolve it
+            if not path_obj.exists():
+                return path_obj.absolute()
+            return path_obj.resolve()
+        except (FileNotFoundError, OSError) as e:
+            # If any OS error occurs (including getcwd() failing),
+            # just return the path as is, with a warning
+            get_logger(__name__).warning(f"Could not normalize path '{path}': {str(e)}")
+            return path_obj
+
+    def expand_user_vars(self, path: str | Path) -> Path:
+        """
+        Expand user variables and environment variables in a path.
+
+        Args:
+            path: Path with variables
+
+        Returns:
+            Expanded Path object
+        """
+        return expand_user_vars(path)
+
+    def is_same_file(self, path1: str | Path, path2: str | Path) -> bool:
+        """
+        Check if two paths refer to the same file.
+
+        Args:
+            path1: First path
+            path2: Second path
+
+        Returns:
+            True if paths refer to the same file
+        """
+        return is_same_file(path1, path2)
+
+    def is_subdirectory(self, child: str | Path, parent: str | Path) -> bool:
+        """
+        Check if a path is a subdirectory of another path.
+
+        Args:
+            child: Potential child path
+            parent: Potential parent path
+
+        Returns:
+            True if child is a subdirectory of parent
+        """
+        return is_subdirectory(child, parent)
 
     @wrap_io_errors
-    def create_temp_directory(self, prefix: str = "quackcore_") -> Path:
+    def create_temp_directory(self, prefix: str = "quackcore_",
+                              suffix: str = "") -> Path:
         """
         Create a temporary directory.
 
         Args:
             prefix: Prefix for the temporary directory name
+            suffix: Suffix for the temporary directory name
 
         Returns:
             Path to the created temporary directory
         """
-        temp_dir = Path(tempfile.mkdtemp(prefix=prefix))
+        temp_dir = Path(tempfile.mkdtemp(prefix=prefix, suffix=suffix))
         return temp_dir
 
     @wrap_io_errors
