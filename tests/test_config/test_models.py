@@ -41,56 +41,60 @@ class TestConfigModels:
         # was normalized to INFO
         assert config.level == "INFO"
 
-        # Test setup_logging method
-        with patch("logging.basicConfig") as mock_basic_config:
+        # Test setup_logging method with the new implementation
+        with patch("quackcore.logging.configure_logger") as mock_configure_logger:
             with patch("logging.StreamHandler") as mock_stream_handler:
-                with patch("logging.FileHandler") as mock_file_handler:
-                    with patch("logging.getLogger") as mock_get_logger:
-                        # Mock objects
-                        mock_handler = MagicMock()
-                        mock_stream_handler.return_value = mock_handler
-                        mock_file_handler.return_value = mock_handler
-                        mock_logger = MagicMock()
-                        mock_get_logger.return_value = mock_logger
+                # Mock logger and handlers
+                mock_logger = MagicMock()
+                mock_handler = MagicMock()
+                mock_stream_handler.return_value = mock_handler
+                mock_configure_logger.return_value = mock_logger
+                mock_logger.handlers = [mock_handler]
 
-                        # Test with default config (console only)
-                        config = LoggingConfig()
-                        config.setup_logging()
+                # Test with default config (console only)
+                config = LoggingConfig()
+                config.setup_logging()
 
-                        # Verify basicConfig called
-                        mock_basic_config.assert_called_once()
-                        # Verify console handler added
-                        mock_stream_handler.assert_called_once()
-                        # Verify file handler not added
-                        mock_file_handler.assert_not_called()
+                # Verify configure_logger called with correct params
+                mock_configure_logger.assert_called_once_with(
+                    "quackcore", level=20, log_file=None
+                )
 
-                        # Reset mocks
-                        mock_basic_config.reset_mock()
-                        mock_stream_handler.reset_mock()
-                        mock_file_handler.reset_mock()
+                # Reset mocks
+                mock_configure_logger.reset_mock()
+                mock_stream_handler.reset_mock()
 
-                        # Test with file config
-                        with patch.object(Path, "mkdir", return_value=None):
-                            config = LoggingConfig(file=Path("/test/log.txt"))
-                            config.setup_logging()
+                # Test with console disabled
+                config = LoggingConfig(console=False)
+                config.setup_logging()
 
-                        # Verify file handler added
-                        mock_file_handler.assert_called_once_with(
-                            str(Path("/test/log.txt"))
-                        )
+                # Verify handlers were filtered
+                assert mock_logger.handlers == []
 
-                        # Test with error during file handler setup
-                        mock_basic_config.reset_mock()
-                        mock_stream_handler.reset_mock()
-                        mock_file_handler.reset_mock()
-                        mock_file_handler.side_effect = Exception("Test error")
+                # Reset mocks
+                mock_configure_logger.reset_mock()
+                mock_logger.reset_mock()
+                mock_logger.handlers = [mock_handler]
 
-                        config = LoggingConfig(file=Path("/test/log.txt"))
-                        # Should not raise exception, but log the error
-                        config.setup_logging()
+                # Test with debug level
+                config = LoggingConfig(level="DEBUG")
+                config.setup_logging()
 
-                        # Verify error logged
-                        mock_get_logger.return_value.error.assert_called_once()
+                # Verify correct log level (10 = DEBUG)
+                mock_configure_logger.assert_called_once_with(
+                    "quackcore", level=10, log_file=None
+                )
+
+                # Test with file logging
+                mock_configure_logger.reset_mock()
+                log_file = Path("/test/log.txt")
+                config = LoggingConfig(file=log_file)
+                config.setup_logging()
+
+                # Verify file path passed correctly
+                mock_configure_logger.assert_called_once_with(
+                    "quackcore", level=20, log_file=log_file
+                )
 
     def test_paths_config(self) -> None:
         """Test the PathsConfig model."""
@@ -255,7 +259,7 @@ class TestConfigModels:
         # Test with disabled plugin
         config.plugins.disabled = ["plugin3", "plugin1"]
         assert (
-            config.get_plugin_enabled("plugin1") is False
+                config.get_plugin_enabled("plugin1") is False
         )  # In disabled list, even if in enabled
 
         # Test get_custom method
