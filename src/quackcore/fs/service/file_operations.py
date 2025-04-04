@@ -12,7 +12,7 @@ from typing import Any
 
 from quackcore.errors import wrap_io_errors
 from quackcore.fs.operations import FileSystemOperations
-from quackcore.fs.results import ReadResult, WriteResult, FileInfoResult, OperationResult
+from quackcore.fs.results import DataResult, OperationResult, ReadResult, WriteResult
 
 
 class FileOperationsMixin:
@@ -22,7 +22,7 @@ class FileOperationsMixin:
     operations: FileSystemOperations
 
     @wrap_io_errors
-    def read_text(self, path: str | Path, encoding: str = "utf-8") -> ReadResult:
+    def read_text(self, path: str | Path, encoding: str = "utf-8") -> ReadResult[str]:
         """
         Read text content from a file.
 
@@ -37,11 +37,11 @@ class FileOperationsMixin:
 
     @wrap_io_errors
     def write_text(
-        self,
-        path: str | Path,
-        content: str,
-        encoding: str = "utf-8",
-        atomic: bool = False,
+            self,
+            path: str | Path,
+            content: str,
+            encoding: str = "utf-8",
+            atomic: bool = False,
     ) -> WriteResult:
         """
         Write text content to a file.
@@ -58,7 +58,7 @@ class FileOperationsMixin:
         return self.operations.write_text(path, content, encoding, atomic)
 
     @wrap_io_errors
-    def read_binary(self, path: str | Path) -> ReadResult:
+    def read_binary(self, path: str | Path) -> ReadResult[bytes]:
         """
         Read binary content from a file.
 
@@ -72,7 +72,7 @@ class FileOperationsMixin:
 
     @wrap_io_errors
     def write_binary(
-        self, path: str | Path, content: bytes, atomic: bool = False
+            self, path: str | Path, content: bytes, atomic: bool = False
     ) -> WriteResult:
         """
         Write binary content to a file.
@@ -88,142 +88,7 @@ class FileOperationsMixin:
         return self.operations.write_binary(path, content, atomic)
 
     @wrap_io_errors
-    def read_yaml(self, path: str | Path) -> ReadResult:
-        """
-        Read and parse YAML content from a file.
-
-        Args:
-            path: Path to the YAML file
-
-        Returns:
-            ReadResult with parsed YAML data
-        """
-        result = self.read_text(path)
-        if not result.success:
-            return result
-
-        try:
-            data = yaml.safe_load(result.content)
-            return ReadResult(
-                success=True,
-                path=str(path),
-                content=result.content,
-                data=data,
-                encoding=result.encoding,
-            )
-        except Exception as e:
-            return ReadResult(
-                success=False,
-                path=str(path),
-                error=f"Failed to parse YAML: {str(e)}",
-            )
-
-    @wrap_io_errors
-    def write_yaml(
-        self, path: str | Path, data: Any, encoding: str = "utf-8", atomic: bool = False
-    ) -> WriteResult:
-        """
-        Convert data to YAML and write to a file.
-
-        Args:
-            path: Path to the file
-            data: Data to convert to YAML
-            encoding: Text encoding to use (default: utf-8)
-            atomic: Whether to use atomic write (default: False)
-
-        Returns:
-            WriteResult with operation status
-        """
-        try:
-            content = yaml.dump(data, default_flow_style=False, sort_keys=False)
-            return self.write_text(path, content, encoding, atomic)
-        except Exception as e:
-            return WriteResult(
-                success=False,
-                path=str(path),
-                error=f"Failed to convert data to YAML: {str(e)}",
-            )
-
-    @wrap_io_errors
-    def read_json(self, path: str | Path) -> ReadResult:
-        """
-        Read and parse JSON content from a file.
-
-        Args:
-            path: Path to the JSON file
-
-        Returns:
-            ReadResult with parsed JSON data
-        """
-        result = self.read_text(path)
-        if not result.success:
-            return result
-
-        try:
-            data = json.loads(result.content)
-            return ReadResult(
-                success=True,
-                path=str(path),
-                content=result.content,
-                data=data,
-                encoding=result.encoding,
-            )
-        except Exception as e:
-            return ReadResult(
-                success=False,
-                path=str(path),
-                error=f"Failed to parse JSON: {str(e)}",
-            )
-
-    @wrap_io_errors
-    def write_json(
-        self,
-        path: str | Path,
-        data: Any,
-        encoding: str = "utf-8",
-        atomic: bool = False,
-        indent: int = 2,
-    ) -> WriteResult:
-        """
-        Convert data to JSON and write to a file.
-
-        Args:
-            path: Path to the file
-            data: Data to convert to JSON
-            encoding: Text encoding to use (default: utf-8)
-            atomic: Whether to use atomic write (default: False)
-            indent: JSON indentation level (default: 2)
-
-        Returns:
-            WriteResult with operation status
-        """
-        try:
-            content = json.dumps(data, indent=indent)
-            return self.write_text(path, content, encoding, atomic)
-        except Exception as e:
-            return WriteResult(
-                success=False,
-                path=str(path),
-                error=f"Failed to convert data to JSON: {str(e)}",
-            )
-
-    @wrap_io_errors
-    def get_file_info(self, path: str | Path) -> FileInfoResult:
-        """
-        Get information about a file or directory.
-
-        Args:
-            path: Path to the file or directory
-
-        Returns:
-            FileInfoResult with the file information
-        """
-        return self.operations.get_file_info(path)
-
-    @wrap_io_errors
-    def read_lines(
-            self, path: str | Path, encoding: str = "utf-8"
-    ) -> ReadResult[list[str]]:
+    def read_lines(self, path: str | Path, encoding: str = "utf-8") -> ReadResult:
         """
         Read lines from a text file.
 
@@ -286,6 +151,172 @@ class FileOperationsMixin:
             return self.operations.write_binary(path, bytes_content, atomic)
         else:
             return self.operations.write_text(path, content, encoding, atomic)
+
+    @wrap_io_errors
+    def read_yaml(self, path: str | Path) -> DataResult[dict]:
+        """
+        Read and parse YAML content from a file.
+
+        Args:
+            path: Path to the YAML file
+
+        Returns:
+            DataResult with parsed YAML data
+        """
+        try:
+            result = self.read_text(path)
+            if not result.success:
+                return DataResult(
+                    success=False,
+                    path=result.path,
+                    data={},
+                    format="yaml",
+                    error=result.error
+                )
+
+            try:
+                parsed_data = yaml.safe_load(result.content)
+                if parsed_data is None:
+                    parsed_data = {}
+
+                # Also set data attribute on the original result for compatibility
+                result.data = parsed_data
+
+                return DataResult(
+                    success=True,
+                    path=result.path,
+                    data=parsed_data,
+                    format="yaml",
+                    message=f"Successfully parsed YAML data"
+                )
+            except yaml.YAMLError as e:
+                error_msg = f"Invalid YAML format: {str(e)}"
+                return DataResult(
+                    success=False,
+                    path=Path(path),
+                    data={},
+                    format="yaml",
+                    error=error_msg
+                )
+        except Exception as e:
+            return DataResult(
+                success=False,
+                path=Path(path),
+                data={},
+                format="yaml",
+                error=f"Error reading YAML format: {str(e)}"
+            )
+
+    @wrap_io_errors
+    def write_yaml(
+            self,
+            path: str | Path,
+            data: dict,
+            atomic: bool = True,
+    ) -> WriteResult:
+        """
+        Write data to a YAML file.
+
+        Args:
+            path: Path to YAML file
+            data: Data to write
+            atomic: Whether to use atomic writing
+
+        Returns:
+            WriteResult with operation status
+        """
+        try:
+            content = yaml.dump(data, default_flow_style=False, sort_keys=False)
+            return self.write_text(path, content, atomic=atomic)
+        except Exception as e:
+            return WriteResult(
+                success=False,
+                path=Path(path),
+                error=f"Failed to write YAML: {str(e)}"
+            )
+
+    @wrap_io_errors
+    def read_json(self, path: str | Path) -> DataResult[dict]:
+        """
+        Read a JSON file and parse its contents.
+
+        Args:
+            path: Path to JSON file
+
+        Returns:
+            DataResult with parsed JSON data
+        """
+        try:
+            result = self.read_text(path)
+            if not result.success:
+                return DataResult(
+                    success=False,
+                    path=result.path,
+                    data={},
+                    format="json",
+                    error=result.error
+                )
+
+            try:
+                parsed_data = json.loads(result.content)
+
+                # Also set data attribute on the original result for compatibility
+                result.data = parsed_data
+
+                return DataResult(
+                    success=True,
+                    path=result.path,
+                    data=parsed_data,
+                    format="json",
+                    message=f"Successfully parsed JSON data"
+                )
+            except json.JSONDecodeError as e:
+                error_msg = f"Invalid JSON format: {str(e)}"
+                return DataResult(
+                    success=False,
+                    path=Path(path),
+                    data={},
+                    format="json",
+                    error=error_msg
+                )
+        except Exception as e:
+            return DataResult(
+                success=False,
+                path=Path(path),
+                data={},
+                format="json",
+                error=f"Error reading JSON format: {str(e)}"
+            )
+
+    @wrap_io_errors
+    def write_json(
+            self,
+            path: str | Path,
+            data: dict,
+            atomic: bool = True,
+            indent: int = 2,
+    ) -> WriteResult:
+        """
+        Write data to a JSON file.
+
+        Args:
+            path: Path to JSON file
+            data: Data to write
+            atomic: Whether to use atomic writing
+            indent: Number of spaces to indent
+
+        Returns:
+            WriteResult with operation status
+        """
+        try:
+            content = json.dumps(data, indent=indent, ensure_ascii=False)
+            return self.write_text(path, content, atomic=atomic)
+        except Exception as e:
+            return WriteResult(
+                success=False,
+                path=Path(path),
+                error=f"Failed to write JSON: {str(e)}"
+            )
 
     # File management operations
     def copy(

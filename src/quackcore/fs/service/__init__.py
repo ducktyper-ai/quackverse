@@ -43,14 +43,32 @@ from quackcore.fs.utils import (
     is_same_file,
     is_subdirectory,
     join_path,
-    normalize_path,
+    normalize_path as utils_normalize_path,
     split_path,
 )
 
 # Create a global instance for convenience
 service = create_service()
 
+
 # Define standalone functions at the module level to avoid circular imports
+
+# This is the function that's being mocked in the test - make sure it can be properly patched
+def normalize_path(path: str | Path) -> Path:
+    """
+    Normalize a path for cross-platform compatibility.
+
+    This is a direct wrapper over the utility function to allow for proper mocking in tests.
+
+    Args:
+        path: Path to normalize
+
+    Returns:
+        Normalized Path object
+    """
+    return utils_normalize_path(path)
+
+
 def create_directory(path: str | Path, exist_ok: bool = True) -> OperationResult:
     """
     Create a directory if it doesn't exist.
@@ -107,10 +125,10 @@ def read_text(path: str | Path, encoding: str = "utf-8") -> ReadResult[str]:
 
 
 def write_text(
-    path: str | Path,
-    content: str,
-    encoding: str = "utf-8",
-    atomic: bool = True,
+        path: str | Path,
+        content: str,
+        encoding: str = "utf-8",
+        atomic: bool = True,
 ) -> WriteResult:
     """
     Write text to a file.
@@ -141,9 +159,9 @@ def read_binary(path: str | Path) -> ReadResult[bytes]:
 
 
 def write_binary(
-    path: str | Path,
-    content: bytes,
-    atomic: bool = True,
+        path: str | Path,
+        content: bytes,
+        atomic: bool = True,
 ) -> WriteResult:
     """
     Write binary data to a file.
@@ -160,9 +178,9 @@ def write_binary(
 
 
 def write_yaml(
-    path: str | Path,
-    data: dict,
-    atomic: bool = True,
+        path: str | Path,
+        data: dict,
+        atomic: bool = True,
 ) -> WriteResult:
     """
     Write data to a YAML file.
@@ -192,10 +210,10 @@ def read_json(path: str | Path) -> DataResult[dict]:
 
 
 def write_json(
-    path: str | Path,
-    data: dict,
-    atomic: bool = True,
-    indent: int = 2,
+        path: str | Path,
+        data: dict,
+        atomic: bool = True,
+        indent: int = 2,
 ) -> WriteResult:
     """
     Write data to a JSON file.
@@ -213,9 +231,9 @@ def write_json(
 
 
 def list_directory(
-    path: str | Path,
-    pattern: str | None = None,
-    include_hidden: bool = False,
+        path: str | Path,
+        pattern: str | None = None,
+        include_hidden: bool = False,
 ) -> DirectoryInfoResult:
     """
     List contents of a directory.
@@ -232,10 +250,10 @@ def list_directory(
 
 
 def find_files(
-    path: str | Path,
-    pattern: str,
-    recursive: bool = True,
-    include_hidden: bool = False,
+        path: str | Path,
+        pattern: str,
+        recursive: bool = True,
+        include_hidden: bool = False,
 ) -> FindResult:
     """
     Find files matching a pattern.
@@ -253,7 +271,7 @@ def find_files(
 
 
 def copy(
-    src: str | Path, dst: str | Path, overwrite: bool = False
+        src: str | Path, dst: str | Path, overwrite: bool = False
 ) -> WriteResult:
     """
     Copy a file or directory.
@@ -270,7 +288,7 @@ def copy(
 
 
 def move(
-    src: str | Path, dst: str | Path, overwrite: bool = False
+        src: str | Path, dst: str | Path, overwrite: bool = False
 ) -> WriteResult:
     """
     Move a file or directory.
@@ -300,7 +318,7 @@ def delete(path: str | Path, missing_ok: bool = True) -> OperationResult:
     return service.delete(path, missing_ok)
 
 
-def read_lines(path: str | Path, encoding: str = "utf-8") -> ReadResult[list[str]]:
+def read_lines(path: str | Path, encoding: str = "utf-8") -> ReadResult:
     """
     Read lines from a text file.
 
@@ -315,11 +333,11 @@ def read_lines(path: str | Path, encoding: str = "utf-8") -> ReadResult[list[str
 
 
 def write_lines(
-    path: str | Path,
-    lines: list[str],
-    encoding: str = "utf-8",
-    atomic: bool = True,
-    line_ending: str = "\n",
+        path: str | Path,
+        lines: list[str],
+        encoding: str = "utf-8",
+        atomic: bool = True,
+        line_ending: str = "\n",
 ) -> WriteResult:
     """
     Write lines to a text file.
@@ -375,6 +393,7 @@ def is_valid_path(path: str | Path) -> bool:
     """
     return service.is_valid_path(path)
 
+
 # Type variables
 T = TypeVar("T")  # Generic type for flexible typing
 
@@ -401,11 +420,11 @@ __all__ = [
     "copy",
     "move",
     "delete",
+    "normalize_path",
     "normalize_path_with_info",
     "get_path_info",
     "is_valid_path",
     # Utility functions
-    "normalize_path",
     "is_same_file",
     "is_subdirectory",
     "get_file_size_str",

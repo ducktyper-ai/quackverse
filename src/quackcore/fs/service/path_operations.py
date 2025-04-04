@@ -16,8 +16,8 @@ from quackcore.fs.utils import (
     is_same_file,
     is_subdirectory,
     split_path,
+    normalize_path as utils_normalize_path,
 )
-from quackcore.logging import get_logger
 
 
 class PathOperationsMixin:
@@ -71,22 +71,7 @@ class PathOperationsMixin:
         Returns:
             Normalized Path object
         """
-        path_obj = Path(path).expanduser()
-
-        # If path is already absolute, no need for getcwd() which might fail
-        if path_obj.is_absolute():
-            return path_obj
-
-        try:
-            # Try to make it absolute or resolve it
-            if not path_obj.exists():
-                return path_obj.absolute()
-            return path_obj.resolve()
-        except (FileNotFoundError, OSError) as e:
-            # If any OS error occurs (including getcwd() failing),
-            # just return the path as is, with a warning
-            get_logger(__name__).warning(f"Could not normalize path '{path}': {str(e)}")
-            return path_obj
+        return utils_normalize_path(path)
 
     def expand_user_vars(self, path: str | Path) -> Path:
         """
