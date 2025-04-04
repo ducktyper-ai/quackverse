@@ -65,7 +65,8 @@ class BaseAuthProvider(ABC, AuthProviderProtocol):
             return str(resolved_path)
         except Exception as e:
             self.logger.warning(f"Could not resolve project path: {e}")
-            # Fall back to normalizing the path
+            # Import the global service instance as recommended in best practices
+            from quackcore.fs import service as fs
             normalized_path = fs.normalize_path(file_path)
             return str(normalized_path)
 
