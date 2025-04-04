@@ -29,8 +29,6 @@ class LoggingConfig(BaseModel):
     file: Path | None = Field(default=None, description="Log file path")
     console: bool = Field(default=True, description="Log to console")
 
-    # In src/quackcore/config/models.py
-
     @field_validator("level")
     @classmethod
     def validate_level(cls, v: str) -> str:
@@ -42,48 +40,28 @@ class LoggingConfig(BaseModel):
 
     def setup_logging(self) -> None:
         """
-        Set up logging based on configuration.
+        Set up logging based on configuration using the centralized logging module.
 
-        This configures the root logger according to the settings.
+        This method delegates to quackcore.logging.configure_logger to create
+        a properly configured logger. If console logging is disabled, the console
+        handler is removed after configuration.
         """
         import logging
+        from quackcore.logging import configure_logger, LOG_LEVELS
 
-        level_name = self.level.upper()
-        if level_name not in self.VALID_LEVELS:
-            level_name = "INFO"
+        # Convert the level string to an integer logging level using our mapping.
+        level_int = LOG_LEVELS.get(self.level, logging.INFO)
 
-        level = getattr(logging, level_name, logging.INFO)
-        log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        # Configure the central logger for "quackcore" using the logging module.
+        logger = configure_logger("quackcore", level=level_int, log_file=self.file)
 
-        # Configure the root logger
-        logging.basicConfig(
-            level=level,
-            format=log_format,
-            handlers=[],
-        )
-
-        # Get the root logger instance
-        logger = logging.getLogger()
-
-        # Add console handler if enabled
-        if self.console:
-            console_handler = logging.StreamHandler()
-            console_handler.setFormatter(logging.Formatter(log_format))
-            logger.addHandler(console_handler)
-
-        # Add file handler if a file is specified
-        if self.file:
-            try:
-                # Ensure the directory exists
-                self.file.parent.mkdir(parents=True, exist_ok=True)
-
-                # Create the file handler using a string path for compatibility
-                # with Python 3.13
-                file_handler = logging.FileHandler(str(self.file))
-                file_handler.setFormatter(logging.Formatter(log_format))
-                logger.addHandler(file_handler)
-            except Exception as e:
-                logger.error(f"Failed to set up file logging: {e}")
+        # Remove any console (StreamHandler) if console logging is disabled.
+        if not self.console:
+            logger.handlers = [
+                handler
+                for handler in logger.handlers
+                if not isinstance(handler, logging.StreamHandler)
+            ]
 
 
 class PathsConfig(BaseModel):

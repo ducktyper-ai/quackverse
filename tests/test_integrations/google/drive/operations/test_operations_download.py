@@ -98,12 +98,12 @@ class TestDriveOperationsDownload:
         # Test with no local path (should create temp directory)
         file_metadata = {"name": "test_file.txt"}
 
-        # The key fix here is to patch the right module
-        with patch("quackcore.fs.create_temp_directory") as mock_temp:
+        # Patch the service module since that's how it's imported in the implementation
+        with patch("quackcore.fs.service.create_temp_directory") as mock_temp:
             # Setup the mock to return what the test expects
             mock_temp.return_value = tmp_path / "temp_dir"
 
-            with patch("quackcore.fs.join_path") as mock_join:
+            with patch("quackcore.fs.service.join_path") as mock_join:
                 # Setup mock_join to return the expected path
                 mock_join.return_value = tmp_path / "temp_dir" / "test_file.txt"
 
@@ -121,13 +121,13 @@ class TestDriveOperationsDownload:
         with patch("quackcore.paths.resolver.resolve_project_path") as mock_resolve:
             mock_resolve.return_value = local_dir
 
-            with patch("quackcore.fs.get_file_info") as mock_info:
+            with patch("quackcore.fs.service.get_file_info") as mock_info:
                 # Setup mock to return a directory
                 mock_info.return_value = FileInfoResult(
                     success=True, path=str(local_dir), exists=True, is_dir=True
                 )
 
-                with patch("quackcore.fs.join_path") as mock_join:
+                with patch("quackcore.fs.service.join_path") as mock_join:
                     # Setup mock_join to return expected path
                     mock_join.return_value = local_dir / "test_file.txt"
 
@@ -144,7 +144,7 @@ class TestDriveOperationsDownload:
         with patch("quackcore.paths.resolver.resolve_project_path") as mock_resolve:
             mock_resolve.return_value = local_file
 
-            with patch("quackcore.fs.get_file_info") as mock_info:
+            with patch("quackcore.fs.service.get_file_info") as mock_info:
                 # Setup mock to return a file
                 mock_info.return_value = FileInfoResult(
                     success=True, path=str(local_file), exists=True, is_file=True,

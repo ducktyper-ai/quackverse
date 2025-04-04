@@ -34,9 +34,9 @@ def resolve_download_path(
 
     if local_path is None:
         # Create a temporary directory using fs.create_temp_directory
-        # The key fix is using fs.create_temp_directory directly, not fs module
+        # Make sure we're using the specific import that's being patched in tests
         temp_dir = fs.create_temp_directory(prefix="gdrive_download_")
-        # Use fs.join_path to join paths correctly
+        # Use fs.join_path for path joining
         return str(fs.join_path(temp_dir, file_name))
 
     # Resolve the local path
