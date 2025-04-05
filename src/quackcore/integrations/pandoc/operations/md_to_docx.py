@@ -6,8 +6,8 @@ This module provides functions for converting Markdown documents to DOCX
 using pandoc with optimized settings and error handling.
 """
 
-import importlib
 import time
+import importlib
 from pathlib import Path
 
 from quackcore.errors import QuackIntegrationError
@@ -83,7 +83,7 @@ def _validate_markdown_input(markdown_path: Path) -> int:
 
 
 def _convert_markdown_to_docx_once(
-    markdown_path: Path, output_path: Path, config: PandocConfig
+        markdown_path: Path, output_path: Path, config: PandocConfig
 ) -> None:
     """
     Perform a single conversion attempt from Markdown to DOCX using pandoc.
@@ -161,10 +161,10 @@ def _get_conversion_output(output_path: Path, start_time: float) -> tuple[float,
 
 
 def convert_markdown_to_docx(
-    markdown_path: Path,
-    output_path: Path,
-    config: PandocConfig,
-    metrics: ConversionMetrics | None = None,
+        markdown_path: Path,
+        output_path: Path,
+        config: PandocConfig,
+        metrics: ConversionMetrics | None = None,
 ) -> IntegrationResult[tuple[Path, ConversionDetails]]:
     """
     Convert a Markdown file to DOCX.
@@ -205,6 +205,7 @@ def convert_markdown_to_docx(
 
                     retry_count += 1
                     if retry_count >= max_retries:
+                        # Only increment failed_conversions once when we've exceeded max retries
                         metrics.failed_conversions += 1
                         metrics.errors[str(markdown_path)] = error_str
                         return IntegrationResult.error_result(
@@ -242,6 +243,7 @@ def convert_markdown_to_docx(
                     f"Markdown to DOCX conversion attempt {retry_count} failed: {str(e)}"
                 )
                 if retry_count >= max_retries:
+                    # Only increment failed_conversions once when we've exceeded max retries
                     metrics.failed_conversions += 1
                     metrics.errors[str(markdown_path)] = str(e)
 
@@ -263,7 +265,7 @@ def convert_markdown_to_docx(
 
 
 def validate_conversion(
-    output_path: Path, input_path: Path, original_size: int, config: PandocConfig
+        output_path: Path, input_path: Path, original_size: int, config: PandocConfig
 ) -> list[str]:
     """
     Validate the converted DOCX document.
@@ -307,13 +309,15 @@ def validate_conversion(
     if not valid_ratio:
         validation_errors.extend(ratio_errors)
 
-    # Check document structure
+    # Check document structure - always proceed with this even if there are other validation errors
     if validation.verify_structure and output_path.exists():
         is_valid, structure_errors = validate_docx_structure(
             output_path, validation.check_links
         )
         if not is_valid:
             validation_errors.extend(structure_errors)
+
+        # Always check metadata
         _check_docx_metadata(output_path, input_path, validation.check_links)
 
     return validation_errors
@@ -334,7 +338,7 @@ def _check_docx_metadata(docx_path: Path, source_path: Path, check_links: bool) 
         docx = None
         try:
             docx = importlib.import_module('docx')
-            Document = getattr(docx, 'Document')
+            Document = docx.Document
         except ImportError:
             logger.debug("python-docx not available for detailed metadata check")
             return
@@ -343,28 +347,32 @@ def _check_docx_metadata(docx_path: Path, source_path: Path, check_links: bool) 
         source_filename = source_path.name
         source_found = False
 
+        # Check if core_properties exists and has the source filename
         if hasattr(doc, "core_properties"):
-            if (
-                hasattr(doc.core_properties, "title")
-                and doc.core_properties.title
-                and source_filename in doc.core_properties.title
-            ):
-                source_found = True
-            elif (
-                hasattr(doc.core_properties, "comments")
-                and doc.core_properties.comments
-                and source_filename in doc.core_properties.comments
-            ):
-                source_found = True
-            elif (
-                hasattr(doc.core_properties, "subject")
-                and doc.core_properties.subject
-                and source_filename in doc.core_properties.subject
-            ):
+            core_props = doc.core_properties
+
+            # Check title
+            if (hasattr(core_props, "title") and
+                    core_props.title and
+                    source_filename in core_props.title):
                 source_found = True
 
+            # Check comments
+            elif (hasattr(core_props, "comments") and
+                  core_props.comments and
+                  source_filename in core_props.comments):
+                source_found = True
+
+            # Check subject
+            elif (hasattr(core_props, "subject") and
+                  core_props.subject and
+                  source_filename in core_props.subject):
+                source_found = True
+
+            # Log if source reference is missing and check_links is True
             if not source_found and check_links:
                 logger.debug(
                     f"Source file reference missing in document metadata: {source_filename}")
+
     except Exception as e:
         logger.debug(f"Could not check document metadata: {str(e)}")
