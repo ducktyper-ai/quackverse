@@ -215,16 +215,9 @@ class TestPandocConfigProvider:
 
         # Test invalid configuration
         with patch("quackcore.integrations.pandoc.config.PandocConfig") as mock_config:
-            mock_config.side_effect = ValidationError.from_exception_data(
-                "ValidationError",
-                [
-                    {
-                        "loc": ("output_dir",),
-                        "msg": "Invalid path",
-                        "type": "value_error",
-                    }
-                ],
-            )
+            # In the test file
+            # In the test file
+            mock_config.side_effect = ValueError("Invalid path format")
             assert provider.validate_config(valid_config) is False
 
         # Test unexpected error

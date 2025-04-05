@@ -9,7 +9,6 @@ from unittest.mock import patch, ANY, Mock
 
 import pytest
 
-from quackcore.fs import service as fs
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs.results import (
     FileInfoResult,

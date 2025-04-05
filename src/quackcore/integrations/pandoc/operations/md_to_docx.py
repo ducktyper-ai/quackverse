@@ -6,6 +6,7 @@ This module provides functions for converting Markdown documents to DOCX
 using pandoc with optimized settings and error handling.
 """
 
+import importlib
 import time
 from pathlib import Path
 
@@ -39,27 +40,25 @@ def _validate_markdown_input(markdown_path: Path) -> int:
     Raises:
         QuackIntegrationError: If the input file is missing or empty.
     """
-    file_info = fs.get_file_info(markdown_path)
+    file_info = fs.service.get_file_info(markdown_path)
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(
             f"Input file not found: {markdown_path}",
             {"path": str(markdown_path), "format": "markdown"},
         )
 
-    # Extract size in a way that works for both real values and mocks
-    # In tests with MagicMock objects, we need to extract the value safely
-    original_size = 0
-    if hasattr(file_info, "size") and file_info.size is not None:
-        try:
-            # Handle both integers and mock objects
-            original_size = int(file_info.size)
-        except (TypeError, ValueError):
-            # If it can't be converted to int, use a safe default
-            logger.warning(f"Could not convert file size to integer: {file_info.size}")
-            original_size = 0
-
+    # Ensure size is an integer
     try:
-        read_result = fs.read_text(markdown_path, encoding="utf-8")
+        original_size = int(file_info.size) if file_info.size is not None else 0
+    except (TypeError, ValueError):
+        logger.warning(
+            f"Could not convert file size to integer: {file_info.size}, using default"
+        )
+        original_size = 0
+
+    # Validate content to ensure it's not empty
+    try:
+        read_result = fs.service.read_text(markdown_path, encoding="utf-8")
         if not read_result.success:
             raise QuackIntegrationError(
                 f"Could not read Markdown file: {read_result.error}",
@@ -73,14 +72,18 @@ def _validate_markdown_input(markdown_path: Path) -> int:
                 {"path": str(markdown_path)},
             )
     except Exception as e:
-        if not isinstance(e, QuackIntegrationError):
-            logger.warning(f"Could not validate markdown content: {str(e)}")
+        if isinstance(e, QuackIntegrationError):
+            raise
+        raise QuackIntegrationError(
+            f"Could not read Markdown file: {str(e)}",
+            {"path": str(markdown_path)},
+        ) from e
 
     return original_size
 
 
 def _convert_markdown_to_docx_once(
-        markdown_path: Path, output_path: Path, config: PandocConfig
+    markdown_path: Path, output_path: Path, config: PandocConfig
 ) -> None:
     """
     Perform a single conversion attempt from Markdown to DOCX using pandoc.
@@ -138,33 +141,30 @@ def _get_conversion_output(output_path: Path, start_time: float) -> tuple[float,
         QuackIntegrationError: If output file info cannot be retrieved.
     """
     conversion_time: float = time.time() - start_time
-    output_info = fs.get_file_info(output_path)
+    output_info = fs.service.get_file_info(output_path)
     if not output_info.success:
         raise QuackIntegrationError(
             f"Failed to get info for converted file: {output_path}",
             {"path": str(output_path), "format": "docx"},
         )
 
-    # Extract size safely, handling both real values and mocks
-    output_size = 0
-    if hasattr(output_info, "size") and output_info.size is not None:
-        try:
-            # Handle both integers and mock objects
-            output_size = int(output_info.size)
-        except (TypeError, ValueError):
-            # If it can't be converted to int, use a safe default
-            logger.warning(
-                f"Could not convert file size to integer: {output_info.size}")
-            output_size = 0
+    # Ensure output_size is an integer
+    try:
+        output_size = int(output_info.size) if output_info.size is not None else 0
+    except (TypeError, ValueError):
+        logger.warning(
+            f"Could not convert output size to integer: {output_info.size}, using default"
+        )
+        output_size = 0
 
     return conversion_time, output_size
 
 
 def convert_markdown_to_docx(
-        markdown_path: Path,
-        output_path: Path,
-        config: PandocConfig,
-        metrics: ConversionMetrics | None = None,
+    markdown_path: Path,
+    output_path: Path,
+    config: PandocConfig,
+    metrics: ConversionMetrics | None = None,
 ) -> IntegrationResult[tuple[Path, ConversionDetails]]:
     """
     Convert a Markdown file to DOCX.
@@ -207,15 +207,9 @@ def convert_markdown_to_docx(
                     if retry_count >= max_retries:
                         metrics.failed_conversions += 1
                         metrics.errors[str(markdown_path)] = error_str
-
-                        # Use consistent error message format
-                        # For the specific test with max_retries=2
-                        if max_retries == 2:
-                            return IntegrationResult.error_result(
-                                "Conversion failed after maximum retries"
-                            )
-                        else:
-                            return IntegrationResult.error_result(error_str)
+                        return IntegrationResult.error_result(
+                            f"Conversion failed after maximum retries: {error_str}"
+                        )
 
                     logger.warning(
                         f"Markdown to DOCX conversion attempt {retry_count} failed: {error_str}"
@@ -251,11 +245,6 @@ def convert_markdown_to_docx(
                     metrics.failed_conversions += 1
                     metrics.errors[str(markdown_path)] = str(e)
 
-                    if max_retries == 2:
-                        return IntegrationResult.error_result(
-                            "Conversion failed after maximum retries"
-                        )
-
                     if isinstance(e, QuackIntegrationError):
                         error_msg = f"Integration error: {str(e)}"
                     else:
@@ -274,7 +263,7 @@ def convert_markdown_to_docx(
 
 
 def validate_conversion(
-        output_path: Path, input_path: Path, original_size: int, config: PandocConfig
+    output_path: Path, input_path: Path, original_size: int, config: PandocConfig
 ) -> list[str]:
     """
     Validate the converted DOCX document.
@@ -292,24 +281,19 @@ def validate_conversion(
     validation = config.validation
 
     # Get info about output file
-    output_info = fs.get_file_info(output_path)
+    output_info = fs.service.get_file_info(output_path)
     if not output_info.success or not output_info.exists:
         validation_errors.append(f"Output file does not exist: {output_path}")
         return validation_errors
 
-    # Extract size safely for both real values and mocks
-    output_size = 0
-    if hasattr(output_info, "size") and output_info.size is not None:
-        try:
-            # Convert to int for consistency, handling both real values and mocks
-            if output_info.size == 10240:  # Special case for test
-                output_size = 10240
-            else:
-                output_size = int(output_info.size)
-        except (TypeError, ValueError):
-            logger.warning(
-                f"Could not convert file size to integer: {output_info.size}")
-            output_size = 0
+    # Ensure output_size is an integer
+    try:
+        output_size = int(output_info.size) if output_info.size is not None else 0
+    except (TypeError, ValueError):
+        logger.warning(
+            f"Could not convert output size to integer: {output_info.size}, using default"
+        )
+        output_size = 0
 
     # Check file size
     valid_size, size_errors = check_file_size(output_size, validation.min_file_size)
@@ -346,43 +330,41 @@ def _check_docx_metadata(docx_path: Path, source_path: Path, check_links: bool) 
         check_links: Whether to check for links/references.
     """
     try:
-        # Try to import docx at runtime - this is more robust than statically importing
-        import importlib
-        docx = importlib.import_module('docx')
-        Document = getattr(docx, 'Document')
-    except ImportError:
-        logger.debug("python-docx not available for detailed metadata check")
-        return
+        # Try to import docx at runtime
+        docx = None
+        try:
+            docx = importlib.import_module('docx')
+            Document = getattr(docx, 'Document')
+        except ImportError:
+            logger.debug("python-docx not available for detailed metadata check")
+            return
 
-    try:
         doc = Document(str(docx_path))
         source_filename = source_path.name
         source_found = False
 
         if hasattr(doc, "core_properties"):
             if (
-                    hasattr(doc.core_properties, "title")
-                    and doc.core_properties.title
-                    and source_filename in doc.core_properties.title
+                hasattr(doc.core_properties, "title")
+                and doc.core_properties.title
+                and source_filename in doc.core_properties.title
             ):
                 source_found = True
             elif (
-                    hasattr(doc.core_properties, "comments")
-                    and doc.core_properties.comments
-                    and source_filename in doc.core_properties.comments
+                hasattr(doc.core_properties, "comments")
+                and doc.core_properties.comments
+                and source_filename in doc.core_properties.comments
             ):
                 source_found = True
             elif (
-                    hasattr(doc.core_properties, "subject")
-                    and doc.core_properties.subject
-                    and source_filename in doc.core_properties.subject
+                hasattr(doc.core_properties, "subject")
+                and doc.core_properties.subject
+                and source_filename in doc.core_properties.subject
             ):
                 source_found = True
 
             if not source_found and check_links:
                 logger.debug(
-                    f"Source file reference missing in "
-                    f"document metadata: {source_filename}"
-                )
+                    f"Source file reference missing in document metadata: {source_filename}")
     except Exception as e:
         logger.debug(f"Could not check document metadata: {str(e)}")

@@ -10,11 +10,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.fs.results import FileInfoResult, OperationResult, ReadResult
+from quackcore.fs.results import FileInfoResult, OperationResult, ReadResult, \
+    WriteResult
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.models import ConversionDetails, ConversionMetrics
 from quackcore.integrations.pandoc.operations.md_to_docx import (
-    _check_docx_metadata,
     _convert_markdown_to_docx_once,
     _get_conversion_output,
     _validate_markdown_input,
@@ -43,9 +43,14 @@ class TestMarkdownToDocxOperations:
         """Fixture to mock fs module."""
         with patch("quackcore.integrations.pandoc.operations.md_to_docx.fs") as mock_fs:
             # Setup default behavior for file info checks
-            from tests.test_integrations.pandoc.mocks import \
-                setup_mock_file_info_for_tests
-            setup_mock_file_info_for_tests(mock_fs.service, size=512)
+            file_info = FileInfoResult(
+                success=True,
+                path="/path/to/file.md",
+                exists=True,
+                is_file=True,
+                size=512,  # Use 512 as expected by the test
+            )
+            mock_fs.service.get_file_info.return_value = file_info
 
             # Setup default behavior for directory creation
             dir_result = OperationResult(
@@ -63,6 +68,17 @@ class TestMarkdownToDocxOperations:
                 encoding="utf-8",
             )
             mock_fs.service.read_text.return_value = read_result
+
+            # Setup default behavior for write_text
+            write_result = WriteResult(
+                success=True,
+                path="/path/to/output/file.docx",
+                bytes_written=100,
+            )
+            mock_fs.write_text.return_value = write_result
+
+            # Set up get_file_size_str
+            mock_fs.get_file_size_str.return_value = "1.0 KB"
 
             yield mock_fs
 
@@ -349,10 +365,8 @@ class TestMarkdownToDocxOperations:
                             )
 
                             assert result.success is False
-                            assert (
-                                "Conversion failed after maximum retries"
-                                in result.error
-                            )
+                            assert "Conversion failed after maximum retries" in result.error
+                            assert "DOCX validation failed" in result.error
                             assert mock_convert.call_count == 2
                             assert mock_sleep.call_count == 1
                             assert metrics.successful_conversions == 0
@@ -378,54 +392,57 @@ class TestMarkdownToDocxOperations:
         input_path = Path("/path/to/file.md")
         original_size = 512
 
-        # Mock file info for output file
-        output_info = FileInfoResult(
-            success=True,
-            path=str(output_path),
-            exists=True,
-            is_file=True,
-            size=10240,
-        )
-        mock_fs.service.get_file_info.return_value = output_info
-
-        # Test valid conversion
+        # Mock file info for output file with correct size parameter
         with patch(
-            "quackcore.integrations.pandoc.operations.md_to_docx.check_file_size"
-        ) as mock_size:
-            mock_size.return_value = (True, [])
+                "quackcore.integrations.pandoc.operations.md_to_docx.fs") as patched_fs:
+            # Create a proper FileInfoResult with size 10240
+            output_info = FileInfoResult(
+                success=True,
+                path=str(output_path),
+                exists=True,
+                is_file=True,
+                size=10240,  # Use the expected size for the test
+            )
+            patched_fs.service.get_file_info.return_value = output_info
 
+            # Test valid conversion
             with patch(
-                "quackcore.integrations.pandoc.operations.md_to_docx.check_conversion_ratio"
-            ) as mock_ratio:
-                mock_ratio.return_value = (True, [])
+                "quackcore.integrations.pandoc.operations.md_to_docx.check_file_size"
+            ) as mock_size:
+                mock_size.return_value = (True, [])
 
                 with patch(
-                    "quackcore.integrations.pandoc.operations.md_to_docx.validate_docx_structure"
-                ) as mock_validate:
-                    mock_validate.return_value = (True, [])
+                    "quackcore.integrations.pandoc.operations.md_to_docx.check_conversion_ratio"
+                ) as mock_ratio:
+                    mock_ratio.return_value = (True, [])
 
                     with patch(
-                        "quackcore.integrations.pandoc.operations.md_to_docx._check_docx_metadata"
-                    ) as mock_metadata:
-                        validation_errors = validate_conversion(
-                            output_path, input_path, original_size, config
-                        )
+                        "quackcore.integrations.pandoc.operations.md_to_docx.validate_docx_structure"
+                    ) as mock_validate:
+                        mock_validate.return_value = (True, [])
 
-                        assert len(validation_errors) == 0
-                        mock_size.assert_called_with(
-                            output_info.size, config.validation.min_file_size
-                        )
-                        mock_ratio.assert_called_with(
-                            output_info.size,
-                            original_size,
-                            config.validation.conversion_ratio_threshold,
-                        )
-                        mock_validate.assert_called_with(
-                            output_path, config.validation.check_links
-                        )
-                        mock_metadata.assert_called_with(
-                            output_path, input_path, config.validation.check_links
-                        )
+                        with patch(
+                            "quackcore.integrations.pandoc.operations.md_to_docx._check_docx_metadata"
+                        ) as mock_metadata:
+                            validation_errors = validate_conversion(
+                                output_path, input_path, original_size, config
+                            )
+
+                            assert len(validation_errors) == 0
+                            mock_size.assert_called_with(
+                                output_info.size, config.validation.min_file_size
+                            )
+                            mock_ratio.assert_called_with(
+                                output_info.size,
+                                original_size,
+                                config.validation.conversion_ratio_threshold,
+                            )
+                            mock_validate.assert_called_with(
+                                output_path, config.validation.check_links
+                            )
+                            mock_metadata.assert_called_with(
+                                output_path, input_path, config.validation.check_links
+                            )
 
         # Test with output file not found
         mock_fs.service.get_file_info.return_value.exists = False
@@ -541,14 +558,18 @@ class TestMarkdownToDocxOperations:
                     mock_logger.assert_not_called()
 
         # Test with source filename not in metadata
-        mock_core_props.title = "Some document"
-        mock_core_props.comments = "Some comments"
-        mock_core_props.subject = "Some subject"
-
         with patch.dict('sys.modules',
                         {'docx': MagicMock(), 'docx.document': MagicMock()}):
-            with patch('docx.Document',
-                       mock_document):  # Using mock_document instead of mock_doc
+            with patch('docx.Document') as mock_document:
+                # Set up the mock document with core_properties that don't contain source_path
+                mock_doc = MagicMock()
+                mock_core_props = MagicMock()
+                mock_core_props.title = "Some document"
+                mock_core_props.comments = "Some comments"
+                mock_core_props.subject = "Some subject"
+                mock_doc.core_properties = mock_core_props
+                mock_document.return_value = mock_doc
+
                 # Should log a warning
                 with patch.object(md_to_docx.logger, 'debug') as mock_logger:
                     md_to_docx._check_docx_metadata(output_path, source_path,
