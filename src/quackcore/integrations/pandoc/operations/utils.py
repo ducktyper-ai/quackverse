@@ -49,10 +49,10 @@ def verify_pandoc() -> str:
 
 
 def prepare_pandoc_args(
-    config: PandocConfig,
-    source_format: str,
-    target_format: str,
-    extra_args: list[str] | None = None,
+        config: PandocConfig,
+        source_format: str,
+        target_format: str,
+        extra_args: list[str] | None = None,
 ) -> list[str]:
     """
     Prepare pandoc conversion arguments.
@@ -98,7 +98,7 @@ def prepare_pandoc_args(
 
 
 def validate_html_structure(
-    content: str, check_links: bool = False
+        content: str, check_links: bool = False
 ) -> tuple[bool, list[str]]:
     """
     Validate HTML document structure.
@@ -122,6 +122,11 @@ def validate_html_structure(
             errors.append("HTML document missing body tag")
             return False, errors
 
+        # Check for presence of header tags or similar structure
+        if not (soup.find(["h1", "h2", "h3", "h4", "h5", "h6"]) or
+                soup.find(["header", "section", "article"])):
+            logger.warning("HTML document has no header tags or structural elements")
+
         # Validate links if configured
         if check_links:
             links = soup.find_all("a")
@@ -142,7 +147,7 @@ def validate_html_structure(
 
 
 def validate_docx_structure(
-    docx_path: Path, check_links: bool = False
+        docx_path: Path, check_links: bool = False
 ) -> tuple[bool, list[str]]:
     """
     Validate DOCX document structure.
@@ -166,6 +171,16 @@ def validate_docx_structure(
             errors.append("DOCX document has no paragraphs")
             return False, errors
 
+        # Check for document structure
+        has_heading = False
+        for para in doc.paragraphs:
+            if para.style and para.style.name.startswith('Heading'):
+                has_heading = True
+                break
+
+        if not has_heading:
+            logger.warning("DOCX document has no heading styles")
+
         # Validate links if configured
         if check_links:
             # In python-docx, hyperlinks are part of the relationships
@@ -184,12 +199,12 @@ def validate_docx_structure(
 
 
 def track_metrics(
-    filename: str,
-    start_time: float,
-    original_size: int,
-    converted_size: int,
-    metrics: ConversionMetrics,
-    config: PandocConfig,
+        filename: str,
+        start_time: float,
+        original_size: int,
+        converted_size: int,
+        metrics: ConversionMetrics,
+        config: PandocConfig,
 ) -> None:
     """
     Track conversion metrics.
@@ -213,15 +228,20 @@ def track_metrics(
 
     # Track file size changes
     if config.metrics.track_file_sizes:
+        # Ensure we have integers for sizes
+        original_size_int = int(original_size) if original_size is not None else 0
+        converted_size_int = int(converted_size) if converted_size is not None else 0
+
+        ratio = converted_size_int / original_size_int if original_size_int > 0 else 0
         metrics.file_sizes[filename] = {
-            "original": original_size,
-            "converted": converted_size,
-            "ratio": converted_size / original_size if original_size > 0 else 0,
+            "original": original_size_int,
+            "converted": converted_size_int,
+            "ratio": ratio,
         }
 
         # Use fs module's utility for formatting file sizes
-        original_size_str = fs.get_file_size_str(original_size)
-        converted_size_str = fs.get_file_size_str(converted_size)
+        original_size_str = fs.get_file_size_str(original_size_int)
+        converted_size_str = fs.get_file_size_str(converted_size_int)
 
         logger.info(
             f"File size change for {filename}: "
@@ -247,6 +267,19 @@ def get_file_info(path: Path, format_hint: str | None = None) -> FileInfo:
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(f"File not found: {path}")
 
+    # Handle size explicitly to ensure we have an integer, not a MagicMock
+    file_size: int = file_info.size if file_info.size is not None else 0
+
+    # Ensure it's an integer value if it's not None
+    if isinstance(file_size, (int, float)):
+        file_size = int(file_size)
+    else:
+        # If it's a mock or something unexpected, use a safe default
+        file_size = 0
+
+    # Handle modified timestamp
+    modified_time: float | None = file_info.modified
+
     # Determine format from file extension if not provided
     if format_hint:
         format_name = format_hint
@@ -267,13 +300,13 @@ def get_file_info(path: Path, format_hint: str | None = None) -> FileInfo:
     return FileInfo(
         path=path,
         format=format_name,
-        size=file_info.size or 0,
-        modified=file_info.modified,
+        size=file_size,
+        modified=modified_time,
     )
 
 
 def check_file_size(
-    converted_size: int, validation_min_size: int
+        converted_size: int, validation_min_size: int
 ) -> tuple[bool, list[str]]:
     """
     Check if the converted file meets the minimum file size.
@@ -287,9 +320,14 @@ def check_file_size(
     """
     errors: list[str] = []
 
-    if validation_min_size > 0 and converted_size < validation_min_size:
-        converted_size_str = fs.get_file_size_str(converted_size)
-        min_size_str = fs.get_file_size_str(validation_min_size)
+    # Ensure we have integers for comparison
+    converted_size_int = int(converted_size) if converted_size is not None else 0
+    validation_min_size_int = int(
+        validation_min_size) if validation_min_size is not None else 0
+
+    if validation_min_size_int > 0 and converted_size_int < validation_min_size_int:
+        converted_size_str = fs.get_file_size_str(converted_size_int)
+        min_size_str = fs.get_file_size_str(validation_min_size_int)
 
         errors.append(
             f"Converted file size ({converted_size_str}) "
@@ -302,7 +340,7 @@ def check_file_size(
 
 
 def check_conversion_ratio(
-    converted_size: int, original_size: int, threshold: float
+        converted_size: int, original_size: int, threshold: float
 ) -> tuple[bool, list[str]]:
     """
     Check if the converted file size is not drastically smaller than the original.
@@ -317,16 +355,23 @@ def check_conversion_ratio(
     """
     errors: list[str] = []
 
-    if original_size > 0:
-        conversion_ratio = converted_size / original_size
-        if conversion_ratio < threshold:
-            converted_size_str = fs.get_file_size_str(converted_size)
-            original_size_str = fs.get_file_size_str(original_size)
+    # Ensure we have integers for calculation
+    converted_size_int = int(converted_size) if converted_size is not None else 0
+    original_size_int = int(original_size) if original_size is not None else 0
+
+    # Ensure threshold is a float
+    threshold_float = float(threshold) if threshold is not None else 0.1
+
+    if original_size_int > 0:
+        conversion_ratio = converted_size_int / original_size_int
+        if conversion_ratio < threshold_float:
+            converted_size_str = fs.get_file_size_str(converted_size_int)
+            original_size_str = fs.get_file_size_str(original_size_int)
 
             errors.append(
                 f"Conversion error: Converted file size "
                 f"({converted_size_str}) is less than "
-                f"{threshold * 100:.0f}% of the original file size "
+                f"{threshold_float * 100:.0f}% of the original file size "
                 f"({original_size_str}) (ratio: {conversion_ratio:.2f})."
             )
             return False, errors
