@@ -43,14 +43,9 @@ class TestMarkdownToDocxOperations:
         """Fixture to mock fs module."""
         with patch("quackcore.integrations.pandoc.operations.md_to_docx.fs") as mock_fs:
             # Setup default behavior for file info checks
-            file_info = FileInfoResult(
-                success=True,
-                path="/path/to/file.md",
-                exists=True,
-                is_file=True,
-                size=512,
-            )
-            mock_fs.service.get_file_info.return_value = file_info
+            from tests.test_integrations.pandoc.mocks import \
+                setup_mock_file_info_for_tests
+            setup_mock_file_info_for_tests(mock_fs.service, size=512)
 
             # Setup default behavior for directory creation
             dir_result = OperationResult(
@@ -518,49 +513,58 @@ class TestMarkdownToDocxOperations:
         check_links = True
 
         # Test when python-docx is not available
-        with patch("quackcore.integrations.pandoc.operations.md_to_docx.docx", None):
+        # Instead of patching the imported module which doesn't exist,
+        # we can patch the import itself to raise ImportError
+        with patch('importlib.import_module',
+                   side_effect=ImportError("No module named 'docx'")):
             # Should not raise an exception, just log and return
-            _check_docx_metadata(output_path, source_path, check_links)
+            md_to_docx._check_docx_metadata(output_path, source_path, check_links)
             # No assertions needed, just testing that it doesn't raise an exception
 
-        # Test with python-docx available
-        from docx.document import Document as DocxDocument
-
-        # Create mock document and core properties
-        mock_doc = MagicMock(spec=DocxDocument)
+        # For testing with python-docx available, we need to make a few changes
+        # Create a mock Document class and module
+        mock_document = MagicMock()
         mock_core_props = MagicMock()
-        mock_doc.core_properties = mock_core_props
+        mock_document.return_value.core_properties = mock_core_props
 
         # Test with source filename in title
         mock_core_props.title = "input.md - converted document"
 
-        with patch("docx.Document", return_value=mock_doc):
-            # Should not log any warnings
-            with patch.object(md_to_docx, "logger", create=True) as mock_logger:
-                _check_docx_metadata(output_path, source_path, check_links)
-                mock_logger.debug.assert_not_called()
+        # Instead of patching the module directly, patch it in the function's namespace
+        with patch.dict('sys.modules',
+                        {'docx': MagicMock(), 'docx.document': MagicMock()}):
+            with patch('docx.Document', mock_document):
+                # Should not log any warnings
+                with patch.object(md_to_docx.logger, 'debug') as mock_logger:
+                    md_to_docx._check_docx_metadata(output_path, source_path,
+                                                    check_links)
+                    mock_logger.assert_not_called()
 
         # Test with source filename not in metadata
         mock_core_props.title = "Some document"
         mock_core_props.comments = "Some comments"
         mock_core_props.subject = "Some subject"
 
-        with patch("docx.Document", return_value=mock_doc):
-            # Should log a warning
-            with patch.object(md_to_docx, "logger", create=True) as mock_logger:
-                _check_docx_metadata(output_path, source_path, check_links)
-                mock_logger.debug.assert_called_once()
-                assert (
-                    "Source file reference missing" in mock_logger.debug.call_args[0][0]
-                )
+        with patch.dict('sys.modules',
+                        {'docx': MagicMock(), 'docx.document': MagicMock()}):
+            with patch('docx.Document',
+                       mock_document):  # Using mock_document instead of mock_doc
+                # Should log a warning
+                with patch.object(md_to_docx.logger, 'debug') as mock_logger:
+                    md_to_docx._check_docx_metadata(output_path, source_path,
+                                                    check_links)
+                    mock_logger.debug.assert_called_once()
+                    assert "Source file reference missing" in \
+                           mock_logger.debug.call_args[0][0]
 
         # Test with exception when checking metadata
-        with patch("docx.Document", side_effect=Exception("DOCX error")):
-            # Should log the error
-            with patch.object(md_to_docx, "logger", create=True) as mock_logger:
-                _check_docx_metadata(output_path, source_path, check_links)
-                mock_logger.debug.assert_called_once()
-                assert (
-                    "Could not check document metadata"
-                    in mock_logger.debug.call_args[0][0]
-                )
+        with patch.dict('sys.modules',
+                        {'docx': MagicMock(), 'docx.document': MagicMock()}):
+            with patch('docx.Document', side_effect=Exception("DOCX error")):
+                # Should log the error
+                with patch.object(md_to_docx.logger, 'debug') as mock_logger:
+                    md_to_docx._check_docx_metadata(output_path, source_path,
+                                                    check_links)
+                    mock_logger.debug.assert_called_once()
+                    assert "Could not check document metadata" in \
+                           mock_logger.debug.call_args[0][0]

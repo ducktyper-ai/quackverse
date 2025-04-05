@@ -112,7 +112,7 @@ class TestHtmlToMarkdownOperations:
             assert True
         except Exception as e:
             assert False, f"Function raised an exception when it shouldn't: {e}"
-            
+
     def test_attempt_conversion(self, config):
         """Test attempting HTML to Markdown conversion."""
         html_path = Path("/path/to/file.html")
