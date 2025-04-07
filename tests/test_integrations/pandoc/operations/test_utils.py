@@ -9,12 +9,16 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from quackcore import fs
+from quackcore.fs import service as fs
+from quackcore.logging import get_logger
 from quackcore.errors import QuackIntegrationError
-from quackcore.fs.results import FileInfoResult, OperationResult
+from quackcore.fs.results import FileInfoResult
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.models import ConversionMetrics, FileInfo
 from quackcore.integrations.pandoc.operations import utils, verify_pandoc
+
+# Get a module-specific logger
+logger = get_logger(__name__)
 
 
 class TestPandocUtilities:
@@ -89,9 +93,7 @@ class TestPandocUtilities:
         assert "--toc" in args
         assert "--toc-depth=2" in args
 
-    # src/quackcore/integrations/pandoc/operations/utils.py
-
-    # Fix get_file_info function
+    # Refactored get_file_info function
     def get_file_info(path: Path, format_hint: str | None = None) -> FileInfo:
         """
         Get file information for conversion.
@@ -106,16 +108,18 @@ class TestPandocUtilities:
         Raises:
             QuackIntegrationError: If the file does not exist
         """
-        # Changed from fs.service.get_file_info to fs.get_file_info
-        file_info = fs.get_file_info(path)
-        if not file_info.success or not file_info.exists:
+        # Use the global service instance
+        file_info_result = fs.get_file_info(path)
+        if not file_info_result.success or not file_info_result.exists:
+            logger.error(f"File not found: {path}")
             raise QuackIntegrationError(f"File not found: {path}")
 
         # Determine format from file extension if not provided
         if format_hint:
             format_name = format_hint
         else:
-            extension = fs.get_extension(path)
+            extension_result = fs.get_extension(path)
+            extension = extension_result.extension if extension_result.success else ""
             format_mapping = {
                 "md": "markdown",
                 "markdown": "markdown",
@@ -128,14 +132,15 @@ class TestPandocUtilities:
             }
             format_name = format_mapping.get(extension, extension)
 
+        logger.debug(f"File info retrieved for {path}, format: {format_name}")
         return FileInfo(
             path=path,
             format=format_name,
-            size=file_info.size or 0,
-            modified=file_info.modified,
+            size=file_info_result.size or 0,
+            modified=file_info_result.modified,
         )
 
-    # Fix check_file_size function
+    # Refactored check_file_size function
     def check_file_size(
         converted_size: int, validation_min_size: int
     ) -> tuple[bool, list[str]]:
@@ -152,20 +157,22 @@ class TestPandocUtilities:
         errors: list[str] = []
 
         if validation_min_size > 0 and converted_size < validation_min_size:
-            # Changed from fs.service.get_file_size_str to fs.get_file_size_str
+            # Use the global service instance for file size strings
             converted_size_str = fs.get_file_size_str(converted_size)
             min_size_str = fs.get_file_size_str(validation_min_size)
 
-            errors.append(
+            error_msg = (
                 f"Converted file size ({converted_size_str}) "
                 f"is below the minimum threshold "
                 f"({min_size_str})"
             )
+            logger.warning(error_msg)
+            errors.append(error_msg)
             return False, errors
 
         return True, errors
 
-    # Fix check_conversion_ratio function
+    # Refactored check_conversion_ratio function
     def check_conversion_ratio(
         converted_size: int, original_size: int, threshold: float
     ) -> tuple[bool, list[str]]:
@@ -185,21 +192,23 @@ class TestPandocUtilities:
         if original_size > 0:
             conversion_ratio = converted_size / original_size
             if conversion_ratio < threshold:
-                # Changed from fs.service.get_file_size_str to fs.get_file_size_str
+                # Use the global service instance for file size strings
                 converted_size_str = fs.get_file_size_str(converted_size)
                 original_size_str = fs.get_file_size_str(original_size)
 
-                errors.append(
+                error_msg = (
                     f"Conversion error: Converted file size "
                     f"({converted_size_str}) is less than "
                     f"{threshold * 100:.0f}% of the original file size "
                     f"({original_size_str}) (ratio: {conversion_ratio:.2f})."
                 )
+                logger.warning(error_msg)
+                errors.append(error_msg)
                 return False, errors
 
         return True, errors
 
-    # Fix track_metrics function
+    # Refactored track_metrics function
     def track_metrics(
         filename: str,
         start_time: float,
@@ -237,7 +246,6 @@ class TestPandocUtilities:
             }
 
             # Use fs module's utility for formatting file sizes
-            # Changed from fs.service.get_file_size_str to fs.get_file_size_str
             original_size_str = fs.get_file_size_str(original_size)
             converted_size_str = fs.get_file_size_str(converted_size)
 

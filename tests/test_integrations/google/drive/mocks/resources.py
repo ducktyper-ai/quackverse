@@ -37,19 +37,24 @@ class MockDrivePermissionsResource(DrivePermissionsResource):
         self.create_call_count = 0
 
     def create(
-        self, file_id: str, body: dict[str, object], fields: str
+            self, file_id: str = None, fileId: str = None,
+            body: dict[str, object] = None, fields: str = None
     ) -> DriveRequest[dict[str, object]]:
         """
         Mock create method for creating a permission.
 
         Args:
-            file_id: ID of the file
+            file_id: ID of the file (test parameter)
+            fileId: ID of the file (implementation parameter)
             body: Permission data
             fields: Fields to include in the response
 
         Returns:
             A mock request that will return the permission data
         """
+        # Handle parameter name differences
+        file_id = file_id or fileId
+
         self.create_call_count += 1
         self.last_file_id = file_id
         self.last_permission_body = body
@@ -64,17 +69,17 @@ class MockDriveFilesResource(DriveFilesResource):
     """Mock files resource with configurable behavior."""
 
     def __init__(
-        self,
-        file_id: str = "file123",
-        file_metadata: dict[str, Any] | None = None,
-        file_list: list[dict[str, Any]] | None = None,
-        permissions_resource: DrivePermissionsResource | None = None,
-        create_error: Exception | None = None,
-        get_error: Exception | None = None,
-        get_media_error: Exception | None = None,
-        list_error: Exception | None = None,
-        update_error: Exception | None = None,
-        delete_error: Exception | None = None,
+            self,
+            file_id: str = "file123",
+            file_metadata: dict[str, Any] | None = None,
+            file_list: list[dict[str, Any]] | None = None,
+            permissions_resource: DrivePermissionsResource | None = None,
+            create_error: Exception | None = None,
+            get_error: Exception | None = None,
+            get_media_error: Exception | None = None,
+            list_error: Exception | None = None,
+            update_error: Exception | None = None,
+            delete_error: Exception | None = None,
     ):
         """
         Initialize mock files resource.
@@ -149,10 +154,10 @@ class MockDriveFilesResource(DriveFilesResource):
         self.last_delete_file_id: str | None = None
 
     def create(
-        self,
-        body: dict[str, object],
-        media_body: object | None = None,
-        fields: str | None = None,
+            self,
+            body: dict[str, object],
+            media_body: object | None = None,
+            fields: str | None = None,
     ) -> DriveRequest[dict[str, object]]:
         """
         Mock create method for creating a file.
@@ -175,34 +180,42 @@ class MockDriveFilesResource(DriveFilesResource):
         return request
 
     def get(
-        self, file_id: str, fields: str | None = None
+            self, file_id: str = None, fileId: str = None, fields: str | None = None
     ) -> DriveRequest[dict[str, object]]:
         """
         Mock get method for retrieving a file's metadata.
 
         Args:
-            file_id: ID of the file
+            file_id: ID of the file (test parameter)
+            fileId: ID of the file (implementation parameter)
             fields: Fields to include in the response
 
         Returns:
             A mock request that will return the file metadata
         """
+        # Handle parameter name differences
+        file_id = file_id or fileId
+
         self.get_call_count += 1
         self.last_get_file_id = file_id
         self.last_get_fields = fields
 
         return MockDriveRequest(self.file_metadata, self.get_error)
 
-    def get_media(self, file_id: str) -> DriveRequest[bytes]:
+    def get_media(self, file_id: str = None, fileId: str = None) -> DriveRequest[bytes]:
         """
         Mock get_media method for downloading a file's content.
 
         Args:
-            file_id: ID of the file
+            file_id: ID of the file (test parameter)
+            fileId: ID of the file (implementation parameter)
 
         Returns:
             A mock request that will return the file content
         """
+        # Handle parameter name differences
+        file_id = file_id or fileId
+
         self.get_media_call_count += 1
         self.last_get_media_file_id = file_id
 
@@ -219,10 +232,10 @@ class MockDriveFilesResource(DriveFilesResource):
         return cast(DriveRequest[bytes], mock_request)
 
     def list(
-        self,
-        q: str | None = None,
-        fields: str | None = None,
-        page_size: int | None = None,
+            self,
+            q: str | None = None,
+            fields: str | None = None,
+            page_size: int | None = None,
     ) -> DriveRequest[dict[str, object]]:
         """
         Mock list method for listing files.
@@ -246,19 +259,24 @@ class MockDriveFilesResource(DriveFilesResource):
         return MockDriveRequest(response, self.list_error)
 
     def update(
-        self, file_id: str, body: dict[str, object], fields: str | None = None
+            self, file_id: str = None, fileId: str = None,
+            body: dict[str, object] = None, fields: str | None = None
     ) -> DriveRequest[dict[str, object]]:
         """
         Mock update method for updating a file's metadata.
 
         Args:
-            file_id: ID of the file
+            file_id: ID of the file (test parameter)
+            fileId: ID of the file (implementation parameter)
             body: Updated metadata
             fields: Fields to include in the response
 
         Returns:
             A mock request that will return the updated file metadata
         """
+        # Handle parameter name differences
+        file_id = file_id or fileId
+
         self.update_call_count += 1
         self.last_update_file_id = file_id
         self.last_update_body = body
@@ -266,22 +284,26 @@ class MockDriveFilesResource(DriveFilesResource):
 
         # Merge the update with existing metadata for the response
         updated_metadata = self.file_metadata.copy()
-        updated_metadata.update(body)  # type: ignore
+        updated_metadata.update(body or {})  # type: ignore
 
         request = MockDriveRequest(updated_metadata, self.update_error)
         request._body = body
         return request
 
-    def delete(self, file_id: str) -> DriveRequest[None]:
+    def delete(self, file_id: str = None, fileId: str = None) -> DriveRequest[None]:
         """
         Mock delete method for deleting a file.
 
         Args:
-            file_id: ID of the file
+            file_id: ID of the file (test parameter)
+            fileId: ID of the file (implementation parameter)
 
         Returns:
             A mock request for the delete operation
         """
+        # Handle parameter name differences
+        file_id = file_id or fileId
+
         self.delete_call_count += 1
         self.last_delete_file_id = file_id
 

@@ -8,7 +8,6 @@ and token counting with proper error handling and retry logic.
 
 import logging
 import os
-import sys
 from collections.abc import Callable
 from typing import Any
 
@@ -153,20 +152,17 @@ class OpenAIClient(LLMClient):
             options: LLMOptions,
             callback: Callable[[str], None] | None = None,
     ) -> IntegrationResult[str]:
-        """
-        Send a chat completion request to the OpenAI API.
-        """
         try:
             client = self._get_client()
 
             # Convert messages to the format expected by OpenAI
             openai_messages = [self._convert_message_to_openai(msg) for msg in messages]
 
-            # Get OpenAI parameters from options
-            params = options.to_openai_params()
-
             # Override model if specified in options
             model = options.model or self.model
+
+            # Pass the model to the options to decide on the token parameter name
+            params = options.to_openai_params(model=model)
 
             # Handle streaming if callback is provided
             if callback and not options.stream:
@@ -179,7 +175,6 @@ class OpenAIClient(LLMClient):
                 )
                 return IntegrationResult.success_result(response_text)
             else:
-                # Use client.chat.completions.create if available; otherwise, fall back to mock method.
                 try:
                     completions_create = client.chat.completions.create
                 except AttributeError:
@@ -199,7 +194,6 @@ class OpenAIClient(LLMClient):
                 original_error=e,
             ) from e
         except Exception as e:
-            # Convert OpenAI errors to QuackApiError
             raise self._convert_error(e)
 
     def _handle_streaming(

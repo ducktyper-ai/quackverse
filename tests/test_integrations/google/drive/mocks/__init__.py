@@ -15,6 +15,12 @@ from tests.test_integrations.google.drive.mocks.credentials import (
     create_credentials,
 )
 
+# Import from download module
+from tests.test_integrations.google.drive.mocks.download import (
+    MockDownloadOperations,
+    mock_download_file,
+)
+
 # Import from media module
 from tests.test_integrations.google.drive.mocks.media import (
     MockDownloadStatus,
@@ -58,4 +64,7 @@ __all__ = [
     "MockDownloadStatus",
     "MockMediaDownloader",
     "create_mock_media_io_base_download",
+    # Download operation mocks
+    "MockDownloadOperations",
+    "mock_download_file",
 ]

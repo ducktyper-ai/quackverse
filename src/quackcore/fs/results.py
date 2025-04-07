@@ -7,7 +7,7 @@ filesystem operations, enhancing error handling and return values.
 """
 
 from pathlib import Path
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -47,6 +47,12 @@ class ReadResult(OperationResult, Generic[T]):
     encoding: str | None = Field(
         default=None,
         description="Encoding used for text content",
+    )
+
+    # This field is added for backward compatibility with the old types.ReadResult
+    data: Any = Field(
+        default=None,
+        description="Parsed data (for structured formats like JSON, YAML)",
     )
 
     @property
@@ -174,6 +180,12 @@ class FileInfoResult(OperationResult):
         description="Detected MIME type",
     )
 
+    # Property for backward compatibility
+    @property
+    def is_directory(self) -> bool:
+        """Alias for is_dir for backward compatibility."""
+        return self.is_dir
+
 
 class DirectoryInfoResult(OperationResult):
     """Result of a directory listing operation."""
@@ -242,7 +254,6 @@ class FindResult(OperationResult):
     )
 
 
-# Fixed the order here - OperationResult (BaseModel) before Generic[T]
 class DataResult(OperationResult, Generic[T]):
     """Result for structured data operations (YAML, JSON, etc.)."""
 
@@ -258,3 +269,8 @@ class DataResult(OperationResult, Generic[T]):
         default=None,
         description="Whether data passed schema validation",
     )
+
+
+# Aliases for backward compatibility with quackcore.fs.types
+DirectoryListResult = DirectoryInfoResult
+FileFindResult = FindResult

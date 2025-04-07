@@ -11,7 +11,7 @@ from quackcore.errors import (
     QuackIOError,
     QuackValidationError,
 )
-from quackcore.fs.results import DataResult, WriteResult
+from quackcore.fs.results import DataResult, ReadResult, WriteResult
 from quackcore.logging import get_logger
 
 # Set up logger
@@ -110,6 +110,9 @@ class SerializationOperationsMixin:
                 f"with {len(data)} top-level keys"
             )
 
+            # For backward compatibility with ReadResult.data
+            # Create both a DataResult and update the original text_result
+            text_result.data = data
             return DataResult(
                 success=True,
                 path=resolved_path,
@@ -238,6 +241,9 @@ class SerializationOperationsMixin:
                 f"with {len(data)} top-level keys"
             )
 
+            # For backward compatibility with ReadResult.data
+            # Create both a DataResult and update the original text_result
+            text_result.data = data
             return DataResult(
                 success=True,
                 path=resolved_path,

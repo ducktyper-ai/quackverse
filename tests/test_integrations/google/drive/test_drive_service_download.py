@@ -117,10 +117,10 @@ class TestGoogleDriveServiceDownload:
                             assert result.success is True
                             assert result.content == "/tmp/test_file.txt"
                             drive_service.drive_service.files().get.assert_called_once_with(
-                                file_id="file123", fields="name, mimeType"
+                                fileId="file123", fields="name, mimeType"
                             )
                             drive_service.drive_service.files().get_media.assert_called_once_with(
-                                file_id="file123"
+                                fileId="file123"
                             )
                             mock_write.assert_called_once()
 

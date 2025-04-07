@@ -75,4 +75,6 @@ __all__ = [
     # Temporary files/directories
     "create_temp_directory",
     "create_temp_file",
+    # Checksums
+    "compute_checksum",
 ]

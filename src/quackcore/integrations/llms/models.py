@@ -149,12 +149,16 @@ class LLMOptions(BaseModel):
             raise ValueError("retry_count must be non-negative")
         return v
 
-    def to_openai_params(self) -> dict[str, Any]:
+    def to_openai_params(self, model: str | None = None) -> dict[str, Any]:
         """
-        Convert options to OpenAI API parameters.
+        Convert options to OpenAI API parameters, adjusting the token parameter name
+        depending on the model type.
+
+        Args:
+            model: The model name to check for token parameter naming.
 
         Returns:
-            dict: Parameters for OpenAI API.
+            dict: Parameters for the OpenAI API.
         """
         params = {
             "temperature": self.temperature,
@@ -162,9 +166,12 @@ class LLMOptions(BaseModel):
             "frequency_penalty": self.frequency_penalty,
             "presence_penalty": self.presence_penalty,
         }
-
+        # Use 'max_completion_tokens' if the model belongs to the "o" family, otherwise 'max_tokens'
+        token_param_name = "max_tokens"
+        if model and model.lower().startswith("o"):
+            token_param_name = "max_completion_tokens"
         if self.max_tokens is not None:
-            params["max_tokens"] = self.max_tokens
+            params[token_param_name] = self.max_tokens
         if self.stop:
             params["stop"] = self.stop
         if self.functions:

@@ -40,23 +40,26 @@ class TestBaseAuthProvider:
 
         # Test with relative path (mocking resolver)
         with patch(
-            "quackcore.integrations.core.base.resolver.resolve_project_path"
+                "quackcore.integrations.core.base.resolver.resolve_project_path"
         ) as mock_resolve:
             mock_resolve.return_value = "/resolved/path"
             resolved = provider._resolve_path("relative/path")
             assert resolved == "/resolved/path"
             mock_resolve.assert_called_once()
 
-        # Test with resolver exception
+        # Test with resolver exception - patch the fs service instance
         with patch(
-            "quackcore.integrations.core.base.resolver.resolve_project_path"
+                "quackcore.integrations.core.base.resolver.resolve_project_path"
         ) as mock_resolve:
             mock_resolve.side_effect = Exception("Test error")
-            with patch("quackcore.fs.service.normalize_path") as mock_normalize:
-                mock_normalize.return_value = "/normalized/path"
+            # Create a mock service instance
+            mock_service = MagicMock()
+            mock_service.normalize_path.return_value = Path("/normalized/path")
+            # Patch the import of the service
+            with patch("quackcore.fs.service", mock_service):
                 resolved = provider._resolve_path("relative/path")
                 assert resolved == "/normalized/path"
-                mock_normalize.assert_called_once()
+                mock_service.normalize_path.assert_called_once_with("relative/path")
 
     def test_abstract_methods(self) -> None:
         """Test that abstract methods must be implemented."""

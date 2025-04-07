@@ -1,8 +1,8 @@
-# tests/test_config/test_models.py
 """
 Tests for configuration models.
 """
 
+import logging
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -41,56 +41,69 @@ class TestConfigModels:
         # was normalized to INFO
         assert config.level == "INFO"
 
-        # Test setup_logging method
-        with patch("logging.basicConfig") as mock_basic_config:
-            with patch("logging.StreamHandler") as mock_stream_handler:
-                with patch("logging.FileHandler") as mock_file_handler:
-                    with patch("logging.getLogger") as mock_get_logger:
-                        # Mock objects
-                        mock_handler = MagicMock()
-                        mock_stream_handler.return_value = mock_handler
-                        mock_file_handler.return_value = mock_handler
-                        mock_logger = MagicMock()
-                        mock_get_logger.return_value = mock_logger
+        # Define LOG_LEVELS mapping for mock
+        mock_log_levels = {
+            "DEBUG": logging.DEBUG,
+            "INFO": logging.INFO,
+            "WARNING": logging.WARNING,
+            "ERROR": logging.ERROR,
+            "CRITICAL": logging.CRITICAL,
+        }
 
-                        # Test with default config (console only)
-                        config = LoggingConfig()
-                        config.setup_logging()
+        # Test setup_logging method with the new implementation
+        with patch("quackcore.logging.configure_logger") as mock_configure_logger:
+            with patch("quackcore.logging.LOG_LEVELS", mock_log_levels):
+                # Create a mock logger to be returned
+                mock_logger = MagicMock()
+                mock_configure_logger.return_value = mock_logger
 
-                        # Verify basicConfig called
-                        mock_basic_config.assert_called_once()
-                        # Verify console handler added
-                        mock_stream_handler.assert_called_once()
-                        # Verify file handler not added
-                        mock_file_handler.assert_not_called()
+                # Add a real stream handler to the logger for isinstance checks to work
+                stream_handler = logging.StreamHandler()
+                mock_logger.handlers = [stream_handler]
 
-                        # Reset mocks
-                        mock_basic_config.reset_mock()
-                        mock_stream_handler.reset_mock()
-                        mock_file_handler.reset_mock()
+                # Test with default config (console only)
+                config = LoggingConfig()
+                config.setup_logging()
 
-                        # Test with file config
-                        with patch.object(Path, "mkdir", return_value=None):
-                            config = LoggingConfig(file=Path("/test/log.txt"))
-                            config.setup_logging()
+                # Verify configure_logger called with correct params
+                mock_configure_logger.assert_called_once_with(
+                    "quackcore", level=logging.INFO, log_file=None
+                )
 
-                        # Verify file handler added
-                        mock_file_handler.assert_called_once_with(
-                            str(Path("/test/log.txt"))
-                        )
+                # Reset mocks for next test
+                mock_configure_logger.reset_mock()
 
-                        # Test with error during file handler setup
-                        mock_basic_config.reset_mock()
-                        mock_stream_handler.reset_mock()
-                        mock_file_handler.reset_mock()
-                        mock_file_handler.side_effect = Exception("Test error")
+                # Test with console disabled
+                config = LoggingConfig(console=False)
+                config.setup_logging()
 
-                        config = LoggingConfig(file=Path("/test/log.txt"))
-                        # Should not raise exception, but log the error
-                        config.setup_logging()
+                # We just check the method is called, the actual filtering is implemented in the class
+                mock_configure_logger.assert_called_once()
 
-                        # Verify error logged
-                        mock_get_logger.return_value.error.assert_called_once()
+                # Reset mocks for next test
+                mock_configure_logger.reset_mock()
+
+                # Test with debug level
+                config = LoggingConfig(level="DEBUG")
+                config.setup_logging()
+
+                # Verify correct log level was passed
+                mock_configure_logger.assert_called_once_with(
+                    "quackcore", level=logging.DEBUG, log_file=None
+                )
+
+                # Reset mocks for next test
+                mock_configure_logger.reset_mock()
+
+                # Test with file logging
+                log_file = Path("/test/log.txt")
+                config = LoggingConfig(file=log_file)
+                config.setup_logging()
+
+                # Verify file path passed correctly
+                mock_configure_logger.assert_called_once_with(
+                    "quackcore", level=logging.INFO, log_file=log_file
+                )
 
     def test_paths_config(self) -> None:
         """Test the PathsConfig model."""

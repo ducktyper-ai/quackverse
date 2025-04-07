@@ -1,4 +1,4 @@
-# src/quackcore/fs/service.py
+# src/quackcore/fs/deprecated_service.py
 """
 FileSystemService provides a high-level interface for filesystem operations.
 

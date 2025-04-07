@@ -9,7 +9,6 @@ that can be used across different test modules.
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import cast
 from unittest.mock import MagicMock
 
 from quackcore.errors import QuackIntegrationError
@@ -498,3 +497,52 @@ def create_conversion_details(
         input_size=input_size,
         validation_errors=validation_errors or [],
     )
+
+
+def setup_mock_file_info_for_tests(mock_fs, size: int = 512) -> None:
+    """
+    Setup mock file_info with predefined values for tests.
+
+    This is a helper for tests to ensure that file_info.size returns a consistent value
+    that tests expect.
+
+    Args:
+        mock_fs: The mocked fs service
+        size: The file size to return (default: 512)
+    """
+    from quackcore.fs.results import FileInfoResult
+
+    # Create a concrete FileInfoResult with the expected size
+    file_info = FileInfoResult(
+        success=True,
+        path="/path/to/file",
+        exists=True,
+        is_file=True,
+        size=size,
+    )
+
+    # Set up the file_info attribute with a concrete value
+    mock_fs.get_file_info.return_value = file_info
+
+def setup_mock_file_info_with_size(mock_fs, path: str | Path, size: int) -> None:
+    """
+    Setup a mock file_info with specific path and size for tests.
+
+    Args:
+        mock_fs: The mocked fs service
+        path: The file path to use
+        size: The file size to return
+    """
+    from quackcore.fs.results import FileInfoResult
+
+    # Create a concrete FileInfoResult with the specified path and size
+    file_info = FileInfoResult(
+        success=True,
+        path=str(path),
+        exists=True,
+        is_file=True,
+        size=size,
+    )
+
+    # Set up the file_info return value with a concrete value
+    mock_fs.service.get_file_info.return_value = file_info
