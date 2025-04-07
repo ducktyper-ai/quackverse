@@ -195,7 +195,7 @@ class OpenAIClient(LLMClient):
             ) from e
         except Exception as e:
             raise self._convert_error(e)
-        
+
     def _handle_streaming(
             self,
             client: Any,
