@@ -17,6 +17,7 @@ from quackcore.config.utils import (
     normalize_paths,
     validate_required_config,
 )
+from quackcore.errors import QuackConfigurationError
 
 
 class TestConfigUtils:
@@ -81,7 +82,7 @@ class TestConfigUtils:
         with patch("quackcore.config.utils.get_env", return_value="development"):
             with patch(
                 "quackcore.config.utils.load_yaml_config",
-                side_effect=Exception("Test error"),
+                side_effect=QuackConfigurationError("Test error"),
             ):
                 config = load_env_config(sample_config, temp_dir)
                 assert config is sample_config

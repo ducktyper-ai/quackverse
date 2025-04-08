@@ -10,8 +10,11 @@ import os
 from pathlib import Path
 from typing import TypeVar
 
-from quackcore.config.loader import _deep_merge, load_yaml_config
 from quackcore.config.models import QuackConfig
+from quackcore.config.loader import _deep_merge, \
+    load_yaml_config  # load_yaml_config is no longer used
+from quackcore.errors import QuackConfigurationError
+from quackcore.fs import service as fs
 
 T = TypeVar("T")
 
@@ -56,14 +59,15 @@ def load_env_config(
 
         # Use a heuristic: look for a 'config' directory in common locations
         candidates = [
-            Path("./config"),
-            Path("./configs"),
-            Path(config.paths.base_dir) / "config",
-            Path(config.paths.base_dir) / "configs",
+            fs.join_path(".", "config"),
+            fs.join_path(".", "configs"),
+            fs.join_path(config.paths.base_dir, "config"),
+            fs.join_path(config.paths.base_dir, "configs"),
         ]
 
         for candidate in candidates:
-            if candidate.is_dir():
+            info = fs.get_file_info(candidate)
+            if info.success and info.exists and info.is_dir:
                 config_dir = candidate
                 break
 
@@ -71,27 +75,29 @@ def load_env_config(
             # No config directory found, return the original config
             return config
 
-    # Load environment-specific configuration
-    env_file = Path(config_dir) / f"{env}.yaml"
-    if not env_file.exists():
+    # Build the environment-specific config file path using fs.join_path
+    env_file = fs.join_path(config_dir, f"{env}.yaml")
+    file_info = fs.get_file_info(env_file)
+    if not (file_info.success and file_info.exists):
         # Try with .yml extension
-        env_file = Path(config_dir) / f"{env}.yml"
-        if not env_file.exists():
+        env_file = fs.join_path(config_dir, f"{env}.yml")
+        file_info = fs.get_file_info(env_file)
+        if not (file_info.success and file_info.exists):
             # No environment-specific config, return the original
             return config
 
     try:
         env_config = load_yaml_config(env_file)
-
         # Merge with base configuration
         base_dict = config.to_dict()
         merged_dict = _deep_merge(base_dict, env_config)
 
-        # Create new config object
+        # Create new config object using validated model data
         return QuackConfig.model_validate(merged_dict)
 
-    except Exception:  # Changed from QuackConfigurationError to Exception
-        # If there's an error loading the environment config, return the original
+    except QuackConfigurationError:
+        # If a configuration-related error occurs during loading,
+        # return the original configuration.
         return config
 
 
@@ -166,7 +172,7 @@ def normalize_paths(config: QuackConfig) -> QuackConfig:
 
     # Normalize the 'paths' section, except the base_dir key.
     for key, value in config_dict["paths"].items():
-        if key != "base_dir" and isinstance(value, (str | Path)):
+        if key != "base_dir" and isinstance(value, (str, Path)):
             config_dict["paths"][key] = _normalize_path(value, base_dir)
 
     # Normalize the plugins' paths if present.
@@ -205,7 +211,8 @@ def _normalize_path(value: str | Path, base_dir: Path) -> Path:
         base_dir: Base directory for resolving relative paths
 
     Returns:
-        Absolute path as Path object.
+        Absolute path as a Path object.
     """
     p = Path(value)
-    return p if p.is_absolute() else base_dir / p
+    # Use fs.join_path for joining, but wrap the result in Path to ensure a Path object is returned
+    return p if p.is_absolute() else Path(fs.join_path(base_dir, p))
