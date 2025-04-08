@@ -12,8 +12,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from quackcore.errors import QuackFileNotFoundError, wrap_io_errors
-
-# Replace standard logging with quackcore.logging
+from quackcore.fs import service as fs
 from quackcore.logging import get_logger
 
 # Get module-specific logger
@@ -21,6 +20,8 @@ logger = get_logger(__name__)
 
 
 class ProjectConfig(BaseModel):
+    """Configuration model for project detection."""
+
     marker_files: list[str] = Field(
         default_factory=lambda: [
             "pyproject.toml",
@@ -28,24 +29,31 @@ class ProjectConfig(BaseModel):
             ".git",
             ".quack",
             "quack_config.yaml",
-        ]
+        ],
+        description="Files that indicate a project root",
     )
+
     marker_dirs: list[str] = Field(
         default_factory=lambda: [
             "src",
             "quackcore",
             "tests",
-        ]
+        ],
+        description="Directories that indicate a project root",
     )
-    max_levels: int = 5
+
+    max_levels: int = Field(
+        default=5,
+        description="Maximum number of parent directories to check"
+    )
 
 
 @wrap_io_errors
 def find_project_root(
-    start_dir: str | Path | None = None,
-    marker_files: list[str] | None = None,
-    marker_dirs: list[str] | None = None,
-    max_levels: int = 5,
+        start_dir: str | Path | None = None,
+        marker_files: list[str] | None = None,
+        marker_dirs: list[str] | None = None,
+        max_levels: int = 5,
 ) -> Path:
     """
     Find the project root directory by looking for marker files or directories.
@@ -69,11 +77,10 @@ def find_project_root(
 
     # Safely get the current directory, with fallback to a known directory
     try:
-        current_dir: Path = Path(start_dir) if start_dir else Path.cwd()
+        current_dir = Path(start_dir) if start_dir else Path.cwd()
     except (FileNotFoundError, OSError):
         # Fallback to home directory if current directory doesn't exist
         current_dir = Path.home()
-        # Use the module logger instead of creating a new one
         logger.warning(
             f"Current working directory not found, falling back to {current_dir}"
         )
@@ -84,13 +91,13 @@ def find_project_root(
             return current_dir
 
         # Check for marker directories: if two or more are found, assume project root.
-        dir_markers_found: int = sum(
+        dir_markers_found = sum(
             1 for marker in marker_dirs if (current_dir / marker).is_dir()
         )
         if dir_markers_found >= 2:
             return current_dir
 
-        parent_dir: Path = current_dir.parent
+        parent_dir = current_dir.parent
         if parent_dir == current_dir:
             break  # Reached filesystem root.
         current_dir = parent_dir
@@ -103,9 +110,9 @@ def find_project_root(
 
 @wrap_io_errors
 def find_nearest_directory(
-    name: str,
-    start_dir: str | Path | None = None,
-    max_levels: int = 5,
+        name: str,
+        start_dir: str | Path | None = None,
+        max_levels: int = 5,
 ) -> Path:
     """
     Find the nearest directory with the given name.
@@ -121,7 +128,7 @@ def find_nearest_directory(
     Raises:
         QuackFileNotFoundError: If directory cannot be found
     """
-    current_dir: Path = Path(start_dir) if start_dir else Path.cwd()
+    current_dir = Path(start_dir) if start_dir else Path.cwd()
 
     # First, search within the current directory and its subdirectories.
     for root, dirs, _ in os.walk(str(current_dir)):
@@ -130,7 +137,7 @@ def find_nearest_directory(
 
     # If not found, search upward through parent directories.
     for _ in range(max_levels):
-        parent_dir: Path = current_dir.parent
+        parent_dir = current_dir.parent
         if parent_dir == current_dir:
             break  # Reached filesystem root.
         current_dir = parent_dir
@@ -145,8 +152,8 @@ def find_nearest_directory(
 
 @wrap_io_errors
 def resolve_relative_to_project(
-    path: str | Path,
-    project_root: str | Path | None = None,
+        path: str | Path,
+        project_root: str | Path | None = None,
 ) -> Path:
     """
     Resolve a path relative to the project root.
@@ -161,7 +168,7 @@ def resolve_relative_to_project(
     Raises:
         QuackFileNotFoundError: If project root cannot be found and path is relative
     """
-    path_obj: Path = Path(path)
+    path_obj = Path(path)
     if path_obj.is_absolute():
         return path_obj
 
@@ -179,9 +186,8 @@ def normalize_path(path: str | Path) -> Path:
     """
     Normalize a path for cross-platform compatibility.
 
-    This function expands the user variable, makes the path absolute (using the current
-    working directory, or falling back to the user's home directory if necessary), and
-    normalizes the path without requiring that it exists.
+    This function uses fs.normalize_path to ensure consistent behavior
+    with quackcore.fs module.
 
     Args:
         path: Path to normalize
@@ -189,29 +195,7 @@ def normalize_path(path: str | Path) -> Path:
     Returns:
         Normalized absolute Path object.
     """
-    path_obj = Path(path).expanduser()
-    try:
-        # Attempt to get the current working directory.
-        try:
-            cwd = Path.cwd()
-        except FileNotFoundError:
-            cwd = (
-                Path.home()
-            )  # Fallback to the user's home directory if cwd is missing.
-            logger.debug(f"Current directory not found, using home directory: {cwd}")
-
-        # If the path is not absolute, make it absolute relative to cwd.
-        if not path_obj.is_absolute():
-            path_obj = cwd / path_obj
-
-        # Use resolve(strict=False) to normalize the path without requiring existence.
-        return path_obj.resolve(strict=False)
-    except Exception as ex:
-        # Log the exception with the logger
-        logger.warning(f"Error normalizing path, falling back to absolute(): {ex}")
-        # Fallback: use absolute() (this still calls cwd, so in worst-case,
-        # an exception will propagate)
-        return path_obj.absolute()
+    return fs.normalize_path(path)
 
 
 @wrap_io_errors
@@ -219,13 +203,16 @@ def join_path(*parts: str | Path) -> Path:
     """
     Join path components.
 
+    This function uses fs.join_path to ensure consistent behavior
+    with quackcore.fs module.
+
     Args:
         *parts: Path parts to join
 
     Returns:
         Joined Path object
     """
-    return Path(*parts)
+    return fs.join_path(*parts)
 
 
 @wrap_io_errors
@@ -233,21 +220,24 @@ def split_path(path: str | Path) -> list[str]:
     """
     Split a path into its components.
 
+    This function uses fs.split_path to ensure consistent behavior
+    with quackcore.fs module.
+
     Args:
         path: Path to split
 
     Returns:
         List of path components
     """
-    parts: list[str] = list(Path(path).parts)
-    if str(path).startswith("./"):
-        parts.insert(0, ".")
-    return parts
+    return fs.split_path(path)
 
 
 def get_extension(path: str | Path) -> str:
     """
     Get the file extension from a path.
+
+    This function uses fs.get_extension to ensure consistent behavior
+    with quackcore.fs module.
 
     Args:
         path: File path
@@ -256,12 +246,7 @@ def get_extension(path: str | Path) -> str:
         File extension without the dot.
         For dotfiles, the extension is the filename without the leading dot.
     """
-    path_obj: Path = Path(path)
-    filename: str = path_obj.name
-
-    if filename.startswith(".") and "." not in filename[1:]:
-        return filename[1:]
-    return path_obj.suffix.lstrip(".")
+    return fs.get_extension(path)
 
 
 def _resolve_project_root(path_obj: Path, project_root: str | Path | None) -> Path:
@@ -307,8 +292,8 @@ def _get_relative_parts(path_obj: Path, base: Path) -> list[str] | None:
 
 @wrap_io_errors
 def infer_module_from_path(
-    path: str | Path,
-    project_root: str | Path | None = None,
+        path: str | Path,
+        project_root: str | Path | None = None,
 ) -> str:
     """
     Infer a Python module name from a file path.
@@ -320,8 +305,8 @@ def infer_module_from_path(
     Returns:
         Python module name.
     """
-    path_obj: Path = Path(path)
-    resolved_root: Path = _resolve_project_root(path_obj, project_root)
+    path_obj = Path(path)
+    resolved_root = _resolve_project_root(path_obj, project_root)
 
     # Ensure the path is absolute.
     if not path_obj.is_absolute():
@@ -330,13 +315,13 @@ def infer_module_from_path(
 
     # Attempt to find the source directory ("src") within the project.
     try:
-        src_dir: Path = find_nearest_directory("src", resolved_root)
+        src_dir = find_nearest_directory("src", resolved_root)
         logger.debug(f"Found source directory: {src_dir}")
     except QuackFileNotFoundError:
         src_dir = resolved_root
         logger.debug(f"Source directory not found, using project root: {src_dir}")
 
-    parts: list[str] | None = _get_relative_parts(path_obj, src_dir)
+    parts = _get_relative_parts(path_obj, src_dir)
     if parts is None:
         parts = _get_relative_parts(path_obj, resolved_root)
     if parts is None:

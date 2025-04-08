@@ -8,7 +8,6 @@ and inferring context from file locations.
 """
 
 from pathlib import Path
-from typing import TypeVar
 
 from quackcore.errors import QuackFileNotFoundError, wrap_io_errors
 from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
@@ -17,8 +16,6 @@ from quackcore.paths.utils import (
     find_nearest_directory,
     find_project_root,
 )
-
-T = TypeVar("T")  # Generic type for flexible typing
 
 
 class PathResolver:
@@ -61,8 +58,6 @@ class PathResolver:
             QuackFileNotFoundError: If project root cannot be found
         """
         return find_project_root(start_dir, marker_files, marker_dirs)
-
-    # src/quackcore/paths/resolver.py fixes for PathResolver methods
 
     def _detect_standard_directories(self, context: ProjectContext) -> None:
         """
@@ -213,9 +208,6 @@ class PathResolver:
                 "output", f"Could not find output directory in or near {current_dir}"
             ) from e
 
-    # Add resolve_project_path method to the
-    # PathResolver class in src/quackcore/paths/resolver.py
-
     def resolve_project_path(
         self,
         path: str | Path,
@@ -229,7 +221,7 @@ class PathResolver:
             project_root: Project root directory (default: auto-detected)
 
         Returns:
-            Path: Resolved absolute path
+            Resolved absolute path
         """
         path_obj = Path(path)
 
@@ -412,22 +404,30 @@ class PathResolver:
         return result
 
 
+# Module-level function for convenience
 def get_project_root(
     start_dir: str | Path | None = None,
     marker_files: list[str] | None = None,
     marker_dirs: list[str] | None = None,
 ) -> Path:
     """
-    Module-level function to get the project root directory.
+    Module-level function to find the project root directory.
 
-    This function instantiates a PathResolver and returns the project root.
+    This function instantiates a PathResolver and delegates
+    to its get_project_root method.
+
+    Args:
+        start_dir: Directory to start searching from (default: current directory)
+        marker_files: List of filenames that indicate a project root
+        marker_dirs: List of directory names that indicate a project root
+
+    Returns:
+        Path to the project root directory
     """
     return PathResolver().get_project_root(start_dir, marker_files, marker_dirs)
 
 
-# Add module-level resolve_project_path function to src/quackcore/paths/resolver.py
-
-
+# Module-level function for convenience
 def resolve_project_path(
     path: str | Path,
     project_root: str | Path | None = None,
@@ -443,6 +443,6 @@ def resolve_project_path(
         project_root: Project root directory (default: auto-detected)
 
     Returns:
-        Path: Resolved absolute path
+        Resolved absolute path
     """
     return PathResolver().resolve_project_path(path, project_root)

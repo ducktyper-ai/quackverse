@@ -6,12 +6,10 @@ This module defines the plugin interface for the paths module,
 allowing QuackCore to expose path resolution functionality to other modules.
 """
 
-from typing import Protocol, TypeVar
+from typing import Protocol
 
 from quackcore.paths.context import ContentContext, ProjectContext
 from quackcore.paths.resolver import PathResolver
-
-T = TypeVar("T")
 
 
 class PathsPlugin(Protocol):
