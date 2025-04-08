@@ -1,1363 +1,4 @@
-## Testing with quackcore.fs
-
-Testing code that uses the filesystem can be challenging, but `quackcore.fs` makes it easier by providing a consistent API that can be mocked effectively. This section covers strategies for testing code that relies on `quackcore.fs`.
-
-### Mocking the FileSystemService
-
-When unit testing, you'll often want to mock the filesystem to avoid actually reading or writing files. Here's how to do that with `pytest` and `unittest.mock`:
-
-```python
-import pytest
-from unittest.mock import MagicMock, patch
-from quackcore.fs import service as fs
-from quackcore.fs.results import ReadResult, FileInfoResult
-
-def test_config_reader():
-    # Function we want to test
-    def read_config(config_path):
-        result = fs.read_yaml(config_path)
-        if not result.success:
-            return {}
-        return result.data
-    
-    # Mock the fs.read_yaml method
-    with patch('quackcore.fs.service.read_yaml') as mock_read_yaml:
-        # Setup the mock to return a successful result
-        mock_result = MagicMock(spec=ReadResult)
-        mock_result.success = True
-        mock_result.data = {"app_name": "TestApp", "version": "1.0.0"}
-        mock_read_yaml.return_value = mock_result
-        
-        # Call the function under test
-        config = read_config("config.yaml")
-        
-        # Verify the result
-        assert config["app_name"] == "TestApp"
-        assert config["version"] == "1.0.0"
-        
-        # Verify fs.read_yaml was called with the correct path
-        mock_read_yaml.assert_called_once_with("config.yaml")
-    
-    # Test error handling
-    with patch('quackcore.fs.service.read_yaml') as mock_read_yaml:
-        # Setup the mock to return a failed result
-        mock_result = MagicMock(spec=ReadResult)
-        mock_result.success = False
-        mock_result.error = "File not found"
-        mock_read_yaml.return_value = mock_result
-        
-        # Call the function under test
-        config = read_config("missing.yaml")
-        
-        # Verify the result
-        assert config == {}
-```
-
-### Using a Fake FileSystemService
-
-For more complex tests, you might want to create a fake implementation of the `FileSystemService`:
-
-```python
-from quackcore.fs.results import ReadResult, WriteResult, FileInfoResult
-from pathlib import Path
-
-class FakeFileSystemService:
-    """A fake FileSystemService for testing."""
-    
-    def __init__(self):
-        # In-memory filesystem
-        self.files = {}
-    
-    def read_text(self, path, encoding="utf-8"):
-        """Simulate reading a text file."""
-        path_str = str(path)
-        if path_str in self.files:
-            return ReadResult(
-                success=True,
-                path=Path(path_str),
-                content=self.files[path_str],
-                encoding=encoding
-            )
-        return ReadResult(
-            success=False,
-            path=Path(path_str),
-            content="",
-            error="File not found"
-        )
-    
-    def write_text(self, path, content, encoding="utf-8", atomic=False):
-        """Simulate writing a text file."""
-        path_str = str(path)
-        self.files[path_str] = content
-        return WriteResult(
-            success=True,
-            path=Path(path_str),
-            bytes_written=len(content.encode(encoding))
-        )
-    
-    def get_file_info(self, path):
-        """Simulate getting file info."""
-        path_str = str(path)
-        exists = path_str in self.files
-        return FileInfoResult(
-            success=True,
-            path=Path(path_str),
-            exists=exists,
-            is_file=exists,
-            is_dir=False,
-            size=len(self.files.get(path_str, "").encode("utf-8")) if exists else 0
-        )
-    
-    # Add more methods as needed for your tests
-
-# Use the fake in tests
-def test_with_fake_fs():
-    # Create a fake fs
-    fake_fs = FakeFileSystemService()
-    
-    # Write a test file
-    fake_fs.write_text("test.txt", "Hello, World!")
-    
-    # Function to test that uses the fake
-    def read_first_line(fs, path):
-        result = fs.read_text(path)
-        if not result.success:
-            return None
-        return result.content.split("\n")[0]
-    
-    # Test the function with our fake
-    first_line = read_first_line(fake_fs, "test.txt")
-    assert first_line == "Hello, World!"
-    
-    # Test with a missing file
-    first_line = read_first_line(fake_fs, "missing.txt")
-    assert first_line is None
-```
-
-### Creating a Test Fixture
-
-For integration tests where you actually want to interact with the real filesystem, you can create a pytest fixture that sets up a temporary directory:
-
-```python
-import pytest
-import tempfile
-import shutil
-from pathlib import Path
-from quackcore.fs import service as fs
-
-@pytest.fixture
-def temp_dir():
-    """Create a temporary directory for tests."""
-    # Create a temporary directory
-    temp_path = tempfile.mkdtemp()
-    yield temp_path
-    
-    # Clean up after the test
-    shutil.rmtree(temp_path)
-
-def test_file_operations(temp_dir):
-    # Create a test file
-    test_file = fs.join_path(temp_dir, "test.txt")
-    fs.write_text(test_file, "Test content")
-    
-    # Verify the file exists
-    info = fs.get_file_info(test_file)
-    assert info.success
-    assert info.exists
-    assert info.is_file
-    
-    # Read the file
-    result = fs.read_text(test_file)
-    assert result.success
-    assert result.content == "Test content"
-    
-    # Delete the file
-    delete_result = fs.delete(test_file)
-    assert delete_result.success
-    
-    # Verify the file no longer exists
-    info = fs.get_file_info(test_file)
-    assert info.success
-    assert not info.exists
-```
-
-## Error Handling Patterns
-
-Proper error handling is crucial when working with filesystem operations. Here are some patterns for handling errors with `quackcore.fs`:
-
-### Basic Error Handling
-
-The simplest pattern is to check the `success` attribute of result objects:
-
-```python
-result = fs.read_text("config.txt")
-if result.success:
-    # Process the content
-    process_content(result.content)
-else:
-    # Handle the error
-    print(f"Error reading config: {result.error}")
-```
-
-### Centralized Error Handler
-
-For more complex applications, you might want to create a centralized error handler:
-
-```python
-class FSErrorHandler:
-    """Centralized handler for filesystem errors."""
-    
-    def __init__(self, logger):
-        self.logger = logger
-    
-    def handle_error(self, result, operation, path):
-        """Handle a filesystem operation error."""
-        if "not found" in result.error.lower():
-            self.logger.warning(f"{path} not found when performing {operation}")
-            return "NOT_FOUND"
-        
-        if "permission denied" in result.error.lower():
-            self.logger.error(f"Permission denied for {path} when performing {operation}")
-            return "PERMISSION_DENIED"
-        
-        if "exists" in result.error.lower():
-            self.logger.warning(f"{path} already exists when performing {operation}")
-            return "ALREADY_EXISTS"
-        
-        # Generic error
-        self.logger.error(f"Error {operation} {path}: {result.error}")
-        return "ERROR"
-    
-    def handle_read_error(self, result, path):
-        """Handle a read operation error."""
-        return self.handle_error(result, "reading", path)
-    
-    def handle_write_error(self, result, path):
-        """Handle a write operation error."""
-        return self.handle_error(result, "writing", path)
-    
-    def handle_delete_error(self, result, path):
-        """Handle a delete operation error."""
-        return self.handle_error(result, "deleting", path)
-
-# Example usage:
-from quackcore.logging import get_logger
-logger = get_logger(__name__)
-error_handler = FSErrorHandler(logger)
-
-def safe_read_config(config_path):
-    """Safely read a configuration file."""
-    result = fs.read_yaml(config_path)
-    if not result.success:
-        error_code = error_handler.handle_read_error(result, config_path)
-        if error_code == "NOT_FOUND":
-            # Create default config
-            return create_default_config()
-        # For other errors, return empty dict
-        return {}
-    return result.data
-```
-
-### Using Try/Except with Result Objects
-
-You can combine traditional exception handling with result object checking:
-
-```python
-def process_config_file(config_path):
-    """Process a configuration file with robust error handling."""
-    try:
-        # Check if the file exists
-        info_result = fs.get_file_info(config_path)
-        if not info_result.success:
-            raise RuntimeError(f"Error checking config file: {info_result.error}")
-        
-        if not info_result.exists:
-            # File doesn't exist - create default
-            return create_default_config(config_path)
-        
-        # Read the config file
-        read_result = fs.read_yaml(config_path)
-        if not read_result.success:
-            raise RuntimeError(f"Error reading config file: {read_result.error}")
-        
-        # Process the config
-        config = read_result.data
-        # ... process config ...
-        return config
-    
-    except RuntimeError as e:
-        # Handle expected errors
-        logger.error(str(e))
-        return None
-    except Exception as e:
-        # Handle unexpected errors
-        logger.exception(f"Unexpected error processing config file: {str(e)}")
-        return None
-```
-
-### Creating Custom Exception Handlers
-
-You can create custom exception handlers for specific types of filesystem operations:
-
-```python
-from functools import wraps
-
-def handle_fs_errors(default_return=None):
-    """
-    Decorator to handle filesystem errors.
-    
-    Args:
-        default_return: Value to return in case of error
-    
-    Returns:
-        Decorated function
-    """
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            try:
-                result = func(*args, **kwargs)
-                if hasattr(result, 'success') and not result.success:
-                    logger.error(f"Error in {func.__name__}: {result.error}")
-                    return default_return
-                return result
-            except Exception as e:
-                logger.exception(f"Unexpected error in {func.__name__}: {str(e)}")
-                return default_return
-        return wrapper
-    return decorator
-
-# Example usage:
-@handle_fs_errors(default_return={})
-def load_config(config_path):
-    """Load configuration safely."""
-    result = fs.read_yaml(config_path)
-    if not result.success:
-        return {}
-    return result.data
-```
-
-## Advanced Topics
-
-### Working with Large Files
-
-When working with large files, it's important to process them efficiently. Here are patterns for working with large files using `quackcore.fs`:
-
-```python
-def process_large_file(file_path, chunk_size=1024*1024):
-    """
-    Process a large file in chunks.
-    
-    Args:
-        file_path: Path to the file
-        chunk_size: Size of each chunk in bytes
-    """
-    # Check if the file exists and get its size
-    info_result = fs.get_file_info(file_path)
-    if not info_result.success or not info_result.exists:
-        print(f"File not found: {file_path}")
-        return
-    
-    total_size = info_result.size
-    processed = 0
-    
-    # Open the file directly for reading in binary mode
-    # For very large files, we don't want to read the whole file at once
-    with open(file_path, 'rb') as f:
-        while processed < total_size:
-            # Read a chunk
-            chunk = f.read(chunk_size)
-            if not chunk:
-                break
-            
-            # Process the chunk
-            process_chunk(chunk)
-            
-            # Update progress
-            processed += len(chunk)
-            progress = (processed / total_size) * 100
-            print(f"Progress: {progress:.1f}% ({processed}/{total_size} bytes)")
-```
-
-### Creating a Custom FileSystemService
-
-If you need specialized behavior, you can create your own custom `FileSystemService`:
-
-```python
-from quackcore.fs import FileSystemService
-from quackcore.logging import get_logger
-from quackcore.fs.results import ReadResult, WriteResult
-import time
-
-class LoggingFileSystemService(FileSystemService):
-    """A FileSystemService that logs all operations."""
-    
-    def __init__(self, base_dir=None):
-        super().__init__(base_dir)
-        self.logger = get_logger(__name__)
-        self.operation_count = 0
-        self.start_time = time.time()
-    
-    def read_text(self, path, encoding="utf-8"):
-        """Read text with logging."""
-        self.operation_count += 1
-        self.logger.info(f"Reading text from {path} (operation #{self.operation_count})")
-        
-        start = time.time()
-        result = super().read_text(path, encoding)
-        duration = time.time() - start
-        
-        if result.success:
-            self.logger.info(f"Successfully read {len(result.content)} characters in {duration:.3f}s")
-        else:
-            self.logger.error(f"Failed to read {path}: {result.error}")
-        
-        return result
-    
-    def write_text(self, path, content, encoding="utf-8", atomic=True):
-        """Write text with logging."""
-        self.operation_count += 1
-        self.logger.info(f"Writing text to {path} (operation #{self.operation_count})")
-        
-        start = time.time()
-        result = super().write_text(path, content, encoding, atomic)
-        duration = time.time() - start
-        
-        if result.success:
-            self.logger.info(f"Successfully wrote {result.bytes_written} bytes in {duration:.3f}s")
-        else:
-            self.logger.error(f"Failed to write {path}: {result.error}")
-        
-        return result
-    
-    def get_stats(self):
-        """Get operation statistics."""
-        return {
-            "operation_count": self.operation_count,
-            "uptime": time.time() - self.start_time
-        }
-
-# Example usage:
-logging_fs = LoggingFileSystemService()
-logging_fs.write_text("example.txt", "Hello, World!")
-result = logging_fs.read_text("example.txt")
-print(result.content)
-print(logging_fs.get_stats())
-```
-
-### Thread Safety and Concurrency
-
-When using `quackcore.fs` in multi-threaded applications, be aware of potential concurrency issues:
-
-```python
-import threading
-from quackcore.fs import service as fs
-import time
-import random
-from concurrent.futures import ThreadPoolExecutor
-
-class ThreadSafeCounter:
-    """Thread-safe counter for filesystem operations."""
-    
-    def __init__(self):
-        self.lock = threading.Lock()
-        self.count = 0
-    
-    def increment(self):
-        """Increment the counter safely."""
-        with self.lock:
-            self.count += 1
-            return self.count
-
-def worker(counter, thread_id, dir_path):
-    """Worker function for a thread."""
-    # Create a thread-specific file
-    file_path = fs.join_path(dir_path, f"thread_{thread_id}.txt")
-    
-    for i in range(5):
-        # Read, modify, and write
-        info = fs.get_file_info(file_path)
-        
-        if not info.exists:
-            # Create the file if it doesn't exist
-            content = f"Thread {thread_id} iteration {i}\n"
-        else:
-            # Append to the file if it exists
-            result = fs.read_text(file_path)
-            if result.success:
-                content = result.content + f"Thread {thread_id} iteration {i}\n"
-            else:
-                content = f"Thread {thread_id} iteration {i}\n"
-        
-        # Write the updated content
-        write_result = fs.write_text(file_path, content, atomic=True)
-        if write_result.success:
-            counter.increment()
-        
-        # Sleep for a random time to simulate work
-        time.sleep(random.uniform(0.01, 0.1))
-
-def run_concurrent_fs_operations(num_threads=10):
-    """Run concurrent filesystem operations."""
-    # Create a temporary directory
-    temp_dir = fs.create_temp_directory()
-    counter = ThreadSafeCounter()
-    
-    print(f"Created temporary directory: {temp_dir}")
-    
-    # Run operations in multiple threads
-    with ThreadPoolExecutor(max_workers=num_threads) as executor:
-        futures = []
-        for i in range(num_threads):
-            futures.append(executor.submit(worker, counter, i, temp_dir))
-    
-    # Check the results
-    print(f"Completed {counter.count} file operations")
-    
-    # List the created files
-    result = fs.list_directory(temp_dir)
-    if result.success:
-        print(f"Created {len(result.files)} files:")
-        for file in result.files:
-            print(f"  {file.name}")
-    
-    return temp_dir
-```
-
-## Extending quackcore.fs
-
-You can extend the functionality of `quackcore.fs` to add new capabilities:
-
-### Creating Custom Result Classes
-
-If you need specialized result objects for new types of operations:
-
-```python
-from quackcore.fs.results import OperationResult
-from pydantic import Field
-
-class ImageInfoResult(OperationResult):
-    """Result of an image information operation."""
-    
-    width: int = Field(default=0, description="Image width in pixels")
-    height: int = Field(default=0, description="Image height in pixels")
-    format: str = Field(default="", description="Image format (e.g., PNG, JPEG)")
-    color_mode: str = Field(default="", description="Color mode (e.g., RGB, CMYK)")
-    dpi: tuple = Field(default=(0, 0), description="Resolution in DPI (x, y)")
-
-# Function that uses the custom result
-def get_image_info(path):
-    """Get information about an image file."""
-    from PIL import Image
-    
-    # Check if the file exists
-    info_result = fs.get_file_info(path)
-    if not info_result.success or not info_result.exists:
-        return ImageInfoResult(
-            success=False,
-            path=path,
-            error="File not found"
-        )
-    
-    try:
-        # Open the image
-        with Image.open(path) as img:
-            return ImageInfoResult(
-                success=True,
-                path=path,
-                width=img.width,
-                height=img.height,
-                format=img.format,
-                color_mode=img.mode,
-                dpi=img.info.get('dpi', (0, 0))
-            )
-    except Exception as e:
-        return ImageInfoResult(
-            success=False,
-            path=path,
-            error=f"Error reading image: {str(e)}"
-        )
-```
-
-### Creating Custom Utilities
-
-You can create custom utilities that build on `quackcore.fs`:
-
-```python
-from quackcore.fs import service as fs
-import hashlib
-from typing import List, Dict, Any
-import json
-
-class FileIndexer:
-    """Index files by content and metadata."""
-    
-    def __init__(self, base_dir, index_file="file_index.json"):
-        self.base_dir = base_dir
-        self.index_file = fs.join_path(base_dir, index_file)
-        self.index = self._load_index()
-    
-    def _load_index(self):
-        """Load the existing index or create a new one."""
-        result = fs.read_json(self.index_file)
-        if result.success:
-            return result.data
-        return {"files": {}, "tags": {}}
-    
-    def _save_index(self):
-        """Save the index to disk."""
-        result = fs.write_json(self.index_file, self.index, atomic=True)
-        return result.success
-    
-    def _compute_file_hash(self, file_path):
-        """Compute a hash of the file content."""
-        result = fs.read_binary(file_path)
-        if not result.success:
-            return None
-        
-        hash_obj = hashlib.sha256()
-        hash_obj.update(result.content)
-        return hash_obj.hexdigest()
-    
-    def index_file(self, file_path, tags=None):
-        """
-        Index a file with optional tags.
-        
-        Args:
-            file_path: Path to the file
-            tags: List of tags to associate with the file
-        
-        Returns:
-            True if successful, False otherwise
-        """
-        # Get file info
-        info_result = fs.get_file_info(file_path)
-        if not info_result.success or not info_result.exists:
-            return False
-        
-        # Compute a hash of the file
-        file_hash = self._compute_file_hash(file_path)
-        if not file_hash:
-            return False
-        
-        # Create the file entry
-        rel_path = str(file_path).replace(str(self.base_dir), "").lstrip("/\\")
-        
-        file_entry = {
-            "path": rel_path,
-            "hash": file_hash,
-            "size": info_result.size,
-            "modified": info_result.modified,
-            "tags": tags or []
-        }
-        
-        # Add to the index
-        self.index["files"][rel_path] = file_entry
-        
-        # Update tag index
-        if tags:
-            for tag in tags:
-                if tag not in self.index["tags"]:
-                    self.index["tags"][tag] = []
-                if rel_path not in self.index["tags"][tag]:
-                    self.index["tags"][tag].append(rel_path)
-        
-        # Save the updated index
-        return self._save_index()
-    
-    def find_by_tag(self, tag):
-        """Find files by tag."""
-        if tag not in self.index["tags"]:
-            return []
-        
-        files = []
-        for rel_path in self.index["tags"][tag]:
-            if rel_path in self.index["files"]:
-                file_entry = self.index["files"][rel_path]
-                abs_path = fs.join_path(self.base_dir, rel_path)
-                files.append((abs_path, file_entry))
-        
-        return files
-    
-    def find_duplicate_files(self):
-        """Find duplicate files by hash."""
-        hashes = {}
-        duplicates = {}
-        
-        for rel_path, file_entry in self.index["files"].items():
-            file_hash = file_entry["hash"]
-            if file_hash in hashes:
-                if file_hash not in duplicates:
-                    duplicates[file_hash] = [hashes[file_hash]]
-                duplicates[file_hash].append(rel_path)
-            else:
-                hashes[file_hash] = rel_path
-        
-        return duplicates
-```
-
-## Troubleshooting
-
-### Common Issues and Solutions
-
-Here are some common issues you might encounter when using `quackcore.fs` and how to solve them:
-
-#### 1. File not found errors when working with relative paths
-
-**Problem:** You get "File not found" errors even though you're sure the file exists.
-
-**Solution:** Make sure you understand how relative paths are resolved in `quackcore.fs`:
-
-```python
-# Bad - uses a relative path that might be relative to the wrong directory
-result = fs.read_text("data/config.txt")
-
-# Good - use absolute paths or join with the correct base directory
-import os
-base_dir = os.path.dirname(os.path.abspath(__file__))
-config_path = fs.join_path(base_dir, "data", "config.txt")
-result = fs.read_text(config_path)
-```
-
-#### 2. Unexpected encoding issues with text files
-
-**Problem:** Text files with non-ASCII characters are not being read or written correctly.
-
-**Solution:** Always specify the encoding explicitly:
-
-```python
-# Bad - uses default encoding which might not be UTF-8
-result = fs.read_text("international.txt")
-
-# Good - explicitly specify UTF-8 encoding
-result = fs.read_text("international.txt", encoding="utf-8")
-```
-
-#### 3. Cannot create a directory because the parent directory doesn't exist
-
-**Problem:** Trying to create a directory fails because its parent doesn't exist.
-
-**Solution:** `create_directory` automatically creates parent directories, but explicit is better:
-
-```python
-# Ensure all parent directories exist
-fs.create_directory("path/to/nested/directory", exist_ok=True)
-
-# Now create a file in this directory
-fs.write_text("path/to/nested/directory/file.txt", "content")
-```
-
-#### 4. Not checking for success/error in results
-
-**Problem:** Operations fail silently because you're not checking result objects.
-
-**Solution:** Always check the `success` attribute before using the result:
-
-```python
-# Bad - assumes success
-content = fs.read_text("config.txt").content  # May raise AttributeError if read fails
-
-# Good - checks for success
-result = fs.read_text("config.txt")
-if result.success:
-    content = result.content
-else:
-    print(f"Error: {result.error}")
-    content = None
-```
-
-### Debugging Tips
-
-Here are some tips for debugging `quackcore.fs` issues:
-
-1. **Enable verbose logging:**
-
-```python
-from quackcore.logging import get_logger, LogLevel
-
-# Set logger to DEBUG level
-logger = get_logger(__name__)
-logger.setLevel(LogLevel.DEBUG)
-```
-
-2. **Use a custom FileSystemService with debugging:**
-
-```python
-from quackcore.fs import FileSystemService, service as fs
-from quackcore.logging import LOG_LEVELS, LogLevel
-
-# Create a service with debug logging
-debug_fs = FileSystemService(log_level=LOG_LEVELS[LogLevel.DEBUG])
-
-# Use this service for debugging
-result = debug_fs.read_text("problem_file.txt")
-```
-
-3. **Inspect full result objects:**
-
-```python
-# Print the entire result object
-result = fs.read_text("config.txt")
-print(f"Result: {result}")
-print(f"Success: {result.success}")
-print(f"Path: {result.path}")
-print(f"Error: {result.error}")
-print(f"Content length: {len(result.content) if result.success else 0}")
-```
-
-4. **Test path resolution:**
-
-```python
-# Debug path resolution issues
-path = "relative/path/to/file.txt"
-resolved = fs.normalize_path(path)
-print(f"Original: {path}")
-print(f"Resolved: {resolved}")
-print(f"Absolute: {resolved.is_absolute()}")
-print(f"Exists: {resolved.exists()}")
-```
-
-## Community Examples and Extensions
-
-Here are some community-contributed examples and extensions for `quackcore.fs`:
-
-### File Watch Service
-
-A service that watches for file changes and runs actions when files change:
-
-```python
-import time
-import threading
-from quackcore.fs import service as fs
-from typing import Dict, Callable, Any
-
-class FileWatchService:
-    """Service that watches files and runs actions when they change."""
-    
-    def __init__(self, poll_interval=1.0):
-        """
-        Initialize the file watch service.
-        
-        Args:
-            poll_interval: How often to check for changes (in seconds)
-        """
-        self.poll_interval = poll_interval
-        self.watched_files = {}  # path -> (timestamp, callback)
-        self.running = False
-        self.thread = None
-        self.lock = threading.Lock()
-    
-    def start(self):
-        """Start watching files."""
-        if self.running:
-            return
-        
-        self.running = True
-        self.thread = threading.Thread(target=self._watch_loop, daemon=True)
-        self.thread.start()
-    
-    def stop(self):
-        """Stop watching files."""
-        self.running = False
-        if self.thread:
-            self.thread.join(timeout=self.poll_interval * 2)
-    
-    def watch(self, path: str, callback: Callable[[str], Any]) -> bool:
-        """
-        Add a file to watch.
-        
-        Args:
-            path: Path to watch
-            callback: Function to call when the file changes
-                     The function will be called with the file path
-        
-        Returns:
-            True if the file was added, False otherwise
-        """
-        info = fs.get_file_info(path)
-        if not info.success:
-            return False
-        
-        with self.lock:
-            self.watched_files[str(path)] = {
-                'timestamp': info.modified if info.exists else 0,
-                'callback': callback
-            }
-        
-        if not self.running:
-            self.start()
-        
-        return True
-    
-    def unwatch(self, path: str) -> bool:
-        """
-        Remove a file from watching.
-        
-        Args:
-            path: Path to stop watching
-        
-        Returns:
-            True if the file was removed, False if it wasn't watched
-        """
-        with self.lock:
-            if str(path) in self.watched_files:
-                del self.watched_files[str(path)]
-                return True
-        return False
-    
-    def _watch_loop(self):
-        """Main loop for watching files."""
-        while self.running:
-            self._check_files()
-            time.sleep(self.poll_interval)
-    
-    def _check_files(self):
-        """Check all watched files for changes."""
-        with self.lock:
-            # Make a copy of the watched files to avoid modification during iteration
-            files_to_check = self.watched_files.copy()
-        
-        for path, info in files_to_check.items():
-            file_info = fs.get_file_info(path)
-            if not file_info.success:
-                continue
-            
-            last_timestamp = info['timestamp']
-            current_timestamp = file_info.modified if file_info.exists else 0
-            
-            # Check if the file has changed
-            if current_timestamp > last_timestamp:
-                # Update the timestamp
-                with self.lock:
-                    if path in self.watched_files:  # Check again, it might have been unwatched
-                        self.watched_files[path]['timestamp'] = current_timestamp
-                
-                # Call the callback
-                try:
-                    info['callback'](path)
-                except Exception as e:
-                    print(f"Error in file change callback for {path}: {e}")
-```
-
-### CSV File Utilities
-
-Utilities for working with CSV files:
-
-```python
-from quackcore.fs import service as fs
-import csv
-from io import StringIO
-from typing import List, Dict, Any, Union
-
-def read_csv(
-    path: str,
-    delimiter: str = ',',
-    has_header: bool = True
-) -> Union[List[Dict[str, str]], List[List[str]]]:
-    """
-    Read a CSV file and return its contents.
-    
-    Args:
-        path: Path to the CSV file
-        delimiter: Field delimiter
-        has_header: Whether the CSV has a header row
-    
-    Returns:
-        If has_header is True, returns a list of dictionaries (one per row)
-        If has_header is False, returns a list of lists (one per row)
-    """
-    result = fs.read_text(path)
-    if not result.success:
-        raise IOError(f"Failed to read CSV file: {result.error}")
-    
-    # Parse the CSV
-    csv_content = result.content
-    csv_file = StringIO(csv_content)
-    
-    if has_header:
-        reader = csv.DictReader(csv_file, delimiter=delimiter)
-        return list(reader)
-    else:
-        reader = csv.reader(csv_file, delimiter=delimiter)
-        return list(reader)
-
-def write_csv(
-    path: str,
-    data: Union[List[Dict[str, Any]], List[List[Any]]],
-    fieldnames: List[str] = None,
-    delimiter: str = ',',
-    quoting: int = csv.QUOTE_MINIMAL
-) -> bool:
-    """
-    Write data to a CSV file.
-    
-    Args:
-        path: Path to the CSV file
-        data: Data to write (list of dicts or list of lists)
-        fieldnames: Column names (required for list of dicts)
-        delimiter: Field delimiter
-        quoting: CSV quoting style
-    
-    Returns:
-        True if successful, False otherwise
-    """
-    csv_file = StringIO()
-    
-    if data and isinstance(data[0], dict):
-        # List of dictionaries
-        if not fieldnames:
-            # If fieldnames not provided, use keys from first dict
-            fieldnames = list(data[0].keys())
-        
-        writer = csv.DictWriter(
-            csv_file,
-            fieldnames=fieldnames,
-            delimiter=delimiter,
-            quoting=quoting
-        )
-        writer.writeheader()
-        writer.writerows(data)
-    else:
-        # List of lists
-        writer = csv.writer(
-            csv_file,
-            delimiter=delimiter,
-            quoting=quoting
-        )
-        writer.writerows(data)
-    
-    # Get the CSV content
-    csv_content = csv_file.getvalue()
-    
-    # Write the file
-    result = fs.write_text(path, csv_content)
-    return result.success
-
-def csv_to_json(csv_path: str, json_path: str, delimiter: str = ',') -> bool:
-    """
-    Convert a CSV file to JSON.
-    
-    Args:
-        csv_path: Path to the CSV file
-        json_path: Path to write the JSON file
-        delimiter: CSV field delimiter
-    
-    Returns:
-        True if successful, False otherwise
-    """
-    try:
-        # Read the CSV
-        data = read_csv(csv_path, delimiter=delimiter, has_header=True)
-        
-        # Write as JSON
-        result = fs.write_json(json_path, data, indent=2)
-        return result.success
-    except Exception as e:
-        print(f"Error converting CSV to JSON: {e}")
-        return False
-```
-
-### Directory Synchronization
-
-A utility for synchronizing directories:
-
-```python
-from quackcore.fs import service as fs
-from typing import List, Dict, Set, Tuple
-
-class DirectorySynchronizer:
-    """Utility for synchronizing directories."""
-    
-    def __init__(self, source_dir: str, target_dir: str):
-        """
-        Initialize the synchronizer.
-        
-        Args:
-            source_dir: Source directory
-            target_dir: Target directory
-        """
-        self.source_dir = source_dir
-        self.target_dir = target_dir
-    
-    def analyze(self) -> Dict[str, List[str]]:
-        """
-        Analyze the differences between source and target.
-        
-        Returns:
-            Dictionary with lists of files to create, update, and delete
-        """
-        # Get source files
-        source_result = fs.find_files(self.source_dir, "*", recursive=True)
-        if not source_result.success:
-            raise IOError(f"Failed to list source directory: {source_result.error}")
-        
-        # Get target files
-        target_result = fs.find_files(self.target_dir, "*", recursive=True)
-        if not target_result.success:
-            raise IOError(f"Failed to list target directory: {target_result.error}")
-        
-        # Convert to relative paths
-        source_files = self._get_relative_paths(source_result.files, self.source_dir)
-        target_files = self._get_relative_paths(target_result.files, self.target_dir)
-        
-        # Find files to create, update, and delete
-        to_create = source_files - target_files
-        to_delete = target_files - source_files
-        to_update = set()
-        
-        # Check for updated files
-        for rel_path in source_files & target_files:
-            source_path = fs.join_path(self.source_dir, rel_path)
-            target_path = fs.join_path(self.target_dir, rel_path)
-            
-            source_info = fs.get_file_info(source_path)
-            target_info = fs.get_file_info(target_path)
-            
-            if (source_info.success and target_info.success and 
-                source_info.modified > target_info.modified):
-                to_update.add(rel_path)
-        
-        return {
-            "create": sorted(list(to_create)),
-            "update": sorted(list(to_update)),
-            "delete": sorted(list(to_delete))
-        }
-    
-    def synchronize(self, delete: bool = False) -> Dict[str, int]:
-        """
-        Synchronize the target directory with the source.
-        
-        Args:
-            delete: Whether to delete files in target that don't exist in source
-        
-        Returns:
-            Statistics about the synchronization
-        """
-        differences = self.analyze()
-        stats = {"created": 0, "updated": 0, "deleted": 0, "errors": 0}
-        
-        # Create new files
-        for rel_path in differences["create"]:
-            source_path = fs.join_path(self.source_dir, rel_path)
-            target_path = fs.join_path(self.target_dir, rel_path)
-            
-            # Ensure parent directory exists
-            parent_dir = fs.join_path(*fs.split_path(target_path)[:-1])
-            fs.create_directory(parent_dir, exist_ok=True)
-            
-            # Copy the file
-            result = fs.copy(source_path, target_path)
-            if result.success:
-                stats["created"] += 1
-            else:
-                stats["errors"] += 1
-        
-        # Update existing files
-        for rel_path in differences["update"]:
-            source_path = fs.join_path(self.source_dir, rel_path)
-            target_path = fs.join_path(self.target_dir, rel_path)
-            
-            # Copy and overwrite
-            result = fs.copy(source_path, target_path, overwrite=True)
-            if result.success:
-                stats["updated"] += 1
-            else:
-                stats["errors"] += 1
-        
-        # Delete files if requested
-        if delete:
-            for rel_path in differences["delete"]:
-                target_path = fs.join_path(self.target_dir, rel_path)
-                
-                result = fs.delete(target_path)
-                if result.success:
-                    stats["deleted"] += 1
-                else:
-                    stats["errors"] += 1
-        
-        return stats
-    
-    def _get_relative_paths(self, paths: List[str], base_dir: str) -> Set[str]:
-        """Convert absolute paths to paths relative to base_dir."""
-        relative_paths = set()
-        base_dir_str = str(base_dir)
-        
-        for path in paths:
-            path_str = str(path)
-            # Remove base directory and any leading slashes
-            rel_path = path_str.replace(base_dir_str, "").lstrip("/\\")
-            relative_paths.add(rel_path)
-        
-        return relative_paths
-```
-
-### File Locking Utility
-
-A utility for file locking to coordinate access between processes:
-
-```python
-from quackcore.fs import service as fs
-import time
-import os
-import random
-from datetime import datetime, timedelta
-
-class FileLock:
-    """
-    File-based locking utility.
-    
-    This implements a simple advisory locking system using a lock file.
-    It's safe to use across multiple processes but is not thread-safe 
-    within the same process (use threading.Lock for that).
-    """
-    
-    def __init__(self, path, timeout=60, retry_delay=0.1):
-        """
-        Initialize the file lock.
-        
-        Args:
-            path: Path to the file to lock. The lock file will be path + ".lock"
-            timeout: Maximum time to wait for the lock (in seconds)
-            retry_delay: Time to wait between lock attempts (in seconds)
-        """
-        self.file_path = path
-        self.lock_path = str(path) + ".lock"
-        self.timeout = timeout
-        self.retry_delay = retry_delay
-        self.locked = False
-        self.owner = f"{os.getpid()}-{random.randint(1000, 9999)}"
-    
-    def acquire(self):
-        """
-        Acquire the lock.
-        
-        Returns:
-            True if the lock was acquired, False otherwise
-        
-        Raises:
-            TimeoutError: If the lock could not be acquired within the timeout
-        """
-        if self.locked:
-            return True
-        
-        start_time = time.time()
-        
-        while True:
-            # Check if we've exceeded the timeout
-            if time.time() - start_time > self.timeout:
-                raise TimeoutError(f"Could not acquire lock for {self.file_path} within {self.timeout} seconds")
-            
-            # Try to create the lock file
-            lock_info = self._read_lock_info()
-            
-            if lock_info:
-                # Lock exists, check if it's stale
-                if self._is_lock_stale(lock_info):
-                    # Lock is stale, try to break it
-                    self._break_lock()
-                else:
-                    # Lock is valid, wait and retry
-                    time.sleep(self.retry_delay)
-                    continue
-            
-            # Try to create the lock
-            if self._create_lock():
-                self.locked = True
-                return True
-            
-            # If we get here, someone else created the lock just before us
-            time.sleep(self.retry_delay)
-    
-    def release(self):
-        """Release the lock."""
-        if not self.locked:
-            return
-        
-        # Only delete the lock file if we own it
-        lock_info = self._read_lock_info()
-        if lock_info and lock_info.get("owner") == self.owner:
-            fs.delete(self.lock_path)
-        
-        self.locked = False
-    
-    def _create_lock(self):
-        """Try to create the lock file."""
-        lock_data = {
-            "owner": self.owner,
-            "created": datetime.now().isoformat(),
-            "pid": os.getpid()
-        }
-        
-        # Write the lock file
-        result = fs.write_json(self.lock_path, lock_data, atomic=True)
-        return result.success
-    
-    def _read_lock_info(self):
-        """Read information from the lock file."""
-        result = fs.read_json(self.lock_path)
-        if result.success:
-            return result.data
-        return None
-    
-    def _is_lock_stale(self, lock_info):
-        """Check if a lock is stale (older than timeout)."""
-        if not lock_info or "created" not in lock_info:
-            return True
-        
-        try:
-            created = datetime.fromisoformat(lock_info["created"])
-            now = datetime.now()
-            
-            # Lock is stale if it's older than the timeout
-            return (now - created) > timedelta(seconds=self.timeout)
-        except Exception:
-            # If we can't parse the date, consider the lock stale
-            return True
-    
-    def _break_lock(self):
-        """Break a stale lock."""
-        fs.delete(self.lock_path)
-    
-    def __enter__(self):
-        """Context manager protocol: acquire the lock."""
-        self.acquire()
-        return self
-    
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager protocol: release the lock."""
-        self.release()
-
-# Example usage:
-def update_shared_file(path, data):
-    """Update a file that might be accessed by multiple processes."""
-    with FileLock(path):
-        # Read the current content
-        result = fs.read_text(path)
-        if result.success:
-            content = result.content
-        else:
-            content = ""
-        
-        # Update the content
-        new_content = content + data
-        
-        # Write back
-        fs.write_text(path, new_content)
-        
-        return True
-```
-
-## Conclusion
-
-The `quackcore.fs` module provides a robust, easy-to-use interface for filesystem operations in the QuackVerse ecosystem. By using standardized result objects, proper error handling, and consistent APIs, it offers a significant improvement over the standard library's filesystem modules.
-
-For QuackTool developers, using `quackcore.fs` instead of `pathlib.Path` and other standard library modules leads to more maintainable, safer code with better error handling and a more consistent API. The module's powerful features for structured data, checksums, atomic operations, and detailed file information make it an essential tool in your QuackVerse development toolkit.
-
-By following the patterns and examples in this documentation, you'll be able to build reliable, robust filesystem operations into your QuackTools while avoiding common pitfalls and bugs associated with direct filesystem access.
-
-This documentation aims to provide a comprehensive guide for junior developers who are new to the `quackcore.fs` module, showcasing both basic usage and advanced patterns. As you become more familiar with the module, you'll discover even more ways to leverage its capabilities in your QuackTools projects.
-
-Happy coding in the QuackVerse!# QuackCore FS Module Documentation
+# QuackCore FS Module Documentation
 
 ## Introduction
 
@@ -3755,6 +2396,1354 @@ observer.watch("config.txt", on_file_change)
 # Later, to stop watching
 # observer.unwatch("config.txt")
 ```
+## Testing with quackcore.fs
+
+Testing code that uses the filesystem can be challenging, but `quackcore.fs` makes it easier by providing a consistent API that can be mocked effectively. This section covers strategies for testing code that relies on `quackcore.fs`.
+
+### Mocking the FileSystemService
+
+When unit testing, you'll often want to mock the filesystem to avoid actually reading or writing files. Here's how to do that with `pytest` and `unittest.mock`:
+
+```python
+import pytest
+from unittest.mock import MagicMock, patch
+from quackcore.fs import service as fs
+from quackcore.fs.results import ReadResult, FileInfoResult
+
+def test_config_reader():
+    # Function we want to test
+    def read_config(config_path):
+        result = fs.read_yaml(config_path)
+        if not result.success:
+            return {}
+        return result.data
+    
+    # Mock the fs.read_yaml method
+    with patch('quackcore.fs.service.read_yaml') as mock_read_yaml:
+        # Setup the mock to return a successful result
+        mock_result = MagicMock(spec=ReadResult)
+        mock_result.success = True
+        mock_result.data = {"app_name": "TestApp", "version": "1.0.0"}
+        mock_read_yaml.return_value = mock_result
+        
+        # Call the function under test
+        config = read_config("config.yaml")
+        
+        # Verify the result
+        assert config["app_name"] == "TestApp"
+        assert config["version"] == "1.0.0"
+        
+        # Verify fs.read_yaml was called with the correct path
+        mock_read_yaml.assert_called_once_with("config.yaml")
+    
+    # Test error handling
+    with patch('quackcore.fs.service.read_yaml') as mock_read_yaml:
+        # Setup the mock to return a failed result
+        mock_result = MagicMock(spec=ReadResult)
+        mock_result.success = False
+        mock_result.error = "File not found"
+        mock_read_yaml.return_value = mock_result
+        
+        # Call the function under test
+        config = read_config("missing.yaml")
+        
+        # Verify the result
+        assert config == {}
+```
+
+### Using a Fake FileSystemService
+
+For more complex tests, you might want to create a fake implementation of the `FileSystemService`:
+
+```python
+from quackcore.fs.results import ReadResult, WriteResult, FileInfoResult
+from pathlib import Path
+
+class FakeFileSystemService:
+    """A fake FileSystemService for testing."""
+    
+    def __init__(self):
+        # In-memory filesystem
+        self.files = {}
+    
+    def read_text(self, path, encoding="utf-8"):
+        """Simulate reading a text file."""
+        path_str = str(path)
+        if path_str in self.files:
+            return ReadResult(
+                success=True,
+                path=Path(path_str),
+                content=self.files[path_str],
+                encoding=encoding
+            )
+        return ReadResult(
+            success=False,
+            path=Path(path_str),
+            content="",
+            error="File not found"
+        )
+    
+    def write_text(self, path, content, encoding="utf-8", atomic=False):
+        """Simulate writing a text file."""
+        path_str = str(path)
+        self.files[path_str] = content
+        return WriteResult(
+            success=True,
+            path=Path(path_str),
+            bytes_written=len(content.encode(encoding))
+        )
+    
+    def get_file_info(self, path):
+        """Simulate getting file info."""
+        path_str = str(path)
+        exists = path_str in self.files
+        return FileInfoResult(
+            success=True,
+            path=Path(path_str),
+            exists=exists,
+            is_file=exists,
+            is_dir=False,
+            size=len(self.files.get(path_str, "").encode("utf-8")) if exists else 0
+        )
+    
+    # Add more methods as needed for your tests
+
+# Use the fake in tests
+def test_with_fake_fs():
+    # Create a fake fs
+    fake_fs = FakeFileSystemService()
+    
+    # Write a test file
+    fake_fs.write_text("test.txt", "Hello, World!")
+    
+    # Function to test that uses the fake
+    def read_first_line(fs, path):
+        result = fs.read_text(path)
+        if not result.success:
+            return None
+        return result.content.split("\n")[0]
+    
+    # Test the function with our fake
+    first_line = read_first_line(fake_fs, "test.txt")
+    assert first_line == "Hello, World!"
+    
+    # Test with a missing file
+    first_line = read_first_line(fake_fs, "missing.txt")
+    assert first_line is None
+```
+
+### Creating a Test Fixture
+
+For integration tests where you actually want to interact with the real filesystem, you can create a pytest fixture that sets up a temporary directory:
+
+```python
+import pytest
+import tempfile
+import shutil
+from pathlib import Path
+from quackcore.fs import service as fs
+
+@pytest.fixture
+def temp_dir():
+    """Create a temporary directory for tests."""
+    # Create a temporary directory
+    temp_path = tempfile.mkdtemp()
+    yield temp_path
+    
+    # Clean up after the test
+    shutil.rmtree(temp_path)
+
+def test_file_operations(temp_dir):
+    # Create a test file
+    test_file = fs.join_path(temp_dir, "test.txt")
+    fs.write_text(test_file, "Test content")
+    
+    # Verify the file exists
+    info = fs.get_file_info(test_file)
+    assert info.success
+    assert info.exists
+    assert info.is_file
+    
+    # Read the file
+    result = fs.read_text(test_file)
+    assert result.success
+    assert result.content == "Test content"
+    
+    # Delete the file
+    delete_result = fs.delete(test_file)
+    assert delete_result.success
+    
+    # Verify the file no longer exists
+    info = fs.get_file_info(test_file)
+    assert info.success
+    assert not info.exists
+```
+
+## Error Handling Patterns
+
+Proper error handling is crucial when working with filesystem operations. Here are some patterns for handling errors with `quackcore.fs`:
+
+### Basic Error Handling
+
+The simplest pattern is to check the `success` attribute of result objects:
+
+```python
+result = fs.read_text("config.txt")
+if result.success:
+    # Process the content
+    process_content(result.content)
+else:
+    # Handle the error
+    print(f"Error reading config: {result.error}")
+```
+
+### Centralized Error Handler
+
+For more complex applications, you might want to create a centralized error handler:
+
+```python
+class FSErrorHandler:
+    """Centralized handler for filesystem errors."""
+    
+    def __init__(self, logger):
+        self.logger = logger
+    
+    def handle_error(self, result, operation, path):
+        """Handle a filesystem operation error."""
+        if "not found" in result.error.lower():
+            self.logger.warning(f"{path} not found when performing {operation}")
+            return "NOT_FOUND"
+        
+        if "permission denied" in result.error.lower():
+            self.logger.error(f"Permission denied for {path} when performing {operation}")
+            return "PERMISSION_DENIED"
+        
+        if "exists" in result.error.lower():
+            self.logger.warning(f"{path} already exists when performing {operation}")
+            return "ALREADY_EXISTS"
+        
+        # Generic error
+        self.logger.error(f"Error {operation} {path}: {result.error}")
+        return "ERROR"
+    
+    def handle_read_error(self, result, path):
+        """Handle a read operation error."""
+        return self.handle_error(result, "reading", path)
+    
+    def handle_write_error(self, result, path):
+        """Handle a write operation error."""
+        return self.handle_error(result, "writing", path)
+    
+    def handle_delete_error(self, result, path):
+        """Handle a delete operation error."""
+        return self.handle_error(result, "deleting", path)
+
+# Example usage:
+from quackcore.logging import get_logger
+logger = get_logger(__name__)
+error_handler = FSErrorHandler(logger)
+
+def safe_read_config(config_path):
+    """Safely read a configuration file."""
+    result = fs.read_yaml(config_path)
+    if not result.success:
+        error_code = error_handler.handle_read_error(result, config_path)
+        if error_code == "NOT_FOUND":
+            # Create default config
+            return create_default_config()
+        # For other errors, return empty dict
+        return {}
+    return result.data
+```
+
+### Using Try/Except with Result Objects
+
+You can combine traditional exception handling with result object checking:
+
+```python
+def process_config_file(config_path):
+    """Process a configuration file with robust error handling."""
+    try:
+        # Check if the file exists
+        info_result = fs.get_file_info(config_path)
+        if not info_result.success:
+            raise RuntimeError(f"Error checking config file: {info_result.error}")
+        
+        if not info_result.exists:
+            # File doesn't exist - create default
+            return create_default_config(config_path)
+        
+        # Read the config file
+        read_result = fs.read_yaml(config_path)
+        if not read_result.success:
+            raise RuntimeError(f"Error reading config file: {read_result.error}")
+        
+        # Process the config
+        config = read_result.data
+        # ... process config ...
+        return config
+    
+    except RuntimeError as e:
+        # Handle expected errors
+        logger.error(str(e))
+        return None
+    except Exception as e:
+        # Handle unexpected errors
+        logger.exception(f"Unexpected error processing config file: {str(e)}")
+        return None
+```
+
+### Creating Custom Exception Handlers
+
+You can create custom exception handlers for specific types of filesystem operations:
+
+```python
+from functools import wraps
+
+def handle_fs_errors(default_return=None):
+    """
+    Decorator to handle filesystem errors.
+    
+    Args:
+        default_return: Value to return in case of error
+    
+    Returns:
+        Decorated function
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                result = func(*args, **kwargs)
+                if hasattr(result, 'success') and not result.success:
+                    logger.error(f"Error in {func.__name__}: {result.error}")
+                    return default_return
+                return result
+            except Exception as e:
+                logger.exception(f"Unexpected error in {func.__name__}: {str(e)}")
+                return default_return
+        return wrapper
+    return decorator
+
+# Example usage:
+@handle_fs_errors(default_return={})
+def load_config(config_path):
+    """Load configuration safely."""
+    result = fs.read_yaml(config_path)
+    if not result.success:
+        return {}
+    return result.data
+```
+
+## Advanced Topics
+
+### Working with Large Files
+
+When working with large files, it's important to process them efficiently. Here are patterns for working with large files using `quackcore.fs`:
+
+```python
+def process_large_file(file_path, chunk_size=1024*1024):
+    """
+    Process a large file in chunks.
+    
+    Args:
+        file_path: Path to the file
+        chunk_size: Size of each chunk in bytes
+    """
+    # Check if the file exists and get its size
+    info_result = fs.get_file_info(file_path)
+    if not info_result.success or not info_result.exists:
+        print(f"File not found: {file_path}")
+        return
+    
+    total_size = info_result.size
+    processed = 0
+    
+    # Open the file directly for reading in binary mode
+    # For very large files, we don't want to read the whole file at once
+    with open(file_path, 'rb') as f:
+        while processed < total_size:
+            # Read a chunk
+            chunk = f.read(chunk_size)
+            if not chunk:
+                break
+            
+            # Process the chunk
+            process_chunk(chunk)
+            
+            # Update progress
+            processed += len(chunk)
+            progress = (processed / total_size) * 100
+            print(f"Progress: {progress:.1f}% ({processed}/{total_size} bytes)")
+```
+
+### Creating a Custom FileSystemService
+
+If you need specialized behavior, you can create your own custom `FileSystemService`:
+
+```python
+from quackcore.fs import FileSystemService
+from quackcore.logging import get_logger
+from quackcore.fs.results import ReadResult, WriteResult
+import time
+
+class LoggingFileSystemService(FileSystemService):
+    """A FileSystemService that logs all operations."""
+    
+    def __init__(self, base_dir=None):
+        super().__init__(base_dir)
+        self.logger = get_logger(__name__)
+        self.operation_count = 0
+        self.start_time = time.time()
+    
+    def read_text(self, path, encoding="utf-8"):
+        """Read text with logging."""
+        self.operation_count += 1
+        self.logger.info(f"Reading text from {path} (operation #{self.operation_count})")
+        
+        start = time.time()
+        result = super().read_text(path, encoding)
+        duration = time.time() - start
+        
+        if result.success:
+            self.logger.info(f"Successfully read {len(result.content)} characters in {duration:.3f}s")
+        else:
+            self.logger.error(f"Failed to read {path}: {result.error}")
+        
+        return result
+    
+    def write_text(self, path, content, encoding="utf-8", atomic=True):
+        """Write text with logging."""
+        self.operation_count += 1
+        self.logger.info(f"Writing text to {path} (operation #{self.operation_count})")
+        
+        start = time.time()
+        result = super().write_text(path, content, encoding, atomic)
+        duration = time.time() - start
+        
+        if result.success:
+            self.logger.info(f"Successfully wrote {result.bytes_written} bytes in {duration:.3f}s")
+        else:
+            self.logger.error(f"Failed to write {path}: {result.error}")
+        
+        return result
+    
+    def get_stats(self):
+        """Get operation statistics."""
+        return {
+            "operation_count": self.operation_count,
+            "uptime": time.time() - self.start_time
+        }
+
+# Example usage:
+logging_fs = LoggingFileSystemService()
+logging_fs.write_text("example.txt", "Hello, World!")
+result = logging_fs.read_text("example.txt")
+print(result.content)
+print(logging_fs.get_stats())
+```
+
+### Thread Safety and Concurrency
+
+When using `quackcore.fs` in multi-threaded applications, be aware of potential concurrency issues:
+
+```python
+import threading
+from quackcore.fs import service as fs
+import time
+import random
+from concurrent.futures import ThreadPoolExecutor
+
+class ThreadSafeCounter:
+    """Thread-safe counter for filesystem operations."""
+    
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.count = 0
+    
+    def increment(self):
+        """Increment the counter safely."""
+        with self.lock:
+            self.count += 1
+            return self.count
+
+def worker(counter, thread_id, dir_path):
+    """Worker function for a thread."""
+    # Create a thread-specific file
+    file_path = fs.join_path(dir_path, f"thread_{thread_id}.txt")
+    
+    for i in range(5):
+        # Read, modify, and write
+        info = fs.get_file_info(file_path)
+        
+        if not info.exists:
+            # Create the file if it doesn't exist
+            content = f"Thread {thread_id} iteration {i}\n"
+        else:
+            # Append to the file if it exists
+            result = fs.read_text(file_path)
+            if result.success:
+                content = result.content + f"Thread {thread_id} iteration {i}\n"
+            else:
+                content = f"Thread {thread_id} iteration {i}\n"
+        
+        # Write the updated content
+        write_result = fs.write_text(file_path, content, atomic=True)
+        if write_result.success:
+            counter.increment()
+        
+        # Sleep for a random time to simulate work
+        time.sleep(random.uniform(0.01, 0.1))
+
+def run_concurrent_fs_operations(num_threads=10):
+    """Run concurrent filesystem operations."""
+    # Create a temporary directory
+    temp_dir = fs.create_temp_directory()
+    counter = ThreadSafeCounter()
+    
+    print(f"Created temporary directory: {temp_dir}")
+    
+    # Run operations in multiple threads
+    with ThreadPoolExecutor(max_workers=num_threads) as executor:
+        futures = []
+        for i in range(num_threads):
+            futures.append(executor.submit(worker, counter, i, temp_dir))
+    
+    # Check the results
+    print(f"Completed {counter.count} file operations")
+    
+    # List the created files
+    result = fs.list_directory(temp_dir)
+    if result.success:
+        print(f"Created {len(result.files)} files:")
+        for file in result.files:
+            print(f"  {file.name}")
+    
+    return temp_dir
+```
+
+## Extending quackcore.fs
+
+You can extend the functionality of `quackcore.fs` to add new capabilities:
+
+### Creating Custom Result Classes
+
+If you need specialized result objects for new types of operations:
+
+```python
+from quackcore.fs.results import OperationResult
+from pydantic import Field
+
+class ImageInfoResult(OperationResult):
+    """Result of an image information operation."""
+    
+    width: int = Field(default=0, description="Image width in pixels")
+    height: int = Field(default=0, description="Image height in pixels")
+    format: str = Field(default="", description="Image format (e.g., PNG, JPEG)")
+    color_mode: str = Field(default="", description="Color mode (e.g., RGB, CMYK)")
+    dpi: tuple = Field(default=(0, 0), description="Resolution in DPI (x, y)")
+
+# Function that uses the custom result
+def get_image_info(path):
+    """Get information about an image file."""
+    from PIL import Image
+    
+    # Check if the file exists
+    info_result = fs.get_file_info(path)
+    if not info_result.success or not info_result.exists:
+        return ImageInfoResult(
+            success=False,
+            path=path,
+            error="File not found"
+        )
+    
+    try:
+        # Open the image
+        with Image.open(path) as img:
+            return ImageInfoResult(
+                success=True,
+                path=path,
+                width=img.width,
+                height=img.height,
+                format=img.format,
+                color_mode=img.mode,
+                dpi=img.info.get('dpi', (0, 0))
+            )
+    except Exception as e:
+        return ImageInfoResult(
+            success=False,
+            path=path,
+            error=f"Error reading image: {str(e)}"
+        )
+```
+
+### Creating Custom Utilities
+
+You can create custom utilities that build on `quackcore.fs`:
+
+```python
+from quackcore.fs import service as fs
+import hashlib
+from typing import List, Dict, Any
+import json
+
+class FileIndexer:
+    """Index files by content and metadata."""
+    
+    def __init__(self, base_dir, index_file="file_index.json"):
+        self.base_dir = base_dir
+        self.index_file = fs.join_path(base_dir, index_file)
+        self.index = self._load_index()
+    
+    def _load_index(self):
+        """Load the existing index or create a new one."""
+        result = fs.read_json(self.index_file)
+        if result.success:
+            return result.data
+        return {"files": {}, "tags": {}}
+    
+    def _save_index(self):
+        """Save the index to disk."""
+        result = fs.write_json(self.index_file, self.index, atomic=True)
+        return result.success
+    
+    def _compute_file_hash(self, file_path):
+        """Compute a hash of the file content."""
+        result = fs.read_binary(file_path)
+        if not result.success:
+            return None
+        
+        hash_obj = hashlib.sha256()
+        hash_obj.update(result.content)
+        return hash_obj.hexdigest()
+    
+    def index_file(self, file_path, tags=None):
+        """
+        Index a file with optional tags.
+        
+        Args:
+            file_path: Path to the file
+            tags: List of tags to associate with the file
+        
+        Returns:
+            True if successful, False otherwise
+        """
+        # Get file info
+        info_result = fs.get_file_info(file_path)
+        if not info_result.success or not info_result.exists:
+            return False
+        
+        # Compute a hash of the file
+        file_hash = self._compute_file_hash(file_path)
+        if not file_hash:
+            return False
+        
+        # Create the file entry
+        rel_path = str(file_path).replace(str(self.base_dir), "").lstrip("/\\")
+        
+        file_entry = {
+            "path": rel_path,
+            "hash": file_hash,
+            "size": info_result.size,
+            "modified": info_result.modified,
+            "tags": tags or []
+        }
+        
+        # Add to the index
+        self.index["files"][rel_path] = file_entry
+        
+        # Update tag index
+        if tags:
+            for tag in tags:
+                if tag not in self.index["tags"]:
+                    self.index["tags"][tag] = []
+                if rel_path not in self.index["tags"][tag]:
+                    self.index["tags"][tag].append(rel_path)
+        
+        # Save the updated index
+        return self._save_index()
+    
+    def find_by_tag(self, tag):
+        """Find files by tag."""
+        if tag not in self.index["tags"]:
+            return []
+        
+        files = []
+        for rel_path in self.index["tags"][tag]:
+            if rel_path in self.index["files"]:
+                file_entry = self.index["files"][rel_path]
+                abs_path = fs.join_path(self.base_dir, rel_path)
+                files.append((abs_path, file_entry))
+        
+        return files
+    
+    def find_duplicate_files(self):
+        """Find duplicate files by hash."""
+        hashes = {}
+        duplicates = {}
+        
+        for rel_path, file_entry in self.index["files"].items():
+            file_hash = file_entry["hash"]
+            if file_hash in hashes:
+                if file_hash not in duplicates:
+                    duplicates[file_hash] = [hashes[file_hash]]
+                duplicates[file_hash].append(rel_path)
+            else:
+                hashes[file_hash] = rel_path
+        
+        return duplicates
+```
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+Here are some common issues you might encounter when using `quackcore.fs` and how to solve them:
+
+#### 1. File not found errors when working with relative paths
+
+**Problem:** You get "File not found" errors even though you're sure the file exists.
+
+**Solution:** Make sure you understand how relative paths are resolved in `quackcore.fs`:
+
+```python
+# Bad - uses a relative path that might be relative to the wrong directory
+result = fs.read_text("data/config.txt")
+
+# Good - use absolute paths or join with the correct base directory
+import os
+base_dir = os.path.dirname(os.path.abspath(__file__))
+config_path = fs.join_path(base_dir, "data", "config.txt")
+result = fs.read_text(config_path)
+```
+
+#### 2. Unexpected encoding issues with text files
+
+**Problem:** Text files with non-ASCII characters are not being read or written correctly.
+
+**Solution:** Always specify the encoding explicitly:
+
+```python
+# Bad - uses default encoding which might not be UTF-8
+result = fs.read_text("international.txt")
+
+# Good - explicitly specify UTF-8 encoding
+result = fs.read_text("international.txt", encoding="utf-8")
+```
+
+#### 3. Cannot create a directory because the parent directory doesn't exist
+
+**Problem:** Trying to create a directory fails because its parent doesn't exist.
+
+**Solution:** `create_directory` automatically creates parent directories, but explicit is better:
+
+```python
+# Ensure all parent directories exist
+fs.create_directory("path/to/nested/directory", exist_ok=True)
+
+# Now create a file in this directory
+fs.write_text("path/to/nested/directory/file.txt", "content")
+```
+
+#### 4. Not checking for success/error in results
+
+**Problem:** Operations fail silently because you're not checking result objects.
+
+**Solution:** Always check the `success` attribute before using the result:
+
+```python
+# Bad - assumes success
+content = fs.read_text("config.txt").content  # May raise AttributeError if read fails
+
+# Good - checks for success
+result = fs.read_text("config.txt")
+if result.success:
+    content = result.content
+else:
+    print(f"Error: {result.error}")
+    content = None
+```
+
+### Debugging Tips
+
+Here are some tips for debugging `quackcore.fs` issues:
+
+1. **Enable verbose logging:**
+
+```python
+from quackcore.logging import get_logger, LogLevel
+
+# Set logger to DEBUG level
+logger = get_logger(__name__)
+logger.setLevel(LogLevel.DEBUG)
+```
+
+2. **Use a custom FileSystemService with debugging:**
+
+```python
+from quackcore.fs import FileSystemService, service as fs
+from quackcore.logging import LOG_LEVELS, LogLevel
+
+# Create a service with debug logging
+debug_fs = FileSystemService(log_level=LOG_LEVELS[LogLevel.DEBUG])
+
+# Use this service for debugging
+result = debug_fs.read_text("problem_file.txt")
+```
+
+3. **Inspect full result objects:**
+
+```python
+# Print the entire result object
+result = fs.read_text("config.txt")
+print(f"Result: {result}")
+print(f"Success: {result.success}")
+print(f"Path: {result.path}")
+print(f"Error: {result.error}")
+print(f"Content length: {len(result.content) if result.success else 0}")
+```
+
+4. **Test path resolution:**
+
+```python
+# Debug path resolution issues
+path = "relative/path/to/file.txt"
+resolved = fs.normalize_path(path)
+print(f"Original: {path}")
+print(f"Resolved: {resolved}")
+print(f"Absolute: {resolved.is_absolute()}")
+print(f"Exists: {resolved.exists()}")
+```
+
+## Community Examples and Extensions
+
+Here are some community-contributed examples and extensions for `quackcore.fs`:
+
+### File Watch Service
+
+A service that watches for file changes and runs actions when files change:
+
+```python
+import time
+import threading
+from quackcore.fs import service as fs
+from typing import Dict, Callable, Any
+
+class FileWatchService:
+    """Service that watches files and runs actions when they change."""
+    
+    def __init__(self, poll_interval=1.0):
+        """
+        Initialize the file watch service.
+        
+        Args:
+            poll_interval: How often to check for changes (in seconds)
+        """
+        self.poll_interval = poll_interval
+        self.watched_files = {}  # path -> (timestamp, callback)
+        self.running = False
+        self.thread = None
+        self.lock = threading.Lock()
+    
+    def start(self):
+        """Start watching files."""
+        if self.running:
+            return
+        
+        self.running = True
+        self.thread = threading.Thread(target=self._watch_loop, daemon=True)
+        self.thread.start()
+    
+    def stop(self):
+        """Stop watching files."""
+        self.running = False
+        if self.thread:
+            self.thread.join(timeout=self.poll_interval * 2)
+    
+    def watch(self, path: str, callback: Callable[[str], Any]) -> bool:
+        """
+        Add a file to watch.
+        
+        Args:
+            path: Path to watch
+            callback: Function to call when the file changes
+                     The function will be called with the file path
+        
+        Returns:
+            True if the file was added, False otherwise
+        """
+        info = fs.get_file_info(path)
+        if not info.success:
+            return False
+        
+        with self.lock:
+            self.watched_files[str(path)] = {
+                'timestamp': info.modified if info.exists else 0,
+                'callback': callback
+            }
+        
+        if not self.running:
+            self.start()
+        
+        return True
+    
+    def unwatch(self, path: str) -> bool:
+        """
+        Remove a file from watching.
+        
+        Args:
+            path: Path to stop watching
+        
+        Returns:
+            True if the file was removed, False if it wasn't watched
+        """
+        with self.lock:
+            if str(path) in self.watched_files:
+                del self.watched_files[str(path)]
+                return True
+        return False
+    
+    def _watch_loop(self):
+        """Main loop for watching files."""
+        while self.running:
+            self._check_files()
+            time.sleep(self.poll_interval)
+    
+    def _check_files(self):
+        """Check all watched files for changes."""
+        with self.lock:
+            # Make a copy of the watched files to avoid modification during iteration
+            files_to_check = self.watched_files.copy()
+        
+        for path, info in files_to_check.items():
+            file_info = fs.get_file_info(path)
+            if not file_info.success:
+                continue
+            
+            last_timestamp = info['timestamp']
+            current_timestamp = file_info.modified if file_info.exists else 0
+            
+            # Check if the file has changed
+            if current_timestamp > last_timestamp:
+                # Update the timestamp
+                with self.lock:
+                    if path in self.watched_files:  # Check again, it might have been unwatched
+                        self.watched_files[path]['timestamp'] = current_timestamp
+                
+                # Call the callback
+                try:
+                    info['callback'](path)
+                except Exception as e:
+                    print(f"Error in file change callback for {path}: {e}")
+```
+
+### CSV File Utilities
+
+Utilities for working with CSV files:
+
+```python
+from quackcore.fs import service as fs
+import csv
+from io import StringIO
+from typing import List, Dict, Any, Union
+
+def read_csv(
+    path: str,
+    delimiter: str = ',',
+    has_header: bool = True
+) -> Union[List[Dict[str, str]], List[List[str]]]:
+    """
+    Read a CSV file and return its contents.
+    
+    Args:
+        path: Path to the CSV file
+        delimiter: Field delimiter
+        has_header: Whether the CSV has a header row
+    
+    Returns:
+        If has_header is True, returns a list of dictionaries (one per row)
+        If has_header is False, returns a list of lists (one per row)
+    """
+    result = fs.read_text(path)
+    if not result.success:
+        raise IOError(f"Failed to read CSV file: {result.error}")
+    
+    # Parse the CSV
+    csv_content = result.content
+    csv_file = StringIO(csv_content)
+    
+    if has_header:
+        reader = csv.DictReader(csv_file, delimiter=delimiter)
+        return list(reader)
+    else:
+        reader = csv.reader(csv_file, delimiter=delimiter)
+        return list(reader)
+
+def write_csv(
+    path: str,
+    data: Union[List[Dict[str, Any]], List[List[Any]]],
+    fieldnames: List[str] = None,
+    delimiter: str = ',',
+    quoting: int = csv.QUOTE_MINIMAL
+) -> bool:
+    """
+    Write data to a CSV file.
+    
+    Args:
+        path: Path to the CSV file
+        data: Data to write (list of dicts or list of lists)
+        fieldnames: Column names (required for list of dicts)
+        delimiter: Field delimiter
+        quoting: CSV quoting style
+    
+    Returns:
+        True if successful, False otherwise
+    """
+    csv_file = StringIO()
+    
+    if data and isinstance(data[0], dict):
+        # List of dictionaries
+        if not fieldnames:
+            # If fieldnames not provided, use keys from first dict
+            fieldnames = list(data[0].keys())
+        
+        writer = csv.DictWriter(
+            csv_file,
+            fieldnames=fieldnames,
+            delimiter=delimiter,
+            quoting=quoting
+        )
+        writer.writeheader()
+        writer.writerows(data)
+    else:
+        # List of lists
+        writer = csv.writer(
+            csv_file,
+            delimiter=delimiter,
+            quoting=quoting
+        )
+        writer.writerows(data)
+    
+    # Get the CSV content
+    csv_content = csv_file.getvalue()
+    
+    # Write the file
+    result = fs.write_text(path, csv_content)
+    return result.success
+
+def csv_to_json(csv_path: str, json_path: str, delimiter: str = ',') -> bool:
+    """
+    Convert a CSV file to JSON.
+    
+    Args:
+        csv_path: Path to the CSV file
+        json_path: Path to write the JSON file
+        delimiter: CSV field delimiter
+    
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        # Read the CSV
+        data = read_csv(csv_path, delimiter=delimiter, has_header=True)
+        
+        # Write as JSON
+        result = fs.write_json(json_path, data, indent=2)
+        return result.success
+    except Exception as e:
+        print(f"Error converting CSV to JSON: {e}")
+        return False
+```
+
+### Directory Synchronization
+
+A utility for synchronizing directories:
+
+```python
+from quackcore.fs import service as fs
+from typing import List, Dict, Set, Tuple
+
+class DirectorySynchronizer:
+    """Utility for synchronizing directories."""
+    
+    def __init__(self, source_dir: str, target_dir: str):
+        """
+        Initialize the synchronizer.
+        
+        Args:
+            source_dir: Source directory
+            target_dir: Target directory
+        """
+        self.source_dir = source_dir
+        self.target_dir = target_dir
+    
+    def analyze(self) -> Dict[str, List[str]]:
+        """
+        Analyze the differences between source and target.
+        
+        Returns:
+            Dictionary with lists of files to create, update, and delete
+        """
+        # Get source files
+        source_result = fs.find_files(self.source_dir, "*", recursive=True)
+        if not source_result.success:
+            raise IOError(f"Failed to list source directory: {source_result.error}")
+        
+        # Get target files
+        target_result = fs.find_files(self.target_dir, "*", recursive=True)
+        if not target_result.success:
+            raise IOError(f"Failed to list target directory: {target_result.error}")
+        
+        # Convert to relative paths
+        source_files = self._get_relative_paths(source_result.files, self.source_dir)
+        target_files = self._get_relative_paths(target_result.files, self.target_dir)
+        
+        # Find files to create, update, and delete
+        to_create = source_files - target_files
+        to_delete = target_files - source_files
+        to_update = set()
+        
+        # Check for updated files
+        for rel_path in source_files & target_files:
+            source_path = fs.join_path(self.source_dir, rel_path)
+            target_path = fs.join_path(self.target_dir, rel_path)
+            
+            source_info = fs.get_file_info(source_path)
+            target_info = fs.get_file_info(target_path)
+            
+            if (source_info.success and target_info.success and 
+                source_info.modified > target_info.modified):
+                to_update.add(rel_path)
+        
+        return {
+            "create": sorted(list(to_create)),
+            "update": sorted(list(to_update)),
+            "delete": sorted(list(to_delete))
+        }
+    
+    def synchronize(self, delete: bool = False) -> Dict[str, int]:
+        """
+        Synchronize the target directory with the source.
+        
+        Args:
+            delete: Whether to delete files in target that don't exist in source
+        
+        Returns:
+            Statistics about the synchronization
+        """
+        differences = self.analyze()
+        stats = {"created": 0, "updated": 0, "deleted": 0, "errors": 0}
+        
+        # Create new files
+        for rel_path in differences["create"]:
+            source_path = fs.join_path(self.source_dir, rel_path)
+            target_path = fs.join_path(self.target_dir, rel_path)
+            
+            # Ensure parent directory exists
+            parent_dir = fs.join_path(*fs.split_path(target_path)[:-1])
+            fs.create_directory(parent_dir, exist_ok=True)
+            
+            # Copy the file
+            result = fs.copy(source_path, target_path)
+            if result.success:
+                stats["created"] += 1
+            else:
+                stats["errors"] += 1
+        
+        # Update existing files
+        for rel_path in differences["update"]:
+            source_path = fs.join_path(self.source_dir, rel_path)
+            target_path = fs.join_path(self.target_dir, rel_path)
+            
+            # Copy and overwrite
+            result = fs.copy(source_path, target_path, overwrite=True)
+            if result.success:
+                stats["updated"] += 1
+            else:
+                stats["errors"] += 1
+        
+        # Delete files if requested
+        if delete:
+            for rel_path in differences["delete"]:
+                target_path = fs.join_path(self.target_dir, rel_path)
+                
+                result = fs.delete(target_path)
+                if result.success:
+                    stats["deleted"] += 1
+                else:
+                    stats["errors"] += 1
+        
+        return stats
+    
+    def _get_relative_paths(self, paths: List[str], base_dir: str) -> Set[str]:
+        """Convert absolute paths to paths relative to base_dir."""
+        relative_paths = set()
+        base_dir_str = str(base_dir)
+        
+        for path in paths:
+            path_str = str(path)
+            # Remove base directory and any leading slashes
+            rel_path = path_str.replace(base_dir_str, "").lstrip("/\\")
+            relative_paths.add(rel_path)
+        
+        return relative_paths
+```
+
+### File Locking Utility
+
+A utility for file locking to coordinate access between processes:
+
+```python
+from quackcore.fs import service as fs
+import time
+import os
+import random
+from datetime import datetime, timedelta
+
+class FileLock:
+    """
+    File-based locking utility.
+    
+    This implements a simple advisory locking system using a lock file.
+    It's safe to use across multiple processes but is not thread-safe 
+    within the same process (use threading.Lock for that).
+    """
+    
+    def __init__(self, path, timeout=60, retry_delay=0.1):
+        """
+        Initialize the file lock.
+        
+        Args:
+            path: Path to the file to lock. The lock file will be path + ".lock"
+            timeout: Maximum time to wait for the lock (in seconds)
+            retry_delay: Time to wait between lock attempts (in seconds)
+        """
+        self.file_path = path
+        self.lock_path = str(path) + ".lock"
+        self.timeout = timeout
+        self.retry_delay = retry_delay
+        self.locked = False
+        self.owner = f"{os.getpid()}-{random.randint(1000, 9999)}"
+    
+    def acquire(self):
+        """
+        Acquire the lock.
+        
+        Returns:
+            True if the lock was acquired, False otherwise
+        
+        Raises:
+            TimeoutError: If the lock could not be acquired within the timeout
+        """
+        if self.locked:
+            return True
+        
+        start_time = time.time()
+        
+        while True:
+            # Check if we've exceeded the timeout
+            if time.time() - start_time > self.timeout:
+                raise TimeoutError(f"Could not acquire lock for {self.file_path} within {self.timeout} seconds")
+            
+            # Try to create the lock file
+            lock_info = self._read_lock_info()
+            
+            if lock_info:
+                # Lock exists, check if it's stale
+                if self._is_lock_stale(lock_info):
+                    # Lock is stale, try to break it
+                    self._break_lock()
+                else:
+                    # Lock is valid, wait and retry
+                    time.sleep(self.retry_delay)
+                    continue
+            
+            # Try to create the lock
+            if self._create_lock():
+                self.locked = True
+                return True
+            
+            # If we get here, someone else created the lock just before us
+            time.sleep(self.retry_delay)
+    
+    def release(self):
+        """Release the lock."""
+        if not self.locked:
+            return
+        
+        # Only delete the lock file if we own it
+        lock_info = self._read_lock_info()
+        if lock_info and lock_info.get("owner") == self.owner:
+            fs.delete(self.lock_path)
+        
+        self.locked = False
+    
+    def _create_lock(self):
+        """Try to create the lock file."""
+        lock_data = {
+            "owner": self.owner,
+            "created": datetime.now().isoformat(),
+            "pid": os.getpid()
+        }
+        
+        # Write the lock file
+        result = fs.write_json(self.lock_path, lock_data, atomic=True)
+        return result.success
+    
+    def _read_lock_info(self):
+        """Read information from the lock file."""
+        result = fs.read_json(self.lock_path)
+        if result.success:
+            return result.data
+        return None
+    
+    def _is_lock_stale(self, lock_info):
+        """Check if a lock is stale (older than timeout)."""
+        if not lock_info or "created" not in lock_info:
+            return True
+        
+        try:
+            created = datetime.fromisoformat(lock_info["created"])
+            now = datetime.now()
+            
+            # Lock is stale if it's older than the timeout
+            return (now - created) > timedelta(seconds=self.timeout)
+        except Exception:
+            # If we can't parse the date, consider the lock stale
+            return True
+    
+    def _break_lock(self):
+        """Break a stale lock."""
+        fs.delete(self.lock_path)
+    
+    def __enter__(self):
+        """Context manager protocol: acquire the lock."""
+        self.acquire()
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager protocol: release the lock."""
+        self.release()
+
+# Example usage:
+def update_shared_file(path, data):
+    """Update a file that might be accessed by multiple processes."""
+    with FileLock(path):
+        # Read the current content
+        result = fs.read_text(path)
+        if result.success:
+            content = result.content
+        else:
+            content = ""
+        
+        # Update the content
+        new_content = content + data
+        
+        # Write back
+        fs.write_text(path, new_content)
+        
+        return True
+```
 
 ## Conclusion
 
@@ -3763,3 +3752,7 @@ The `quackcore.fs` module provides a robust, easy-to-use interface for filesyste
 For QuackTool developers, using `quackcore.fs` instead of `pathlib.Path` and other standard library modules leads to more maintainable, safer code with better error handling and a more consistent API. The module's powerful features for structured data, checksums, atomic operations, and detailed file information make it an essential tool in your QuackVerse development toolkit.
 
 By following the patterns and examples in this documentation, you'll be able to build reliable, robust filesystem operations into your QuackTools while avoiding common pitfalls and bugs associated with direct filesystem access.
+
+This documentation aims to provide a comprehensive guide for junior developers who are new to the `quackcore.fs` module, showcasing both basic usage and advanced patterns. As you become more familiar with the module, you'll discover even more ways to leverage its capabilities in your QuackTools projects.
+
+Happy coding in the QuackVerse!
