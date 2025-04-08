@@ -1,3 +1,4 @@
+# src/quackcore/config/plugin.py
 """
 Configuration loading utilities for QuackCore.
 
