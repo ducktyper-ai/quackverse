@@ -7,11 +7,8 @@ which is used for resolving paths in a project.
 """
 
 from pathlib import Path
-from typing import TypeVar
 
 from pydantic import BaseModel, Field
-
-T = TypeVar("T")  # Generic type for flexible typing
 
 
 class ProjectDirectory(BaseModel):
