@@ -3753,6 +3753,4 @@ For QuackTool developers, using `quackcore.fs` instead of `pathlib.Path` and oth
 
 By following the patterns and examples in this documentation, you'll be able to build reliable, robust filesystem operations into your QuackTools while avoiding common pitfalls and bugs associated with direct filesystem access.
 
-This documentation aims to provide a comprehensive guide for junior developers who are new to the `quackcore.fs` module, showcasing both basic usage and advanced patterns. As you become more familiar with the module, you'll discover even more ways to leverage its capabilities in your QuackTools projects.
-
 Happy coding in the QuackVerse!
