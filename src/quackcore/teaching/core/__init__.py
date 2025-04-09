@@ -39,9 +39,8 @@ Example:
     ```
 """
 
-from quackcore.teaching.core import badges, certificates, quests, utils, xp
-from quackcore.teaching.core.models import Badge, Quest, UserProgress, XPEvent
-from quackcore.teaching.npc import agent
+from . import badges, certificates, quests, utils, xp
+from .models import Badge, Quest, UserProgress, XPEvent
 
 __all__ = [
     # Core models
@@ -55,5 +54,4 @@ __all__ = [
     "quests",
     "utils",
     "certificates",
-    "agent",
 ]
