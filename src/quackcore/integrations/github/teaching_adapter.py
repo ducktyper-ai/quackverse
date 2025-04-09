@@ -135,8 +135,11 @@ class GitHubTeachingAdapter:
                 base_branch=base_branch
             )
 
+            # Convert HttpUrl to string to match the return type
+            url_string = str(pr.url)
+
             return IntegrationResult.success_result(
-                content=pr.url,
+                content=url_string,
                 message=f"Successfully submitted assignment via PR #{pr.number}"
             )
         except QuackApiError as e:
