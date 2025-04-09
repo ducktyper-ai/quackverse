@@ -49,10 +49,10 @@ def verify_pandoc() -> str:
 
 
 def prepare_pandoc_args(
-        config: PandocConfig,
-        source_format: str,
-        target_format: str,
-        extra_args: list[str] | None = None,
+    config: PandocConfig,
+    source_format: str,
+    target_format: str,
+    extra_args: list[str] | None = None,
 ) -> list[str]:
     """
     Prepare pandoc conversion arguments.
@@ -98,7 +98,7 @@ def prepare_pandoc_args(
 
 
 def validate_html_structure(
-        content: str, check_links: bool = False
+    content: str, check_links: bool = False
 ) -> tuple[bool, list[str]]:
     """
     Validate HTML document structure.
@@ -123,8 +123,10 @@ def validate_html_structure(
             return False, errors
 
         # Check for presence of header tags or similar structure
-        if not (soup.find(["h1", "h2", "h3", "h4", "h5", "h6"]) or
-                soup.find(["header", "section", "article"])):
+        if not (
+            soup.find(["h1", "h2", "h3", "h4", "h5", "h6"])
+            or soup.find(["header", "section", "article"])
+        ):
             logger.warning("HTML document has no header tags or structural elements")
 
         # Validate links if configured
@@ -147,7 +149,7 @@ def validate_html_structure(
 
 
 def validate_docx_structure(
-        docx_path: Path, check_links: bool = False
+    docx_path: Path, check_links: bool = False
 ) -> tuple[bool, list[str]]:
     """
     Validate DOCX document structure.
@@ -174,7 +176,7 @@ def validate_docx_structure(
         # Check for document structure
         has_heading = False
         for para in doc.paragraphs:
-            if para.style and para.style.name.startswith('Heading'):
+            if para.style and para.style.name.startswith("Heading"):
                 has_heading = True
                 break
 
@@ -199,12 +201,12 @@ def validate_docx_structure(
 
 
 def track_metrics(
-        filename: str,
-        start_time: float,
-        original_size: int,
-        converted_size: int,
-        metrics: ConversionMetrics,
-        config: PandocConfig,
+    filename: str,
+    start_time: float,
+    original_size: int,
+    converted_size: int,
+    metrics: ConversionMetrics,
+    config: PandocConfig,
 ) -> None:
     """
     Track conversion metrics.
@@ -306,7 +308,7 @@ def get_file_info(path: Path, format_hint: str | None = None) -> FileInfo:
 
 
 def check_file_size(
-        converted_size: int, validation_min_size: int
+    converted_size: int, validation_min_size: int
 ) -> tuple[bool, list[str]]:
     """
     Check if the converted file meets the minimum file size.
@@ -322,8 +324,9 @@ def check_file_size(
 
     # Ensure we have integers for comparison
     converted_size_int = int(converted_size) if converted_size is not None else 0
-    validation_min_size_int = int(
-        validation_min_size) if validation_min_size is not None else 0
+    validation_min_size_int = (
+        int(validation_min_size) if validation_min_size is not None else 0
+    )
 
     if validation_min_size_int > 0 and converted_size_int < validation_min_size_int:
         converted_size_str = fs.get_file_size_str(converted_size_int)
@@ -340,7 +343,7 @@ def check_file_size(
 
 
 def check_conversion_ratio(
-        converted_size: int, original_size: int, threshold: float
+    converted_size: int, original_size: int, threshold: float
 ) -> tuple[bool, list[str]]:
     """
     Check if the converted file size is not drastically smaller than the original.

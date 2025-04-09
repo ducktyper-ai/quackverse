@@ -21,17 +21,17 @@ class OpenAIClient(LLMClient):
     """OpenAI LLM client implementation."""
 
     def __init__(
-            self,
-            model: str | None = None,
-            api_key: str | None = None,
-            api_base: str | None = None,
-            organization: str | None = None,
-            timeout: int = 60,
-            retry_count: int = 3,
-            initial_retry_delay: float = 1.0,
-            max_retry_delay: float = 30.0,
-            log_level: int = logging.INFO,
-            **kwargs: Any,
+        self,
+        model: str | None = None,
+        api_key: str | None = None,
+        api_base: str | None = None,
+        organization: str | None = None,
+        timeout: int = 60,
+        retry_count: int = 3,
+        initial_retry_delay: float = 1.0,
+        max_retry_delay: float = 30.0,
+        log_level: int = logging.INFO,
+        **kwargs: Any,
     ) -> None:
         """
         Initialize the OpenAI client.
@@ -54,13 +54,15 @@ class OpenAIClient(LLMClient):
         if api_key and not os.environ.get("OPENAI_API_KEY"):
             os.environ["OPENAI_API_KEY"] = api_key
             self.logger.debug(
-                "Set OPENAI_API_KEY in environment from provided argument")
+                "Set OPENAI_API_KEY in environment from provided argument"
+            )
 
         # Set organization in environment if provided
         if organization and not os.environ.get("OPENAI_ORGANIZATION"):
             os.environ["OPENAI_ORGANIZATION"] = organization
             self.logger.debug(
-                "Set OPENAI_ORGANIZATION in environment from provided argument")
+                "Set OPENAI_ORGANIZATION in environment from provided argument"
+            )
 
     def _get_client(self) -> Any:
         """
@@ -97,13 +99,15 @@ class OpenAIClient(LLMClient):
                 # Ensure the API key is also set in the environment
                 # This helps with certain OpenAI SDK versions/implementations
                 import os
+
                 if self._api_key and "OPENAI_API_KEY" not in os.environ:
                     os.environ["OPENAI_API_KEY"] = self._api_key
                     self.logger.debug("Set OPENAI_API_KEY in environment")
 
                 self._client = OpenAI(**kwargs)
                 self.logger.debug(
-                    f"Successfully created OpenAI client with model: {self.model}")
+                    f"Successfully created OpenAI client with model: {self.model}"
+                )
             except ImportError as e:
                 raise QuackIntegrationError(
                     f"Failed to import OpenAI package: {e}. "
@@ -147,10 +151,10 @@ class OpenAIClient(LLMClient):
         return self._model
 
     def _chat_with_provider(
-            self,
-            messages: list[ChatMessage],
-            options: LLMOptions,
-            callback: Callable[[str], None] | None = None,
+        self,
+        messages: list[ChatMessage],
+        options: LLMOptions,
+        callback: Callable[[str], None] | None = None,
     ) -> IntegrationResult[str]:
         try:
             client = self._get_client()
@@ -197,12 +201,12 @@ class OpenAIClient(LLMClient):
             raise self._convert_error(e)
 
     def _handle_streaming(
-            self,
-            client: Any,
-            model: str,
-            messages: list[dict],
-            params: dict,
-            callback: Callable[[str], None] | None,
+        self,
+        client: Any,
+        model: str,
+        messages: list[dict],
+        params: dict,
+        callback: Callable[[str], None] | None,
     ) -> str:
         """
         Handle streaming responses from the OpenAI API.
@@ -334,7 +338,7 @@ class OpenAIClient(LLMClient):
             )
 
     def _count_tokens_with_provider(
-            self, messages: list[ChatMessage]
+        self, messages: list[ChatMessage]
     ) -> IntegrationResult[int]:
         """
         Count the number of tokens in the messages using OpenAI's tokenizer.

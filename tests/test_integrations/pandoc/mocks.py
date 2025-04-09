@@ -524,6 +524,7 @@ def setup_mock_file_info_for_tests(mock_fs, size: int = 512) -> None:
     # Set up the file_info attribute with a concrete value
     mock_fs.get_file_info.return_value = file_info
 
+
 def setup_mock_file_info_with_size(mock_fs, path: str | Path, size: int) -> None:
     """
     Setup a mock file_info with specific path and size for tests.

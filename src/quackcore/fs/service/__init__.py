@@ -18,10 +18,12 @@ from quackcore.fs.results import (
     ReadResult,
     WriteResult,
 )
+from quackcore.fs.service.factory import create_service
+
 # Import the complete FileSystemService with all mixins
 from quackcore.fs.service.full_class import FileSystemService
-from quackcore.fs.service.factory import create_service
 from quackcore.fs.service.path_validation import PathInfo
+
 # Import utility functions directly
 from quackcore.fs.utils import (
     atomic_write,
@@ -43,7 +45,9 @@ from quackcore.fs.utils import (
     is_same_file,
     is_subdirectory,
     join_path,
-    normalize_path as utils_normalize_path,
+)
+from quackcore.fs.utils import normalize_path as utils_normalize_path
+from quackcore.fs.utils import (
     split_path,
 )
 
@@ -52,6 +56,7 @@ service = create_service()
 
 
 # Define standalone functions at the module level to avoid circular imports
+
 
 # This is the function that's being mocked in the test - make sure it can be properly patched
 def normalize_path(path: str | Path) -> Path:
@@ -125,10 +130,10 @@ def read_text(path: str | Path, encoding: str = "utf-8") -> ReadResult[str]:
 
 
 def write_text(
-        path: str | Path,
-        content: str,
-        encoding: str = "utf-8",
-        atomic: bool = True,
+    path: str | Path,
+    content: str,
+    encoding: str = "utf-8",
+    atomic: bool = True,
 ) -> WriteResult:
     """
     Write text to a file.
@@ -159,9 +164,9 @@ def read_binary(path: str | Path) -> ReadResult[bytes]:
 
 
 def write_binary(
-        path: str | Path,
-        content: bytes,
-        atomic: bool = True,
+    path: str | Path,
+    content: bytes,
+    atomic: bool = True,
 ) -> WriteResult:
     """
     Write binary data to a file.
@@ -178,9 +183,9 @@ def write_binary(
 
 
 def write_yaml(
-        path: str | Path,
-        data: dict,
-        atomic: bool = True,
+    path: str | Path,
+    data: dict,
+    atomic: bool = True,
 ) -> WriteResult:
     """
     Write data to a YAML file.
@@ -210,10 +215,10 @@ def read_json(path: str | Path) -> DataResult[dict]:
 
 
 def write_json(
-        path: str | Path,
-        data: dict,
-        atomic: bool = True,
-        indent: int = 2,
+    path: str | Path,
+    data: dict,
+    atomic: bool = True,
+    indent: int = 2,
 ) -> WriteResult:
     """
     Write data to a JSON file.
@@ -231,9 +236,9 @@ def write_json(
 
 
 def list_directory(
-        path: str | Path,
-        pattern: str | None = None,
-        include_hidden: bool = False,
+    path: str | Path,
+    pattern: str | None = None,
+    include_hidden: bool = False,
 ) -> DirectoryInfoResult:
     """
     List contents of a directory.
@@ -250,10 +255,10 @@ def list_directory(
 
 
 def find_files(
-        path: str | Path,
-        pattern: str,
-        recursive: bool = True,
-        include_hidden: bool = False,
+    path: str | Path,
+    pattern: str,
+    recursive: bool = True,
+    include_hidden: bool = False,
 ) -> FindResult:
     """
     Find files matching a pattern.
@@ -270,9 +275,7 @@ def find_files(
     return service.find_files(path, pattern, recursive, include_hidden)
 
 
-def copy(
-        src: str | Path, dst: str | Path, overwrite: bool = False
-) -> WriteResult:
+def copy(src: str | Path, dst: str | Path, overwrite: bool = False) -> WriteResult:
     """
     Copy a file or directory.
 
@@ -287,9 +290,7 @@ def copy(
     return service.copy(src, dst, overwrite)
 
 
-def move(
-        src: str | Path, dst: str | Path, overwrite: bool = False
-) -> WriteResult:
+def move(src: str | Path, dst: str | Path, overwrite: bool = False) -> WriteResult:
     """
     Move a file or directory.
 
@@ -333,11 +334,11 @@ def read_lines(path: str | Path, encoding: str = "utf-8") -> ReadResult:
 
 
 def write_lines(
-        path: str | Path,
-        lines: list[str],
-        encoding: str = "utf-8",
-        atomic: bool = True,
-        line_ending: str = "\n",
+    path: str | Path,
+    lines: list[str],
+    encoding: str = "utf-8",
+    atomic: bool = True,
+    line_ending: str = "\n",
 ) -> WriteResult:
     """
     Write lines to a text file.

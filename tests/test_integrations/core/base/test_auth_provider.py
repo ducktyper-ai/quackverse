@@ -40,7 +40,7 @@ class TestBaseAuthProvider:
 
         # Test with relative path (mocking resolver)
         with patch(
-                "quackcore.integrations.core.base.resolver.resolve_project_path"
+            "quackcore.integrations.core.base.resolver.resolve_project_path"
         ) as mock_resolve:
             mock_resolve.return_value = "/resolved/path"
             resolved = provider._resolve_path("relative/path")
@@ -49,7 +49,7 @@ class TestBaseAuthProvider:
 
         # Test with resolver exception - patch the fs service instance
         with patch(
-                "quackcore.integrations.core.base.resolver.resolve_project_path"
+            "quackcore.integrations.core.base.resolver.resolve_project_path"
         ) as mock_resolve:
             mock_resolve.side_effect = Exception("Test error")
             # Create a mock service instance

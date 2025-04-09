@@ -30,6 +30,7 @@ def check_llm_dependencies() -> tuple[bool, str, list[str]]:
         # Try to connect to local Ollama server to check availability
         try:
             import requests
+
             try:
                 response = requests.get("http://localhost:11434/api/version", timeout=1)
                 if response.status_code == 200:
@@ -45,7 +46,16 @@ def check_llm_dependencies() -> tuple[bool, str, list[str]]:
     available_providers.append("mock")
 
     if not available_providers or (
-            len(available_providers) == 1 and available_providers[0] == "mock"):
-        return False, "No LLM providers available. Install OpenAI or Anthropic package, or run Ollama locally.", available_providers
+        len(available_providers) == 1 and available_providers[0] == "mock"
+    ):
+        return (
+            False,
+            "No LLM providers available. Install OpenAI or Anthropic package, or run Ollama locally.",
+            available_providers,
+        )
 
-    return True, f"Available LLM providers: {', '.join(available_providers)}", available_providers
+    return (
+        True,
+        f"Available LLM providers: {', '.join(available_providers)}",
+        available_providers,
+    )

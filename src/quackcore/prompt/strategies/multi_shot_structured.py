@@ -5,8 +5,9 @@ Multi-shot structured strategy for the PromptBooster.
 This strategy provides a template for extracting structured data
 using multiple examples and a schema.
 """
-from ..strategy_base import PromptStrategy
+
 from ..registry import register_prompt_strategy
+from ..strategy_base import PromptStrategy
 
 
 def render(task_description: str, schema: str, examples: list[str] | str) -> str:
@@ -49,7 +50,7 @@ strategy = PromptStrategy(
     input_vars=["task_description", "schema", "examples"],
     render_fn=render,
     tags=["structured-output", "few-shot", "stable"],
-    origin="Internal strategy based on OpenAI Cookbook + CRM Podcast prompt iterations"
+    origin="Internal strategy based on OpenAI Cookbook + CRM Podcast prompt iterations",
 )
 
 # Register the strategy

@@ -2,6 +2,7 @@
 """
 Tests for Google Drive operations download module.
 """
+
 import logging
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -29,7 +30,8 @@ class TestDriveOperationsDownload:
             patch("io.BytesIO") as mock_bytesio,
             # Patch the fs module directly as it's imported as an alias
             patch(
-                "quackcore.integrations.google.drive.operations.download.fs") as mock_fs,
+                "quackcore.integrations.google.drive.operations.download.fs"
+            ) as mock_fs,
             patch(
                 "quackcore.integrations.google.drive.utils.api.execute_api_request"
             ) as mock_execute,
@@ -64,20 +66,18 @@ class TestDriveOperationsDownload:
                 success=True,
                 path="/tmp/test_file.txt",
                 bytes_written=12,
-                message="File written"
+                message="File written",
             )
 
             # Mock paths resolver
             with patch(
-                    "quackcore.integrations.google.drive.operations.download.resolver"
+                "quackcore.integrations.google.drive.operations.download.resolver"
             ) as mock_resolver:
                 mock_resolver.resolve_project_path.return_value = "/tmp/test_file.txt"
 
                 # Call download function
                 result = download.download_file(
-                    mock_drive_service,
-                    "file123",
-                    "/tmp/test_file.txt"
+                    mock_drive_service, "file123", "/tmp/test_file.txt"
                 )
 
                 # Assertions
@@ -91,7 +91,8 @@ class TestDriveOperationsDownload:
 
         # Patch the fs module directly as it's imported as an alias
         with patch(
-                "quackcore.integrations.google.drive.operations.download.fs") as mock_fs:
+            "quackcore.integrations.google.drive.operations.download.fs"
+        ) as mock_fs:
             # Setup the mock to return what the test expects
             mock_fs.create_temp_directory.return_value = tmp_path / "temp_dir"
             mock_fs.join_path.return_value = tmp_path / "temp_dir" / "test_file.txt"
@@ -100,7 +101,9 @@ class TestDriveOperationsDownload:
             result = download.resolve_download_path(file_metadata, None)
 
             # Verify the result matches our expected path
-            assert mock_fs.create_temp_directory.called, "create_temp_directory should be called"
+            assert mock_fs.create_temp_directory.called, (
+                "create_temp_directory should be called"
+            )
             assert mock_fs.join_path.called, "join_path should be called"
             assert str(result) == str(tmp_path / "temp_dir" / "test_file.txt")
 
@@ -111,7 +114,8 @@ class TestDriveOperationsDownload:
             mock_resolve.return_value = local_dir
 
             with patch(
-                    "quackcore.integrations.google.drive.operations.download.fs") as mock_fs:
+                "quackcore.integrations.google.drive.operations.download.fs"
+            ) as mock_fs:
                 # Setup mock to return a directory
                 mock_fs.get_file_info.return_value = FileInfoResult(
                     success=True, path=str(local_dir), exists=True, is_dir=True
@@ -124,7 +128,9 @@ class TestDriveOperationsDownload:
                 result = download.resolve_download_path(file_metadata, str(local_dir))
 
                 assert str(result) == str(local_dir / "test_file.txt")
-                assert mock_fs.join_path.called, "join_path should be called for directory paths"
+                assert mock_fs.join_path.called, (
+                    "join_path should be called for directory paths"
+                )
 
         # Test with local path as specific file
         local_file = tmp_path / "specific_file.txt"
@@ -133,11 +139,15 @@ class TestDriveOperationsDownload:
             mock_resolve.return_value = local_file
 
             with patch(
-                    "quackcore.integrations.google.drive.operations.download.fs") as mock_fs:
+                "quackcore.integrations.google.drive.operations.download.fs"
+            ) as mock_fs:
                 # Setup mock to return a file
                 mock_fs.get_file_info.return_value = FileInfoResult(
-                    success=True, path=str(local_file), exists=True, is_file=True,
-                    is_dir=False
+                    success=True,
+                    path=str(local_file),
+                    exists=True,
+                    is_file=True,
+                    is_dir=False,
                 )
 
                 # Test function with a file path
@@ -155,7 +165,7 @@ class TestDriveOperationsDownload:
 
         # Mock execute_api_request to raise QuackApiError
         with patch(
-                "quackcore.integrations.google.drive.utils.api.execute_api_request"
+            "quackcore.integrations.google.drive.utils.api.execute_api_request"
         ) as mock_execute:
             mock_execute.side_effect = QuackApiError(
                 "Failed to get file metadata",
@@ -182,7 +192,8 @@ class TestDriveOperationsDownload:
             patch("googleapiclient.http.MediaIoBaseDownload") as mock_download,
             patch("io.BytesIO") as mock_bytesio,
             patch(
-                "quackcore.integrations.google.drive.operations.download.fs") as mock_fs,
+                "quackcore.integrations.google.drive.operations.download.fs"
+            ) as mock_fs,
             patch("quackcore.paths.resolver.resolve_project_path") as mock_resolve,
             patch(
                 "quackcore.integrations.google.drive.utils.api.execute_api_request"

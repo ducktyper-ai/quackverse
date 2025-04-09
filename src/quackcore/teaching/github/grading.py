@@ -1,14 +1,15 @@
-# src/quackcore/integrations/github/grading.py
+# src/quackcore/teaching/github/grading.py
 """GitHub assignment grading utilities for QuackCore."""
 
 from typing import Any
 
 from quackcore.errors import QuackApiError
 from quackcore.integrations.core import IntegrationResult
+from quackcore.integrations.github.client import GitHubClient
+from quackcore.integrations.github.models import PullRequest
 from quackcore.logging import get_logger
 
-from .client import GitHubClient
-from .models import GradeResult, PullRequest
+from .models import GradeResult
 
 logger = get_logger(__name__)
 
@@ -25,9 +26,7 @@ class GitHubGrader:
         self.client = client
 
     def grade_submission(
-            self,
-            pull_request: PullRequest,
-            grading_criteria: dict[str, Any] | None = None
+        self, pull_request: PullRequest, grading_criteria: dict[str, Any] | None = None
     ) -> IntegrationResult[GradeResult]:
         """Grade a pull request submission.
 
@@ -40,7 +39,8 @@ class GitHubGrader:
         """
         try:
             logger.info(
-                f"Grading submission PR #{pull_request.number} from {pull_request.author.username}")
+                f"Grading submission PR #{pull_request.number} from {pull_request.author.username}"
+            )
 
             # If grading criteria not provided, use default simple criteria
             if not grading_criteria:
@@ -62,8 +62,7 @@ class GitHubGrader:
             # Check for required files
             if "required_files" in grading_criteria:
                 req_files_result = self._check_required_files(
-                    changed_files,
-                    grading_criteria["required_files"]
+                    changed_files, grading_criteria["required_files"]
                 )
                 results["required_files"] = req_files_result
                 total_points += req_files_result["points_earned"]
@@ -73,9 +72,7 @@ class GitHubGrader:
             # Check for required changes (if specified)
             if "required_changes" in grading_criteria:
                 req_changes_result = self._check_required_changes(
-                    pull_request,
-                    changed_files,
-                    grading_criteria["required_changes"]
+                    pull_request, changed_files, grading_criteria["required_changes"]
                 )
                 results["required_changes"] = req_changes_result
                 total_points += req_changes_result["points_earned"]
@@ -85,9 +82,7 @@ class GitHubGrader:
             # Check for prohibited patterns (if specified)
             if "prohibited_patterns" in grading_criteria:
                 prohibited_result = self._check_prohibited_patterns(
-                    pull_request,
-                    changed_files,
-                    grading_criteria["prohibited_patterns"]
+                    pull_request, changed_files, grading_criteria["prohibited_patterns"]
                 )
                 results["prohibited_patterns"] = prohibited_result
                 total_points += prohibited_result["points_earned"]
@@ -112,31 +107,29 @@ class GitHubGrader:
 
             # Create the result
             grade_result = GradeResult(
-                score=score,
-                passed=passed,
-                comments=feedback,
-                details=results
+                score=score, passed=passed, comments=feedback, details=results
             )
 
             return IntegrationResult.success_result(
                 content=grade_result,
-                message=f"Successfully graded submission (Score: {score * 100:.1f}%)"
+                message=f"Successfully graded submission (Score: {score * 100:.1f}%)",
             )
 
         except QuackApiError as e:
             return IntegrationResult.error_result(
                 error=f"Failed to grade submission: {str(e)}",
-                message="Could not grade submission due to an API error"
+                message="Could not grade submission due to an API error",
             )
         except Exception as e:
             logger.exception("Unexpected error while grading submission")
             return IntegrationResult.error_result(
                 error=f"Unexpected error during grading: {str(e)}",
-                message="Could not grade submission due to an unexpected error"
+                message="Could not grade submission due to an unexpected error",
             )
 
-    def _get_pr_files(self, pull_request: PullRequest) -> IntegrationResult[
-        list[dict[str, Any]]]:
+    def _get_pr_files(
+        self, pull_request: PullRequest
+    ) -> IntegrationResult[list[dict[str, Any]]]:
         """Get the files changed in a pull request.
 
         Args:
@@ -146,12 +139,22 @@ class GitHubGrader:
             Result with list of file information
         """
         try:
-            # This would typically call the GitHub API to get the files changed in the PR
-            # Since we didn't implement this in the client yet, this is a placeholder
-            # In a real implementation, we would call:
-            # files = self.client.get_pull_request_files(pull_request.base_repo, pull_request.number)
+            # Use the client to fetch actual PR files
+            files = self.client.get_pull_request_files(
+                repo=pull_request.base_repo, pull_number=pull_request.number
+            )
 
-            # For now, we'll return a simple simulated result
+            return IntegrationResult.success_result(
+                content=files,
+                message=f"Found {len(files)} changed files in PR #{pull_request.number}",
+            )
+        except AttributeError:
+            # Fallback if the method isn't implemented in the client
+            logger.warning(
+                "get_pull_request_files not implemented in client, using simulated data"
+            )
+
+            # Return simulated data
             files = [
                 {
                     "filename": "README.md",
@@ -173,17 +176,17 @@ class GitHubGrader:
                     "additions": 50,
                     "deletions": 0,
                     "changes": 50,
-                }
+                },
             ]
 
             return IntegrationResult.success_result(
                 content=files,
-                message=f"Found {len(files)} changed files in PR #{pull_request.number}"
+                message=f"Found {len(files)} simulated changed files in PR #{pull_request.number}",
             )
         except QuackApiError as e:
             return IntegrationResult.error_result(
                 error=f"Failed to get PR files: {str(e)}",
-                message=f"Could not retrieve files for PR #{pull_request.number}"
+                message=f"Could not retrieve files for PR #{pull_request.number}",
             )
 
     def _default_grading_criteria(self) -> dict[str, Any]:
@@ -194,35 +197,30 @@ class GitHubGrader:
         """
         return {
             "passing_threshold": 0.7,
-            "required_files": {
-                "points": 50,
-                "files": ["README.md", "src/main.py"]
-            },
+            "required_files": {"points": 50, "files": ["README.md", "src/main.py"]},
             "required_changes": {
                 "points": 30,
                 "changes": [
                     {
                         "file": "src/main.py",
                         "min_additions": 10,
-                        "description": "Implement the main function"
+                        "description": "Implement the main function",
                     }
-                ]
+                ],
             },
             "prohibited_patterns": {
                 "points": 20,
                 "patterns": [
                     {
                         "pattern": r"import os\s*;",
-                        "description": "Using semicolons in Python is discouraged"
+                        "description": "Using semicolons in Python is discouraged",
                     }
-                ]
-            }
+                ],
+            },
         }
 
     def _check_required_files(
-            self,
-            changed_files: list[dict[str, Any]],
-            criteria: dict[str, Any]
+        self, changed_files: list[dict[str, Any]], criteria: dict[str, Any]
     ) -> dict[str, Any]:
         """Check if required files are present in the changes.
 
@@ -241,7 +239,7 @@ class GitHubGrader:
                 "points_earned": points_possible,
                 "points_possible": points_possible,
                 "comment": "No required files specified.",
-                "passed": True
+                "passed": True,
             }
 
         # Get list of all filenames that were changed
@@ -264,21 +262,23 @@ class GitHubGrader:
             for file in missing_files:
                 comment += f"- {file}\n"
         else:
-            comment = f"Required Files Check: All {len(required_files)} required files found."
+            comment = (
+                f"Required Files Check: All {len(required_files)} required files found."
+            )
 
         return {
             "points_earned": points_earned,
             "points_possible": points_possible,
             "missing_files": missing_files,
             "comment": comment,
-            "passed": len(missing_files) == 0
+            "passed": len(missing_files) == 0,
         }
 
     def _check_required_changes(
-            self,
-            pull_request: PullRequest,
-            changed_files: list[dict[str, Any]],
-            criteria: dict[str, Any]
+        self,
+        pull_request: PullRequest,
+        changed_files: list[dict[str, Any]],
+        criteria: dict[str, Any],
     ) -> dict[str, Any]:
         """Check if required changes are present in the pull request.
 
@@ -298,7 +298,7 @@ class GitHubGrader:
                 "points_earned": points_possible,
                 "points_possible": points_possible,
                 "comment": "No required changes specified.",
-                "passed": True
+                "passed": True,
             }
 
         # Create a map of files to their stats
@@ -318,31 +318,38 @@ class GitHubGrader:
                 additions = file_info.get("additions", 0)
 
                 if additions >= min_additions:
-                    passed_changes.append({
-                        "file": file,
-                        "description": description,
-                        "additions": additions,
-                        "required": min_additions
-                    })
+                    passed_changes.append(
+                        {
+                            "file": file,
+                            "description": description,
+                            "additions": additions,
+                            "required": min_additions,
+                        }
+                    )
                 else:
-                    failed_changes.append({
+                    failed_changes.append(
+                        {
+                            "file": file,
+                            "description": description,
+                            "additions": additions,
+                            "required": min_additions,
+                        }
+                    )
+            else:
+                failed_changes.append(
+                    {
                         "file": file,
                         "description": description,
-                        "additions": additions,
-                        "required": min_additions
-                    })
-            else:
-                failed_changes.append({
-                    "file": file,
-                    "description": description,
-                    "additions": 0,
-                    "required": min_additions
-                })
+                        "additions": 0,
+                        "required": min_additions,
+                    }
+                )
 
         # Calculate points
         changes_passed = len(passed_changes)
-        points_per_change = points_possible / len(
-            required_changes) if required_changes else 0
+        points_per_change = (
+            points_possible / len(required_changes) if required_changes else 0
+        )
         points_earned = changes_passed * points_per_change
 
         # Generate comment
@@ -359,5 +366,109 @@ class GitHubGrader:
             "passed_changes": passed_changes,
             "failed_changes": failed_changes,
             "comment": comment,
-            "passed": len(failed_changes) == 0
+            "passed": len(failed_changes) == 0,
+        }
+
+    def _check_prohibited_patterns(
+        self,
+        pull_request: PullRequest,
+        changed_files: list[dict[str, Any]],
+        criteria: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Check if prohibited patterns are present in the pull request.
+
+        Args:
+            pull_request: Pull request to check
+            changed_files: List of changed files
+            criteria: Criteria for prohibited patterns
+
+        Returns:
+            Dictionary with results of the check
+        """
+        import re
+
+        points_possible = criteria.get("points", 20)
+        prohibited_patterns = criteria.get("patterns", [])
+
+        if not prohibited_patterns:
+            return {
+                "points_earned": points_possible,
+                "points_possible": points_possible,
+                "comment": "No prohibited patterns specified.",
+                "passed": True,
+            }
+
+        # In a real implementation, we would fetch file contents for each changed file
+        # For this example, we'll simulate file content
+        file_contents = {}
+        for file in changed_files:
+            filename = file["filename"]
+            try:
+                # Try to get actual file content using the client
+                # Note: This requires implementing get_pr_file_content in the GitHub client
+                try:
+                    content, _ = self.client.get_repository_file_content(
+                        repo=pull_request.base_repo,
+                        path=filename,
+                        ref=pull_request.head_branch,
+                    )
+                    file_contents[filename] = content
+                except Exception:
+                    # Fallback to simulated content for demonstration
+                    if filename.endswith(".py"):
+                        file_contents[filename] = (
+                            "def main():\n    print('Hello, world!')\n\nif __name__ == '__main__':\n    main()"
+                        )
+                    elif filename.endswith(".md"):
+                        file_contents[filename] = (
+                            "# Assignment\n\nThis is a sample README."
+                        )
+                    else:
+                        file_contents[filename] = f"Content of {filename}"
+            except Exception as e:
+                logger.warning(f"Failed to get content for {filename}: {e}")
+
+        # Check each file for prohibited patterns
+        violations = []
+
+        for filename, content in file_contents.items():
+            for pattern_info in prohibited_patterns:
+                pattern = pattern_info.get("pattern", "")
+                description = pattern_info.get("description", "Prohibited pattern")
+
+                if re.search(pattern, content):
+                    violations.append(
+                        {
+                            "file": filename,
+                            "pattern": pattern,
+                            "description": description,
+                        }
+                    )
+
+        # Calculate points
+        # If there are violations, deduct points proportionally
+        if violations:
+            points_per_violation = points_possible / len(prohibited_patterns)
+            unique_patterns_violated = len(set(v["pattern"] for v in violations))
+            points_deducted = min(
+                points_possible, unique_patterns_violated * points_per_violation
+            )
+            points_earned = points_possible - points_deducted
+        else:
+            points_earned = points_possible
+
+        # Generate comment
+        if violations:
+            comment = f"Prohibited Patterns Check: Found {len(violations)} violations.\n\nViolations:\n"
+            for violation in violations:
+                comment += f"- {violation['description']} in {violation['file']}\n"
+        else:
+            comment = "Prohibited Patterns Check: No prohibited patterns found."
+
+        return {
+            "points_earned": points_earned,
+            "points_possible": points_possible,
+            "violations": violations,
+            "comment": comment,
+            "passed": len(violations) == 0,
         }

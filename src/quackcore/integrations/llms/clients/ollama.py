@@ -13,23 +13,23 @@ from quackcore.errors import QuackApiError, QuackIntegrationError
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.llms.clients.base import LLMClient
 from quackcore.integrations.llms.models import ChatMessage, LLMOptions, RoleType
-from quackcore.logging import LogLevel, LOG_LEVELS
+from quackcore.logging import LOG_LEVELS, LogLevel
 
 
 class OllamaClient(LLMClient):
     """Ollama LLM client implementation."""
 
     def __init__(
-            self,
-            model: str | None = None,
-            api_key: str | None = None,  # Not used but kept for API consistency
-            api_base: str | None = None,
-            timeout: int = 60,
-            retry_count: int = 3,
-            initial_retry_delay: float = 1.0,
-            max_retry_delay: float = 30.0,
-            log_level: int = LOG_LEVELS[LogLevel.INFO],
-            **kwargs: Any,
+        self,
+        model: str | None = None,
+        api_key: str | None = None,  # Not used but kept for API consistency
+        api_base: str | None = None,
+        timeout: int = 60,
+        retry_count: int = 3,
+        initial_retry_delay: float = 1.0,
+        max_retry_delay: float = 30.0,
+        log_level: int = LOG_LEVELS[LogLevel.INFO],
+        **kwargs: Any,
     ) -> None:
         """
         Initialize the Ollama client.
@@ -80,6 +80,7 @@ class OllamaClient(LLMClient):
         """
         try:
             import requests
+
             return True
         except ImportError as e:
             raise QuackIntegrationError(
@@ -88,10 +89,10 @@ class OllamaClient(LLMClient):
             )
 
     def _chat_with_provider(
-            self,
-            messages: list[ChatMessage],
-            options: LLMOptions,
-            callback: Callable[[str], None] | None = None,
+        self,
+        messages: list[ChatMessage],
+        options: LLMOptions,
+        callback: Callable[[str], None] | None = None,
     ) -> IntegrationResult[str]:
         """
         Send a chat completion request to the Ollama API.
@@ -120,7 +121,7 @@ class OllamaClient(LLMClient):
                 "stream": options.stream or callback is not None,
                 "options": {
                     "temperature": options.temperature,
-                }
+                },
             }
 
             # Add max_tokens if provided
@@ -141,9 +142,7 @@ class OllamaClient(LLMClient):
             # Non-streaming request
             try:
                 response = requests.post(
-                    api_url,
-                    json=request_data,
-                    timeout=self._timeout
+                    api_url, json=request_data, timeout=self._timeout
                 )
 
                 # Check for HTTP errors
@@ -154,7 +153,8 @@ class OllamaClient(LLMClient):
 
                 if "message" in result and "content" in result["message"]:
                     return IntegrationResult.success_result(
-                        result["message"]["content"])
+                        result["message"]["content"]
+                    )
                 else:
                     return IntegrationResult.error_result(
                         f"Unexpected response format from Ollama: {result}"
@@ -182,10 +182,10 @@ class OllamaClient(LLMClient):
             )
 
     def _handle_streaming(
-            self,
-            api_url: str,
-            request_data: dict,
-            callback: Callable[[str], None] | None,
+        self,
+        api_url: str,
+        request_data: dict,
+        callback: Callable[[str], None] | None,
     ) -> IntegrationResult[str]:
         """
         Handle streaming responses from the Ollama API.
@@ -200,8 +200,9 @@ class OllamaClient(LLMClient):
         """
         # Import at the beginning to avoid reference issues
         try:
-            import requests
             import json
+
+            import requests
         except ImportError as e:
             return IntegrationResult.error_result(
                 f"Failed to import required package: {e}. Please install requests: pip install requests"
@@ -211,10 +212,7 @@ class OllamaClient(LLMClient):
             collected_content = []
 
             with requests.post(
-                    api_url,
-                    json=request_data,
-                    timeout=self._timeout,
-                    stream=True
+                api_url, json=request_data, timeout=self._timeout, stream=True
             ) as response:
                 response.raise_for_status()
 
@@ -233,7 +231,8 @@ class OllamaClient(LLMClient):
                                 callback(content)
                     except json.JSONDecodeError:
                         self.logger.warning(
-                            f"Failed to parse Ollama stream chunk: {line}")
+                            f"Failed to parse Ollama stream chunk: {line}"
+                        )
 
             return IntegrationResult.success_result("".join(collected_content))
 
@@ -261,10 +260,12 @@ class OllamaClient(LLMClient):
             role = self._convert_role_to_ollama(message.role)
 
             if message.content is not None:
-                ollama_messages.append({
-                    "role": role,
-                    "content": message.content,
-                })
+                ollama_messages.append(
+                    {
+                        "role": role,
+                        "content": message.content,
+                    }
+                )
 
         return ollama_messages
 
@@ -287,7 +288,7 @@ class OllamaClient(LLMClient):
         return role_map.get(role, "user")
 
     def _count_tokens_with_provider(
-            self, messages: list[ChatMessage]
+        self, messages: list[ChatMessage]
     ) -> IntegrationResult[int]:
         """
         Count tokens using Ollama API.
@@ -324,7 +325,7 @@ class OllamaClient(LLMClient):
                 response = requests.post(
                     f"{self._api_base}/api/tokenize",
                     json=request_data,
-                    timeout=self._timeout
+                    timeout=self._timeout,
                 )
 
                 response.raise_for_status()
@@ -338,17 +339,18 @@ class OllamaClient(LLMClient):
                     estimated_tokens = len(combined_text) // 4
                     return IntegrationResult.success_result(
                         estimated_tokens,
-                        message="Token count is an estimation based on text length."
+                        message="Token count is an estimation based on text length.",
                     )
 
             except requests.exceptions.RequestException as e:
                 # If token counting endpoint fails, fall back to estimation
                 self.logger.warning(
-                    f"Ollama token counting failed: {e}. Using estimation.")
+                    f"Ollama token counting failed: {e}. Using estimation."
+                )
                 estimated_tokens = len(combined_text) // 4
                 return IntegrationResult.success_result(
                     estimated_tokens,
-                    message="Token count is an estimation. Ollama token counting API failed."
+                    message="Token count is an estimation. Ollama token counting API failed.",
                 )
 
         except Exception as e:

@@ -10,8 +10,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.fs.results import FileInfoResult, OperationResult, ReadResult, \
-    WriteResult
+from quackcore.fs.results import (
+    FileInfoResult,
+    OperationResult,
+    ReadResult,
+    WriteResult,
+)
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.models import ConversionDetails, ConversionMetrics
 from quackcore.integrations.pandoc.operations.md_to_docx import (
@@ -126,7 +130,7 @@ class TestMarkdownToDocxOperations:
 
         # Test successful conversion
         with patch(
-                "quackcore.integrations.pandoc.operations.md_to_docx.prepare_pandoc_args"
+            "quackcore.integrations.pandoc.operations.md_to_docx.prepare_pandoc_args"
         ) as mock_args:
             mock_args.return_value = ["--reference-doc=template.docx"]
 
@@ -162,7 +166,7 @@ class TestMarkdownToDocxOperations:
         mock_fs.create_directory.return_value.success = True
 
         with patch(
-                "quackcore.integrations.pandoc.operations.md_to_docx.prepare_pandoc_args"
+            "quackcore.integrations.pandoc.operations.md_to_docx.prepare_pandoc_args"
         ) as mock_args:
             mock_args.return_value = ["--reference-doc=template.docx"]
 
@@ -181,7 +185,7 @@ class TestMarkdownToDocxOperations:
 
         # Test successful retrieval
         with patch(
-                "quackcore.integrations.pandoc.operations.md_to_docx.time.time"
+            "quackcore.integrations.pandoc.operations.md_to_docx.time.time"
         ) as mock_time:
             mock_time.return_value = start_time + 2  # 2 seconds have passed
 
@@ -213,17 +217,17 @@ class TestMarkdownToDocxOperations:
 
         # Test successful conversion
         with patch(
-                "quackcore.integrations.pandoc.operations.md_to_docx._validate_markdown_input"
+            "quackcore.integrations.pandoc.operations.md_to_docx._validate_markdown_input"
         ) as mock_validate:
             mock_validate.return_value = 512  # Original size
 
             with patch(
-                    "quackcore.integrations.pandoc.operations.md_to_docx._convert_markdown_to_docx_once"
+                "quackcore.integrations.pandoc.operations.md_to_docx._convert_markdown_to_docx_once"
             ) as mock_convert:
                 # mock_convert doesn't return anything
 
                 with patch(
-                        "quackcore.integrations.pandoc.operations.md_to_docx._get_conversion_output"
+                    "quackcore.integrations.pandoc.operations.md_to_docx._get_conversion_output"
                 ) as mock_output:
                     mock_output.return_value = (
                         1.0,
@@ -231,12 +235,12 @@ class TestMarkdownToDocxOperations:
                     )  # (conversion_time, output_size)
 
                     with patch(
-                            "quackcore.integrations.pandoc.operations.md_to_docx.validate_conversion"
+                        "quackcore.integrations.pandoc.operations.md_to_docx.validate_conversion"
                     ) as mock_validate_out:
                         mock_validate_out.return_value = []  # No validation errors
 
                         with patch(
-                                "quackcore.integrations.pandoc.operations.md_to_docx.track_metrics"
+                            "quackcore.integrations.pandoc.operations.md_to_docx.track_metrics"
                         ) as mock_track:
                             # Test successful conversion
                             result = convert_markdown_to_docx(
@@ -264,17 +268,17 @@ class TestMarkdownToDocxOperations:
 
         # Test with validation errors
         with patch(
-                "quackcore.integrations.pandoc.operations.md_to_docx._validate_markdown_input"
+            "quackcore.integrations.pandoc.operations.md_to_docx._validate_markdown_input"
         ) as mock_validate:
             mock_validate.return_value = 512  # Original size
 
             with patch(
-                    "quackcore.integrations.pandoc.operations.md_to_docx._convert_markdown_to_docx_once"
+                "quackcore.integrations.pandoc.operations.md_to_docx._convert_markdown_to_docx_once"
             ) as mock_convert:
                 # mock_convert doesn't return anything
 
                 with patch(
-                        "quackcore.integrations.pandoc.operations.md_to_docx._get_conversion_output"
+                    "quackcore.integrations.pandoc.operations.md_to_docx._get_conversion_output"
                 ) as mock_output:
                     mock_output.return_value = (
                         1.0,
@@ -282,7 +286,7 @@ class TestMarkdownToDocxOperations:
                     )  # (conversion_time, output_size)
 
                     with patch(
-                            "quackcore.integrations.pandoc.operations.md_to_docx.validate_conversion"
+                        "quackcore.integrations.pandoc.operations.md_to_docx.validate_conversion"
                     ) as mock_validate_out:
                         mock_validate_out.return_value = ["DOCX validation failed"]
 
@@ -304,17 +308,17 @@ class TestMarkdownToDocxOperations:
 
         # Test with retry and eventual success
         with patch(
-                "quackcore.integrations.pandoc.operations.md_to_docx._validate_markdown_input"
+            "quackcore.integrations.pandoc.operations.md_to_docx._validate_markdown_input"
         ) as mock_validate:
             mock_validate.return_value = 512  # Original size
 
             with patch(
-                    "quackcore.integrations.pandoc.operations.md_to_docx._convert_markdown_to_docx_once"
+                "quackcore.integrations.pandoc.operations.md_to_docx._convert_markdown_to_docx_once"
             ) as mock_convert:
                 # mock_convert doesn't return anything
 
                 with patch(
-                        "quackcore.integrations.pandoc.operations.md_to_docx._get_conversion_output"
+                    "quackcore.integrations.pandoc.operations.md_to_docx._get_conversion_output"
                 ) as mock_output:
                     mock_output.return_value = (
                         1.0,
@@ -322,13 +326,13 @@ class TestMarkdownToDocxOperations:
                     )  # (conversion_time, output_size)
 
                     with patch(
-                            "quackcore.integrations.pandoc.operations.md_to_docx.validate_conversion"
+                        "quackcore.integrations.pandoc.operations.md_to_docx.validate_conversion"
                     ) as mock_validate_out:
                         # First call fails, second call succeeds
                         mock_validate_out.side_effect = [["DOCX validation failed"], []]
 
                         with patch(
-                                "quackcore.integrations.pandoc.operations.md_to_docx.time.sleep"
+                            "quackcore.integrations.pandoc.operations.md_to_docx.time.sleep"
                         ) as mock_sleep:
                             # Test retry logic
                             result = convert_markdown_to_docx(
@@ -347,17 +351,17 @@ class TestMarkdownToDocxOperations:
 
         # Test with max retries exceeded
         with patch(
-                "quackcore.integrations.pandoc.operations.md_to_docx._validate_markdown_input"
+            "quackcore.integrations.pandoc.operations.md_to_docx._validate_markdown_input"
         ) as mock_validate:
             mock_validate.return_value = 512  # Original size
 
             with patch(
-                    "quackcore.integrations.pandoc.operations.md_to_docx._convert_markdown_to_docx_once"
+                "quackcore.integrations.pandoc.operations.md_to_docx._convert_markdown_to_docx_once"
             ) as mock_convert:
                 # mock_convert doesn't return anything
 
                 with patch(
-                        "quackcore.integrations.pandoc.operations.md_to_docx._get_conversion_output"
+                    "quackcore.integrations.pandoc.operations.md_to_docx._get_conversion_output"
                 ) as mock_output:
                     mock_output.return_value = (
                         1.0,
@@ -365,13 +369,13 @@ class TestMarkdownToDocxOperations:
                     )  # (conversion_time, output_size)
 
                     with patch(
-                            "quackcore.integrations.pandoc.operations.md_to_docx.validate_conversion"
+                        "quackcore.integrations.pandoc.operations.md_to_docx.validate_conversion"
                     ) as mock_validate_out:
                         # Always return validation errors
                         mock_validate_out.return_value = ["DOCX validation failed"]
 
                         with patch(
-                                "quackcore.integrations.pandoc.operations.md_to_docx.time.sleep"
+                            "quackcore.integrations.pandoc.operations.md_to_docx.time.sleep"
                         ) as mock_sleep:
                             # Set max retries to 2 for faster testing
                             config.retry_mechanism.max_conversion_retries = 2
@@ -382,7 +386,10 @@ class TestMarkdownToDocxOperations:
                             )
 
                             assert result.success is False
-                            assert "Conversion failed after maximum retries" in result.error
+                            assert (
+                                "Conversion failed after maximum retries"
+                                in result.error
+                            )
                             assert "DOCX validation failed" in result.error
                             assert mock_convert.call_count == 2
                             assert mock_sleep.call_count == 1
@@ -396,7 +403,7 @@ class TestMarkdownToDocxOperations:
 
         # Test with exception
         with patch(
-                "quackcore.integrations.pandoc.operations.md_to_docx._validate_markdown_input"
+            "quackcore.integrations.pandoc.operations.md_to_docx._validate_markdown_input"
         ) as mock_validate:
             mock_validate.side_effect = Exception("Unexpected error")
 
@@ -419,7 +426,8 @@ class TestMarkdownToDocxOperations:
 
         # Mock file info for output file with correct size parameter
         with patch(
-                "quackcore.integrations.pandoc.operations.md_to_docx.fs") as patched_fs:
+            "quackcore.integrations.pandoc.operations.md_to_docx.fs"
+        ) as patched_fs:
             # Create a proper FileInfoResult with size 10240
             output_info = FileInfoResult(
                 success=True,
@@ -435,25 +443,25 @@ class TestMarkdownToDocxOperations:
 
             # Test valid conversion
             with patch(
-                    "quackcore.integrations.pandoc.operations.md_to_docx.check_file_size"
+                "quackcore.integrations.pandoc.operations.md_to_docx.check_file_size"
             ) as mock_size:
                 mock_size.return_value = (True, [])
 
                 with patch(
-                        "quackcore.integrations.pandoc.operations.md_to_docx.check_conversion_ratio"
+                    "quackcore.integrations.pandoc.operations.md_to_docx.check_conversion_ratio"
                 ) as mock_ratio:
                     mock_ratio.return_value = (True, [])
 
                     with patch(
-                            "quackcore.integrations.pandoc.operations.md_to_docx.validate_docx_structure"
+                        "quackcore.integrations.pandoc.operations.md_to_docx.validate_docx_structure"
                     ) as mock_validate:
                         mock_validate.return_value = (True, [])
 
                         with patch(
-                                "quackcore.integrations.pandoc.operations.md_to_docx._check_docx_metadata"
+                            "quackcore.integrations.pandoc.operations.md_to_docx._check_docx_metadata"
                         ) as mock_metadata:
                             # Force the Path.exists() method to return True
-                            with patch.object(Path, 'exists', return_value=True):
+                            with patch.object(Path, "exists", return_value=True):
                                 validation_errors = validate_conversion(
                                     output_path, input_path, original_size, config
                                 )
@@ -471,8 +479,9 @@ class TestMarkdownToDocxOperations:
                                     output_path, config.validation.check_links
                                 )
                                 mock_metadata.assert_called_with(
-                                    output_path, input_path,
-                                    config.validation.check_links
+                                    output_path,
+                                    input_path,
+                                    config.validation.check_links,
                                 )
 
         # Test with output file not found
@@ -489,12 +498,12 @@ class TestMarkdownToDocxOperations:
         mock_fs.service.get_file_info.return_value.exists = True
 
         with patch(
-                "quackcore.integrations.pandoc.operations.md_to_docx.check_file_size"
+            "quackcore.integrations.pandoc.operations.md_to_docx.check_file_size"
         ) as mock_size:
             mock_size.return_value = (False, ["File size is below threshold"])
 
             with patch(
-                    "quackcore.integrations.pandoc.operations.md_to_docx.check_conversion_ratio"
+                "quackcore.integrations.pandoc.operations.md_to_docx.check_conversion_ratio"
             ) as mock_ratio:
                 mock_ratio.return_value = (True, [])
 
@@ -507,12 +516,12 @@ class TestMarkdownToDocxOperations:
 
         # Test with conversion ratio check failure
         with patch(
-                "quackcore.integrations.pandoc.operations.md_to_docx.check_file_size"
+            "quackcore.integrations.pandoc.operations.md_to_docx.check_file_size"
         ) as mock_size:
             mock_size.return_value = (True, [])
 
             with patch(
-                    "quackcore.integrations.pandoc.operations.md_to_docx.check_conversion_ratio"
+                "quackcore.integrations.pandoc.operations.md_to_docx.check_conversion_ratio"
             ) as mock_ratio:
                 mock_ratio.return_value = (
                     False,
@@ -528,17 +537,17 @@ class TestMarkdownToDocxOperations:
 
         # Test with DOCX structure validation failure
         with patch(
-                "quackcore.integrations.pandoc.operations.md_to_docx.check_file_size"
+            "quackcore.integrations.pandoc.operations.md_to_docx.check_file_size"
         ) as mock_size:
             mock_size.return_value = (True, [])
 
             with patch(
-                    "quackcore.integrations.pandoc.operations.md_to_docx.check_conversion_ratio"
+                "quackcore.integrations.pandoc.operations.md_to_docx.check_conversion_ratio"
             ) as mock_ratio:
                 mock_ratio.return_value = (True, [])
 
                 with patch(
-                        "quackcore.integrations.pandoc.operations.md_to_docx.validate_docx_structure"
+                    "quackcore.integrations.pandoc.operations.md_to_docx.validate_docx_structure"
                 ) as mock_validate:
                     mock_validate.return_value = (
                         False,
@@ -546,7 +555,7 @@ class TestMarkdownToDocxOperations:
                     )
 
                     # Force the Path.exists() method to return True
-                    with patch.object(Path, 'exists', return_value=True):
+                    with patch.object(Path, "exists", return_value=True):
                         validation_errors = validate_conversion(
                             output_path, input_path, original_size, config
                         )
@@ -565,8 +574,9 @@ class TestMarkdownToDocxOperations:
         # Test when python-docx is not available
         # Instead of patching the imported module which doesn't exist,
         # we can patch the import itself to raise ImportError
-        with patch('importlib.import_module',
-                   side_effect=ImportError("No module named 'docx'")):
+        with patch(
+            "importlib.import_module", side_effect=ImportError("No module named 'docx'")
+        ):
             # Should not raise an exception, just log and return
             md_to_docx._check_docx_metadata(output_path, source_path, check_links)
             # No assertions needed, just testing that it doesn't raise an exception
@@ -587,9 +597,9 @@ class TestMarkdownToDocxOperations:
         # Add Document to the mocked docx module
         docx_module.Document = mock_document_class
 
-        with patch.dict('sys.modules', {'docx': docx_module}):
+        with patch.dict("sys.modules", {"docx": docx_module}):
             # Should not log any warnings
-            with patch.object(md_to_docx.logger, 'debug') as mock_logger:
+            with patch.object(md_to_docx.logger, "debug") as mock_logger:
                 md_to_docx._check_docx_metadata(output_path, source_path, check_links)
                 mock_logger.assert_not_called()
 
@@ -609,10 +619,11 @@ class TestMarkdownToDocxOperations:
         # Add Document to the mocked docx module
         docx_module.Document = mock_document_class
 
-        with patch.dict('sys.modules', {'docx': docx_module}):
+        with patch.dict("sys.modules", {"docx": docx_module}):
             # Should log a warning
-            with patch.object(md_to_docx.logger, 'debug') as mock_logger:
+            with patch.object(md_to_docx.logger, "debug") as mock_logger:
                 md_to_docx._check_docx_metadata(output_path, source_path, check_links)
                 mock_logger.debug.assert_called_once()
-                assert "Source file reference missing" in \
-                       mock_logger.debug.call_args[0][0]
+                assert (
+                    "Source file reference missing" in mock_logger.debug.call_args[0][0]
+                )

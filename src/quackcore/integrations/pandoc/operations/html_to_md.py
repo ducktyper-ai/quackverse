@@ -62,7 +62,8 @@ def _validate_input(html_path: Path, config: PandocConfig) -> int:
     except (TypeError, ValueError):
         # Default value for any conversion error
         logger.warning(
-            f"Could not convert file size to integer: {file_info.size}, using default size")
+            f"Could not convert file size to integer: {file_info.size}, using default size"
+        )
         original_size = 1024  # Default size for HTML files
 
     # Skip structure validation if disabled
@@ -75,7 +76,8 @@ def _validate_input(html_path: Path, config: PandocConfig) -> int:
         read_result = fs.read_text(html_path)
         if not read_result.success:
             raise QuackIntegrationError(
-                f"Could not read HTML file: {read_result.error}")
+                f"Could not read HTML file: {read_result.error}"
+            )
 
         # Validate HTML structure if required
         html_content = read_result.content
@@ -83,21 +85,25 @@ def _validate_input(html_path: Path, config: PandocConfig) -> int:
         # Check that we have a valid string content to validate
         if not isinstance(html_content, str):
             logger.warning(
-                f"HTML content is not a string, skipping validation: {type(html_content)}")
+                f"HTML content is not a string, skipping validation: {type(html_content)}"
+            )
             return original_size
 
-        is_valid, html_errors = validate_html_structure(html_content,
-                                                        config.validation.check_links)
+        is_valid, html_errors = validate_html_structure(
+            html_content, config.validation.check_links
+        )
         if not is_valid:
             error_msg: str = "; ".join(html_errors)
             raise QuackIntegrationError(
-                f"Invalid HTML structure in {html_path}: {error_msg}")
+                f"Invalid HTML structure in {html_path}: {error_msg}"
+            )
     except Exception as e:
         if isinstance(e, QuackIntegrationError):
             raise
         logger.warning(f"Could not validate HTML structure: {str(e)}")
 
     return original_size
+
 
 def _attempt_conversion(html_path: Path, config: PandocConfig) -> str:
     """
@@ -133,12 +139,12 @@ def _attempt_conversion(html_path: Path, config: PandocConfig) -> str:
 
 
 def _write_and_validate_output(
-        cleaned_markdown: str,
-        output_path: Path,
-        input_path: Path,
-        original_size: int,
-        config: PandocConfig,
-        attempt_start: float,
+    cleaned_markdown: str,
+    output_path: Path,
+    input_path: Path,
+    original_size: int,
+    config: PandocConfig,
+    attempt_start: float,
 ) -> tuple[float, int, list[str]]:
     """
     Write the converted markdown to the output file and validate the conversion.
@@ -162,9 +168,7 @@ def _write_and_validate_output(
         )
 
     # Write the content
-    write_result = fs.write_text(
-        output_path, cleaned_markdown, encoding="utf-8"
-    )
+    write_result = fs.write_text(output_path, cleaned_markdown, encoding="utf-8")
     if not write_result.success:
         raise QuackIntegrationError(
             f"Failed to write output file: {write_result.error}"
@@ -181,13 +185,16 @@ def _write_and_validate_output(
 
     # Use the bytes_written from the write_result if available, otherwise fall back to file_info.size
     output_size: int = 0
-    if hasattr(write_result,
-               'bytes_written') and write_result.bytes_written is not None:
+    if (
+        hasattr(write_result, "bytes_written")
+        and write_result.bytes_written is not None
+    ):
         try:
             output_size = int(write_result.bytes_written)
         except (TypeError, ValueError):
             logger.warning(
-                f"Could not convert bytes_written to integer: {write_result.bytes_written}")
+                f"Could not convert bytes_written to integer: {write_result.bytes_written}"
+            )
 
     # If bytes_written was not available or couldn't be converted, use file_info.size
     if output_size == 0 and output_info.size is not None:
@@ -195,7 +202,8 @@ def _write_and_validate_output(
             output_size = int(output_info.size)
         except (TypeError, ValueError):
             logger.warning(
-                f"Could not convert file size to integer: {output_info.size}")
+                f"Could not convert file size to integer: {output_info.size}"
+            )
 
     # Validate the conversion
     validation_errors: list[str] = validate_conversion(
@@ -206,10 +214,10 @@ def _write_and_validate_output(
 
 
 def convert_html_to_markdown(
-        html_path: Path,
-        output_path: Path,
-        config: PandocConfig,
-        metrics: ConversionMetrics | None = None,
+    html_path: Path,
+    output_path: Path,
+    config: PandocConfig,
+    metrics: ConversionMetrics | None = None,
 ) -> IntegrationResult[tuple[Path, ConversionDetails]]:
     """
     Convert an HTML file to Markdown.
@@ -303,7 +311,8 @@ def convert_html_to_markdown(
         metrics.failed_conversions += 1
         metrics.errors[str(html_path)] = str(e)
         return IntegrationResult.error_result(
-            f"Failed to convert HTML to Markdown: {str(e)}")
+            f"Failed to convert HTML to Markdown: {str(e)}"
+        )
 
 
 def post_process_markdown(markdown_content: str) -> str:
@@ -326,10 +335,10 @@ def post_process_markdown(markdown_content: str) -> str:
 
 
 def validate_conversion(
-        output_path: Path,
-        input_path: Path,
-        original_size: int,
-        config: PandocConfig,
+    output_path: Path,
+    input_path: Path,
+    original_size: int,
+    config: PandocConfig,
 ) -> list[str]:
     """
     Validate the converted markdown document.
@@ -356,7 +365,8 @@ def validate_conversion(
         output_size: int = int(output_info.size) if output_info.size is not None else 0
     except (TypeError, ValueError):
         logger.warning(
-            f"Could not convert output size to integer: {output_info.size}, using 0")
+            f"Could not convert output size to integer: {output_info.size}, using 0"
+        )
         output_size = 0
 
     # Check file size

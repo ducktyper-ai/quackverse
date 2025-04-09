@@ -18,8 +18,10 @@ from quackcore.fs.results import (
     ReadResult,
     WriteResult,
 )
+
 # Import the correct FileSystemService class that includes all mixins
 from quackcore.fs.service.full_class import FileSystemService
+
 # Import PathInfo directly from the module where it's defined
 from quackcore.fs.service.path_validation import PathInfo
 
@@ -29,6 +31,7 @@ T = TypeVar("T")  # Generic type for flexible typing
 _service = FileSystemService()
 
 # File operations
+
 
 def read_text(path: str | Path, encoding: str = "utf-8") -> ReadResult[str]:
     """
@@ -268,9 +271,7 @@ def find_files(
     return _service.find_files(path, pattern, recursive, include_hidden)
 
 
-def copy(
-    src: str | Path, dst: str | Path, overwrite: bool = False
-) -> WriteResult:
+def copy(src: str | Path, dst: str | Path, overwrite: bool = False) -> WriteResult:
     """
     Copy a file or directory.
 
@@ -285,9 +286,7 @@ def copy(
     return _service.copy(src, dst, overwrite)
 
 
-def move(
-    src: str | Path, dst: str | Path, overwrite: bool = False
-) -> WriteResult:
+def move(src: str | Path, dst: str | Path, overwrite: bool = False) -> WriteResult:
     """
     Move a file or directory.
 
@@ -343,6 +342,7 @@ def join_path(*parts: str | Path) -> Path:
 
 
 # Path utility functions
+
 
 def normalize_path_with_info(path: str | Path) -> PathInfo:
     """

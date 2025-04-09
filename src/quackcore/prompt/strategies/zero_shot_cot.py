@@ -5,8 +5,9 @@ Zero-shot Chain of Thought (CoT) strategy for the PromptBooster.
 This strategy encourages the model to think step-by-step without
 providing explicit examples, which can improve reasoning performance.
 """
-from ..strategy_base import PromptStrategy
+
 from ..registry import register_prompt_strategy
+from ..strategy_base import PromptStrategy
 
 
 def render(task_description: str, final_instruction: str | None = None) -> str:
@@ -43,7 +44,7 @@ strategy = PromptStrategy(
     input_vars=["task_description", "final_instruction"],
     render_fn=render,
     tags=["reasoning", "zero-shot", "step-by-step"],
-    origin="Chain-of-Thought Prompting Elicits Reasoning in Large Language Models (Wei et al., 2022)"
+    origin="Chain-of-Thought Prompting Elicits Reasoning in Large Language Models (Wei et al., 2022)",
 )
 
 # Register the strategy

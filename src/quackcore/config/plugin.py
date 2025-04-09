@@ -13,11 +13,12 @@ import yaml
 
 from quackcore.config.models import QuackConfig
 from quackcore.errors import QuackConfigurationError, wrap_io_errors
-from quackcore.logging import get_logger
-from quackcore.paths import resolver
 
 # Import FS service and helper functions.
-from quackcore.fs import service as fs, join_path
+from quackcore.fs import join_path
+from quackcore.fs import service as fs
+from quackcore.logging import get_logger
+from quackcore.paths import resolver
 
 T = TypeVar("T")  # Generic type for flexible typing
 
@@ -66,7 +67,9 @@ def load_yaml_config(path: str) -> dict[str, Any]:
         # Use fs.read_text to read file content.
         read_result = fs.read_text(path, encoding="utf-8")
         if not read_result.success:
-            raise QuackConfigurationError(f"Failed to load YAML config: {read_result.error}", path)
+            raise QuackConfigurationError(
+                f"Failed to load YAML config: {read_result.error}", path
+            )
         config = yaml.safe_load(read_result.content)
         return config or {}
     except (yaml.YAMLError, OSError) as e:
@@ -147,7 +150,7 @@ def _get_env_config() -> dict[str, Any]:
     config: dict[str, Any] = {}
     for key, value in os.environ.items():
         if key.startswith(ENV_PREFIX):
-            key_parts = key[len(ENV_PREFIX):].lower().split("__")
+            key_parts = key[len(ENV_PREFIX) :].lower().split("__")
             if len(key_parts) < 2:
                 continue
             typed_value = _convert_env_value(value)
@@ -185,12 +188,16 @@ def find_config_file() -> str | None:
         root = resolver.get_project_root()
         for name in ["quack_config.yaml", "config/quack_config.yaml"]:
             candidate = join_path(str(root), name)
-            if fs.get_file_info(candidate).success and fs.get_file_info(candidate).exists:
+            if (
+                fs.get_file_info(candidate).success
+                and fs.get_file_info(candidate).exists
+            ):
                 return str(candidate)
     except Exception as e:
         logger.debug("Failed to find project root: %s", e)
 
     return None
+
 
 def load_config(
     config_path: str | None = None,
@@ -215,8 +222,12 @@ def load_config(
 
     if config_path:
         expanded = fs.expand_user_vars(str(config_path))
-        if not (fs.get_file_info(expanded).success and fs.get_file_info(expanded).exists):
-            raise QuackConfigurationError(f"Configuration file not found: {expanded}", expanded)
+        if not (
+            fs.get_file_info(expanded).success and fs.get_file_info(expanded).exists
+        ):
+            raise QuackConfigurationError(
+                f"Configuration file not found: {expanded}", expanded
+            )
         config_dict = load_yaml_config(expanded)
     else:
         found = find_config_file()

@@ -1,12 +1,11 @@
-# src/quackcore/integrations/github/teaching_adapter.py
+# src/quackcore/teaching/github/teaching_adapter.py
 """GitHub teaching adapter for QuackCore."""
 
 from quackcore.errors import QuackApiError
 from quackcore.integrations.core import IntegrationResult
+from quackcore.integrations.github.client import GitHubClient
+from quackcore.integrations.github.models import PullRequest
 from quackcore.logging import get_logger
-
-from .client import GitHubClient
-from .models import PullRequest
 
 logger = get_logger(__name__)
 
@@ -39,21 +38,19 @@ class GitHubTeachingAdapter:
             # Check if the repo is already starred
             if self.client.is_repo_starred(repo):
                 return IntegrationResult.success_result(
-                    content=True,
-                    message=f"Repository {repo} is already starred"
+                    content=True, message=f"Repository {repo} is already starred"
                 )
 
             # Star the repo
             self.client.star_repo(repo)
 
             return IntegrationResult.success_result(
-                content=True,
-                message=f"Successfully starred repository {repo}"
+                content=True, message=f"Successfully starred repository {repo}"
             )
         except QuackApiError as e:
             return IntegrationResult.error_result(
                 error=f"Failed to star repository: {str(e)}",
-                message=f"Could not star {repo}"
+                message=f"Could not star {repo}",
             )
 
     def ensure_forked(self, repo: str) -> IntegrationResult[str]:
@@ -76,10 +73,11 @@ class GitHubTeachingAdapter:
 
             if self.client.check_repository_exists(expected_fork_name):
                 logger.info(
-                    f"User already has a fork of {repo} at {expected_fork_name}")
+                    f"User already has a fork of {repo} at {expected_fork_name}"
+                )
                 return IntegrationResult.success_result(
                     content=expected_fork_name,
-                    message=f"Repository {repo} is already forked to {expected_fork_name}"
+                    message=f"Repository {repo} is already forked to {expected_fork_name}",
                 )
 
             # Create a new fork
@@ -87,22 +85,22 @@ class GitHubTeachingAdapter:
 
             return IntegrationResult.success_result(
                 content=forked_repo.full_name,
-                message=f"Successfully forked repository {repo} to {forked_repo.full_name}"
+                message=f"Successfully forked repository {repo} to {forked_repo.full_name}",
             )
         except QuackApiError as e:
             return IntegrationResult.error_result(
                 error=f"Failed to fork repository: {str(e)}",
-                message=f"Could not fork {repo}"
+                message=f"Could not fork {repo}",
             )
 
     def submit_assignment(
-            self,
-            forked_repo: str,
-            base_repo: str,
-            branch: str,
-            title: str,
-            body: str | None = None,
-            base_branch: str = "main"
+        self,
+        forked_repo: str,
+        base_repo: str,
+        branch: str,
+        title: str,
+        body: str | None = None,
+        base_branch: str = "main",
     ) -> IntegrationResult[str]:
         """Submit an assignment by creating a pull request.
 
@@ -132,7 +130,7 @@ class GitHubTeachingAdapter:
                 head=head,
                 title=f"[SUBMISSION] {title}",
                 body=body,
-                base_branch=base_branch
+                base_branch=base_branch,
             )
 
             # Convert HttpUrl to string to match the return type
@@ -140,16 +138,17 @@ class GitHubTeachingAdapter:
 
             return IntegrationResult.success_result(
                 content=url_string,
-                message=f"Successfully submitted assignment via PR #{pr.number}"
+                message=f"Successfully submitted assignment via PR #{pr.number}",
             )
         except QuackApiError as e:
             return IntegrationResult.error_result(
                 error=f"Failed to submit assignment: {str(e)}",
-                message=f"Could not create pull request from {forked_repo}:{branch} to {base_repo}:{base_branch}"
+                message=f"Could not create pull request from {forked_repo}:{branch} to {base_repo}:{base_branch}",
             )
 
-    def get_latest_submission(self, repo: str, student: str) -> IntegrationResult[
-        PullRequest]:
+    def get_latest_submission(
+        self, repo: str, student: str
+    ) -> IntegrationResult[PullRequest]:
         """Get the latest assignment submission for a student.
 
         Args:
@@ -166,7 +165,7 @@ class GitHubTeachingAdapter:
             if not prs:
                 return IntegrationResult.error_result(
                     error=f"No pull requests found for {student} in {repo}",
-                    message=f"No submissions found for {student}"
+                    message=f"No submissions found for {student}",
                 )
 
             # Find the latest submission
@@ -175,10 +174,10 @@ class GitHubTeachingAdapter:
 
             return IntegrationResult.success_result(
                 content=latest_pr,
-                message=f"Found latest submission (PR #{latest_pr.number}) from {student}"
+                message=f"Found latest submission (PR #{latest_pr.number}) from {student}",
             )
         except QuackApiError as e:
             return IntegrationResult.error_result(
                 error=f"Failed to get latest submission: {str(e)}",
-                message=f"Could not retrieve submissions for {student} in {repo}"
+                message=f"Could not retrieve submissions for {student} in {repo}",
             )

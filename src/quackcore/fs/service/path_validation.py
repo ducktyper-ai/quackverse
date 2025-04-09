@@ -104,7 +104,7 @@ class PathValidationMixin:
 
             # Check for invalid characters in the path
             # This varies by platform, but here are some common checks
-            if os.name == 'nt':  # Windows
+            if os.name == "nt":  # Windows
                 # Check for reserved characters in Windows
                 reserved_chars = '<>:"|?*'
                 if any(c in str(path_obj.name) for c in reserved_chars):
@@ -112,11 +112,28 @@ class PathValidationMixin:
 
                 # Check for reserved names in Windows
                 reserved_names = [
-                    'CON', 'PRN', 'AUX', 'NUL',
-                    'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8',
-                    'COM9',
-                    'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8',
-                    'LPT9'
+                    "CON",
+                    "PRN",
+                    "AUX",
+                    "NUL",
+                    "COM1",
+                    "COM2",
+                    "COM3",
+                    "COM4",
+                    "COM5",
+                    "COM6",
+                    "COM7",
+                    "COM8",
+                    "COM9",
+                    "LPT1",
+                    "LPT2",
+                    "LPT3",
+                    "LPT4",
+                    "LPT5",
+                    "LPT6",
+                    "LPT7",
+                    "LPT8",
+                    "LPT9",
                 ]
                 if any(part.upper() in reserved_names for part in path_obj.parts):
                     return False

@@ -5,17 +5,18 @@ Plugin module for the PromptBooster.
 This module provides a plugin interface for the PromptBooster to
 integrate with the QuackCore plugin system.
 """
-from typing import Any
+
 from collections.abc import Callable
+from typing import Any
 
 from .booster import PromptBooster
-from .strategy_base import PromptStrategy
 from .registry import (
-    register_prompt_strategy,
-    get_strategy_by_id,
     find_strategies_by_tags,
     get_all_strategies,
+    get_strategy_by_id,
+    register_prompt_strategy,
 )
+from .strategy_base import PromptStrategy
 
 
 class PromptBoosterPlugin:
@@ -33,12 +34,12 @@ class PromptBoosterPlugin:
         self.description = "A plugin for creating and enhancing prompts"
 
     def create_booster(
-            self,
-            raw_prompt: str,
-            schema: str | None = None,
-            examples: list[str] | str | None = None,
-            tags: list[str] | None = None,
-            strategy_id: str | None = None
+        self,
+        raw_prompt: str,
+        schema: str | None = None,
+        examples: list[str] | str | None = None,
+        tags: list[str] | None = None,
+        strategy_id: str | None = None,
     ) -> PromptBooster:
         """
         Create a new PromptBooster instance.
@@ -58,18 +59,18 @@ class PromptBoosterPlugin:
             schema=schema,
             examples=examples,
             tags=tags,
-            strategy_id=strategy_id
+            strategy_id=strategy_id,
         )
 
     def register_strategy(
-            self,
-            id: str,
-            label: str,
-            description: str,
-            input_vars: list[str],
-            render_fn: Callable[..., str],
-            tags: list[str] | None = None,
-            origin: str | None = None
+        self,
+        id: str,
+        label: str,
+        description: str,
+        input_vars: list[str],
+        render_fn: Callable[..., str],
+        tags: list[str] | None = None,
+        origin: str | None = None,
     ) -> PromptStrategy:
         """
         Register a new prompt strategy.
@@ -96,7 +97,7 @@ class PromptBoosterPlugin:
             input_vars=input_vars,
             render_fn=render_fn,
             tags=tags or [],
-            origin=origin
+            origin=origin,
         )
         register_prompt_strategy(strategy)
         return strategy
@@ -142,16 +143,16 @@ class PromptBoosterPlugin:
                 "label": s.label,
                 "description": s.description,
                 "tags": s.tags,
-                "origin": s.origin
+                "origin": s.origin,
             }
             for s in strategies
         ]
 
     def enhance_prompt(
-            self,
-            booster: PromptBooster,
-            model: str | None = None,
-            provider: str | None = None
+        self,
+        booster: PromptBooster,
+        model: str | None = None,
+        provider: str | None = None,
     ) -> str:
         """
         Enhance a prompt using an LLM.

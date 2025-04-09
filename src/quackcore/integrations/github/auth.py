@@ -5,10 +5,11 @@ import os
 import time
 from typing import Any
 
-from quackcore.fs import service as fs
-from quackcore.integrations.core import BaseAuthProvider, AuthResult
-from quackcore.logging import get_logger
 import requests
+
+from quackcore.fs import service as fs
+from quackcore.integrations.core import AuthResult, BaseAuthProvider
+from quackcore.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -17,9 +18,9 @@ class GitHubAuthProvider(BaseAuthProvider):
     """GitHub authentication provider using personal access tokens."""
 
     def __init__(
-            self,
-            credentials_file: str | None = None,
-            log_level: int | None = None,
+        self,
+        credentials_file: str | None = None,
+        log_level: int | None = None,
     ) -> None:
         """Initialize the GitHub authentication provider.
 
@@ -85,11 +86,13 @@ class GitHubAuthProvider(BaseAuthProvider):
                 token=self.token,
                 message="Successfully authenticated with GitHub",
                 credentials_path=self.credentials_file,
-                content={"user_info": self._user_info}
+                content={"user_info": self._user_info},
             )
         except requests.exceptions.HTTPError as e:
             status_code = e.response.status_code
-            error_message = f"GitHub API authentication failed with status {status_code}"
+            error_message = (
+                f"GitHub API authentication failed with status {status_code}"
+            )
 
             if status_code == 401:
                 error_message = "Invalid GitHub token (unauthorized)"
@@ -152,10 +155,7 @@ class GitHubAuthProvider(BaseAuthProvider):
             if credentials and credentials.get("token"):
                 self.token = credentials.get("token")
 
-        return {
-            "token": self.token,
-            "user_info": self._user_info
-        }
+        return {"token": self.token, "user_info": self._user_info}
 
     def save_credentials(self) -> bool:
         """Save GitHub credentials to file.
@@ -200,10 +200,7 @@ class GitHubAuthProvider(BaseAuthProvider):
         self._ensure_credentials_directory()
 
         # Prepare credentials data
-        credentials = {
-            "token": token,
-            "saved_at": int(time.time())
-        }
+        credentials = {"token": token, "saved_at": int(time.time())}
 
         if self._user_info:
             credentials["user_info"] = self._user_info

@@ -226,7 +226,7 @@ class PluginLoader:
         return plugins
 
     def load_entry_points(
-            self, group: str = "quackcore.plugins"
+        self, group: str = "quackcore.plugins"
     ) -> list[QuackPluginProtocol]:
         """
         Load plugins from entry points.
@@ -261,7 +261,8 @@ class PluginLoader:
 
                         # Determine if this is a core module or an external plugin
                         is_core_module = ep.value.startswith(
-                            "quackcore.") or ep.name in ["config", "fs", "paths"]
+                            "quackcore."
+                        ) or ep.name in ["config", "fs", "paths"]
 
                         if is_core_module:
                             self.logger.info(

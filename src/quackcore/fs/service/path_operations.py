@@ -15,8 +15,10 @@ from quackcore.fs.utils import (
     expand_user_vars,
     is_same_file,
     is_subdirectory,
+)
+from quackcore.fs.utils import normalize_path as utils_normalize_path
+from quackcore.fs.utils import (
     split_path,
-    normalize_path as utils_normalize_path,
 )
 
 
@@ -112,8 +114,9 @@ class PathOperationsMixin:
         return is_subdirectory(child, parent)
 
     @wrap_io_errors
-    def create_temp_directory(self, prefix: str = "quackcore_",
-                              suffix: str = "") -> Path:
+    def create_temp_directory(
+        self, prefix: str = "quackcore_", suffix: str = ""
+    ) -> Path:
         """
         Create a temporary directory.
 

@@ -12,10 +12,10 @@ from quackcore.integrations.llms.models import ChatMessage, LLMOptions
 
 
 def chat(
-        self,
-        messages: Sequence[ChatMessage] | Sequence[dict],
-        options: LLMOptions | None = None,
-        callback: Callable[[str], None] | None = None,
+    self,
+    messages: Sequence[ChatMessage] | Sequence[dict],
+    options: LLMOptions | None = None,
+    callback: Callable[[str], None] | None = None,
 ) -> IntegrationResult[str]:
     """
     Send a chat completion request to the LLM.
@@ -45,8 +45,7 @@ def chat(
 
 
 def count_tokens(
-        self,
-        messages: Sequence[ChatMessage] | Sequence[dict]
+    self, messages: Sequence[ChatMessage] | Sequence[dict]
 ) -> IntegrationResult[int]:
     """
     Count the number of tokens in the messages.
@@ -84,8 +83,10 @@ def get_provider_status(self) -> list[dict] | None:
         list[dict] | None: Status information for all providers or None if not using fallback
     """
     if self._fallback_client is not None:
-        return [status.model_dump() for status in
-                self._fallback_client.get_provider_status()]
+        return [
+            status.model_dump()
+            for status in self._fallback_client.get_provider_status()
+        ]
     return None
 
 

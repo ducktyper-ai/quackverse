@@ -16,7 +16,7 @@ from quackcore.integrations.llms.clients import LLMClient, MockLLMClient
 from quackcore.integrations.llms.config import LLMConfig, LLMConfigProvider
 from quackcore.integrations.llms.fallback import FallbackConfig
 from quackcore.integrations.llms.models import ChatMessage, LLMOptions
-from quackcore.logging import LogLevel, LOG_LEVELS
+from quackcore.logging import LOG_LEVELS, LogLevel
 
 
 def check_llm_dependencies() -> tuple[bool, str, list[str]]:
@@ -41,6 +41,7 @@ def check_llm_dependencies() -> tuple[bool, str, list[str]]:
         # Try to connect to local Ollama server to check availability
         try:
             import requests
+
             try:
                 response = requests.get("http://localhost:11434/api/version", timeout=1)
                 if response.status_code == 200:
@@ -56,24 +57,32 @@ def check_llm_dependencies() -> tuple[bool, str, list[str]]:
     available_providers.append("mock")
 
     if not available_providers or (
-            len(available_providers) == 1 and available_providers[0] == "mock"):
-        return False, "No LLM providers available. Install OpenAI or Anthropic package, or run Ollama locally.", available_providers
+        len(available_providers) == 1 and available_providers[0] == "mock"
+    ):
+        return (
+            False,
+            "No LLM providers available. Install OpenAI or Anthropic package, or run Ollama locally.",
+            available_providers,
+        )
 
-    return True, f"Available LLM providers: {', '.join(available_providers)}", available_providers
+    return (
+        True,
+        f"Available LLM providers: {', '.join(available_providers)}",
+        available_providers,
+    )
 
 
 class LLMIntegration(BaseIntegrationService):
     """Integration service for LLMs."""
 
-
     def __init__(
-            self,
-            provider: str | None = None,
-            model: str | None = None,
-            api_key: str | None = None,
-            config_path: str | None = None,
-            log_level: int = LOG_LEVELS[LogLevel.INFO],
-            enable_fallback: bool = True,  # New parameter
+        self,
+        provider: str | None = None,
+        model: str | None = None,
+        api_key: str | None = None,
+        config_path: str | None = None,
+        log_level: int = LOG_LEVELS[LogLevel.INFO],
+        enable_fallback: bool = True,  # New parameter
     ) -> None:
         """
         Initialize the LLM integration service.
@@ -170,18 +179,21 @@ class LLMIntegration(BaseIntegrationService):
                 try:
                     fallback_config = FallbackConfig(**llm_config["fallback"])
                     self.logger.info(
-                        f"Loaded fallback configuration with providers: {fallback_config.providers}")
+                        f"Loaded fallback configuration with providers: {fallback_config.providers}"
+                    )
                 except Exception as e:
                     self.logger.warning(
-                        f"Invalid fallback configuration, using defaults: {e}")
+                        f"Invalid fallback configuration, using defaults: {e}"
+                    )
 
             # If fallback is disabled or not configured, use standard initialization
             if not self._enable_fallback or fallback_config is None:
                 return self._initialize_single_provider(llm_config, available_providers)
 
             # Initialize with fallback support
-            return self._initialize_with_fallback(llm_config, fallback_config,
-                                                  available_providers)
+            return self._initialize_with_fallback(
+                llm_config, fallback_config, available_providers
+            )
 
         except QuackIntegrationError as e:
             self.logger.error(f"Integration error during initialization: {e}")
@@ -193,7 +205,7 @@ class LLMIntegration(BaseIntegrationService):
             )
 
     def _initialize_single_provider(
-            self, llm_config: dict, available_providers: list[str]
+        self, llm_config: dict, available_providers: list[str]
     ) -> IntegrationResult:
         """
         Initialize with a single provider (original implementation).
@@ -206,8 +218,9 @@ class LLMIntegration(BaseIntegrationService):
             IntegrationResult: Result of initialization
         """
         # Determine provider
-        requested_provider = self.provider or llm_config.get("default_provider",
-                                                             "openai")
+        requested_provider = self.provider or llm_config.get(
+            "default_provider", "openai"
+        )
 
         # Fall back to an available provider if the requested one is not available
         provider = requested_provider
@@ -257,6 +270,7 @@ class LLMIntegration(BaseIntegrationService):
         try:
             # Import the registry functions for getting an LLM client
             from quackcore.integrations.llms.registry import get_llm_client
+
             self.client = get_llm_client(**client_args)
         except QuackIntegrationError as e:
             # If we can't initialize the requested client, fall back to MockLLMClient
@@ -277,10 +291,10 @@ class LLMIntegration(BaseIntegrationService):
         )
 
     def _initialize_with_fallback(
-            self,
-            llm_config: dict,
-            fallback_config: FallbackConfig,
-            available_providers: list[str]
+        self,
+        llm_config: dict,
+        fallback_config: FallbackConfig,
+        available_providers: list[str],
     ) -> IntegrationResult:
         """
         Initialize with fallback support.
@@ -294,8 +308,9 @@ class LLMIntegration(BaseIntegrationService):
             IntegrationResult: Result of initialization
         """
         # Filter fallback_config.providers to only include available providers
-        fallback_providers = [p for p in fallback_config.providers if
-                              p in available_providers]
+        fallback_providers = [
+            p for p in fallback_config.providers if p in available_providers
+        ]
 
         # Always include mock as the last resort
         if "mock" not in fallback_providers:
@@ -305,8 +320,9 @@ class LLMIntegration(BaseIntegrationService):
         fallback_config.providers = fallback_providers
 
         # Check if we have any real providers
-        self._using_mock = len(fallback_providers) == 1 and fallback_providers[
-            0] == "mock"
+        self._using_mock = (
+            len(fallback_providers) == 1 and fallback_providers[0] == "mock"
+        )
 
         # Prepare model and API key maps
         model_map = {}
@@ -389,10 +405,10 @@ class LLMIntegration(BaseIntegrationService):
             return self._initialize_single_provider(llm_config, available_providers)
 
     def chat(
-            self,
-            messages: Sequence[ChatMessage] | Sequence[dict],
-            options: LLMOptions | None = None,
-            callback: Callable[[str], None] | None = None,
+        self,
+        messages: Sequence[ChatMessage] | Sequence[dict],
+        options: LLMOptions | None = None,
+        callback: Callable[[str], None] | None = None,
     ) -> IntegrationResult[str]:
         """
         Send a chat completion request to the LLM.
@@ -420,7 +436,7 @@ class LLMIntegration(BaseIntegrationService):
         return result
 
     def count_tokens(
-            self, messages: Sequence[ChatMessage] | Sequence[dict]
+        self, messages: Sequence[ChatMessage] | Sequence[dict]
     ) -> IntegrationResult[int]:
         """
         Count the number of tokens in the messages.
@@ -453,8 +469,10 @@ class LLMIntegration(BaseIntegrationService):
             list[dict] | None: Status information for all providers or None if not using fallback
         """
         if self._fallback_client is not None:
-            return [status.model_dump() for status in
-                    self._fallback_client.get_provider_status()]
+            return [
+                status.model_dump()
+                for status in self._fallback_client.get_provider_status()
+            ]
         return None
 
     def reset_provider_status(self) -> bool:

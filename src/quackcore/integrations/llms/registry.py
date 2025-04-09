@@ -40,10 +40,10 @@ def register_llm_client(name: str, client_class: Type[LLMClient]) -> None:
 
 
 def get_llm_client(
-        provider: str = "openai",
-        model: str | None = None,
-        api_key: str | None = None,
-        **kwargs,
+    provider: str = "openai",
+    model: str | None = None,
+    api_key: str | None = None,
+    **kwargs,
 ) -> LLMClient:
     """
     Get an LLM client instance.

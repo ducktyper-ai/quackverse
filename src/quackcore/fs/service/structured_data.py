@@ -30,10 +30,10 @@ class StructuredDataMixin:
         return self.operations.read_yaml(path)
 
     def write_yaml(
-            self,
-            path: str | Path,
-            data: dict,
-            atomic: bool = True,
+        self,
+        path: str | Path,
+        data: dict,
+        atomic: bool = True,
     ) -> WriteResult:
         """
         Write data to a YAML file.
@@ -61,11 +61,11 @@ class StructuredDataMixin:
         return self.operations.read_json(path)
 
     def write_json(
-            self,
-            path: str | Path,
-            data: dict,
-            atomic: bool = True,
-            indent: int = 2,
+        self,
+        path: str | Path,
+        data: dict,
+        atomic: bool = True,
+        indent: int = 2,
     ) -> WriteResult:
         """
         Write data to a JSON file.

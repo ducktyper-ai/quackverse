@@ -70,18 +70,22 @@ from quackcore.fs.utils import (
     safe_move,
 )
 
+
 # Define path validation functions directly here for backward compatibility
 def get_path_info(path):
     """Get information about a path's validity and format."""
     return service.get_path_info(path)
 
+
 def is_valid_path(path):
     """Check if a path has valid syntax."""
     return service.is_valid_path(path)
 
+
 def normalize_path_with_info(path):
     """Normalize a path and return detailed information."""
     return service.normalize_path_with_info(path)
+
 
 __all__ = [
     # Main service class

@@ -2,22 +2,15 @@
 """GitHub integration for QuackCore."""
 
 from quackcore.integrations.core import registry
+from quackcore.teaching.github.grading import GitHubGrader
+from quackcore.teaching.github.teaching_adapter import GitHubTeachingAdapter
 
 from .auth import GitHubAuthProvider
 from .client import GitHubClient
 from .config import GitHubConfigProvider
-from .grading import GitHubGrader
-from .models import (
-    GitHubRepo,
-    GitHubUser,
-    GradeResult,
-    PullRequest,
-    PullRequestStatus
-)
-from .protocols import GitHubIntegrationProtocol, GitHubTeachingIntegrationProtocol
+from .models import GitHubRepo, GitHubUser, PullRequest, PullRequestStatus
+from .protocols import GitHubIntegrationProtocol
 from .service import GitHubIntegration
-from .teaching_adapter import GitHubTeachingAdapter
-
 
 __all__ = [
     # Main classes
@@ -27,18 +20,13 @@ __all__ = [
     "GitHubConfigProvider",
     "GitHubTeachingAdapter",
     "GitHubGrader",
-
     # Protocols
     "GitHubIntegrationProtocol",
-    "GitHubTeachingIntegrationProtocol",
-
     # Models
     "GitHubRepo",
     "GitHubUser",
     "PullRequest",
     "PullRequestStatus",
-    "GradeResult",
-
     # Factory function
     "create_integration",
 ]
@@ -60,4 +48,5 @@ try:
 except Exception as e:
     # Log error but don't crash on import
     import logging
+
     logging.getLogger(__name__).error(f"Failed to register GitHub integration: {e}")

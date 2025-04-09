@@ -6,24 +6,28 @@ from datetime import datetime
 from typing import Any
 
 import requests
-from quackcore.errors import QuackApiError, QuackAuthenticationError, \
-    QuackQuotaExceededError
+
+from quackcore.errors import (
+    QuackApiError,
+    QuackAuthenticationError,
+    QuackQuotaExceededError,
+)
 from quackcore.logging import get_logger
 
 logger = get_logger(__name__)
 
 
 def make_request(
-        session: requests.Session,
-        method: str,
-        url: str,
-        api_url: str,
-        timeout: int = 30,
-        max_retries: int = 3,
-        retry_delay: float = 1.0,
-        params: dict[str, Any] | None = None,
-        json: dict[str, Any] | None = None,
-        **kwargs: Any
+    session: requests.Session,
+    method: str,
+    url: str,
+    api_url: str,
+    timeout: int = 30,
+    max_retries: int = 3,
+    retry_delay: float = 1.0,
+    params: dict[str, Any] | None = None,
+    json: dict[str, Any] | None = None,
+    **kwargs: Any,
 ) -> requests.Response:
     """Make an HTTP request to the GitHub API with retries.
 
@@ -52,8 +56,9 @@ def make_request(
 
     for attempt in range(1, max_retries + 1):
         try:
-            response = session.request(method, full_url, params=params, json=json,
-                                       **kwargs)
+            response = session.request(
+                method, full_url, params=params, json=json, **kwargs
+            )
 
             # Check for rate limiting
             remaining = int(response.headers.get("X-RateLimit-Remaining", "1"))
@@ -72,7 +77,7 @@ def make_request(
                     raise QuackQuotaExceededError(
                         f"GitHub API rate limit exceeded. Reset at {datetime.fromtimestamp(reset_time)}",
                         service="GitHub",
-                        resource=url
+                        resource=url,
                     )
 
             # Check for successful response
@@ -87,7 +92,7 @@ def make_request(
                 raise QuackAuthenticationError(
                     f"GitHub API authentication failed: {e.response.text}",
                     service="GitHub",
-                    original_error=e
+                    original_error=e,
                 )
 
             # Handle rate limiting
@@ -107,7 +112,7 @@ def make_request(
                         f"GitHub API rate limit exceeded. Reset at {datetime.fromtimestamp(reset_time)}",
                         service="GitHub",
                         resource=url,
-                        original_error=e
+                        original_error=e,
                     )
 
             # For server errors, retry
@@ -134,7 +139,7 @@ def make_request(
                 service="GitHub",
                 status_code=status_code,
                 api_method=url,
-                original_error=e
+                original_error=e,
             )
 
         except requests.exceptions.ConnectionError as e:
@@ -151,7 +156,7 @@ def make_request(
                 f"GitHub API connection error: {str(e)}",
                 service="GitHub",
                 api_method=url,
-                original_error=e
+                original_error=e,
             )
 
         except requests.exceptions.Timeout as e:
@@ -168,7 +173,7 @@ def make_request(
                 f"GitHub API timeout: {str(e)}",
                 service="GitHub",
                 api_method=url,
-                original_error=e
+                original_error=e,
             )
 
         except Exception as e:
@@ -177,5 +182,5 @@ def make_request(
                 f"Unexpected error in GitHub API request: {str(e)}",
                 service="GitHub",
                 api_method=url,
-                original_error=e
+                original_error=e,
             )

@@ -28,39 +28,25 @@ class GitHubIntegrationProtocol(IntegrationProtocol, Protocol):
         """Fork a GitHub repository."""
         ...
 
-
-@runtime_checkable
-class GitHubTeachingIntegrationProtocol(GitHubIntegrationProtocol, Protocol):
-    """Protocol for GitHub teaching integration."""
-
-    def ensure_starred(self, repo: str) -> IntegrationResult[bool]:
-        """Ensure that the user has starred a repository."""
-        ...
-
-    def ensure_forked(self, repo: str) -> IntegrationResult[str]:
-        """Ensure that the user has forked a repository."""
-        ...
-
-    def submit_assignment(
+    def create_pull_request(
         self,
-        forked_repo: str,
         base_repo: str,
-        branch: str,
+        head: str,
         title: str,
         body: str | None = None,
-        base_branch: str = "main"
-    ) -> IntegrationResult[str]:
-        """Submit an assignment by creating a pull request."""
+        base_branch: str = "main",
+    ) -> IntegrationResult[PullRequest]:
+        """Create a pull request."""
         ...
 
-    def get_latest_submission(self, repo: str, student: str) -> IntegrationResult[PullRequest]:
-        """Get the latest assignment submission for a student."""
+    def list_pull_requests(
+        self, repo: str, state: str = "open", author: str | None = None
+    ) -> IntegrationResult[list[PullRequest]]:
+        """List pull requests for a repository."""
         ...
 
-    def grade_submission(
-        self,
-        pull_request: PullRequest,
-        grading_criteria: dict[str, Any] | None = None
-    ) -> IntegrationResult[Any]:
-        """Grade a pull request submission."""
+    def get_pull_request(
+        self, repo: str, number: int
+    ) -> IntegrationResult[PullRequest]:
+        """Get a specific pull request."""
         ...

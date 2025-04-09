@@ -5,11 +5,13 @@ Base strategy module for the PromptBooster.
 This module defines the PromptStrategy class that serves as the foundation
 for all prompt enhancement strategies in the QuackCore ecosystem.
 """
+
 from collections.abc import Callable
 from typing import TypeVar
+
 from pydantic import BaseModel, Field
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class PromptStrategy(BaseModel):
@@ -26,19 +28,26 @@ class PromptStrategy(BaseModel):
         tags: List of tags for categorizing and searching strategies
         origin: Optional source of the strategy (paper, blog, etc.)
     """
+
     id: str = Field(..., description="Unique identifier for the strategy")
     label: str = Field(..., description="Human-readable name for the strategy")
-    description: str = Field(...,
-                             description="Detailed explanation of what the strategy does")
-    input_vars: list[str] = Field(...,
-                                  description="List of input variables required by the strategy")
-    render_fn: Callable[..., str] = Field(...,
-                                          description="Function that renders the prompt")
-    tags: list[str] = Field(default_factory=list,
-                            description="Tags for categorizing strategies")
-    origin: str | None = Field(None,
-                               description="Source of the strategy (paper, blog, etc.)")
+    description: str = Field(
+        ..., description="Detailed explanation of what the strategy does"
+    )
+    input_vars: list[str] = Field(
+        ..., description="List of input variables required by the strategy"
+    )
+    render_fn: Callable[..., str] = Field(
+        ..., description="Function that renders the prompt"
+    )
+    tags: list[str] = Field(
+        default_factory=list, description="Tags for categorizing strategies"
+    )
+    origin: str | None = Field(
+        None, description="Source of the strategy (paper, blog, etc.)"
+    )
 
     class Config:
         """Pydantic model configuration."""
+
         arbitrary_types_allowed = True

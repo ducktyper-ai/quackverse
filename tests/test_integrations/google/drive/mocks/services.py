@@ -54,7 +54,7 @@ class MockDriveService(DriveService):
         return None
 
     def download_file(
-            self, remote_id: str, local_path: str | None = None
+        self, remote_id: str, local_path: str | None = None
     ) -> IntegrationResult[str]:
         """
         Mock implementation of download_file to match the real service.
@@ -88,12 +88,10 @@ class MockDriveService(DriveService):
                 message=f"File downloaded successfully to {local_path}",
             )
         except Exception as e:
-            return IntegrationResult.error_result(
-                f"Failed to download file: {e}"
-            )
+            return IntegrationResult.error_result(f"Failed to download file: {e}")
 
     def _resolve_download_path(
-            self, file_metadata: dict[str, Any], local_path: str | None
+        self, file_metadata: dict[str, Any], local_path: str | None
     ) -> str:
         """
         Mock implementation of _resolve_download_path to match the real service.
@@ -116,9 +114,9 @@ class MockDriveService(DriveService):
 
 
 def create_mock_drive_service(
-        file_id: str = "file123",
-        file_metadata: dict[str, Any] | None = None,
-        file_list: list[dict[str, Any]] | None = None,
+    file_id: str = "file123",
+    file_metadata: dict[str, Any] | None = None,
+    file_list: list[dict[str, Any]] | None = None,
 ) -> DriveService:
     """
     Create and return a configurable mock Drive service.
@@ -133,7 +131,8 @@ def create_mock_drive_service(
     """
     files_resource = MockDriveFilesResource(
         file_id=file_id,
-        file_metadata=file_metadata or {
+        file_metadata=file_metadata
+        or {
             "id": file_id,
             "name": "test_file.txt",
             "mimeType": "text/plain",
@@ -146,13 +145,13 @@ def create_mock_drive_service(
 
 
 def create_error_drive_service(
-        create_error: Exception | None = None,
-        get_error: Exception | None = None,
-        get_media_error: Exception | None = None,
-        list_error: Exception | None = None,
-        update_error: Exception | None = None,
-        delete_error: Exception | None = None,
-        permission_error: Exception | None = None,
+    create_error: Exception | None = None,
+    get_error: Exception | None = None,
+    get_media_error: Exception | None = None,
+    list_error: Exception | None = None,
+    update_error: Exception | None = None,
+    delete_error: Exception | None = None,
+    permission_error: Exception | None = None,
 ) -> DriveService:
     """
     Create a Drive service mock that raises configurable exceptions.

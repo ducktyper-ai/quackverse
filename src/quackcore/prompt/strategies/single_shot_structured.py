@@ -5,8 +5,9 @@ Single-shot structured strategy for the PromptBooster.
 This strategy provides a template for extracting structured data
 using a single example and a schema.
 """
-from ..strategy_base import PromptStrategy
+
 from ..registry import register_prompt_strategy
+from ..strategy_base import PromptStrategy
 
 
 def render(task_description: str, schema: str, example: str | None = None) -> str:
@@ -48,7 +49,7 @@ strategy = PromptStrategy(
     input_vars=["task_description", "schema", "example"],
     render_fn=render,
     tags=["structured-output", "one-shot", "stable"],
-    origin="Simplified version of few-shot learning with a focus on schema-alignment"
+    origin="Simplified version of few-shot learning with a focus on schema-alignment",
 )
 
 # Register the strategy

@@ -9,7 +9,9 @@ from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.llms.fallback import FallbackConfig
 
 
-def initialize_single_provider(self, llm_config: dict, available_providers: list[str]) -> IntegrationResult:
+def initialize_single_provider(
+    self, llm_config: dict, available_providers: list[str]
+) -> IntegrationResult:
     """
     Initialize with a single provider.
 
@@ -72,6 +74,7 @@ def initialize_single_provider(self, llm_config: dict, available_providers: list
     try:
         # Import the registry functions for getting an LLM client
         from quackcore.integrations.llms.registry import get_llm_client
+
         self.client = get_llm_client(**client_args)
     except Exception as e:
         # If we can't initialize the requested client, fall back to MockLLMClient
@@ -80,6 +83,7 @@ def initialize_single_provider(self, llm_config: dict, available_providers: list
 
         # Create a mock client with default responses
         from quackcore.integrations.llms.clients.mock import MockLLMClient
+
         self.client = MockLLMClient(log_level=self.log_level)
         self._using_mock = True
 
@@ -88,15 +92,15 @@ def initialize_single_provider(self, llm_config: dict, available_providers: list
     return IntegrationResult(
         success=True,
         message=f"LLM integration initialized successfully with provider: {provider}"
-               f"{' (using mock client)' if self._using_mock else ''}",
+        f"{' (using mock client)' if self._using_mock else ''}",
     )
 
 
 def initialize_with_fallback(
-        self,
-        llm_config: dict,
-        fallback_config: FallbackConfig,
-        available_providers: list[str]
+    self,
+    llm_config: dict,
+    fallback_config: FallbackConfig,
+    available_providers: list[str],
 ) -> IntegrationResult:
     """
     Initialize with fallback support.
@@ -111,7 +115,9 @@ def initialize_with_fallback(
         IntegrationResult: Result of initialization
     """
     # Filter fallback_config.providers to only include available providers
-    fallback_providers = [p for p in fallback_config.providers if p in available_providers]
+    fallback_providers = [
+        p for p in fallback_config.providers if p in available_providers
+    ]
 
     # Always include mock as the last resort
     if "mock" not in fallback_providers:

@@ -9,13 +9,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from quackcore.fs import service as fs
-from quackcore.logging import get_logger
 from quackcore.errors import QuackIntegrationError
+from quackcore.fs import service as fs
 from quackcore.fs.results import FileInfoResult
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.models import ConversionMetrics, FileInfo
 from quackcore.integrations.pandoc.operations import utils, verify_pandoc
+from quackcore.logging import get_logger
 
 # Get a module-specific logger
 logger = get_logger(__name__)

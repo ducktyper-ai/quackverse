@@ -4,17 +4,17 @@ QuackCore Prompt module.
 
 This module provides tools and strategies for creating high-quality LLM prompts.
 """
-from .booster import PromptBooster
-from .strategy_base import PromptStrategy
-from .registry import (
-    register_prompt_strategy,
-    get_strategy_by_id,
-    find_strategies_by_tags,
-    get_all_strategies,
-)
 
 # Import strategies package to register all strategies
 from . import strategies
+from .booster import PromptBooster
+from .registry import (
+    find_strategies_by_tags,
+    get_all_strategies,
+    get_strategy_by_id,
+    register_prompt_strategy,
+)
+from .strategy_base import PromptStrategy
 
 __all__ = [
     "PromptBooster",

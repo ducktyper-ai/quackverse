@@ -62,7 +62,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
         return self._pandoc_version
 
     def convert_file(
-            self, input_path: Path, output_path: Path, output_format: str
+        self, input_path: Path, output_path: Path, output_format: str
     ) -> IntegrationResult[Path]:
         """
         Convert a file from one format to another.
@@ -85,10 +85,12 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             # Ensure output directory exists
             dir_result = fs.create_directory(output_path.parent, exist_ok=True)
             if not dir_result.success:
-                return cast(IntegrationResult[Path],
-                            IntegrationResult.error_result(
-                                f"Failed to create output directory: {dir_result.error}"
-                            ))
+                return cast(
+                    IntegrationResult[Path],
+                    IntegrationResult.error_result(
+                        f"Failed to create output directory: {dir_result.error}"
+                    ),
+                )
 
             # Perform conversion based on source and target formats
             if input_info.format == "html" and output_format == "markdown":
@@ -96,45 +98,57 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
                     input_path, output_path, self.config, self.metrics
                 )
                 if result.success and result.content:
-                    return cast(IntegrationResult[Path],
-                                IntegrationResult.success_result(
-                                    result.content[0],  # Extract just the Path
-                                    message=f"Successfully converted {input_path} to Markdown",
-                                ))
-                return cast(IntegrationResult[Path],
-                            IntegrationResult.error_result(
-                                result.error or "Conversion failed",
-                            ))
+                    return cast(
+                        IntegrationResult[Path],
+                        IntegrationResult.success_result(
+                            result.content[0],  # Extract just the Path
+                            message=f"Successfully converted {input_path} to Markdown",
+                        ),
+                    )
+                return cast(
+                    IntegrationResult[Path],
+                    IntegrationResult.error_result(
+                        result.error or "Conversion failed",
+                    ),
+                )
             elif input_info.format == "markdown" and output_format == "docx":
                 result = convert_markdown_to_docx(
                     input_path, output_path, self.config, self.metrics
                 )
                 if result.success and result.content:
-                    return cast(IntegrationResult[Path],
-                                IntegrationResult.success_result(
-                                    result.content[0],  # Extract just the Path
-                                    message=f"Successfully converted {input_path} to DOCX",
-                                ))
-                return cast(IntegrationResult[Path],
-                            IntegrationResult.error_result(
-                                result.error or "Conversion failed",
-                            ))
+                    return cast(
+                        IntegrationResult[Path],
+                        IntegrationResult.success_result(
+                            result.content[0],  # Extract just the Path
+                            message=f"Successfully converted {input_path} to DOCX",
+                        ),
+                    )
+                return cast(
+                    IntegrationResult[Path],
+                    IntegrationResult.error_result(
+                        result.error or "Conversion failed",
+                    ),
+                )
             else:
-                return cast(IntegrationResult[Path],
-                            IntegrationResult.error_result(
-                                f"Unsupported conversion: {input_info.format} to {output_format}"
-                            ))
+                return cast(
+                    IntegrationResult[Path],
+                    IntegrationResult.error_result(
+                        f"Unsupported conversion: {input_info.format} to {output_format}"
+                    ),
+                )
 
         except QuackIntegrationError as e:
             logger.error(f"Integration error during conversion: {str(e)}")
             return cast(IntegrationResult[Path], IntegrationResult.error_result(str(e)))
         except Exception as e:
             logger.error(f"Unexpected error during conversion: {str(e)}")
-            return cast(IntegrationResult[Path],
-                        IntegrationResult.error_result(f"Conversion error: {str(e)}"))
+            return cast(
+                IntegrationResult[Path],
+                IntegrationResult.error_result(f"Conversion error: {str(e)}"),
+            )
 
     def convert_batch(
-            self, tasks: Sequence[ConversionTask], output_dir: Path | None = None
+        self, tasks: Sequence[ConversionTask], output_dir: Path | None = None
     ) -> IntegrationResult[list[Path]]:
         """
         Convert a batch of files.
@@ -151,10 +165,12 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
         # Create output directory
         dir_result = fs.create_directory(output_directory, exist_ok=True)
         if not dir_result.success:
-            return cast(IntegrationResult[list[Path]],
-                        IntegrationResult.error_result(
-                            f"Failed to create output directory: {dir_result.error}"
-                        ))
+            return cast(
+                IntegrationResult[list[Path]],
+                IntegrationResult.error_result(
+                    f"Failed to create output directory: {dir_result.error}"
+                ),
+            )
 
         successful_files: list[Path] = []
         failed_files: list[Path] = []
@@ -206,21 +222,25 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
 
         # Return batch result
         if not failed_files:
-            return cast(IntegrationResult[list[Path]],
-                        IntegrationResult.success_result(
-                            successful_files,
-                            message=f"Successfully converted {len(successful_files)} files",
-                        ))
+            return cast(
+                IntegrationResult[list[Path]],
+                IntegrationResult.success_result(
+                    successful_files,
+                    message=f"Successfully converted {len(successful_files)} files",
+                ),
+            )
         elif successful_files:
-            return cast(IntegrationResult[list[Path]],
-                        IntegrationResult.success_result(
-                            successful_files,
-                            message=(
-                                f"Partially successful: "
-                                f"converted {len(successful_files)} files, "
-                                f"failed to convert {len(failed_files)} files"
-                            ),
-                        ))
+            return cast(
+                IntegrationResult[list[Path]],
+                IntegrationResult.success_result(
+                    successful_files,
+                    message=(
+                        f"Partially successful: "
+                        f"converted {len(successful_files)} files, "
+                        f"failed to convert {len(failed_files)} files"
+                    ),
+                ),
+            )
         else:
             # Create a detailed error message that includes the failed files information
             failed_files_str = ", ".join([str(f) for f in failed_files[:5]])
@@ -229,12 +249,14 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
 
             error_msg = f"Failed to convert any files. Failed files: {failed_files_str}"
 
-            return cast(IntegrationResult[list[Path]],
-                        IntegrationResult.error_result(
-                            error=error_msg,
-                            message=f"All {len(failed_files)} conversion "
-                                    f"tasks failed. See logs for details.",
-                        ))
+            return cast(
+                IntegrationResult[list[Path]],
+                IntegrationResult.error_result(
+                    error=error_msg,
+                    message=f"All {len(failed_files)} conversion "
+                    f"tasks failed. See logs for details.",
+                ),
+            )
 
     def validate_conversion(self, output_path: Path, input_path: Path) -> bool:
         """

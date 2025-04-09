@@ -47,7 +47,8 @@ class LoggingConfig(BaseModel):
         handler is removed after configuration.
         """
         import logging
-        from quackcore.logging import configure_logger, LOG_LEVELS
+
+        from quackcore.logging import LOG_LEVELS, configure_logger
 
         # Convert the level string to an integer logging level using our mapping.
         level_int = LOG_LEVELS.get(self.level, logging.INFO)

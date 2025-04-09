@@ -26,10 +26,10 @@ class TestClientImports:
     def test_client_imports(self) -> None:
         """Test that all clients are properly exported."""
         from quackcore.integrations.llms.clients import (
+            AnthropicClient,
             LLMClient,
             MockLLMClient,
             OpenAIClient,
-            AnthropicClient,
         )
 
         assert issubclass(LLMClient, object)

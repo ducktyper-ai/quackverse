@@ -5,7 +5,9 @@ Registry module for the PromptBooster.
 This module provides functions to register, retrieve, and search for
 prompt strategies in the QuackCore ecosystem.
 """
+
 from collections.abc import Sequence
+
 from .strategy_base import PromptStrategy
 
 # Global registry to store all prompt strategies

@@ -5,14 +5,15 @@ Main PromptBooster module for QuackCore.
 This module provides the PromptBooster class, which is the main entry point
 for enhancing prompts using various strategies.
 """
+
 from pathlib import Path
 from typing import Any
 
 from quackcore.fs import service as fs
 from quackcore.logging import get_logger
 
+from .registry import find_strategies_by_tags, get_all_strategies, get_strategy_by_id
 from .strategy_base import PromptStrategy
-from .registry import get_strategy_by_id, find_strategies_by_tags, get_all_strategies
 
 # Set up logger
 logger = get_logger(__name__)
@@ -44,7 +45,7 @@ class PromptBooster:
         schema: str | None = None,
         examples: list[str] | str | None = None,
         tags: list[str] | None = None,
-        strategy_id: str | None = None
+        strategy_id: str | None = None,
     ):
         """
         Initialize a new PromptBooster.
@@ -71,7 +72,7 @@ class PromptBooster:
             except KeyError:
                 logger.warning(
                     "Strategy with ID '%s' not found. Will select strategy during render.",
-                    strategy_id
+                    strategy_id,
                 )
 
     def select_strategy(self, strategy_id: str | None = None) -> PromptStrategy:
@@ -129,7 +130,12 @@ class PromptBooster:
         self.strategy_id = self.strategy.id
         return self.strategy
 
-    def render(self, use_llm: bool = False, model: str | None = None, provider: str | None = None) -> str:
+    def render(
+        self,
+        use_llm: bool = False,
+        model: str | None = None,
+        provider: str | None = None,
+    ) -> str:
         """
         Render the prompt using the selected strategy.
 
@@ -154,17 +160,21 @@ class PromptBooster:
         if use_llm:
             try:
                 from .enhancer import enhance_with_llm
+
                 enhanced_prompt = enhance_with_llm(
                     task_description=self.raw_prompt,
                     schema=self.schema,
                     examples=self.examples,
                     strategy_name=self.strategy.id,
                     model=model,
-                    provider=provider
+                    provider=provider,
                 )
                 self.optimized_prompt = enhanced_prompt
             except (ImportError, RuntimeError) as e:
-                logger.warning("LLM enhancement failed: %s. Using strategy-based prompt instead.", str(e))
+                logger.warning(
+                    "LLM enhancement failed: %s. Using strategy-based prompt instead.",
+                    str(e),
+                )
 
         return self.optimized_prompt
 
@@ -175,7 +185,9 @@ class PromptBooster:
             "schema": self.schema,
             "examples": self.examples,
             # Include other common inputs that might be needed by strategies
-            "example": self.examples[0] if isinstance(self.examples, list) and self.examples else self.examples,
+            "example": self.examples[0]
+            if isinstance(self.examples, list) and self.examples
+            else self.examples,
             "final_instruction": None,  # Needed for some strategies
             "tools": None,  # Needed for some strategies
         }
@@ -230,7 +242,7 @@ class PromptBooster:
                 task_description=self.raw_prompt,
                 schema=self.schema,
                 examples=self.examples,
-                strategy_name=self.strategy.id if self.strategy else None
+                strategy_name=self.strategy.id if self.strategy else None,
             )
 
             return token_count
@@ -252,7 +264,7 @@ class PromptBooster:
         origin_info = f"Origin: {s.origin}" if s.origin else "Origin: unknown"
 
         return f"""{s.label}: {s.description}
-Tags: {', '.join(s.tags)}
+Tags: {", ".join(s.tags)}
 {origin_info}"""
 
     def export(self, path: str | Path) -> None:
@@ -268,7 +280,7 @@ Tags: {', '.join(s.tags)}
         export_data = {
             "prompt": self.optimized_prompt or self.raw_prompt,
             "metadata": self.metadata(),
-            "explanation": self.explain() if self.strategy else "No strategy selected."
+            "explanation": self.explain() if self.strategy else "No strategy selected.",
         }
 
         try:
@@ -276,7 +288,7 @@ Tags: {', '.join(s.tags)}
             fs.create_directory(Path(path).parent, exist_ok=True)
 
             # Determine output format based on file extension
-            if str(path).lower().endswith('.json'):
+            if str(path).lower().endswith(".json"):
                 # Use quackcore.fs to write JSON
                 result = fs.write_json(path, export_data, indent=2)
                 if not result.success:
@@ -290,10 +302,15 @@ Tags: {', '.join(s.tags)}
                 try:
                     # First try with a temporary file approach
                     import tempfile
-                    with tempfile.NamedTemporaryFile(mode='w+', delete=False) as temp_file:
+
+                    with tempfile.NamedTemporaryFile(
+                        mode="w+", delete=False
+                    ) as temp_file:
                         temp_path = temp_file.name
 
-                    json_result = fs.write_json(temp_path, export_data['metadata'], indent=2)
+                    json_result = fs.write_json(
+                        temp_path, export_data["metadata"], indent=2
+                    )
                     if json_result.success:
                         read_result = fs.read_text(temp_path)
                         if read_result.success:
@@ -308,6 +325,7 @@ Tags: {', '.join(s.tags)}
                     # Fallback to standard json if the temporary file approach fails
                     logger.debug("Using fallback JSON formatting: %s", str(e))
                     import json
+
                     content += f"{json.dumps(export_data['metadata'], indent=2)}\n\n"
 
                 content += f"# Explanation\n\n{export_data['explanation']}\n"

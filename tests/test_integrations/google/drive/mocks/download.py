@@ -11,10 +11,10 @@ from quackcore.integrations.google.drive.protocols import DriveService
 
 
 def mock_download_file(
-        drive_service: DriveService,
-        remote_id: str,
-        local_path: Optional[str] = None,
-        logger: Optional[logging.Logger] = None
+    drive_service: DriveService,
+    remote_id: str,
+    local_path: Optional[str] = None,
+    logger: Optional[logging.Logger] = None,
 ) -> IntegrationResult[str]:
     """
     Mock implementation for download_file that matches the expected signature.
@@ -34,7 +34,7 @@ def mock_download_file(
     # Return success result
     return IntegrationResult.success_result(
         content=result_path,
-        message=f"Mock file downloaded successfully to {result_path}"
+        message=f"Mock file downloaded successfully to {result_path}",
     )
 
 
@@ -48,8 +48,7 @@ class MockDownloadOperations:
 
     @staticmethod
     def resolve_download_path(
-            file_metadata: dict[str, Any],
-            local_path: Optional[str] = None
+        file_metadata: dict[str, Any], local_path: Optional[str] = None
     ) -> str:
         """
         Mock implementation for resolve_download_path.
@@ -70,10 +69,10 @@ class MockDownloadOperations:
 
     @staticmethod
     def download_file(
-            drive_service: DriveService,
-            remote_id: str,
-            local_path: str | None = None,
-            logger: str | None = None
+        drive_service: DriveService,
+        remote_id: str,
+        local_path: str | None = None,
+        logger: str | None = None,
     ) -> IntegrationResult[str]:
         """
         Mock implementation for download_file.
@@ -93,5 +92,5 @@ class MockDownloadOperations:
         # Return success result
         return IntegrationResult.success_result(
             content=result_path,
-            message=f"Mock file downloaded successfully to {result_path}"
+            message=f"Mock file downloaded successfully to {result_path}",
         )

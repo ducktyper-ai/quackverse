@@ -5,6 +5,7 @@ import base64
 from typing import Any
 
 import requests
+
 from quackcore.errors import QuackApiError
 
 from ..models import GitHubRepo, GitHubUser
@@ -12,10 +13,7 @@ from ..utils.api import make_request
 
 
 def get_repo(
-        session: requests.Session,
-        full_name: str,
-        api_url: str,
-        **request_kwargs: Any
+    session: requests.Session, full_name: str, api_url: str, **request_kwargs: Any
 ) -> GitHubRepo:
     """Get information about a GitHub repository.
 
@@ -33,11 +31,7 @@ def get_repo(
     """
     endpoint = f"/repos/{full_name}"
     response = make_request(
-        session=session,
-        method="GET",
-        url=endpoint,
-        api_url=api_url,
-        **request_kwargs
+        session=session, method="GET", url=endpoint, api_url=api_url, **request_kwargs
     )
 
     repo_data = response.json()
@@ -47,7 +41,7 @@ def get_repo(
     owner = GitHubUser(
         username=owner_data.get("login"),
         url=owner_data.get("html_url"),
-        avatar_url=owner_data.get("avatar_url")
+        avatar_url=owner_data.get("avatar_url"),
     )
 
     # Create and return the repository object
@@ -61,15 +55,12 @@ def get_repo(
         fork=repo_data.get("fork", False),
         forks_count=repo_data.get("forks_count", 0),
         stargazers_count=repo_data.get("stargazers_count", 0),
-        owner=owner
+        owner=owner,
     )
 
 
 def star_repo(
-        session: requests.Session,
-        full_name: str,
-        api_url: str,
-        **request_kwargs: Any
+    session: requests.Session, full_name: str, api_url: str, **request_kwargs: Any
 ) -> bool:
     """Star a GitHub repository.
 
@@ -87,20 +78,13 @@ def star_repo(
     """
     endpoint = f"/user/starred/{full_name}"
     make_request(
-        session=session,
-        method="PUT",
-        url=endpoint,
-        api_url=api_url,
-        **request_kwargs
+        session=session, method="PUT", url=endpoint, api_url=api_url, **request_kwargs
     )
     return True
 
 
 def unstar_repo(
-        session: requests.Session,
-        full_name: str,
-        api_url: str,
-        **request_kwargs: Any
+    session: requests.Session, full_name: str, api_url: str, **request_kwargs: Any
 ) -> bool:
     """Unstar a GitHub repository.
 
@@ -122,16 +106,13 @@ def unstar_repo(
         method="DELETE",
         url=endpoint,
         api_url=api_url,
-        **request_kwargs
+        **request_kwargs,
     )
     return True
 
 
 def is_repo_starred(
-        session: requests.Session,
-        full_name: str,
-        api_url: str,
-        **request_kwargs: Any
+    session: requests.Session, full_name: str, api_url: str, **request_kwargs: Any
 ) -> bool:
     """Check if a repository is starred by the authenticated user.
 
@@ -151,7 +132,7 @@ def is_repo_starred(
             method="GET",
             url=endpoint,
             api_url=api_url,
-            **request_kwargs
+            **request_kwargs,
         )
         return True
     except QuackApiError as e:
@@ -161,11 +142,11 @@ def is_repo_starred(
 
 
 def fork_repo(
-        session: requests.Session,
-        full_name: str,
-        api_url: str,
-        organization: str | None = None,
-        **request_kwargs: Any
+    session: requests.Session,
+    full_name: str,
+    api_url: str,
+    organization: str | None = None,
+    **request_kwargs: Any,
 ) -> GitHubRepo:
     """Fork a GitHub repository.
 
@@ -194,7 +175,7 @@ def fork_repo(
         url=endpoint,
         api_url=api_url,
         json=params,
-        **request_kwargs
+        **request_kwargs,
     )
 
     # The API returns the new repo data
@@ -205,7 +186,7 @@ def fork_repo(
     owner = GitHubUser(
         username=owner_data.get("login"),
         url=owner_data.get("html_url"),
-        avatar_url=owner_data.get("avatar_url")
+        avatar_url=owner_data.get("avatar_url"),
     )
 
     # Create and return the repository object
@@ -219,15 +200,12 @@ def fork_repo(
         fork=True,  # This is definitely a fork
         forks_count=fork_data.get("forks_count", 0),
         stargazers_count=fork_data.get("stargazers_count", 0),
-        owner=owner
+        owner=owner,
     )
 
 
 def check_repository_exists(
-        session: requests.Session,
-        full_name: str,
-        api_url: str,
-        **request_kwargs: Any
+    session: requests.Session, full_name: str, api_url: str, **request_kwargs: Any
 ) -> bool:
     """Check if a repository exists.
 
@@ -247,7 +225,7 @@ def check_repository_exists(
             method="GET",
             url=endpoint,
             api_url=api_url,
-            **request_kwargs
+            **request_kwargs,
         )
         return True
     except QuackApiError as e:
@@ -257,12 +235,12 @@ def check_repository_exists(
 
 
 def get_repository_file_content(
-        session: requests.Session,
-        repo: str,
-        path: str,
-        api_url: str,
-        ref: str | None = None,
-        **request_kwargs: Any
+    session: requests.Session,
+    repo: str,
+    path: str,
+    api_url: str,
+    ref: str | None = None,
+    **request_kwargs: Any,
 ) -> tuple[str, str]:
     """Get the content of a file from a repository.
 
@@ -292,7 +270,7 @@ def get_repository_file_content(
         url=endpoint,
         api_url=api_url,
         params=params,
-        **request_kwargs
+        **request_kwargs,
     )
 
     data = response.json()
@@ -305,15 +283,15 @@ def get_repository_file_content(
 
 
 def update_repository_file(
-        session: requests.Session,
-        repo: str,
-        path: str,
-        content: str,
-        message: str,
-        sha: str,
-        api_url: str,
-        branch: str | None = None,
-        **request_kwargs: Any
+    session: requests.Session,
+    repo: str,
+    path: str,
+    content: str,
+    message: str,
+    sha: str,
+    api_url: str,
+    branch: str | None = None,
+    **request_kwargs: Any,
 ) -> bool:
     """Update a file in a repository.
 
@@ -354,6 +332,6 @@ def update_repository_file(
         url=endpoint,
         api_url=api_url,
         json=data,
-        **request_kwargs
+        **request_kwargs,
     )
     return True

@@ -10,10 +10,10 @@ from ..utils.api import make_request
 
 
 def get_user(
-        session: requests.Session,
-        api_url: str,
-        username: str | None = None,
-        **request_kwargs: Any
+    session: requests.Session,
+    api_url: str,
+    username: str | None = None,
+    **request_kwargs: Any,
 ) -> GitHubUser:
     """Get information about a GitHub user.
 
@@ -37,11 +37,7 @@ def get_user(
         endpoint = f"/users/{username}"
 
     response = make_request(
-        session=session,
-        method="GET",
-        url=endpoint,
-        api_url=api_url,
-        **request_kwargs
+        session=session, method="GET", url=endpoint, api_url=api_url, **request_kwargs
     )
 
     user_data = response.json()
@@ -51,5 +47,5 @@ def get_user(
         url=user_data.get("html_url"),
         name=user_data.get("name"),
         email=user_data.get("email"),
-        avatar_url=user_data.get("avatar_url")
+        avatar_url=user_data.get("avatar_url"),
     )

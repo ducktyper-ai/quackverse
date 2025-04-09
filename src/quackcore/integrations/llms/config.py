@@ -52,9 +52,7 @@ class AnthropicConfig(BaseModel):
 class OllamaConfig(BaseModel):
     """Configuration for Ollama API."""
 
-    api_base: str = Field(
-        "http://localhost:11434", description="Ollama API base URL"
-    )
+    api_base: str = Field("http://localhost:11434", description="Ollama API base URL")
     default_model: str = Field("llama3", description="Default model to use")
 
 
@@ -141,8 +139,9 @@ class LLMConfigProvider(BaseConfigProvider):
             dict[str, Any]: LLM-specific configuration
         """
         # Look for llm section in integrations section first
-        if "integrations" in config_data and isinstance(config_data["integrations"],
-                                                        dict):
+        if "integrations" in config_data and isinstance(
+            config_data["integrations"], dict
+        ):
             if "llm" in config_data["integrations"]:
                 return config_data["integrations"]["llm"]
 
@@ -240,14 +239,16 @@ class LLMConfigProvider(BaseConfigProvider):
                     if not os.environ.get("OPENAI_API_KEY"):
                         os.environ["OPENAI_API_KEY"] = api_key
                         self.logger.debug(
-                            "Set OPENAI_API_KEY in environment from config")
+                            "Set OPENAI_API_KEY in environment from config"
+                        )
 
                 if "organization" in openai_config and openai_config["organization"]:
                     org_id = openai_config["organization"]
                     if not os.environ.get("OPENAI_ORGANIZATION"):
                         os.environ["OPENAI_ORGANIZATION"] = org_id
                         self.logger.debug(
-                            "Set OPENAI_ORGANIZATION in environment from config")
+                            "Set OPENAI_ORGANIZATION in environment from config"
+                        )
 
             # Set Anthropic API key in environment if provided and not already set
             if "anthropic" in config and isinstance(config["anthropic"], dict):
@@ -258,7 +259,8 @@ class LLMConfigProvider(BaseConfigProvider):
                     if not os.environ.get("ANTHROPIC_API_KEY"):
                         os.environ["ANTHROPIC_API_KEY"] = api_key
                         self.logger.debug(
-                            "Set ANTHROPIC_API_KEY in environment from config")
+                            "Set ANTHROPIC_API_KEY in environment from config"
+                        )
 
         except Exception as e:
             self.logger.warning(f"Error setting up environment variables: {e}")

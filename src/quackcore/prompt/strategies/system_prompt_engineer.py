@@ -13,8 +13,8 @@ and instructs the LLM to rewrite and improve it by:
 The output should be the rewritten prompt only.
 """
 
-from ..strategy_base import PromptStrategy
 from ..registry import register_prompt_strategy
+from ..strategy_base import PromptStrategy
 
 
 def render(strategy: str) -> str:
@@ -53,7 +53,7 @@ strategy = PromptStrategy(
     input_vars=["strategy"],
     render_fn=render,
     tags=["system-prompt", "prompt-engineering", "rewriting"],
-    origin="Based on the default prompt configuration for system prompt generation"
+    origin="Based on the default prompt configuration for system prompt generation",
 )
 
 # Register the strategy

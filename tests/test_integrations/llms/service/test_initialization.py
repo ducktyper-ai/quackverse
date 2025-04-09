@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from quackcore.integrations.core.results import IntegrationResult
-from quackcore.integrations.llms import get_llm_client, MockLLMClient
+from quackcore.integrations.llms import MockLLMClient, get_llm_client
 from quackcore.integrations.llms.fallback import FallbackConfig
 from quackcore.integrations.llms.service.initialization import (
     initialize_single_provider,
@@ -33,8 +33,9 @@ class TestInitialization:
         integration._using_mock = False
         return integration
 
-    def test_initialize_single_provider_default(self,
-                                                mock_integration: MagicMock) -> None:
+    def test_initialize_single_provider_default(
+        self, mock_integration: MagicMock
+    ) -> None:
         """Test initializing with a single provider using defaults."""
         # Mock config and available providers
         llm_config = {
@@ -47,17 +48,23 @@ class TestInitialization:
         # Mock get_llm_client
         mock_client = MagicMock()
 
-        with patch("quackcore.integrations.llms.registry.get_llm_client",
-                   return_value=mock_client) as mock_get_client:
+        with patch(
+            "quackcore.integrations.llms.registry.get_llm_client",
+            return_value=mock_client,
+        ) as mock_get_client:
             # Call from a fixture context to avoid any implementation details
             with patch(
-                    "quackcore.integrations.llms.service.initialization.initialize_single_provider",
-                    side_effect=initialize_single_provider):
-                result = initialize_single_provider(mock_integration, llm_config,
-                                                    available_providers)
+                "quackcore.integrations.llms.service.initialization.initialize_single_provider",
+                side_effect=initialize_single_provider,
+            ):
+                result = initialize_single_provider(
+                    mock_integration, llm_config, available_providers
+                )
 
                 assert result.success is True
-                assert "initialized successfully with provider: openai" in result.message
+                assert (
+                    "initialized successfully with provider: openai" in result.message
+                )
                 assert mock_integration._initialized is True
                 assert mock_integration.client == mock_client
                 assert mock_integration._using_mock is False
@@ -69,8 +76,9 @@ class TestInitialization:
                 assert call_args["model"] == "gpt-4o"
                 assert call_args["api_key"] == "test-key"
 
-    def test_initialize_single_provider_custom(self,
-                                               mock_integration: MagicMock) -> None:
+    def test_initialize_single_provider_custom(
+        self, mock_integration: MagicMock
+    ) -> None:
         """Test initializing with a single provider using custom values."""
         # Set custom provider and model
         mock_integration.provider = "anthropic"
@@ -81,25 +89,34 @@ class TestInitialization:
         llm_config = {
             "default_provider": "openai",
             "timeout": 30,
-            "anthropic": {"default_model": "claude-3-sonnet",
-                          "api_base": "https://custom-anthropic.com"},
+            "anthropic": {
+                "default_model": "claude-3-sonnet",
+                "api_base": "https://custom-anthropic.com",
+            },
         }
         available_providers = ["openai", "anthropic", "mock"]
 
         # Mock get_llm_client
         mock_client = MagicMock()
 
-        with patch("quackcore.integrations.llms.registry.get_llm_client",
-                   return_value=mock_client) as mock_get_client:
+        with patch(
+            "quackcore.integrations.llms.registry.get_llm_client",
+            return_value=mock_client,
+        ) as mock_get_client:
             # Call initialize_single_provider directly from a fixture to avoid implementation details
             with patch(
-                    "quackcore.integrations.llms.service.initialization.initialize_single_provider",
-                    side_effect=initialize_single_provider):
-                result = initialize_single_provider(mock_integration, llm_config,
-                                                    available_providers)
+                "quackcore.integrations.llms.service.initialization.initialize_single_provider",
+                side_effect=initialize_single_provider,
+            ):
+                result = initialize_single_provider(
+                    mock_integration, llm_config, available_providers
+                )
 
                 assert result.success is True
-                assert "initialized successfully with provider: anthropic" in result.message
+                assert (
+                    "initialized successfully with provider: anthropic"
+                    in result.message
+                )
                 assert mock_integration._initialized is True
                 assert mock_integration._using_mock is False
 
@@ -107,13 +124,15 @@ class TestInitialization:
                 mock_get_client.assert_called_once()
                 call_args = mock_get_client.call_args[1]
                 assert call_args["provider"] == "anthropic"
-                assert call_args[
-                           "model"] == "claude-3-opus"  # Custom value, not from config
+                assert (
+                    call_args["model"] == "claude-3-opus"
+                )  # Custom value, not from config
                 assert call_args["api_key"] == "custom-key"
                 assert call_args["api_base"] == "https://custom-anthropic.com"
 
-    def test_initialize_single_provider_unavailable(self,
-                                                    mock_integration: MagicMock) -> None:
+    def test_initialize_single_provider_unavailable(
+        self, mock_integration: MagicMock
+    ) -> None:
         """Test initializing with a provider that's not available."""
         mock_integration.provider = "unavailable-provider"
 
@@ -128,17 +147,23 @@ class TestInitialization:
         # Mock get_llm_client
         mock_client = MagicMock()
 
-        with patch("quackcore.integrations.llms.registry.get_llm_client",
-                   return_value=mock_client) as mock_get_client:
+        with patch(
+            "quackcore.integrations.llms.registry.get_llm_client",
+            return_value=mock_client,
+        ) as mock_get_client:
             # Call initialize_single_provider directly from a fixture to avoid implementation details
             with patch(
-                    "quackcore.integrations.llms.service.initialization.initialize_single_provider",
-                    side_effect=initialize_single_provider):
-                result = initialize_single_provider(mock_integration, llm_config,
-                                                    available_providers)
+                "quackcore.integrations.llms.service.initialization.initialize_single_provider",
+                side_effect=initialize_single_provider,
+            ):
+                result = initialize_single_provider(
+                    mock_integration, llm_config, available_providers
+                )
 
                 assert result.success is True
-                assert "initialized successfully with provider: openai" in result.message
+                assert (
+                    "initialized successfully with provider: openai" in result.message
+                )
                 assert mock_integration._initialized is True
                 assert mock_integration._using_mock is False
 
@@ -147,8 +172,9 @@ class TestInitialization:
                     "Requested provider 'unavailable-provider' not available. Using 'openai' instead."
                 )
 
-    def test_initialize_single_provider_mock_fallback(self,
-                                                      mock_integration: MagicMock) -> None:
+    def test_initialize_single_provider_mock_fallback(
+        self, mock_integration: MagicMock
+    ) -> None:
         """Test fallback to mock when no real providers are available."""
         # Mock config and available providers - only mock is available
         llm_config = {"default_provider": "openai"}
@@ -158,24 +184,30 @@ class TestInitialization:
         mock_client = MagicMock()
 
         # First call get_llm_client to raise an error
-        with patch("quackcore.integrations.llms.registry.get_llm_client",
-                   side_effect=Exception("Not available")):
+        with patch(
+            "quackcore.integrations.llms.registry.get_llm_client",
+            side_effect=Exception("Not available"),
+        ):
             # Patch MockLLMClient constructor directly to avoid log_level issues
-            with patch("quackcore.integrations.llms.clients.mock.MockLLMClient",
-                       return_value=mock_client):
+            with patch(
+                "quackcore.integrations.llms.clients.mock.MockLLMClient",
+                return_value=mock_client,
+            ):
                 # Set the log_level property to a real integer instead of a MagicMock
                 mock_integration.log_level = 20  # INFO level
 
-                result = initialize_single_provider(mock_integration, llm_config,
-                                                    available_providers)
+                result = initialize_single_provider(
+                    mock_integration, llm_config, available_providers
+                )
 
                 assert result.success is True
                 assert "using mock client" in result.message.lower()
                 assert mock_integration._initialized is True
                 assert mock_integration._using_mock is True
 
-    def test_initialize_with_fallback_all_providers(self,
-                                                    mock_integration: MagicMock) -> None:
+    def test_initialize_with_fallback_all_providers(
+        self, mock_integration: MagicMock
+    ) -> None:
         """Test initializing with fallback using all providers."""
         # Mock config
         llm_config = {
@@ -188,18 +220,23 @@ class TestInitialization:
         # Mock FallbackLLMClient
         mock_fallback_client = MagicMock()
 
-        with patch("quackcore.integrations.llms.fallback.FallbackLLMClient",
-                   return_value=mock_fallback_client) as mock_fallback_class:
+        with patch(
+            "quackcore.integrations.llms.fallback.FallbackLLMClient",
+            return_value=mock_fallback_client,
+        ) as mock_fallback_class:
             # Call initialize_with_fallback directly
             with patch(
-                    "quackcore.integrations.llms.service.initialization.initialize_with_fallback",
-                    side_effect=initialize_with_fallback):
+                "quackcore.integrations.llms.service.initialization.initialize_with_fallback",
+                side_effect=initialize_with_fallback,
+            ):
                 result = initialize_with_fallback(
                     mock_integration, llm_config, fallback_config, available_providers
                 )
 
                 assert result.success is True
-                assert "initialized successfully with fallback support" in result.message
+                assert (
+                    "initialized successfully with fallback support" in result.message
+                )
                 assert mock_integration._initialized is True
                 assert mock_integration._using_mock is False
                 assert mock_integration.client == mock_fallback_client
@@ -208,15 +245,19 @@ class TestInitialization:
                 # Verify FallbackLLMClient was called with correct args
                 mock_fallback_class.assert_called_once()
                 call_args = mock_fallback_class.call_args[1]
-                assert call_args["fallback_config"].providers == ["openai", "anthropic",
-                                                                  "mock"]
+                assert call_args["fallback_config"].providers == [
+                    "openai",
+                    "anthropic",
+                    "mock",
+                ]
                 assert call_args["model_map"]["openai"] == "gpt-4o"
                 assert call_args["model_map"]["anthropic"] == "claude-3-opus"
                 assert call_args["api_key_map"]["openai"] == "openai-key"
                 assert call_args["api_key_map"]["anthropic"] == "anthropic-key"
 
-    def test_initialize_with_fallback_mock_only(self,
-                                                mock_integration: MagicMock) -> None:
+    def test_initialize_with_fallback_mock_only(
+        self, mock_integration: MagicMock
+    ) -> None:
         """Test initializing with fallback when only mock is available."""
         # Mock config
         llm_config = {}
@@ -226,18 +267,23 @@ class TestInitialization:
         # Mock FallbackLLMClient
         mock_fallback_client = MagicMock()
 
-        with patch("quackcore.integrations.llms.fallback.FallbackLLMClient",
-                   return_value=mock_fallback_client) as mock_fallback_class:
+        with patch(
+            "quackcore.integrations.llms.fallback.FallbackLLMClient",
+            return_value=mock_fallback_client,
+        ) as mock_fallback_class:
             # Call initialize_with_fallback directly
             with patch(
-                    "quackcore.integrations.llms.service.initialization.initialize_with_fallback",
-                    side_effect=initialize_with_fallback):
+                "quackcore.integrations.llms.service.initialization.initialize_with_fallback",
+                side_effect=initialize_with_fallback,
+            ):
                 result = initialize_with_fallback(
                     mock_integration, llm_config, fallback_config, available_providers
                 )
 
                 assert result.success is True
-                assert "initialized successfully with fallback support" in result.message
+                assert (
+                    "initialized successfully with fallback support" in result.message
+                )
                 assert "using mock client only" in result.message
                 assert mock_integration._initialized is True
                 assert mock_integration._using_mock is True
@@ -258,21 +304,22 @@ class TestInitialization:
 
         # Mock FallbackLLMClient to raise an error
         with patch(
-                "quackcore.integrations.llms.fallback.FallbackLLMClient",
-                side_effect=Exception("Fallback initialization error")
+            "quackcore.integrations.llms.fallback.FallbackLLMClient",
+            side_effect=Exception("Fallback initialization error"),
         ) as mock_fallback_class:
             # Mock initialize_single_provider to succeed
             success_result = IntegrationResult(
-                success=True,
-                message="Initialized with single provider"
+                success=True, message="Initialized with single provider"
             )
 
             # Create a custom function to handle the fallback logic
-            def patched_fallback(self, llm_config, fallback_config,
-                                 available_providers):
+            def patched_fallback(
+                self, llm_config, fallback_config, available_providers
+            ):
                 try:
                     # This will raise an exception
                     from quackcore.integrations.llms.fallback import FallbackLLMClient
+
                     fallback_client = FallbackLLMClient()
                 except Exception as e:
                     self.logger.error(f"Failed to initialize fallback LLM client: {e}")
@@ -281,16 +328,18 @@ class TestInitialization:
 
             # Call initialize_with_fallback directly but patched
             with patch(
-                    "quackcore.integrations.llms.service.initialization.initialize_with_fallback",
-                    side_effect=patched_fallback
+                "quackcore.integrations.llms.service.initialization.initialize_with_fallback",
+                side_effect=patched_fallback,
             ):
                 with patch(
-                        "quackcore.integrations.llms.service.initialization.initialize_single_provider",
-                        return_value=success_result
+                    "quackcore.integrations.llms.service.initialization.initialize_single_provider",
+                    return_value=success_result,
                 ) as mock_init_single:
                     result = initialize_with_fallback(
-                        mock_integration, llm_config, fallback_config,
-                        available_providers
+                        mock_integration,
+                        llm_config,
+                        fallback_config,
+                        available_providers,
                     )
 
                     assert result.success is True

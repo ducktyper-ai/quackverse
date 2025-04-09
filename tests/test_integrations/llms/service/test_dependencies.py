@@ -9,11 +9,13 @@ class TestDependencies:
 
     def test_check_llm_dependencies_all_available(self) -> None:
         """Test dependency checking with all providers available."""
-        with patch("importlib.util.find_spec",
-                   return_value=MagicMock()) as mock_find_spec:
+        with patch(
+            "importlib.util.find_spec", return_value=MagicMock()
+        ) as mock_find_spec:
             # Also mock the requests.get for Ollama server check
-            with patch("requests.get",
-                       return_value=MagicMock(status_code=200)) as mock_get:
+            with patch(
+                "requests.get", return_value=MagicMock(status_code=200)
+            ) as mock_get:
                 success, message, providers = check_llm_dependencies()
 
                 assert success is True

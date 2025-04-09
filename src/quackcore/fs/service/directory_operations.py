@@ -7,8 +7,12 @@ from pathlib import Path
 from typing import Protocol
 
 from quackcore.fs.operations import FileSystemOperations
-from quackcore.fs.results import DirectoryInfoResult, FileInfoResult, FindResult, \
-    OperationResult
+from quackcore.fs.results import (
+    DirectoryInfoResult,
+    FileInfoResult,
+    FindResult,
+    OperationResult,
+)
 
 
 class HasOperations(Protocol):
@@ -24,7 +28,7 @@ class DirectoryOperationsMixin:
     operations: FileSystemOperations
 
     def create_directory(
-            self, path: str | Path, exist_ok: bool = True
+        self, path: str | Path, exist_ok: bool = True
     ) -> OperationResult:
         """
         Create a directory.
@@ -53,10 +57,10 @@ class DirectoryOperationsMixin:
         return self.operations.get_file_info(path)
 
     def list_directory(
-            self,
-            path: str | Path,
-            pattern: str | None = None,
-            include_hidden: bool = False,
+        self,
+        path: str | Path,
+        pattern: str | None = None,
+        include_hidden: bool = False,
     ) -> DirectoryInfoResult:
         """
         List contents of a directory.
@@ -72,11 +76,11 @@ class DirectoryOperationsMixin:
         return self.operations.list_directory(path, pattern, include_hidden)
 
     def find_files(
-            self,
-            path: str | Path,
-            pattern: str,
-            recursive: bool = True,
-            include_hidden: bool = False,
+        self,
+        path: str | Path,
+        pattern: str,
+        recursive: bool = True,
+        include_hidden: bool = False,
     ) -> FindResult:
         """
         Find files matching a pattern.

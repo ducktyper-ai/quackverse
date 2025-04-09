@@ -30,7 +30,9 @@ class TestOllamaClient:
         # Test with default parameters
         client = OllamaClient()
         assert client._model is None  # Will use default if not specified
-        assert client._api_key is None  # Not used by Ollama but kept for API consistency
+        assert (
+            client._api_key is None
+        )  # Not used by Ollama but kept for API consistency
         assert client._api_base == "http://localhost:11434"
         assert client._timeout == 60
 
@@ -125,6 +127,7 @@ class TestOllamaClient:
                         continue
 
                     import json
+
                     chunk = json.loads(line)
                     if "message" in chunk and "content" in chunk["message"]:
                         content = chunk["message"]["content"]
@@ -135,8 +138,9 @@ class TestOllamaClient:
                 return IntegrationResult.success_result("".join(collected_content))
 
             # Patch the _handle_streaming method
-            with patch.object(ollama_client, "_handle_streaming",
-                              side_effect=mock_handle_streaming):
+            with patch.object(
+                ollama_client, "_handle_streaming", side_effect=mock_handle_streaming
+            ):
                 # Make the request
                 result = ollama_client._handle_streaming(
                     "http://localhost:11434/api/chat",
@@ -177,8 +181,12 @@ class TestOllamaClient:
         assert ollama_client._convert_role_to_ollama(RoleType.USER) == "user"
         assert ollama_client._convert_role_to_ollama(RoleType.SYSTEM) == "system"
         assert ollama_client._convert_role_to_ollama(RoleType.ASSISTANT) == "assistant"
-        assert ollama_client._convert_role_to_ollama(RoleType.FUNCTION) == "user"  # Falls back to user
-        assert ollama_client._convert_role_to_ollama(RoleType.TOOL) == "user"  # Falls back to user
+        assert (
+            ollama_client._convert_role_to_ollama(RoleType.FUNCTION) == "user"
+        )  # Falls back to user
+        assert (
+            ollama_client._convert_role_to_ollama(RoleType.TOOL) == "user"
+        )  # Falls back to user
 
     def test_count_tokens_with_provider(self, ollama_client: OllamaClient) -> None:
         """Test the Ollama-specific token counting implementation."""
@@ -208,10 +216,15 @@ class TestOllamaClient:
             assert call_args[1]["json"]["model"] == "llama3"
             assert "prompt" in call_args[1]["json"]
 
-    def test_count_tokens_with_provider_error(self, ollama_client: OllamaClient) -> None:
+    def test_count_tokens_with_provider_error(
+        self, ollama_client: OllamaClient
+    ) -> None:
         """Test token counting with API error."""
         # Set up mock for requests.post to raise an exception
-        with patch("requests.post", side_effect=requests.exceptions.RequestException("API error")) as mock_post:
+        with patch(
+            "requests.post",
+            side_effect=requests.exceptions.RequestException("API error"),
+        ) as mock_post:
             # Set up messages
             messages = [
                 ChatMessage(role=RoleType.USER, content="Count my tokens"),

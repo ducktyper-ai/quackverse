@@ -31,7 +31,7 @@ class GitHubConfigProvider(BaseConfigProvider):
                 "default_base_branch": "main",
                 "pr_title_template": "[SUBMISSION] {title}",
                 "pr_body_template": "This is a submission for the assignment: {assignment}\n\nSubmitted by: {student}",
-            }
+            },
         }
 
     def validate_config(self, config: dict[str, Any]) -> bool:
@@ -80,8 +80,9 @@ class GitHubConfigProvider(BaseConfigProvider):
                 return config_data[key]
 
         # If no GitHub-specific section is found, try the "integrations" section
-        if "integrations" in config_data and isinstance(config_data["integrations"],
-                                                        dict):
+        if "integrations" in config_data and isinstance(
+            config_data["integrations"], dict
+        ):
             for key in ["github", "GitHub"]:
                 if key in config_data["integrations"]:
                     return config_data["integrations"][key]

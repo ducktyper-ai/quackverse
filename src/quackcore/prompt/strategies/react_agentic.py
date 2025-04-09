@@ -5,12 +5,16 @@ ReAct agentic strategy for the PromptBooster.
 This strategy combines reasoning and acting steps for interactive agents,
 based on the ReAct paper by Yao et al.
 """
-from ..strategy_base import PromptStrategy
+
 from ..registry import register_prompt_strategy
+from ..strategy_base import PromptStrategy
 
 
-def render(task_description: str, tools: list[dict] | str,
-           examples: list[str] | str | None = None) -> str:
+def render(
+    task_description: str,
+    tools: list[dict] | str,
+    examples: list[str] | str | None = None,
+) -> str:
     """
     Render a ReAct agentic prompt.
 
@@ -91,7 +95,7 @@ strategy = PromptStrategy(
     input_vars=["task_description", "tools", "examples"],
     render_fn=render,
     tags=["reasoning", "tool-use", "multi-step"],
-    origin="ReAct: Synergizing Reasoning and Acting in Language Models (Yao et al., 2022)"
+    origin="ReAct: Synergizing Reasoning and Acting in Language Models (Yao et al., 2022)",
 )
 
 # Register the strategy

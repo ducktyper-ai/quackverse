@@ -110,8 +110,11 @@ class TestFallbackLLMClient:
 
     def test_init(self, fallback_client: FallbackLLMClient) -> None:
         """Test initializing the fallback client."""
-        assert fallback_client._fallback_config.providers == ["openai", "anthropic",
-                                                              "mock"]
+        assert fallback_client._fallback_config.providers == [
+            "openai",
+            "anthropic",
+            "mock",
+        ]
         assert fallback_client._model_map["openai"] == "gpt-4o"
         assert fallback_client._model_map["anthropic"] == "claude-3-opus"
         assert fallback_client._api_key_map["openai"] == "openai-key"
@@ -135,8 +138,9 @@ class TestFallbackLLMClient:
         mock_client = MagicMock()
         mock_client.model = "claude-3-opus"
 
-        with patch.object(fallback_client, "_get_client_for_provider",
-                          return_value=mock_client):
+        with patch.object(
+            fallback_client, "_get_client_for_provider", return_value=mock_client
+        ):
             assert fallback_client.model == "claude-3-opus"
 
     def test_get_provider_status(self, fallback_client: FallbackLLMClient) -> None:
@@ -169,8 +173,10 @@ class TestFallbackLLMClient:
         # Mock the registry function
         mock_client = MagicMock()
 
-        with patch("quackcore.integrations.llms.registry.get_llm_client",
-                   return_value=mock_client) as mock_get_client:
+        with patch(
+            "quackcore.integrations.llms.registry.get_llm_client",
+            return_value=mock_client,
+        ) as mock_get_client:
             client = fallback_client._get_client_for_provider("openai")
 
             assert client == mock_client
@@ -185,12 +191,13 @@ class TestFallbackLLMClient:
             fallback_client._get_client_for_provider("openai")
             assert mock_get_client.call_count == 1  # Should not be called again
 
-    def test_get_client_initialization_error(self,
-                                             fallback_client: FallbackLLMClient) -> None:
+    def test_get_client_initialization_error(
+        self, fallback_client: FallbackLLMClient
+    ) -> None:
         """Test error handling when getting a client."""
         with patch(
-                "quackcore.integrations.llms.registry.get_llm_client",
-                side_effect=QuackIntegrationError("Failed to initialize")
+            "quackcore.integrations.llms.registry.get_llm_client",
+            side_effect=QuackIntegrationError("Failed to initialize"),
         ):
             with pytest.raises(QuackIntegrationError) as excinfo:
                 fallback_client._get_client_for_provider("openai")
@@ -213,8 +220,9 @@ class TestFallbackLLMClient:
         error = Exception("Rate limit exceeded")
         assert fallback_client._is_auth_error(error) is False
 
-    def test_chat_with_provider_successful(self,
-                                           fallback_client: FallbackLLMClient) -> None:
+    def test_chat_with_provider_successful(
+        self, fallback_client: FallbackLLMClient
+    ) -> None:
         """Test chat with provider succeeding on first try."""
         messages = [ChatMessage(role=RoleType.USER, content="Test message")]
         options = LLMOptions()
@@ -224,7 +232,7 @@ class TestFallbackLLMClient:
 
         # Mock the client retrieval
         with patch.object(
-                fallback_client, "_get_client_for_provider", return_value=mock_openai
+            fallback_client, "_get_client_for_provider", return_value=mock_openai
         ):
             # Mock sleep to speed up test
             with patch("time.sleep"):
@@ -239,8 +247,9 @@ class TestFallbackLLMClient:
                 status = fallback_client._provider_status["openai"]
                 assert status.success_count == 1
 
-    def test_chat_with_provider_fallback(self,
-                                         fallback_client: FallbackLLMClient) -> None:
+    def test_chat_with_provider_fallback(
+        self, fallback_client: FallbackLLMClient
+    ) -> None:
         """Test chat falling back to next provider on error."""
         messages = [ChatMessage(role=RoleType.USER, content="Test message")]
         options = LLMOptions()
@@ -263,7 +272,7 @@ class TestFallbackLLMClient:
             raise ValueError(f"Unexpected provider: {provider}")
 
         with patch.object(
-                fallback_client, "_get_client_for_provider", side_effect=get_mock_client
+            fallback_client, "_get_client_for_provider", side_effect=get_mock_client
         ):
             # Mock sleep to speed up test
             with patch("time.sleep"):
@@ -280,10 +289,13 @@ class TestFallbackLLMClient:
                 assert "Rate limit exceeded" in openai_status.last_error
 
                 anthropic_status = fallback_client._provider_status["anthropic"]
-                assert anthropic_status.success_count >= 1  # Changed from "== 1" to ">= 1"
+                assert (
+                    anthropic_status.success_count >= 1
+                )  # Changed from "== 1" to ">= 1"
 
-    def test_count_tokens_with_provider(self,
-                                        fallback_client: FallbackLLMClient) -> None:
+    def test_count_tokens_with_provider(
+        self, fallback_client: FallbackLLMClient
+    ) -> None:
         """Test token counting with fallback."""
         messages = [ChatMessage(role=RoleType.USER, content="Count my tokens")]
 
@@ -292,7 +304,7 @@ class TestFallbackLLMClient:
 
         # Mock the client retrieval
         with patch.object(
-                fallback_client, "_get_client_for_provider", return_value=mock_openai
+            fallback_client, "_get_client_for_provider", return_value=mock_openai
         ):
             result = fallback_client._count_tokens_with_provider(messages)
 

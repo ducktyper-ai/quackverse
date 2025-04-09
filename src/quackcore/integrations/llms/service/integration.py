@@ -5,6 +5,7 @@ Core LLM integration class.
 This module provides the main LLMIntegration class which serves as the entry point
 for using different LLM providers.
 """
+
 from collections.abc import Callable, Sequence
 
 from quackcore.errors import QuackIntegrationError
@@ -15,20 +16,20 @@ from quackcore.integrations.llms.clients import LLMClient
 from quackcore.integrations.llms.config import LLMConfigProvider
 from quackcore.integrations.llms.fallback import FallbackConfig
 from quackcore.integrations.llms.service.dependencies import check_llm_dependencies
-from quackcore.logging import LogLevel, LOG_LEVELS
+from quackcore.logging import LOG_LEVELS, LogLevel
 
 
 class LLMIntegration(BaseIntegrationService):
     """Integration service for LLMs."""
 
     def __init__(
-            self,
-            provider: str | None = None,
-            model: str | None = None,
-            api_key: str | None = None,
-            config_path: str | None = None,
-            log_level: int = LOG_LEVELS[LogLevel.INFO],
-            enable_fallback: bool = True,
+        self,
+        provider: str | None = None,
+        model: str | None = None,
+        api_key: str | None = None,
+        config_path: str | None = None,
+        log_level: int = LOG_LEVELS[LogLevel.INFO],
+        enable_fallback: bool = True,
     ) -> None:
         """
         Initialize the LLM integration service.
@@ -95,6 +96,7 @@ class LLMIntegration(BaseIntegrationService):
         # Validate configuration
         try:
             from quackcore.integrations.llms.config import LLMConfig
+
             LLMConfig(**self.config)
             return self.config
         except Exception as e:
@@ -133,16 +135,16 @@ class LLMIntegration(BaseIntegrationService):
                 try:
                     fallback_config = FallbackConfig(**llm_config["fallback"])
                     self.logger.info(
-                        f"Loaded fallback configuration with providers: {fallback_config.providers}")
+                        f"Loaded fallback configuration with providers: {fallback_config.providers}"
+                    )
                 except Exception as e:
                     self.logger.warning(
-                        f"Invalid fallback configuration, using defaults: {e}")
+                        f"Invalid fallback configuration, using defaults: {e}"
+                    )
 
             # If fallback is disabled or not configured, use standard initialization
             if not self._enable_fallback or fallback_config is None:
-                return initialize_single_provider(
-                    self, llm_config, available_providers
-                )
+                return initialize_single_provider(self, llm_config, available_providers)
 
             # Initialize with fallback support
             return initialize_with_fallback(
@@ -155,8 +157,7 @@ class LLMIntegration(BaseIntegrationService):
         except Exception as e:
             self.logger.error(f"Failed to initialize LLM integration: {e}")
             return IntegrationResult(
-                success=False,
-                error=f"Failed to initialize LLM integration: {e}"
+                success=False, error=f"Failed to initialize LLM integration: {e}"
             )
 
     def get_client(self) -> LLMClient:
@@ -185,10 +186,10 @@ class LLMIntegration(BaseIntegrationService):
         return self._using_mock
 
     def chat(
-            self,
-            messages: Sequence[ChatMessage] | Sequence[dict],
-            options: LLMOptions | None = None,
-            callback: Callable[[str], None] | None = None,
+        self,
+        messages: Sequence[ChatMessage] | Sequence[dict],
+        options: LLMOptions | None = None,
+        callback: Callable[[str], None] | None = None,
     ) -> IntegrationResult[str]:
         """
         Send a chat completion request to the LLM.
@@ -202,10 +203,11 @@ class LLMIntegration(BaseIntegrationService):
             IntegrationResult[str]: Result of the chat completion request
         """
         from quackcore.integrations.llms.service.operations import chat
+
         return chat(self, messages, options, callback)
 
     def count_tokens(
-            self, messages: Sequence[ChatMessage] | Sequence[dict]
+        self, messages: Sequence[ChatMessage] | Sequence[dict]
     ) -> IntegrationResult[int]:
         """
         Count the number of tokens in the messages.
@@ -217,6 +219,7 @@ class LLMIntegration(BaseIntegrationService):
             IntegrationResult[int]: Result containing the token count
         """
         from quackcore.integrations.llms.service.operations import count_tokens
+
         return count_tokens(self, messages)
 
     def get_provider_status(self) -> list[dict] | None:
@@ -227,6 +230,7 @@ class LLMIntegration(BaseIntegrationService):
             list[dict] | None: Status information for all providers or None if not using fallback
         """
         from quackcore.integrations.llms.service.operations import get_provider_status
+
         return get_provider_status(self)
 
     def reset_provider_status(self) -> bool:
@@ -237,4 +241,5 @@ class LLMIntegration(BaseIntegrationService):
             bool: True if successful, False if not using fallback
         """
         from quackcore.integrations.llms.service.operations import reset_provider_status
+
         return reset_provider_status(self)

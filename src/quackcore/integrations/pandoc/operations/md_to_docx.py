@@ -6,8 +6,8 @@ This module provides functions for converting Markdown documents to DOCX
 using pandoc with optimized settings and error handling.
 """
 
-import time
 import importlib
+import time
 from pathlib import Path
 
 from quackcore.errors import QuackIntegrationError
@@ -83,7 +83,7 @@ def _validate_markdown_input(markdown_path: Path) -> int:
 
 
 def _convert_markdown_to_docx_once(
-        markdown_path: Path, output_path: Path, config: PandocConfig
+    markdown_path: Path, output_path: Path, config: PandocConfig
 ) -> None:
     """
     Perform a single conversion attempt from Markdown to DOCX using pandoc.
@@ -161,10 +161,10 @@ def _get_conversion_output(output_path: Path, start_time: float) -> tuple[float,
 
 
 def convert_markdown_to_docx(
-        markdown_path: Path,
-        output_path: Path,
-        config: PandocConfig,
-        metrics: ConversionMetrics | None = None,
+    markdown_path: Path,
+    output_path: Path,
+    config: PandocConfig,
+    metrics: ConversionMetrics | None = None,
 ) -> IntegrationResult[tuple[Path, ConversionDetails]]:
     """
     Convert a Markdown file to DOCX.
@@ -261,11 +261,12 @@ def convert_markdown_to_docx(
         metrics.failed_conversions += 1
         metrics.errors[str(markdown_path)] = str(e)
         return IntegrationResult.error_result(
-            f"Failed to convert Markdown to DOCX: {str(e)}")
+            f"Failed to convert Markdown to DOCX: {str(e)}"
+        )
 
 
 def validate_conversion(
-        output_path: Path, input_path: Path, original_size: int, config: PandocConfig
+    output_path: Path, input_path: Path, original_size: int, config: PandocConfig
 ) -> list[str]:
     """
     Validate the converted DOCX document.
@@ -336,7 +337,7 @@ def _check_docx_metadata(docx_path: Path, source_path: Path, check_links: bool) 
     try:
         # Try to import docx at runtime
         try:
-            docx = importlib.import_module('docx')
+            docx = importlib.import_module("docx")
             Document = docx.Document
         except ImportError:
             logger.debug("python-docx not available for detailed metadata check")
@@ -351,28 +352,35 @@ def _check_docx_metadata(docx_path: Path, source_path: Path, check_links: bool) 
             core_props = doc.core_properties
 
             # Check title
-            if (hasattr(core_props, "title") and
-                    core_props.title and
-                    source_filename in str(core_props.title)):
+            if (
+                hasattr(core_props, "title")
+                and core_props.title
+                and source_filename in str(core_props.title)
+            ):
                 source_found = True
 
             # Check comments
-            elif (hasattr(core_props, "comments") and
-                  core_props.comments and
-                  source_filename in str(core_props.comments)):
+            elif (
+                hasattr(core_props, "comments")
+                and core_props.comments
+                and source_filename in str(core_props.comments)
+            ):
                 source_found = True
 
             # Check subject
-            elif (hasattr(core_props, "subject") and
-                  core_props.subject and
-                  source_filename in str(core_props.subject)):
+            elif (
+                hasattr(core_props, "subject")
+                and core_props.subject
+                and source_filename in str(core_props.subject)
+            ):
                 source_found = True
 
         # Log if source reference is missing - note that we're not checking check_links here
         if not source_found and check_links:
             # This is the critical line that needs to be reached during testing
             logger.debug(
-                f"Source file reference missing in document metadata: {source_filename}")
+                f"Source file reference missing in document metadata: {source_filename}"
+            )
 
     except Exception as e:
         logger.debug(f"Could not check document metadata: {str(e)}")

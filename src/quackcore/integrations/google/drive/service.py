@@ -39,13 +39,13 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
     ]
 
     def __init__(
-            self,
-            client_secrets_file: str | None = None,
-            credentials_file: str | None = None,
-            shared_folder_id: str | None = None,
-            config_path: str | None = None,
-            scopes: list[str] | None = None,
-            log_level: int = logging.INFO,
+        self,
+        client_secrets_file: str | None = None,
+        credentials_file: str | None = None,
+        shared_folder_id: str | None = None,
+        config_path: str | None = None,
+        scopes: list[str] | None = None,
+        log_level: int = logging.INFO,
     ) -> None:
         """
         Initialize the Google Drive integration service.
@@ -80,10 +80,10 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
         return "GoogleDrive"
 
     def _initialize_config(
-            self,
-            client_secrets_file: str | None,
-            credentials_file: str | None,
-            shared_folder_id: str | None,
+        self,
+        client_secrets_file: str | None,
+        credentials_file: str | None,
+        shared_folder_id: str | None,
     ) -> dict[str, Any]:
         """
         Initialize configuration from parameters or config file.
@@ -178,7 +178,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
     # --- Helper Methods for Refactoring ---
 
     def _resolve_file_details(
-            self, file_path: str, remote_path: str | None, parent_folder_id: str | None
+        self, file_path: str, remote_path: str | None, parent_folder_id: str | None
     ) -> tuple[Any, str, str | None, str]:
         """
         Resolve file details for upload.
@@ -210,7 +210,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
         return path_obj, filename, folder_id, mime_type
 
     def _resolve_download_path(
-            self, file_metadata: dict[str, Any], local_path: str | None
+        self, file_metadata: dict[str, Any], local_path: str | None
     ) -> str:
         """
         Resolve the local path for file download.
@@ -273,7 +273,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
         return " and ".join(query_parts)
 
     def _execute_upload(
-            self, file_metadata: dict[str, Any], media: Any
+        self, file_metadata: dict[str, Any], media: Any
     ) -> dict[str, Any]:
         """
         Execute the file upload to Google Drive.
@@ -310,12 +310,12 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
     # --- End of Helper Methods ---
 
     def upload_file(
-            self,
-            file_path: str,
-            remote_path: str | None = None,
-            description: str | None = None,
-            parent_folder_id: str | None = None,
-            public: bool | None = None,
+        self,
+        file_path: str,
+        remote_path: str | None = None,
+        description: str | None = None,
+        parent_folder_id: str | None = None,
+        public: bool | None = None,
     ) -> IntegrationResult[str]:
         """
         Upload a file to Google Drive.
@@ -376,9 +376,9 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
                     )
 
             link = (
-                    file.get("webViewLink")
-                    or file.get("webContentLink")
-                    or f"https://drive.google.com/file/d/{file['id']}/view"
+                file.get("webViewLink")
+                or file.get("webContentLink")
+                or f"https://drive.google.com/file/d/{file['id']}/view"
             )
             return IntegrationResult.success_result(
                 content=link,
@@ -398,7 +398,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             )
 
     def download_file(
-            self, remote_id: str, local_path: str | None = None
+        self, remote_id: str, local_path: str | None = None
     ) -> IntegrationResult[str]:
         """
         Download a file from Google Drive.
@@ -481,7 +481,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             )
 
     def list_files(
-            self, remote_path: str | None = None, pattern: str | None = None
+        self, remote_path: str | None = None, pattern: str | None = None
     ) -> IntegrationResult[list[Mapping]]:
         """
         List files in Google Drive.
@@ -544,7 +544,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             )
 
     def create_folder(
-            self, folder_name: str, parent_path: str | None = None
+        self, folder_name: str, parent_path: str | None = None
     ) -> IntegrationResult[str]:
         """
         Create a folder in Google Drive.
@@ -607,7 +607,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             )
 
     def set_file_permissions(
-            self, file_id: str, role: str | None = None, type_: str = "anyone"
+        self, file_id: str, role: str | None = None, type_: str = "anyone"
     ) -> IntegrationResult[bool]:
         """
         Set permissions for a file or folder.
@@ -683,9 +683,9 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
                 ) from api_error
 
             link = (
-                    file_metadata.get("webViewLink")
-                    or file_metadata.get("webContentLink")
-                    or f"https://drive.google.com/file/d/{file_id}/view"
+                file_metadata.get("webViewLink")
+                or file_metadata.get("webContentLink")
+                or f"https://drive.google.com/file/d/{file_id}/view"
             )
             return IntegrationResult.success_result(
                 content=link, message="Got sharing link successfully"
@@ -704,7 +704,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             )
 
     def delete_file(
-            self, file_id: str, permanent: bool = False
+        self, file_id: str, permanent: bool = False
     ) -> IntegrationResult[bool]:
         """
         Delete a file from Google Drive.
@@ -753,7 +753,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             )
 
     def get_file_info(
-            self, remote_id: str, fields: str | None = None
+        self, remote_id: str, fields: str | None = None
     ) -> IntegrationResult[dict[str, Any]]:
         """
         Retrieve file metadata from Google Drive.
@@ -782,8 +782,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             )
 
             return IntegrationResult.success_result(
-                content=file_metadata,
-                message="File metadata retrieved successfully"
+                content=file_metadata, message="File metadata retrieved successfully"
             )
 
         except Exception as api_error:

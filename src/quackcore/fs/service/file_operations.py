@@ -6,9 +6,10 @@ These utilities extend the FileSystemService with methods for file manipulation.
 """
 
 import json
-import yaml
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 from quackcore.errors import wrap_io_errors
 from quackcore.fs.operations import FileSystemOperations
@@ -37,11 +38,11 @@ class FileOperationsMixin:
 
     @wrap_io_errors
     def write_text(
-            self,
-            path: str | Path,
-            content: str,
-            encoding: str = "utf-8",
-            atomic: bool = False,
+        self,
+        path: str | Path,
+        content: str,
+        encoding: str = "utf-8",
+        atomic: bool = False,
     ) -> WriteResult:
         """
         Write text content to a file.
@@ -72,7 +73,7 @@ class FileOperationsMixin:
 
     @wrap_io_errors
     def write_binary(
-            self, path: str | Path, content: bytes, atomic: bool = False
+        self, path: str | Path, content: bytes, atomic: bool = False
     ) -> WriteResult:
         """
         Write binary content to a file.
@@ -119,12 +120,12 @@ class FileOperationsMixin:
 
     @wrap_io_errors
     def write_lines(
-            self,
-            path: str | Path,
-            lines: list[str],
-            encoding: str = "utf-8",
-            atomic: bool = True,
-            line_ending: str = "\n",
+        self,
+        path: str | Path,
+        lines: list[str],
+        encoding: str = "utf-8",
+        atomic: bool = True,
+        line_ending: str = "\n",
     ) -> WriteResult:
         """
         Write lines to a text file.
@@ -171,7 +172,7 @@ class FileOperationsMixin:
                     path=result.path,
                     data={},
                     format="yaml",
-                    error=result.error
+                    error=result.error,
                 )
 
             try:
@@ -187,7 +188,7 @@ class FileOperationsMixin:
                     path=result.path,
                     data=parsed_data,
                     format="yaml",
-                    message=f"Successfully parsed YAML data"
+                    message=f"Successfully parsed YAML data",
                 )
             except yaml.YAMLError as e:
                 error_msg = f"Invalid YAML format: {str(e)}"
@@ -196,7 +197,7 @@ class FileOperationsMixin:
                     path=Path(path),
                     data={},
                     format="yaml",
-                    error=error_msg
+                    error=error_msg,
                 )
         except Exception as e:
             return DataResult(
@@ -204,15 +205,15 @@ class FileOperationsMixin:
                 path=Path(path),
                 data={},
                 format="yaml",
-                error=f"Error reading YAML format: {str(e)}"
+                error=f"Error reading YAML format: {str(e)}",
             )
 
     @wrap_io_errors
     def write_yaml(
-            self,
-            path: str | Path,
-            data: dict,
-            atomic: bool = True,
+        self,
+        path: str | Path,
+        data: dict,
+        atomic: bool = True,
     ) -> WriteResult:
         """
         Write data to a YAML file.
@@ -230,9 +231,7 @@ class FileOperationsMixin:
             return self.write_text(path, content, atomic=atomic)
         except Exception as e:
             return WriteResult(
-                success=False,
-                path=Path(path),
-                error=f"Failed to write YAML: {str(e)}"
+                success=False, path=Path(path), error=f"Failed to write YAML: {str(e)}"
             )
 
     @wrap_io_errors
@@ -254,7 +253,7 @@ class FileOperationsMixin:
                     path=result.path,
                     data={},
                     format="json",
-                    error=result.error
+                    error=result.error,
                 )
 
             try:
@@ -268,7 +267,7 @@ class FileOperationsMixin:
                     path=result.path,
                     data=parsed_data,
                     format="json",
-                    message=f"Successfully parsed JSON data"
+                    message=f"Successfully parsed JSON data",
                 )
             except json.JSONDecodeError as e:
                 error_msg = f"Invalid JSON format: {str(e)}"
@@ -277,7 +276,7 @@ class FileOperationsMixin:
                     path=Path(path),
                     data={},
                     format="json",
-                    error=error_msg
+                    error=error_msg,
                 )
         except Exception as e:
             return DataResult(
@@ -285,16 +284,16 @@ class FileOperationsMixin:
                 path=Path(path),
                 data={},
                 format="json",
-                error=f"Error reading JSON format: {str(e)}"
+                error=f"Error reading JSON format: {str(e)}",
             )
 
     @wrap_io_errors
     def write_json(
-            self,
-            path: str | Path,
-            data: dict,
-            atomic: bool = True,
-            indent: int = 2,
+        self,
+        path: str | Path,
+        data: dict,
+        atomic: bool = True,
+        indent: int = 2,
     ) -> WriteResult:
         """
         Write data to a JSON file.
@@ -313,14 +312,12 @@ class FileOperationsMixin:
             return self.write_text(path, content, atomic=atomic)
         except Exception as e:
             return WriteResult(
-                success=False,
-                path=Path(path),
-                error=f"Failed to write JSON: {str(e)}"
+                success=False, path=Path(path), error=f"Failed to write JSON: {str(e)}"
             )
 
     # File management operations
     def copy(
-            self, src: str | Path, dst: str | Path, overwrite: bool = False
+        self, src: str | Path, dst: str | Path, overwrite: bool = False
     ) -> WriteResult:
         """
         Copy a file or directory.
@@ -336,7 +333,7 @@ class FileOperationsMixin:
         return self.operations.copy(src, dst, overwrite)
 
     def move(
-            self, src: str | Path, dst: str | Path, overwrite: bool = False
+        self, src: str | Path, dst: str | Path, overwrite: bool = False
     ) -> WriteResult:
         """
         Move a file or directory.

@@ -5,8 +5,9 @@ Task decomposition strategy for the PromptBooster.
 This strategy helps break down complex tasks into smaller,
 more manageable subtasks for better handling by LLMs.
 """
-from ..strategy_base import PromptStrategy
+
 from ..registry import register_prompt_strategy
+from ..strategy_base import PromptStrategy
 
 
 def render(task_description: str, output_format: str | None = None) -> str:
@@ -54,7 +55,7 @@ strategy = PromptStrategy(
     input_vars=["task_description", "output_format"],
     render_fn=render,
     tags=["decomposition", "complex-tasks", "structured-thinking"],
-    origin="Based on 'Least-to-Most Prompting' and 'Chain of Thought' research"
+    origin="Based on 'Least-to-Most Prompting' and 'Chain of Thought' research",
 )
 
 # Register the strategy

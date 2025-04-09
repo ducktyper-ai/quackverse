@@ -3,12 +3,13 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any
+
 from pydantic import BaseModel, Field, HttpUrl
 
 
 class PullRequestStatus(str, Enum):
     """Status of a pull request."""
+
     OPEN = "open"
     CLOSED = "closed"
     MERGED = "merged"
@@ -16,6 +17,7 @@ class PullRequestStatus(str, Enum):
 
 class GitHubUser(BaseModel):
     """Model representing a GitHub user."""
+
     username: str = Field(description="GitHub username")
     url: HttpUrl = Field(description="GitHub profile URL")
     name: str | None = Field(default=None, description="User's full name if available")
@@ -25,6 +27,7 @@ class GitHubUser(BaseModel):
 
 class GitHubRepo(BaseModel):
     """Model representing a GitHub repository."""
+
     name: str = Field(description="Repository name without owner")
     full_name: str = Field(description="Full repository name with owner (owner/repo)")
     url: HttpUrl = Field(description="Repository URL")
@@ -39,6 +42,7 @@ class GitHubRepo(BaseModel):
 
 class PullRequest(BaseModel):
     """Model representing a GitHub pull request."""
+
     number: int = Field(description="Pull request number")
     title: str = Field(description="Pull request title")
     url: HttpUrl = Field(description="Pull request URL")
@@ -52,12 +56,3 @@ class PullRequest(BaseModel):
     head_repo: str = Field(description="Head repository full name")
     base_branch: str = Field(description="Base branch")
     head_branch: str = Field(description="Head branch")
-
-
-class GradeResult(BaseModel):
-    """Model representing the result of grading a submission."""
-    score: float = Field(description="Score between 0.0 and 1.0")
-    passed: bool = Field(description="Whether the submission passed")
-    comments: str = Field(description="Feedback comments")
-    details: dict[str, Any] = Field(default_factory=dict,
-                                    description="Detailed grading information")

@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field, field_validator
 from quackcore.config.models import LoggingConfig
 from quackcore.fs import service as fs
 from quackcore.integrations.core.base import BaseConfigProvider
-from quackcore.logging import get_logger, LOG_LEVELS, LogLevel
+from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
 
 
 class PandocOptions(BaseModel):
@@ -196,7 +196,8 @@ class PandocConfigProvider(BaseConfigProvider):
                 path_str = str(path)
                 if not fs.is_valid_path(path_str):
                     self.logger.warning(
-                        f"Output directory path is not valid: {path_str}")
+                        f"Output directory path is not valid: {path_str}"
+                    )
                     return False
 
             return True
@@ -234,10 +235,10 @@ class PandocConfigProvider(BaseConfigProvider):
 
         for key, value in os.environ.items():
             if key.startswith(self.ENV_PREFIX):
-                config_key = key[len(self.ENV_PREFIX):].lower()
+                config_key = key[len(self.ENV_PREFIX) :].lower()
 
                 # Try to parse as JSON if it looks like a complex value
-                if value.startswith(('[', '{')) or value.lower() in ('true', 'false'):
+                if value.startswith(("[", "{")) or value.lower() in ("true", "false"):
                     try:
                         config[config_key] = json.loads(value)
                     except json.JSONDecodeError:

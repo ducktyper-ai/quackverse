@@ -4,26 +4,28 @@
 from typing import Any, Literal
 
 import requests
+
 from quackcore.logging import get_logger
 
 from .models import GitHubRepo, GitHubUser, PullRequest
+from .operations import get_pull_request_files  # Added import
 from .operations import (
+    add_issue_comment,
+    check_repository_exists,
+    create_issue,
+    create_pull_request,
+    fork_repo,
+    get_issue,
+    get_pull_request,
     get_repo,
+    get_repository_file_content,
+    get_user,
+    is_repo_starred,
+    list_issues,
+    list_pull_requests,
     star_repo,
     unstar_repo,
-    is_repo_starred,
-    fork_repo,
-    check_repository_exists,
-    get_repository_file_content,
     update_repository_file,
-    get_user,
-    create_pull_request,
-    list_pull_requests,
-    get_pull_request,
-    create_issue,
-    list_issues,
-    get_issue,
-    add_issue_comment
 )
 
 logger = get_logger(__name__)
@@ -57,11 +59,13 @@ class GitHubClient:
 
         # Set up session with default headers
         self.session = requests.Session()
-        self.session.headers.update({
-            "Authorization": f"token {token}",
-            "Accept": "application/vnd.github.v3+json",
-            "User-Agent": "QuackCore-GitHub-Integration",
-        })
+        self.session.headers.update(
+            {
+                "Authorization": f"token {token}",
+                "Accept": "application/vnd.github.v3+json",
+                "User-Agent": "QuackCore-GitHub-Integration",
+            }
+        )
 
         # Cache for user info
         self._current_user: GitHubUser | None = None
@@ -90,7 +94,7 @@ class GitHubClient:
             username=username,
             timeout=self.timeout,
             max_retries=self.max_retries,
-            retry_delay=self.retry_delay
+            retry_delay=self.retry_delay,
         )
 
         # Cache the current user
@@ -117,7 +121,7 @@ class GitHubClient:
             api_url=self.api_url,
             timeout=self.timeout,
             max_retries=self.max_retries,
-            retry_delay=self.retry_delay
+            retry_delay=self.retry_delay,
         )
 
     def star_repo(self, full_name: str) -> bool:
@@ -138,7 +142,7 @@ class GitHubClient:
             api_url=self.api_url,
             timeout=self.timeout,
             max_retries=self.max_retries,
-            retry_delay=self.retry_delay
+            retry_delay=self.retry_delay,
         )
 
     def unstar_repo(self, full_name: str) -> bool:
@@ -159,7 +163,7 @@ class GitHubClient:
             api_url=self.api_url,
             timeout=self.timeout,
             max_retries=self.max_retries,
-            retry_delay=self.retry_delay
+            retry_delay=self.retry_delay,
         )
 
     def is_repo_starred(self, full_name: str) -> bool:
@@ -177,7 +181,7 @@ class GitHubClient:
             api_url=self.api_url,
             timeout=self.timeout,
             max_retries=self.max_retries,
-            retry_delay=self.retry_delay
+            retry_delay=self.retry_delay,
         )
 
     def fork_repo(self, full_name: str, organization: str | None = None) -> GitHubRepo:
@@ -200,7 +204,7 @@ class GitHubClient:
             organization=organization,
             timeout=self.timeout,
             max_retries=self.max_retries,
-            retry_delay=self.retry_delay
+            retry_delay=self.retry_delay,
         )
 
     def create_pull_request(
@@ -236,7 +240,7 @@ class GitHubClient:
             base_branch=base_branch,
             timeout=self.timeout,
             max_retries=self.max_retries,
-            retry_delay=self.retry_delay
+            retry_delay=self.retry_delay,
         )
 
     def list_pull_requests(
@@ -266,7 +270,7 @@ class GitHubClient:
             author=author,
             timeout=self.timeout,
             max_retries=self.max_retries,
-            retry_delay=self.retry_delay
+            retry_delay=self.retry_delay,
         )
 
     def get_pull_request(self, repo: str, number: int) -> PullRequest:
@@ -289,7 +293,7 @@ class GitHubClient:
             api_url=self.api_url,
             timeout=self.timeout,
             max_retries=self.max_retries,
-            retry_delay=self.retry_delay
+            retry_delay=self.retry_delay,
         )
 
     def check_repository_exists(self, full_name: str) -> bool:
@@ -307,10 +311,12 @@ class GitHubClient:
             api_url=self.api_url,
             timeout=self.timeout,
             max_retries=self.max_retries,
-            retry_delay=self.retry_delay
+            retry_delay=self.retry_delay,
         )
 
-    def get_repository_file_content(self, repo: str, path: str, ref: str | None = None) -> tuple[str, str]:
+    def get_repository_file_content(
+        self, repo: str, path: str, ref: str | None = None
+    ) -> tuple[str, str]:
         """Get the content of a file from a repository.
 
         Args:
@@ -332,7 +338,7 @@ class GitHubClient:
             ref=ref,
             timeout=self.timeout,
             max_retries=self.max_retries,
-            retry_delay=self.retry_delay
+            retry_delay=self.retry_delay,
         )
 
     def update_repository_file(
@@ -342,7 +348,7 @@ class GitHubClient:
         content: str,
         message: str,
         sha: str,
-        branch: str | None = None
+        branch: str | None = None,
     ) -> bool:
         """Update a file in a repository.
 
@@ -371,7 +377,7 @@ class GitHubClient:
             branch=branch,
             timeout=self.timeout,
             max_retries=self.max_retries,
-            retry_delay=self.retry_delay
+            retry_delay=self.retry_delay,
         )
 
     # Issue methods
@@ -382,7 +388,7 @@ class GitHubClient:
         title: str,
         body: str | None = None,
         labels: list[str] | None = None,
-        assignees: list[str] | None = None
+        assignees: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create an issue in a repository.
 
@@ -409,7 +415,7 @@ class GitHubClient:
             assignees=assignees,
             timeout=self.timeout,
             max_retries=self.max_retries,
-            retry_delay=self.retry_delay
+            retry_delay=self.retry_delay,
         )
 
     def list_issues(
@@ -418,7 +424,7 @@ class GitHubClient:
         state: Literal["open", "closed", "all"] = "open",
         labels: str | None = None,
         sort: Literal["created", "updated", "comments"] = "created",
-        direction: Literal["asc", "desc"] = "desc"
+        direction: Literal["asc", "desc"] = "desc",
     ) -> list[dict[str, Any]]:
         """List issues in a repository.
 
@@ -445,14 +451,10 @@ class GitHubClient:
             direction=direction,
             timeout=self.timeout,
             max_retries=self.max_retries,
-            retry_delay=self.retry_delay
+            retry_delay=self.retry_delay,
         )
 
-    def get_issue(
-        self,
-        repo: str,
-        issue_number: int
-    ) -> dict[str, Any]:
+    def get_issue(self, repo: str, issue_number: int) -> dict[str, Any]:
         """Get a specific issue in a repository.
 
         Args:
@@ -472,14 +474,11 @@ class GitHubClient:
             api_url=self.api_url,
             timeout=self.timeout,
             max_retries=self.max_retries,
-            retry_delay=self.retry_delay
+            retry_delay=self.retry_delay,
         )
 
     def add_issue_comment(
-        self,
-        repo: str,
-        issue_number: int,
-        body: str
+        self, repo: str, issue_number: int, body: str
     ) -> dict[str, Any]:
         """Add a comment to an issue.
 
@@ -502,5 +501,32 @@ class GitHubClient:
             api_url=self.api_url,
             timeout=self.timeout,
             max_retries=self.max_retries,
-            retry_delay=self.retry_delay
+            retry_delay=self.retry_delay,
+        )
+
+    def get_pull_request_files(
+        self,
+        repo: str,
+        pull_number: int,
+    ) -> list[dict[str, Any]]:
+        """Get the files changed in a pull request.
+
+        Args:
+            repo: Full repository name (owner/repo)
+            pull_number: Pull request number
+
+        Returns:
+            List of file information dictionaries
+
+        Raises:
+            QuackApiError: If the API request fails
+        """
+        return get_pull_request_files(
+            session=self.session,
+            repo=repo,
+            pull_number=pull_number,
+            api_url=self.api_url,
+            timeout=self.timeout,
+            max_retries=self.max_retries,
+            retry_delay=self.retry_delay,
         )

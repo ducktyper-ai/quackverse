@@ -63,7 +63,7 @@ class UtilityOperationsMixin:
 
     @wrap_io_errors
     def create_temp_directory(
-            self, prefix: str = "quackcore_", suffix: str = ""
+        self, prefix: str = "quackcore_", suffix: str = ""
     ) -> Path:
         """
         Create a temporary directory.
@@ -79,10 +79,10 @@ class UtilityOperationsMixin:
 
     @wrap_io_errors
     def create_temp_file(
-            self,
-            suffix: str = ".txt",
-            prefix: str = "quackcore_",
-            directory: str | Path | None = None,
+        self,
+        suffix: str = ".txt",
+        prefix: str = "quackcore_",
+        directory: str | Path | None = None,
     ) -> Path:
         """
         Create a temporary file.
@@ -99,7 +99,7 @@ class UtilityOperationsMixin:
 
     @wrap_io_errors
     def find_files_by_content(
-            self, directory: str | Path, text_pattern: str, recursive: bool = True
+        self, directory: str | Path, text_pattern: str, recursive: bool = True
     ) -> list[Path]:
         """
         Find files containing the given text pattern.

@@ -18,7 +18,7 @@ from quackcore.paths import resolver
 
 
 def resolve_download_path(
-        file_metadata: Mapping[str, object], local_path: str | None = None
+    file_metadata: Mapping[str, object], local_path: str | None = None
 ) -> str:
     """
     Resolve the local path for file download with enhanced path handling.
@@ -57,10 +57,10 @@ def resolve_download_path(
 
 
 def download_file(
-        drive_service: DriveService,
-        remote_id: str,
-        local_path: str | None = None,
-        logger: logging.Logger | None = None
+    drive_service: DriveService,
+    remote_id: str,
+    local_path: str | None = None,
+    logger: logging.Logger | None = None,
 ) -> IntegrationResult[str]:
     """
     Download a file from Google Drive.
@@ -80,12 +80,9 @@ def download_file(
         # Get file metadata
         try:
             file_metadata = execute_api_request(
-                drive_service.files().get(
-                    file_id=remote_id,
-                    fields="name, mimeType"
-                ),
+                drive_service.files().get(file_id=remote_id, fields="name, mimeType"),
                 "Failed to get file metadata from Google Drive",
-                "files.get"
+                "files.get",
             )
         except QuackApiError as metadata_error:
             local_logger.error(f"Metadata retrieval failed: {metadata_error}")

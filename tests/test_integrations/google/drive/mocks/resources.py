@@ -37,8 +37,11 @@ class MockDrivePermissionsResource(DrivePermissionsResource):
         self.create_call_count = 0
 
     def create(
-            self, file_id: str = None, fileId: str = None,
-            body: dict[str, object] = None, fields: str = None
+        self,
+        file_id: str = None,
+        fileId: str = None,
+        body: dict[str, object] = None,
+        fields: str = None,
     ) -> DriveRequest[dict[str, object]]:
         """
         Mock create method for creating a permission.
@@ -69,17 +72,17 @@ class MockDriveFilesResource(DriveFilesResource):
     """Mock files resource with configurable behavior."""
 
     def __init__(
-            self,
-            file_id: str = "file123",
-            file_metadata: dict[str, Any] | None = None,
-            file_list: list[dict[str, Any]] | None = None,
-            permissions_resource: DrivePermissionsResource | None = None,
-            create_error: Exception | None = None,
-            get_error: Exception | None = None,
-            get_media_error: Exception | None = None,
-            list_error: Exception | None = None,
-            update_error: Exception | None = None,
-            delete_error: Exception | None = None,
+        self,
+        file_id: str = "file123",
+        file_metadata: dict[str, Any] | None = None,
+        file_list: list[dict[str, Any]] | None = None,
+        permissions_resource: DrivePermissionsResource | None = None,
+        create_error: Exception | None = None,
+        get_error: Exception | None = None,
+        get_media_error: Exception | None = None,
+        list_error: Exception | None = None,
+        update_error: Exception | None = None,
+        delete_error: Exception | None = None,
     ):
         """
         Initialize mock files resource.
@@ -154,10 +157,10 @@ class MockDriveFilesResource(DriveFilesResource):
         self.last_delete_file_id: str | None = None
 
     def create(
-            self,
-            body: dict[str, object],
-            media_body: object | None = None,
-            fields: str | None = None,
+        self,
+        body: dict[str, object],
+        media_body: object | None = None,
+        fields: str | None = None,
     ) -> DriveRequest[dict[str, object]]:
         """
         Mock create method for creating a file.
@@ -180,7 +183,7 @@ class MockDriveFilesResource(DriveFilesResource):
         return request
 
     def get(
-            self, file_id: str = None, fileId: str = None, fields: str | None = None
+        self, file_id: str = None, fileId: str = None, fields: str | None = None
     ) -> DriveRequest[dict[str, object]]:
         """
         Mock get method for retrieving a file's metadata.
@@ -232,10 +235,10 @@ class MockDriveFilesResource(DriveFilesResource):
         return cast(DriveRequest[bytes], mock_request)
 
     def list(
-            self,
-            q: str | None = None,
-            fields: str | None = None,
-            page_size: int | None = None,
+        self,
+        q: str | None = None,
+        fields: str | None = None,
+        page_size: int | None = None,
     ) -> DriveRequest[dict[str, object]]:
         """
         Mock list method for listing files.
@@ -259,8 +262,11 @@ class MockDriveFilesResource(DriveFilesResource):
         return MockDriveRequest(response, self.list_error)
 
     def update(
-            self, file_id: str = None, fileId: str = None,
-            body: dict[str, object] = None, fields: str | None = None
+        self,
+        file_id: str = None,
+        fileId: str = None,
+        body: dict[str, object] = None,
+        fields: str | None = None,
     ) -> DriveRequest[dict[str, object]]:
         """
         Mock update method for updating a file's metadata.

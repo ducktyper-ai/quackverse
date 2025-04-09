@@ -1,28 +1,24 @@
 # src/quackcore/integrations/github/service.py
-"""GitHub integration service for QuackCore."""
-
-from typing import Any
+"""GitHub core integration service for QuackCore."""
 
 from quackcore.integrations.core import (
     AuthProviderProtocol,
     BaseIntegrationService,
     ConfigProviderProtocol,
-    IntegrationResult
+    IntegrationResult,
 )
 from quackcore.logging import get_logger
 
 from .auth import GitHubAuthProvider
 from .client import GitHubClient
 from .config import GitHubConfigProvider
-from .grading import GitHubGrader
 from .models import GitHubRepo, GitHubUser, PullRequest
-from .protocols import GitHubTeachingIntegrationProtocol
-from .teaching_adapter import GitHubTeachingAdapter
+from .protocols import GitHubIntegrationProtocol
 
 logger = get_logger(__name__)
 
 
-class GitHubIntegration(BaseIntegrationService, GitHubTeachingIntegrationProtocol):
+class GitHubIntegration(BaseIntegrationService, GitHubIntegrationProtocol):
     """GitHub integration for QuackCore."""
 
     def __init__(
@@ -55,8 +51,6 @@ class GitHubIntegration(BaseIntegrationService, GitHubTeachingIntegrationProtoco
         )
 
         self.client = None
-        self.teaching_adapter = None
-        self.grader = None
 
     @property
     def name(self) -> str:
@@ -107,7 +101,9 @@ class GitHubIntegration(BaseIntegrationService, GitHubTeachingIntegrationProtoco
                     else:
                         return IntegrationResult.error_result(
                             "Failed to authenticate with GitHub",
-                            message=auth_result.error if hasattr(auth_result, "error") else "Authentication failed"
+                            message=auth_result.error
+                            if hasattr(auth_result, "error")
+                            else "Authentication failed",
                         )
                 else:
                     return IntegrationResult.error_result(
@@ -122,12 +118,6 @@ class GitHubIntegration(BaseIntegrationService, GitHubTeachingIntegrationProtoco
                 max_retries=self.config.get("max_retries", 3),
                 retry_delay=self.config.get("retry_delay", 1.0),
             )
-
-            # Initialize teaching adapter
-            self.teaching_adapter = GitHubTeachingAdapter(self.client)
-
-            # Initialize grader
-            self.grader = GitHubGrader(self.client)
 
             self._initialized = True
             return IntegrationResult.success_result(
@@ -162,13 +152,10 @@ class GitHubIntegration(BaseIntegrationService, GitHubTeachingIntegrationProtoco
         try:
             user = self.client.get_user()
             return IntegrationResult.success_result(
-                content=user,
-                message=f"Successfully retrieved user {user.username}"
+                content=user, message=f"Successfully retrieved user {user.username}"
             )
         except Exception as e:
-            return IntegrationResult.error_result(
-                f"Failed to get user: {str(e)}"
-            )
+            return IntegrationResult.error_result(f"Failed to get user: {str(e)}")
 
     def get_repo(self, full_name: str) -> IntegrationResult[GitHubRepo]:
         """Get a GitHub repository.
@@ -187,12 +174,10 @@ class GitHubIntegration(BaseIntegrationService, GitHubTeachingIntegrationProtoco
             repo = self.client.get_repo(full_name)
             return IntegrationResult.success_result(
                 content=repo,
-                message=f"Successfully retrieved repository {repo.full_name}"
+                message=f"Successfully retrieved repository {repo.full_name}",
             )
         except Exception as e:
-            return IntegrationResult.error_result(
-                f"Failed to get repository: {str(e)}"
-            )
+            return IntegrationResult.error_result(f"Failed to get repository: {str(e)}")
 
     def star_repo(self, full_name: str) -> IntegrationResult[bool]:
         """Star a GitHub repository.
@@ -210,8 +195,7 @@ class GitHubIntegration(BaseIntegrationService, GitHubTeachingIntegrationProtoco
         try:
             self.client.star_repo(full_name)
             return IntegrationResult.success_result(
-                content=True,
-                message=f"Successfully starred repository {full_name}"
+                content=True, message=f"Successfully starred repository {full_name}"
             )
         except Exception as e:
             return IntegrationResult.error_result(
@@ -235,7 +219,7 @@ class GitHubIntegration(BaseIntegrationService, GitHubTeachingIntegrationProtoco
             fork = self.client.fork_repo(full_name)
             return IntegrationResult.success_result(
                 content=fork,
-                message=f"Successfully forked repository {full_name} to {fork.full_name}"
+                message=f"Successfully forked repository {full_name} to {fork.full_name}",
             )
         except Exception as e:
             return IntegrationResult.error_result(
@@ -250,7 +234,7 @@ class GitHubIntegration(BaseIntegrationService, GitHubTeachingIntegrationProtoco
         head: str,
         title: str,
         body: str | None = None,
-        base_branch: str = "main"
+        base_branch: str = "main",
     ) -> IntegrationResult[PullRequest]:
         """Create a pull request.
 
@@ -274,11 +258,10 @@ class GitHubIntegration(BaseIntegrationService, GitHubTeachingIntegrationProtoco
                 head=head,
                 title=title,
                 body=body,
-                base_branch=base_branch
+                base_branch=base_branch,
             )
             return IntegrationResult.success_result(
-                content=pr,
-                message=f"Successfully created pull request #{pr.number}"
+                content=pr, message=f"Successfully created pull request #{pr.number}"
             )
         except Exception as e:
             return IntegrationResult.error_result(
@@ -286,10 +269,7 @@ class GitHubIntegration(BaseIntegrationService, GitHubTeachingIntegrationProtoco
             )
 
     def list_pull_requests(
-        self,
-        repo: str,
-        state: str = "open",
-        author: str | None = None
+        self, repo: str, state: str = "open", author: str | None = None
     ) -> IntegrationResult[list[PullRequest]]:
         """List pull requests for a repository.
 
@@ -306,152 +286,39 @@ class GitHubIntegration(BaseIntegrationService, GitHubTeachingIntegrationProtoco
             return init_error
 
         try:
-            prs = self.client.list_pull_requests(
-                repo=repo,
-                state=state,
-                author=author
-            )
+            prs = self.client.list_pull_requests(repo=repo, state=state, author=author)
             return IntegrationResult.success_result(
                 content=prs,
-                message=f"Successfully retrieved {len(prs)} pull requests for {repo}"
+                message=f"Successfully retrieved {len(prs)} pull requests for {repo}",
             )
         except Exception as e:
             return IntegrationResult.error_result(
                 f"Failed to list pull requests: {str(e)}"
             )
 
-    # Teaching Methods
-
-    def ensure_starred(self, repo: str) -> IntegrationResult[bool]:
-        """Ensure that the user has starred a repository.
-
-        Args:
-            repo: Full repository name (owner/repo)
-
-        Returns:
-            Result with True if the repo is now starred
-        """
-        init_error = self._ensure_initialized()
-        if init_error:
-            return init_error
-
-        return self.teaching_adapter.ensure_starred(repo)
-
-    def ensure_forked(self, repo: str) -> IntegrationResult[str]:
-        """Ensure that the user has forked a repository.
+    def get_pull_request(
+        self, repo: str, number: int
+    ) -> IntegrationResult[PullRequest]:
+        """Get a specific pull request.
 
         Args:
             repo: Full repository name (owner/repo)
+            number: Pull request number
 
         Returns:
-            Result with the forked repository full name
-        """
-        init_error = self._ensure_initialized()
-        if init_error:
-            return init_error
-
-        return self.teaching_adapter.ensure_forked(repo)
-
-    def submit_assignment(
-        self,
-        forked_repo: str,
-        base_repo: str,
-        branch: str,
-        title: str,
-        body: str | None = None,
-        base_branch: str = "main"
-    ) -> IntegrationResult[str]:
-        """Submit an assignment by creating a pull request.
-
-        Args:
-            forked_repo: Full name of the forked repository (username/repo)
-            base_repo: Full name of the base repository (owner/repo)
-            branch: Branch in the forked repo containing the changes
-            title: Pull request title
-            body: Pull request body
-            base_branch: Base branch to merge into
-
-        Returns:
-            Result with the pull request URL
-        """
-        init_error = self._ensure_initialized()
-        if init_error:
-            return init_error
-
-        return self.teaching_adapter.submit_assignment(
-            forked_repo=forked_repo,
-            base_repo=base_repo,
-            branch=branch,
-            title=title,
-            body=body,
-            base_branch=base_branch
-        )
-
-    def get_latest_submission(self, repo: str, student: str) -> IntegrationResult[PullRequest]:
-        """Get the latest assignment submission for a student.
-
-        Args:
-            repo: Full repository name (owner/repo)
-            student: Student's GitHub username
-
-        Returns:
-            Result with the latest pull request
-        """
-        init_error = self._ensure_initialized()
-        if init_error:
-            return init_error
-
-        return self.teaching_adapter.get_latest_submission(repo, student)
-
-    # Grading Methods
-
-    def grade_submission(
-        self,
-        pull_request: PullRequest,
-        grading_criteria: dict[str, Any] | None = None
-    ) -> IntegrationResult[Any]:
-        """Grade a pull request submission.
-
-        Args:
-            pull_request: Pull request to grade
-            grading_criteria: Dictionary of grading criteria
-
-        Returns:
-            Result with the grading result
-        """
-        init_error = self._ensure_initialized()
-        if init_error:
-            return init_error
-
-        return self.grader.grade_submission(pull_request, grading_criteria)
-
-    def grade_submission_by_number(
-        self,
-        repo: str,
-        pr_number: int,
-        grading_criteria: dict[str, Any] | None = None
-    ) -> IntegrationResult[Any]:
-        """Grade a pull request submission by PR number.
-
-        Args:
-            repo: Full repository name (owner/repo)
-            pr_number: Pull request number
-            grading_criteria: Dictionary of grading criteria
-
-        Returns:
-            Result with the grading result
+            Result with PullRequest object
         """
         init_error = self._ensure_initialized()
         if init_error:
             return init_error
 
         try:
-            # First get the pull request
-            pr = self.client.get_pull_request(repo, pr_number)
-
-            # Then grade it
-            return self.grader.grade_submission(pr, grading_criteria)
+            pr = self.client.get_pull_request(repo, number)
+            return IntegrationResult.success_result(
+                content=pr,
+                message=f"Successfully retrieved pull request #{number} from {repo}",
+            )
         except Exception as e:
             return IntegrationResult.error_result(
-                f"Failed to grade submission: {str(e)}"
+                f"Failed to get pull request: {str(e)}"
             )

@@ -16,16 +16,16 @@ class AnthropicClient(LLMClient):
     """Anthropic LLM client implementation."""
 
     def __init__(
-            self,
-            model: str | None = None,
-            api_key: str | None = None,
-            api_base: str | None = None,
-            timeout: int = 60,
-            retry_count: int = 3,
-            initial_retry_delay: float = 1.0,
-            max_retry_delay: float = 30.0,
-            log_level: int = logging.INFO,
-            **kwargs: Any,
+        self,
+        model: str | None = None,
+        api_key: str | None = None,
+        api_base: str | None = None,
+        timeout: int = 60,
+        retry_count: int = 3,
+        initial_retry_delay: float = 1.0,
+        max_retry_delay: float = 30.0,
+        log_level: int = logging.INFO,
+        **kwargs: Any,
     ) -> None:
         """
         Initialize the Anthropic client.
@@ -70,8 +70,8 @@ class AnthropicClient(LLMClient):
 
         # Check if anthropic is already in sys.modules and is a mock
         anthropic_is_mock = (
-                "anthropic" in sys.modules and
-                "MagicMock" in sys.modules["anthropic"].__class__.__name__
+            "anthropic" in sys.modules
+            and "MagicMock" in sys.modules["anthropic"].__class__.__name__
         )
 
         return in_pytest or anthropic_is_mock
@@ -86,6 +86,7 @@ class AnthropicClient(LLMClient):
         try:
             # Import directly instead of using find_spec to avoid issues with mocks
             import anthropic
+
             self.logger.debug("Anthropic package is available")
         except ImportError:
             self.logger.error("Anthropic package not installed")
@@ -182,13 +183,13 @@ class AnthropicClient(LLMClient):
         }
 
     def _handle_streaming(
-            self,
-            client: Any,
-            model: str,
-            system: str | None,
-            messages: list[dict],
-            params: dict,
-            callback: Callable[[str], None] | None,
+        self,
+        client: Any,
+        model: str,
+        system: str | None,
+        messages: list[dict],
+        params: dict,
+        callback: Callable[[str], None] | None,
     ) -> str:
         """
         Handle streaming responses from the Anthropic API.
@@ -221,10 +222,10 @@ class AnthropicClient(LLMClient):
                 with stream as context_stream:
                     for chunk in context_stream:
                         if (
-                                hasattr(chunk, "type")
-                                and chunk.type == "content_block_delta"
-                                and hasattr(chunk, "delta")
-                                and hasattr(chunk.delta, "text")
+                            hasattr(chunk, "type")
+                            and chunk.type == "content_block_delta"
+                            and hasattr(chunk, "delta")
+                            and hasattr(chunk.delta, "text")
                         ):
                             collected_content.append(chunk.delta.text)
                             if callback:
@@ -234,10 +235,10 @@ class AnthropicClient(LLMClient):
                 # try to use the stream directly as an iterator
                 for chunk in stream:
                     if (
-                            hasattr(chunk, "type")
-                            and chunk.type == "content_block_delta"
-                            and hasattr(chunk, "delta")
-                            and hasattr(chunk.delta, "text")
+                        hasattr(chunk, "type")
+                        and chunk.type == "content_block_delta"
+                        and hasattr(chunk, "delta")
+                        and hasattr(chunk.delta, "text")
                     ):
                         collected_content.append(chunk.delta.text)
                         if callback:
@@ -269,13 +270,12 @@ class AnthropicClient(LLMClient):
                 original_error=error,
             )
         elif (
-                (
-                        "api_key" in error_str.lower()
-                        and (
-                                "invalid" in error_str.lower() or "incorrect" in error_str.lower())
-                )
-                or ("invalid api key" in error_str.lower())
-                or ("authentication" in error_str.lower())
+            (
+                "api_key" in error_str.lower()
+                and ("invalid" in error_str.lower() or "incorrect" in error_str.lower())
+            )
+            or ("invalid api key" in error_str.lower())
+            or ("authentication" in error_str.lower())
         ):
             return QuackApiError(
                 f"Invalid Anthropic API key: {error}",
@@ -299,10 +299,10 @@ class AnthropicClient(LLMClient):
             )
 
     def _chat_with_provider(
-            self,
-            messages: list[ChatMessage],
-            options: LLMOptions,
-            callback: Callable[[str], None] | None = None,
+        self,
+        messages: list[ChatMessage],
+        options: LLMOptions,
+        callback: Callable[[str], None] | None = None,
     ) -> IntegrationResult[str]:
         """
         Send a chat completion request to the Anthropic API.
@@ -378,9 +378,9 @@ class AnthropicClient(LLMClient):
 
                 # Process the response
                 if (
-                        hasattr(response, "content")
-                        and len(response.content) > 0
-                        and hasattr(response.content[0], "text")
+                    hasattr(response, "content")
+                    and len(response.content) > 0
+                    and hasattr(response.content[0], "text")
                 ):
                     result = response.content[0].text
                 elif hasattr(response, "text"):
@@ -396,7 +396,7 @@ class AnthropicClient(LLMClient):
             raise self._convert_error(e)
 
     def _count_tokens_with_provider(
-            self, messages: list[ChatMessage]
+        self, messages: list[ChatMessage]
     ) -> IntegrationResult[int]:
         """
         Count the number of tokens in the messages using Anthropic's tokenizer.

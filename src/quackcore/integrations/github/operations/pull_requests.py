@@ -11,14 +11,14 @@ from ..utils.api import make_request
 
 
 def create_pull_request(
-        session: requests.Session,
-        base_repo: str,
-        head: str,
-        title: str,
-        api_url: str,
-        body: str | None = None,
-        base_branch: str = "main",
-        **request_kwargs: Any
+    session: requests.Session,
+    base_repo: str,
+    head: str,
+    title: str,
+    api_url: str,
+    body: str | None = None,
+    base_branch: str = "main",
+    **request_kwargs: Any,
 ) -> PullRequest:
     """Create a pull request.
 
@@ -55,7 +55,7 @@ def create_pull_request(
         url=endpoint,
         api_url=api_url,
         json=data,
-        **request_kwargs
+        **request_kwargs,
     )
 
     pr_data = response.json()
@@ -65,19 +65,22 @@ def create_pull_request(
     author = GitHubUser(
         username=author_data.get("login"),
         url=author_data.get("html_url"),
-        avatar_url=author_data.get("avatar_url")
+        avatar_url=author_data.get("avatar_url"),
     )
 
     # Parse the dates
     created_at = datetime.fromisoformat(
-        pr_data.get("created_at").replace("Z", "+00:00"))
+        pr_data.get("created_at").replace("Z", "+00:00")
+    )
     updated_at = datetime.fromisoformat(
-        pr_data.get("updated_at").replace("Z", "+00:00"))
+        pr_data.get("updated_at").replace("Z", "+00:00")
+    )
 
     merged_at = None
     if pr_data.get("merged_at"):
         merged_at = datetime.fromisoformat(
-            pr_data.get("merged_at").replace("Z", "+00:00"))
+            pr_data.get("merged_at").replace("Z", "+00:00")
+        )
 
     # Determine the status
     if merged_at:
@@ -105,17 +108,17 @@ def create_pull_request(
         base_repo=base_repo_name,
         head_repo=head_repo,
         base_branch=pr_data.get("base", {}).get("ref", ""),
-        head_branch=pr_data.get("head", {}).get("ref", "")
+        head_branch=pr_data.get("head", {}).get("ref", ""),
     )
 
 
 def list_pull_requests(
-        session: requests.Session,
-        repo: str,
-        api_url: str,
-        state: Literal["open", "closed", "all"] = "open",
-        author: str | None = None,
-        **request_kwargs: Any
+    session: requests.Session,
+    repo: str,
+    api_url: str,
+    state: Literal["open", "closed", "all"] = "open",
+    author: str | None = None,
+    **request_kwargs: Any,
 ) -> list[PullRequest]:
     """List pull requests for a repository.
 
@@ -146,7 +149,7 @@ def list_pull_requests(
         url=endpoint,
         api_url=api_url,
         params=params,
-        **request_kwargs
+        **request_kwargs,
     )
 
     pr_list = response.json()
@@ -162,19 +165,22 @@ def list_pull_requests(
         author_obj = GitHubUser(
             username=author_data.get("login"),
             url=author_data.get("html_url"),
-            avatar_url=author_data.get("avatar_url")
+            avatar_url=author_data.get("avatar_url"),
         )
 
         # Parse the dates
         created_at = datetime.fromisoformat(
-            pr_data.get("created_at").replace("Z", "+00:00"))
+            pr_data.get("created_at").replace("Z", "+00:00")
+        )
         updated_at = datetime.fromisoformat(
-            pr_data.get("updated_at").replace("Z", "+00:00"))
+            pr_data.get("updated_at").replace("Z", "+00:00")
+        )
 
         merged_at = None
         if pr_data.get("merged_at"):
             merged_at = datetime.fromisoformat(
-                pr_data.get("merged_at").replace("Z", "+00:00"))
+                pr_data.get("merged_at").replace("Z", "+00:00")
+            )
 
         # Determine the status
         if merged_at:
@@ -202,7 +208,7 @@ def list_pull_requests(
             base_repo=base_repo_name,
             head_repo=head_repo,
             base_branch=pr_data.get("base", {}).get("ref", ""),
-            head_branch=pr_data.get("head", {}).get("ref", "")
+            head_branch=pr_data.get("head", {}).get("ref", ""),
         )
 
         result.append(pr)
@@ -211,11 +217,11 @@ def list_pull_requests(
 
 
 def get_pull_request(
-        session: requests.Session,
-        repo: str,
-        number: int,
-        api_url: str,
-        **request_kwargs: Any
+    session: requests.Session,
+    repo: str,
+    number: int,
+    api_url: str,
+    **request_kwargs: Any,
 ) -> PullRequest:
     """Get a specific pull request.
 
@@ -234,11 +240,7 @@ def get_pull_request(
     """
     endpoint = f"/repos/{repo}/pulls/{number}"
     response = make_request(
-        session=session,
-        method="GET",
-        url=endpoint,
-        api_url=api_url,
-        **request_kwargs
+        session=session, method="GET", url=endpoint, api_url=api_url, **request_kwargs
     )
 
     pr_data = response.json()
@@ -248,19 +250,22 @@ def get_pull_request(
     author = GitHubUser(
         username=author_data.get("login"),
         url=author_data.get("html_url"),
-        avatar_url=author_data.get("avatar_url")
+        avatar_url=author_data.get("avatar_url"),
     )
 
     # Parse the dates
     created_at = datetime.fromisoformat(
-        pr_data.get("created_at").replace("Z", "+00:00"))
+        pr_data.get("created_at").replace("Z", "+00:00")
+    )
     updated_at = datetime.fromisoformat(
-        pr_data.get("updated_at").replace("Z", "+00:00"))
+        pr_data.get("updated_at").replace("Z", "+00:00")
+    )
 
     merged_at = None
     if pr_data.get("merged_at"):
         merged_at = datetime.fromisoformat(
-            pr_data.get("merged_at").replace("Z", "+00:00"))
+            pr_data.get("merged_at").replace("Z", "+00:00")
+        )
 
     # Determine the status
     if merged_at:
@@ -288,19 +293,19 @@ def get_pull_request(
         base_repo=base_repo_name,
         head_repo=head_repo,
         base_branch=pr_data.get("base", {}).get("ref", ""),
-        head_branch=pr_data.get("head", {}).get("ref", "")
+        head_branch=pr_data.get("head", {}).get("ref", ""),
     )
 
 
 def merge_pull_request(
-        session: requests.Session,
-        repo: str,
-        pull_number: int,
-        api_url: str,
-        commit_title: str | None = None,
-        commit_message: str | None = None,
-        merge_method: Literal["merge", "squash", "rebase"] = "merge",
-        **request_kwargs: Any
+    session: requests.Session,
+    repo: str,
+    pull_number: int,
+    api_url: str,
+    commit_title: str | None = None,
+    commit_message: str | None = None,
+    merge_method: Literal["merge", "squash", "rebase"] = "merge",
+    **request_kwargs: Any,
 ) -> bool:
     """Merge a pull request.
 
@@ -338,7 +343,7 @@ def merge_pull_request(
         url=endpoint,
         api_url=api_url,
         json=data,
-        **request_kwargs
+        **request_kwargs,
     )
 
     result = response.json()
@@ -346,11 +351,11 @@ def merge_pull_request(
 
 
 def get_pull_request_files(
-        session: requests.Session,
-        repo: str,
-        pull_number: int,
-        api_url: str,
-        **request_kwargs: Any
+    session: requests.Session,
+    repo: str,
+    pull_number: int,
+    api_url: str,
+    **request_kwargs: Any,
 ) -> list[dict[str, Any]]:
     """Get the files changed in a pull request.
 
@@ -370,24 +375,20 @@ def get_pull_request_files(
     endpoint = f"/repos/{repo}/pulls/{pull_number}/files"
 
     response = make_request(
-        session=session,
-        method="GET",
-        url=endpoint,
-        api_url=api_url,
-        **request_kwargs
+        session=session, method="GET", url=endpoint, api_url=api_url, **request_kwargs
     )
 
     return response.json()
 
 
 def add_pull_request_review(
-        session: requests.Session,
-        repo: str,
-        pull_number: int,
-        body: str,
-        api_url: str,
-        event: Literal["APPROVE", "REQUEST_CHANGES", "COMMENT"] = "COMMENT",
-        **request_kwargs: Any
+    session: requests.Session,
+    repo: str,
+    pull_number: int,
+    body: str,
+    api_url: str,
+    event: Literal["APPROVE", "REQUEST_CHANGES", "COMMENT"] = "COMMENT",
+    **request_kwargs: Any,
 ) -> dict[str, Any]:
     """Add a review to a pull request.
 
@@ -419,7 +420,7 @@ def add_pull_request_review(
         url=endpoint,
         api_url=api_url,
         json=data,
-        **request_kwargs
+        **request_kwargs,
     )
 
     return response.json()

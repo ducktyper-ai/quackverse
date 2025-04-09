@@ -6,11 +6,12 @@ This module uses an LLM to rewrite and polish prompt templates
 into production-ready prompts, leveraging the quackcore.integrations.llms
 module for standardized LLM interactions.
 """
+
 from collections.abc import Sequence
 
-from quackcore.logging import get_logger
 from quackcore.config import config as quack_config
 from quackcore.fs import service as fs
+from quackcore.logging import get_logger
 
 # Set up logger
 logger = get_logger(__name__)
@@ -22,12 +23,13 @@ DEFAULT_CONFIG = {
         "max_tokens": 1200,
         "top_p": 0.95,
         "frequency_penalty": 0.0,
-        "presence_penalty": 0.0
+        "presence_penalty": 0.0,
     },
     "system_prompt": {
         "prompt_engineer": "You are a world-class prompt engineer.\nYou will be given a task description and optionally a schema and examples.\nRewrite the prompt {strategy} so that it is production-ready.\nFormat the output clearly for use with GPT-4 or Claude.\n\nONLY output the final rewritten prompt."
-    }
+    },
 }
+
 
 def _load_config():
     """
@@ -44,10 +46,7 @@ def _load_config():
 
     if not enhancer_config:
         # Check if we have a local config file
-        config_paths = [
-            "config/prompt_enhancer.yaml",
-            "prompt_enhancer.yaml"
-        ]
+        config_paths = ["config/prompt_enhancer.yaml", "prompt_enhancer.yaml"]
 
         for path in config_paths:
             result = fs.read_yaml(path)
@@ -70,12 +69,12 @@ def _load_config():
 
 
 def enhance_with_llm(
-        task_description: str,
-        schema: str | None = None,
-        examples: list[str] | str | None = None,
-        strategy_name: str | None = None,
-        model: str | None = None,
-        provider: str | None = None
+    task_description: str,
+    schema: str | None = None,
+    examples: list[str] | str | None = None,
+    strategy_name: str | None = None,
+    model: str | None = None,
+    provider: str | None = None,
 ) -> str:
     """
     Use an LLM to enhance a prompt based on the selected strategy.
@@ -95,8 +94,8 @@ def enhance_with_llm(
         ImportError: If the LLM client is not properly configured
     """
     try:
+        from quackcore.integrations.llms.models import ChatMessage, LLMOptions, RoleType
         from quackcore.integrations.llms.service import LLMIntegration
-        from quackcore.integrations.llms.models import ChatMessage, RoleType, LLMOptions
     except ImportError as e:
         logger.error("Failed to import LLM integration: %s", str(e))
         raise ImportError(
@@ -111,9 +110,7 @@ def enhance_with_llm(
     try:
         # Initialize the LLM integration service
         llm_service = LLMIntegration(
-            provider=provider,
-            model=model,
-            enable_fallback=True
+            provider=provider, model=model, enable_fallback=True
         )
         init_result = llm_service.initialize()
 
@@ -127,7 +124,7 @@ def enhance_with_llm(
 
         messages = [
             ChatMessage(role=RoleType.SYSTEM, content=system_prompt),
-            ChatMessage(role=RoleType.USER, content=user_prompt)
+            ChatMessage(role=RoleType.USER, content=user_prompt),
         ]
 
         # Set options from config
@@ -136,7 +133,7 @@ def enhance_with_llm(
             max_tokens=llm_config.get("max_tokens", 1200),
             top_p=llm_config.get("top_p", 0.95),
             frequency_penalty=llm_config.get("frequency_penalty", 0.0),
-            presence_penalty=llm_config.get("presence_penalty", 0.0)
+            presence_penalty=llm_config.get("presence_penalty", 0.0),
         )
 
         # Send the chat request
@@ -151,7 +148,8 @@ def enhance_with_llm(
         # Validate the response - ensure we got something useful
         if not enhanced_prompt or len(enhanced_prompt) < len(task_description):
             logger.warning(
-                "LLM returned a shorter prompt than the original. Using original.")
+                "LLM returned a shorter prompt than the original. Using original."
+            )
             return task_description
 
         return enhanced_prompt
@@ -178,8 +176,7 @@ def _create_system_prompt(strategy_name: str | None, config: dict) -> str:
     """
     # Get the prompt template from config
     prompt_template = config.get("system_prompt", {}).get(
-        "prompt_engineer",
-        DEFAULT_CONFIG["system_prompt"]["prompt_engineer"]
+        "prompt_engineer", DEFAULT_CONFIG["system_prompt"]["prompt_engineer"]
     )
 
     # Format strategy information
@@ -190,9 +187,7 @@ def _create_system_prompt(strategy_name: str | None, config: dict) -> str:
 
 
 def _create_user_prompt(
-        task_description: str,
-        schema: str | None,
-        examples: list[str] | str | None
+    task_description: str, schema: str | None, examples: list[str] | str | None
 ) -> str:
     """
     Create the user prompt for the LLM enhancer.
@@ -221,10 +216,10 @@ def _create_user_prompt(
 
 
 def count_prompt_tokens(
-        task_description: str,
-        schema: str | None = None,
-        examples: list[str] | str | None = None,
-        strategy_name: str | None = None
+    task_description: str,
+    schema: str | None = None,
+    examples: list[str] | str | None = None,
+    strategy_name: str | None = None,
 ) -> int | None:
     """
     Count the tokens in a prompt that would be sent to the LLM.
@@ -242,8 +237,8 @@ def count_prompt_tokens(
         Token count if successful, None if token counting failed
     """
     try:
-        from quackcore.integrations.llms.service import LLMIntegration
         from quackcore.integrations.llms.models import ChatMessage, RoleType
+        from quackcore.integrations.llms.service import LLMIntegration
 
         # Load configuration
         config = _load_config()
@@ -262,7 +257,7 @@ def count_prompt_tokens(
 
         messages = [
             ChatMessage(role=RoleType.SYSTEM, content=system_prompt),
-            ChatMessage(role=RoleType.USER, content=user_prompt)
+            ChatMessage(role=RoleType.USER, content=user_prompt),
         ]
 
         # Count tokens

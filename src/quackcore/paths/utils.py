@@ -43,17 +43,16 @@ class ProjectConfig(BaseModel):
     )
 
     max_levels: int = Field(
-        default=5,
-        description="Maximum number of parent directories to check"
+        default=5, description="Maximum number of parent directories to check"
     )
 
 
 @wrap_io_errors
 def find_project_root(
-        start_dir: str | Path | None = None,
-        marker_files: list[str] | None = None,
-        marker_dirs: list[str] | None = None,
-        max_levels: int = 5,
+    start_dir: str | Path | None = None,
+    marker_files: list[str] | None = None,
+    marker_dirs: list[str] | None = None,
+    max_levels: int = 5,
 ) -> Path:
     """
     Find the project root directory by looking for marker files or directories.
@@ -110,9 +109,9 @@ def find_project_root(
 
 @wrap_io_errors
 def find_nearest_directory(
-        name: str,
-        start_dir: str | Path | None = None,
-        max_levels: int = 5,
+    name: str,
+    start_dir: str | Path | None = None,
+    max_levels: int = 5,
 ) -> Path:
     """
     Find the nearest directory with the given name.
@@ -152,8 +151,8 @@ def find_nearest_directory(
 
 @wrap_io_errors
 def resolve_relative_to_project(
-        path: str | Path,
-        project_root: str | Path | None = None,
+    path: str | Path,
+    project_root: str | Path | None = None,
 ) -> Path:
     """
     Resolve a path relative to the project root.
@@ -292,8 +291,8 @@ def _get_relative_parts(path_obj: Path, base: Path) -> list[str] | None:
 
 @wrap_io_errors
 def infer_module_from_path(
-        path: str | Path,
-        project_root: str | Path | None = None,
+    path: str | Path,
+    project_root: str | Path | None = None,
 ) -> str:
     """
     Infer a Python module name from a file path.

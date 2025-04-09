@@ -16,7 +16,7 @@ def create_issue(
     body: str | None = None,
     labels: list[str] | None = None,
     assignees: list[str] | None = None,
-    **request_kwargs: Any
+    **request_kwargs: Any,
 ) -> dict[str, Any]:
     """Create an issue in a repository.
 
@@ -57,7 +57,7 @@ def create_issue(
         url=endpoint,
         api_url=api_url,
         json=data,
-        **request_kwargs
+        **request_kwargs,
     )
 
     return response.json()
@@ -71,7 +71,7 @@ def list_issues(
     labels: str | None = None,
     sort: Literal["created", "updated", "comments"] = "created",
     direction: Literal["asc", "desc"] = "desc",
-    **request_kwargs: Any
+    **request_kwargs: Any,
 ) -> list[dict[str, Any]]:
     """List issues in a repository.
 
@@ -93,11 +93,7 @@ def list_issues(
     """
     endpoint = f"/repos/{repo}/issues"
 
-    params = {
-        "state": state,
-        "sort": sort,
-        "direction": direction
-    }
+    params = {"state": state, "sort": sort, "direction": direction}
 
     if labels:
         params["labels"] = labels
@@ -108,7 +104,7 @@ def list_issues(
         url=endpoint,
         api_url=api_url,
         params=params,
-        **request_kwargs
+        **request_kwargs,
     )
 
     return response.json()
@@ -119,7 +115,7 @@ def get_issue(
     repo: str,
     issue_number: int,
     api_url: str,
-    **request_kwargs: Any
+    **request_kwargs: Any,
 ) -> dict[str, Any]:
     """Get a specific issue in a repository.
 
@@ -139,11 +135,7 @@ def get_issue(
     endpoint = f"/repos/{repo}/issues/{issue_number}"
 
     response = make_request(
-        session=session,
-        method="GET",
-        url=endpoint,
-        api_url=api_url,
-        **request_kwargs
+        session=session, method="GET", url=endpoint, api_url=api_url, **request_kwargs
     )
 
     return response.json()
@@ -155,7 +147,7 @@ def add_issue_comment(
     issue_number: int,
     body: str,
     api_url: str,
-    **request_kwargs: Any
+    **request_kwargs: Any,
 ) -> dict[str, Any]:
     """Add a comment to an issue.
 
@@ -175,9 +167,7 @@ def add_issue_comment(
     """
     endpoint = f"/repos/{repo}/issues/{issue_number}/comments"
 
-    data = {
-        "body": body
-    }
+    data = {"body": body}
 
     response = make_request(
         session=session,
@@ -185,7 +175,7 @@ def add_issue_comment(
         url=endpoint,
         api_url=api_url,
         json=data,
-        **request_kwargs
+        **request_kwargs,
     )
 
     return response.json()

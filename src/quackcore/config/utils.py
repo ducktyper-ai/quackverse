@@ -10,9 +10,11 @@ import os
 from pathlib import Path
 from typing import TypeVar
 
+from quackcore.config.loader import (  # load_yaml_config is no longer used
+    _deep_merge,
+    load_yaml_config,
+)
 from quackcore.config.models import QuackConfig
-from quackcore.config.loader import _deep_merge, \
-    load_yaml_config  # load_yaml_config is no longer used
 from quackcore.errors import QuackConfigurationError
 from quackcore.fs import service as fs
 

@@ -16,7 +16,7 @@ from quackcore.errors import QuackApiError, QuackIntegrationError
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.llms.clients.base import LLMClient
 from quackcore.integrations.llms.models import ChatMessage, LLMOptions
-from quackcore.logging import get_logger, LogLevel, LOG_LEVELS
+from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
 
 
 class FallbackConfig(BaseModel):
@@ -48,8 +48,9 @@ class ProviderStatus(BaseModel):
     provider: str = Field(..., description="Provider name")
     available: bool = Field(True, description="Whether the provider is available")
     last_error: str | None = Field(None, description="Last error message")
-    last_attempt_time: float | None = Field(None,
-                                            description="Timestamp of last attempt")
+    last_attempt_time: float | None = Field(
+        None, description="Timestamp of last attempt"
+    )
     success_count: int = Field(0, description="Number of successful calls")
     fail_count: int = Field(0, description="Number of failed calls")
 
@@ -63,12 +64,12 @@ class FallbackLLMClient(LLMClient):
     """
 
     def __init__(
-            self,
-            fallback_config: FallbackConfig | None = None,
-            model_map: dict[str, str] | None = None,
-            api_key_map: dict[str, str] | None = None,
-            log_level: int = LOG_LEVELS[LogLevel.INFO],
-            **kwargs: Any,
+        self,
+        fallback_config: FallbackConfig | None = None,
+        model_map: dict[str, str] | None = None,
+        api_key_map: dict[str, str] | None = None,
+        log_level: int = LOG_LEVELS[LogLevel.INFO],
+        **kwargs: Any,
     ) -> None:
         """
         Initialize the fallback LLM client.
@@ -89,7 +90,8 @@ class FallbackLLMClient(LLMClient):
         )
 
         self.logger = get_logger(
-            f"{self.__class__.__module__}.{self.__class__.__name__}")
+            f"{self.__class__.__module__}.{self.__class__.__name__}"
+        )
         self.logger.setLevel(log_level)
 
         # Use default config if none is provided
@@ -134,7 +136,10 @@ class FallbackLLMClient(LLMClient):
             str: Current model name
         """
         # If we have a successful provider, return its model
-        if self._last_successful_provider and self._fallback_config.stop_on_successful_provider:
+        if (
+            self._last_successful_provider
+            and self._fallback_config.stop_on_successful_provider
+        ):
             provider = self._last_successful_provider
             client = self._get_client_for_provider(provider)
             return client.model
@@ -228,21 +233,24 @@ class FallbackLLMClient(LLMClient):
             bool: True if it's an authentication error
         """
         error_str = str(error).lower()
-        return any(term in error_str for term in [
-            "api key",
-            "authentication",
-            "auth",
-            "credential",
-            "permission",
-            "unauthorized",
-            "invalid key",
-        ])
+        return any(
+            term in error_str
+            for term in [
+                "api key",
+                "authentication",
+                "auth",
+                "credential",
+                "permission",
+                "unauthorized",
+                "invalid key",
+            ]
+        )
 
     def _chat_with_provider(
-            self,
-            messages: list[ChatMessage],
-            options: LLMOptions,
-            callback: Callable[[str], None] | None = None,
+        self,
+        messages: list[ChatMessage],
+        options: LLMOptions,
+        callback: Callable[[str], None] | None = None,
     ) -> IntegrationResult[str]:
         """
         Send a chat completion request with fallback support.
@@ -259,11 +267,17 @@ class FallbackLLMClient(LLMClient):
             IntegrationResult[str]: Result of the chat completion request
         """
         # If we have a successful provider and configuration says to use it, try it first
-        if self._last_successful_provider and self._fallback_config.stop_on_successful_provider:
+        if (
+            self._last_successful_provider
+            and self._fallback_config.stop_on_successful_provider
+        ):
             providers_to_try = [
                 self._last_successful_provider,
-                *[p for p in self._fallback_config.providers if
-                  p != self._last_successful_provider]
+                *[
+                    p
+                    for p in self._fallback_config.providers
+                    if p != self._last_successful_provider
+                ],
             ]
         else:
             providers_to_try = self._fallback_config.providers
@@ -288,7 +302,8 @@ class FallbackLLMClient(LLMClient):
             try:
                 client = self._get_client_for_provider(provider)
                 self.logger.info(
-                    f"Trying provider: {provider} with model: {client.model}")
+                    f"Trying provider: {provider} with model: {client.model}"
+                )
             except QuackIntegrationError as e:
                 self.logger.warning(f"Could not initialize provider {provider}: {e}")
                 last_error = e
@@ -301,7 +316,8 @@ class FallbackLLMClient(LLMClient):
                 try:
                     # Start the request
                     self.logger.debug(
-                        f"Sending request to {provider} (attempt {attempt}/{max_attempts})")
+                        f"Sending request to {provider} (attempt {attempt}/{max_attempts})"
+                    )
 
                     # Set the model in options if not already set
                     if options.model is None:
@@ -341,8 +357,10 @@ class FallbackLLMClient(LLMClient):
                     provider_status.fail_count += 1
 
                     # Check if it's an auth error and we should fail fast
-                    if self._fallback_config.fail_fast_on_auth_errors and self._is_auth_error(
-                            e):
+                    if (
+                        self._fallback_config.fail_fast_on_auth_errors
+                        and self._is_auth_error(e)
+                    ):
                         self.logger.warning(
                             f"Authentication error with {provider}, skipping remaining attempts: {e}"
                         )
@@ -380,7 +398,7 @@ class FallbackLLMClient(LLMClient):
         return IntegrationResult.error_result(error_message)
 
     def _count_tokens_with_provider(
-            self, messages: list[ChatMessage]
+        self, messages: list[ChatMessage]
     ) -> IntegrationResult[int]:
         """
         Count tokens with fallback support.
@@ -395,11 +413,17 @@ class FallbackLLMClient(LLMClient):
         """
         # Similar fallback logic as _chat_with_provider, but for token counting
         # If we have a successful provider and configuration says to use it, try it first
-        if self._last_successful_provider and self._fallback_config.stop_on_successful_provider:
+        if (
+            self._last_successful_provider
+            and self._fallback_config.stop_on_successful_provider
+        ):
             providers_to_try = [
                 self._last_successful_provider,
-                *[p for p in self._fallback_config.providers if
-                  p != self._last_successful_provider]
+                *[
+                    p
+                    for p in self._fallback_config.providers
+                    if p != self._last_successful_provider
+                ],
             ]
         else:
             providers_to_try = self._fallback_config.providers
@@ -453,6 +477,8 @@ class FallbackLLMClient(LLMClient):
                 last_error = e
 
         # If we get here, all providers failed
-        error_message = f"All providers failed to count tokens. Last error: {last_error}"
+        error_message = (
+            f"All providers failed to count tokens. Last error: {last_error}"
+        )
         self.logger.error(error_message)
         return IntegrationResult.error_result(error_message)

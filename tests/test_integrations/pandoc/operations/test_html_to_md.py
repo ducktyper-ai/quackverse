@@ -5,7 +5,7 @@ Tests for HTML to Markdown conversion operations.
 
 import time
 from pathlib import Path
-from unittest.mock import patch, ANY, Mock
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 
@@ -91,7 +91,8 @@ class TestHtmlToMarkdownOperations:
         """Test validating HTML input file."""
         html_path = Path("/path/to/file.html")
         config = PandocConfig(
-            validation={"verify_structure": False})  # Disable validation
+            validation={"verify_structure": False}
+        )  # Disable validation
 
         # Create a direct mock for fs.get_file_info using monkeypatch
         class MockFileInfo:
@@ -122,12 +123,12 @@ class TestHtmlToMarkdownOperations:
 
             # Test conversion
             with patch(
-                    "quackcore.integrations.pandoc.operations.html_to_md.prepare_pandoc_args"
+                "quackcore.integrations.pandoc.operations.html_to_md.prepare_pandoc_args"
             ) as mock_args:
                 mock_args.return_value = ["--strip-comments", "--no-highlight"]
 
                 with patch(
-                        "quackcore.integrations.pandoc.operations.html_to_md.post_process_markdown"
+                    "quackcore.integrations.pandoc.operations.html_to_md.post_process_markdown"
                 ) as mock_post:
                     mock_post.return_value = "# Test\n\nContent"
 
@@ -188,7 +189,7 @@ class TestHtmlToMarkdownOperations:
 
         # Mock validate_conversion to return no errors
         with patch(
-                "quackcore.integrations.pandoc.operations.html_to_md.validate_conversion"
+            "quackcore.integrations.pandoc.operations.html_to_md.validate_conversion"
         ) as mock_validate:
             mock_validate.return_value = []  # No validation errors
 
@@ -254,7 +255,7 @@ class TestHtmlToMarkdownOperations:
         mock_fs.write_text.return_value.success = True
 
         with patch(
-                "quackcore.integrations.pandoc.operations.html_to_md.validate_conversion"
+            "quackcore.integrations.pandoc.operations.html_to_md.validate_conversion"
         ) as mock_validate:
             mock_validate.return_value = ["Output file is empty"]
 
@@ -279,17 +280,17 @@ class TestHtmlToMarkdownOperations:
 
         # Test successful conversion
         with patch(
-                "quackcore.integrations.pandoc.operations.html_to_md._validate_input"
+            "quackcore.integrations.pandoc.operations.html_to_md._validate_input"
         ) as mock_validate:
             mock_validate.return_value = 1024  # Original size
 
             with patch(
-                    "quackcore.integrations.pandoc.operations.html_to_md._attempt_conversion"
+                "quackcore.integrations.pandoc.operations.html_to_md._attempt_conversion"
             ) as mock_attempt:
                 mock_attempt.return_value = "# Test\n\nContent"
 
                 with patch(
-                        "quackcore.integrations.pandoc.operations.html_to_md._write_and_validate_output"
+                    "quackcore.integrations.pandoc.operations.html_to_md._write_and_validate_output"
                 ) as mock_write:
                     mock_write.return_value = (
                         1.0,
@@ -298,7 +299,7 @@ class TestHtmlToMarkdownOperations:
                     )  # (conversion_time, output_size, validation_errors)
 
                     with patch(
-                            "quackcore.integrations.pandoc.operations.html_to_md.track_metrics"
+                        "quackcore.integrations.pandoc.operations.html_to_md.track_metrics"
                     ) as mock_track:
                         # Test successful conversion
                         result = convert_html_to_markdown(
@@ -321,17 +322,17 @@ class TestHtmlToMarkdownOperations:
 
         # Test with validation errors on first attempt but success on retry
         with patch(
-                "quackcore.integrations.pandoc.operations.html_to_md._validate_input"
+            "quackcore.integrations.pandoc.operations.html_to_md._validate_input"
         ) as mock_validate:
             mock_validate.return_value = 1024  # Original size
 
             with patch(
-                    "quackcore.integrations.pandoc.operations.html_to_md._attempt_conversion"
+                "quackcore.integrations.pandoc.operations.html_to_md._attempt_conversion"
             ) as mock_attempt:
                 mock_attempt.return_value = "# Test\n\nContent"
 
                 with patch(
-                        "quackcore.integrations.pandoc.operations.html_to_md._write_and_validate_output"
+                    "quackcore.integrations.pandoc.operations.html_to_md._write_and_validate_output"
                 ) as mock_write:
                     # First call returns validation errors, second call succeeds
                     mock_write.side_effect = [
@@ -340,10 +341,10 @@ class TestHtmlToMarkdownOperations:
                     ]
 
                     with patch(
-                            "quackcore.integrations.pandoc.operations.html_to_md.track_metrics"
+                        "quackcore.integrations.pandoc.operations.html_to_md.track_metrics"
                     ) as mock_track:
                         with patch(
-                                "quackcore.integrations.pandoc.operations.html_to_md.time.sleep"
+                            "quackcore.integrations.pandoc.operations.html_to_md.time.sleep"
                         ) as mock_sleep:
                             # Test retry logic
                             result = convert_html_to_markdown(
@@ -365,26 +366,26 @@ class TestHtmlToMarkdownOperations:
         metrics.successful_conversions = 0  # Reset for this test
 
         with patch(
-                "quackcore.integrations.pandoc.operations.html_to_md._validate_input"
+            "quackcore.integrations.pandoc.operations.html_to_md._validate_input"
         ) as mock_validate:
             mock_validate.return_value = 1024  # Original size
 
             with patch(
-                    "quackcore.integrations.pandoc.operations.html_to_md._attempt_conversion"
+                "quackcore.integrations.pandoc.operations.html_to_md._attempt_conversion"
             ) as mock_attempt:
                 mock_attempt.return_value = "# Test\n\nContent"
 
                 with patch(
-                        "quackcore.integrations.pandoc.operations.html_to_md._write_and_validate_output"
+                    "quackcore.integrations.pandoc.operations.html_to_md._write_and_validate_output"
                 ) as mock_write:
                     # Always return validation errors
                     mock_write.return_value = (1.0, 100, ["Output file is empty"])
 
                     with patch(
-                            "quackcore.integrations.pandoc.operations.html_to_md.track_metrics"
+                        "quackcore.integrations.pandoc.operations.html_to_md.track_metrics"
                     ) as mock_track:
                         with patch(
-                                "quackcore.integrations.pandoc.operations.html_to_md.time.sleep"
+                            "quackcore.integrations.pandoc.operations.html_to_md.time.sleep"
                         ) as mock_sleep:
                             # Test max retries (default is 3)
                             result = convert_html_to_markdown(
@@ -393,8 +394,8 @@ class TestHtmlToMarkdownOperations:
 
                             assert result.success is False
                             assert (
-                                    "Conversion validation failed after maximum retries"
-                                    in result.error
+                                "Conversion validation failed after maximum retries"
+                                in result.error
                             )
                             assert mock_write.call_count == 3
                             assert mock_sleep.call_count == 2
@@ -406,15 +407,16 @@ class TestHtmlToMarkdownOperations:
 
         # Test with exception
         with patch(
-                "quackcore.integrations.pandoc.operations.html_to_md._validate_input"
+            "quackcore.integrations.pandoc.operations.html_to_md._validate_input"
         ) as mock_validate:
             mock_validate.side_effect = Exception("Unexpected error")
 
             with patch(
-                    "quackcore.integrations.pandoc.operations.html_to_md.track_metrics"
+                "quackcore.integrations.pandoc.operations.html_to_md.track_metrics"
             ) as mock_track:
-                result = convert_html_to_markdown(html_path, output_path, config,
-                                                  metrics)
+                result = convert_html_to_markdown(
+                    html_path, output_path, config, metrics
+                )
 
                 assert result.success is False
                 assert "Failed to convert HTML to Markdown" in result.error
@@ -430,7 +432,8 @@ class TestHtmlToMarkdownOperations:
 
         # Use comprehensive patching strategy
         with patch(
-                "quackcore.integrations.pandoc.operations.html_to_md.fs") as patched_fs:
+            "quackcore.integrations.pandoc.operations.html_to_md.fs"
+        ) as patched_fs:
             # 1. Setup proper FileInfoResult for successful validation
             output_info = FileInfoResult(
                 success=True,
@@ -454,11 +457,13 @@ class TestHtmlToMarkdownOperations:
 
             # 4. Mock dependent validation functions to ensure they pass
             with patch(
-                    "quackcore.integrations.pandoc.operations.html_to_md.check_file_size") as mock_size:
+                "quackcore.integrations.pandoc.operations.html_to_md.check_file_size"
+            ) as mock_size:
                 mock_size.return_value = (True, [])  # passes validation
 
                 with patch(
-                        "quackcore.integrations.pandoc.operations.html_to_md.check_conversion_ratio") as mock_ratio:
+                    "quackcore.integrations.pandoc.operations.html_to_md.check_conversion_ratio"
+                ) as mock_ratio:
                     mock_ratio.return_value = (True, [])  # passes validation
 
                     # 5. Run the validation with all controls in place
@@ -474,12 +479,13 @@ class TestHtmlToMarkdownOperations:
                     mock_ratio.assert_called_with(
                         output_info.size,
                         original_size,
-                        config.validation.conversion_ratio_threshold
+                        config.validation.conversion_ratio_threshold,
                     )
 
         # Test with file not found
         with patch(
-                "quackcore.integrations.pandoc.operations.html_to_md.fs") as patched_fs:
+            "quackcore.integrations.pandoc.operations.html_to_md.fs"
+        ) as patched_fs:
             # Setup not found file info
             not_found_info = FileInfoResult(
                 success=True,
@@ -499,7 +505,8 @@ class TestHtmlToMarkdownOperations:
 
         # Test with empty content
         with patch(
-                "quackcore.integrations.pandoc.operations.html_to_md.fs") as patched_fs:
+            "quackcore.integrations.pandoc.operations.html_to_md.fs"
+        ) as patched_fs:
             # Setup existing file info
             file_exists_info = FileInfoResult(
                 success=True,
@@ -521,11 +528,13 @@ class TestHtmlToMarkdownOperations:
             patched_fs.read_text.return_value = empty_content
 
             with patch(
-                    "quackcore.integrations.pandoc.operations.html_to_md.check_file_size") as mock_size:
+                "quackcore.integrations.pandoc.operations.html_to_md.check_file_size"
+            ) as mock_size:
                 mock_size.return_value = (True, [])
 
                 with patch(
-                        "quackcore.integrations.pandoc.operations.html_to_md.check_conversion_ratio") as mock_ratio:
+                    "quackcore.integrations.pandoc.operations.html_to_md.check_conversion_ratio"
+                ) as mock_ratio:
                     mock_ratio.return_value = (True, [])
 
                     validation_errors = validate_conversion(
@@ -537,7 +546,8 @@ class TestHtmlToMarkdownOperations:
 
         # Test with minimal content but no headers
         with patch(
-                "quackcore.integrations.pandoc.operations.html_to_md.fs") as patched_fs:
+            "quackcore.integrations.pandoc.operations.html_to_md.fs"
+        ) as patched_fs:
             # Setup existing file info
             file_exists_info = FileInfoResult(
                 success=True,
@@ -559,11 +569,13 @@ class TestHtmlToMarkdownOperations:
             patched_fs.read_text.return_value = minimal_content
 
             with patch(
-                    "quackcore.integrations.pandoc.operations.html_to_md.check_file_size") as mock_size:
+                "quackcore.integrations.pandoc.operations.html_to_md.check_file_size"
+            ) as mock_size:
                 mock_size.return_value = (True, [])
 
                 with patch(
-                        "quackcore.integrations.pandoc.operations.html_to_md.check_conversion_ratio") as mock_ratio:
+                    "quackcore.integrations.pandoc.operations.html_to_md.check_conversion_ratio"
+                ) as mock_ratio:
                     mock_ratio.return_value = (True, [])
 
                     validation_errors = validate_conversion(
@@ -571,12 +583,14 @@ class TestHtmlToMarkdownOperations:
                     )
 
                     assert len(validation_errors) == 1
-                    assert "Output file contains minimal content" in validation_errors[
-                        0]
+                    assert (
+                        "Output file contains minimal content" in validation_errors[0]
+                    )
 
         # Test with size validation failure
         with patch(
-                "quackcore.integrations.pandoc.operations.html_to_md.fs") as patched_fs:
+            "quackcore.integrations.pandoc.operations.html_to_md.fs"
+        ) as patched_fs:
             # Setup existing file info
             file_exists_info = FileInfoResult(
                 success=True,
@@ -598,11 +612,13 @@ class TestHtmlToMarkdownOperations:
             patched_fs.read_text.return_value = content_with_headers
 
             with patch(
-                    "quackcore.integrations.pandoc.operations.html_to_md.check_file_size") as mock_size:
+                "quackcore.integrations.pandoc.operations.html_to_md.check_file_size"
+            ) as mock_size:
                 mock_size.return_value = (False, ["File size is below threshold"])
 
                 with patch(
-                        "quackcore.integrations.pandoc.operations.html_to_md.check_conversion_ratio") as mock_ratio:
+                    "quackcore.integrations.pandoc.operations.html_to_md.check_conversion_ratio"
+                ) as mock_ratio:
                     mock_ratio.return_value = (True, [])
 
                     validation_errors = validate_conversion(
