@@ -152,3 +152,4 @@ exclude_lines = [
 paths = "quackcore.paths.plugin:create_plugin"
 fs = "quackcore.fs.plugin:create_plugin"
 config = "quackcore.config.plugin:create_plugin"
+prompt = "quackcore.prompt.plugin:create_plugin"
