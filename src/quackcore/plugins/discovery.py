@@ -12,14 +12,15 @@ for model validation, and favor collections.abc over typing where possible.
 import importlib
 import inspect
 
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
 from quackcore.errors import QuackPluginError
 from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
-from quackcore.plugins.protocols import QuackPluginProtocol
+from quackcore.plugins.protocols import QuackPluginProtocol, QuackPluginMetadata
 
 
-class PluginInfo(BaseModel):
+class PluginInfo(QuackPluginMetadata):
+    """Plugin information used for validation."""
     name: str
 
 
@@ -37,7 +38,7 @@ class PluginLoader:
         self.logger.setLevel(log_level)
 
     def _validate_plugin(
-        self, plugin: QuackPluginProtocol, module_path: str
+            self, plugin: QuackPluginProtocol, module_path: str
     ) -> QuackPluginProtocol:
         """
         Validate that the plugin has the required attributes using pydantic.
@@ -53,8 +54,40 @@ class PluginLoader:
             QuackPluginError: If validation fails.
         """
         try:
-            PluginInfo(name=plugin.name)
-        except ValidationError as e:
+            # First check that the plugin has a name property (backward compatibility)
+            if not hasattr(plugin, "name"):
+                raise AttributeError("Plugin has no 'name' attribute")
+
+            # Validate the get_metadata method and its return value
+            if not hasattr(plugin, "get_metadata") or not callable(
+                    getattr(plugin, "get_metadata")):
+                # For backward compatibility, create minimal metadata if get_metadata is not implemented
+                metadata = QuackPluginMetadata(
+                    name=plugin.name,
+                    version="0.1.0",
+                    description=f"Plugin from {module_path}",
+                    capabilities=[]
+                )
+            else:
+                # Get the metadata, but handle the case where it might be a mock or other non-standard object
+                metadata = plugin.get_metadata()
+
+                # If metadata is not a QuackPluginMetadata object, we should validate its contents
+                # rather than automatically converting it
+                if not isinstance(metadata, QuackPluginMetadata):
+                    # For dictionaries, try to construct a QuackPluginMetadata object,
+                    # but let validation errors propagate
+                    if isinstance(metadata, dict):
+                        metadata = QuackPluginMetadata(**metadata)
+                    else:
+                        # For other types, this should fail validation
+                        raise TypeError(
+                            f"get_metadata() must return a QuackPluginMetadata object, got {type(metadata)}")
+
+            # Validate the metadata
+            PluginInfo(**metadata.model_dump())
+
+        except (ValidationError, AttributeError, TypeError) as e:
             raise QuackPluginError(
                 f"Plugin from module {module_path} "
                 f"does not have valid plugin info: {e}",
@@ -226,7 +259,7 @@ class PluginLoader:
         return plugins
 
     def load_entry_points(
-        self, group: str = "quackcore.plugins"
+            self, group: str = "quackcore.plugins"
     ) -> list[QuackPluginProtocol]:
         """
         Load plugins from entry points.
@@ -239,6 +272,7 @@ class PluginLoader:
         """
         self.logger.debug(f"Loading plugins from entry points group: {group}")
         plugins: list[QuackPluginProtocol] = []
+
         try:
             discovered_eps: list = []
             try:
@@ -246,6 +280,11 @@ class PluginLoader:
 
                 eps = entry_points(group=group)
                 discovered_eps = list(eps)
+                self.logger.debug(
+                    f"Found {len(discovered_eps)} entry points in group '{group}'")
+
+                for ep in discovered_eps:
+                    self.logger.debug(f"Entry point: {ep.name} from {ep.value}")
             except (ImportError, AttributeError) as e:
                 self.logger.debug(f"Error getting entry points: {e}")
                 return plugins
@@ -269,9 +308,18 @@ class PluginLoader:
                                 f"Loaded core module '{ep.name}' from entry point {ep.value}"
                             )
                         else:
-                            self.logger.info(
-                                f"Loaded external plugin '{plugin.name}' from entry point {ep.name}"
-                            )
+                            try:
+                                metadata = plugin.get_metadata()
+                                capabilities = ', '.join(
+                                    metadata.capabilities) if metadata.capabilities else "none"
+                                self.logger.info(
+                                    f"Loaded external plugin '{plugin.name}' v{metadata.version} "
+                                    f"from entry point {ep.name} with capabilities: {capabilities}"
+                                )
+                            except Exception:
+                                self.logger.info(
+                                    f"Loaded external plugin '{plugin.name}' from entry point {ep.name}"
+                                )
                 except Exception as e:
                     self.logger.error(f"Failed to load entry point {ep.name}: {e}")
         except Exception as e:

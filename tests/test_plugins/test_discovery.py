@@ -10,7 +10,7 @@ import pytest
 
 from quackcore.errors import QuackPluginError
 from quackcore.plugins.discovery import PluginLoader
-from quackcore.plugins.protocols import QuackPluginProtocol
+from quackcore.plugins.protocols import QuackPluginProtocol, QuackPluginMetadata
 
 
 # Mock plugin implementation for testing
@@ -20,6 +20,15 @@ class MockPlugin(QuackPluginProtocol):
     @property
     def name(self) -> str:
         return "mock_plugin"
+
+    def get_metadata(self) -> QuackPluginMetadata:
+        """Get plugin metadata."""
+        return QuackPluginMetadata(
+            name=self.name,
+            version="1.0.0",
+            description="Mock plugin for testing",
+            capabilities=[]
+        )
 
 
 class TestPluginLoader:

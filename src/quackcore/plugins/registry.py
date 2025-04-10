@@ -355,6 +355,96 @@ class PluginRegistry:
         """
         return self._extensions.get(target, [])
 
+    def find_plugins_by_capability(self, capability: str) -> list[QuackPluginProtocol]:
+        """
+        Find plugins that advertise a specific capability.
+
+        Args:
+            capability: Capability to look for
+
+        Returns:
+            List of plugins that have the specified capability
+        """
+        result: list[QuackPluginProtocol] = []
+
+        for plugin in self._plugins.values():
+            if hasattr(plugin, "get_metadata") and callable(
+                    getattr(plugin, "get_metadata")):
+                try:
+                    metadata = plugin.get_metadata()
+                    if capability in metadata.capabilities:
+                        result.append(plugin)
+                except Exception as e:
+                    self.logger.warning(
+                        f"Error getting metadata from plugin {plugin.name}: {e}"
+                    )
+
+        return result
+
+    def get_plugin_module_path(self, plugin: QuackPluginProtocol) -> str | None:
+        """
+        Get the module path for a plugin.
+
+        Args:
+            plugin: The plugin to get the module path for
+
+        Returns:
+            The module path or None if it cannot be determined
+        """
+        if hasattr(plugin, "__module__"):
+            return plugin.__module__
+        return None
+
+    def reload_plugin(self, name: str) -> QuackPluginProtocol:
+        """
+        Reload a plugin by name.
+
+        This unregisters the plugin, reloads its module, and registers the new instance.
+
+        Args:
+            name: Name of the plugin to reload
+
+        Returns:
+            The newly loaded plugin
+
+        Raises:
+            QuackPluginError: If the plugin is not registered or cannot be reloaded
+        """
+        from quackcore.plugins.discovery import loader
+
+        if name not in self._plugins:
+            raise QuackPluginError(
+                f"Plugin '{name}' is not registered", plugin_name=name
+            )
+
+        plugin = self._plugins[name]
+        module_path = self.get_plugin_module_path(plugin)
+
+        if not module_path:
+            raise QuackPluginError(
+                f"Cannot determine module path for plugin '{name}'", plugin_name=name
+            )
+
+        # Unregister the current plugin
+        self.unregister(name)
+
+        # Reload the module and load the new plugin
+        try:
+            import importlib
+            importlib.reload(importlib.import_module(module_path))
+            new_plugin = loader.load_plugin(module_path)
+
+            # Register the new plugin
+            self.register(new_plugin)
+
+            self.logger.info(f"Successfully reloaded plugin '{name}'")
+            return new_plugin
+        except Exception as e:
+            self.logger.error(f"Error reloading plugin '{name}': {e}")
+            raise QuackPluginError(
+                f"Failed to reload plugin '{name}': {e}", plugin_name=name
+            ) from e
+
 
 # Global registry instance
 registry = PluginRegistry()

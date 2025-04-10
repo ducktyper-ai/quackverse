@@ -152,6 +152,3 @@ exclude_lines = [
 paths = "quackcore.paths.plugin:create_plugin"
 fs = "quackcore.fs.plugin:create_plugin"
 config = "quackcore.config.plugin:create_plugin"
-# Remove once plugins are fully implemented
-#google_drive = "quackcore.integrations.google.drive.service:create_integration"
-#gmail = "quackcore.integrations.google.mail.service:create_integration"
