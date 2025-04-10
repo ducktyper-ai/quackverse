@@ -3,7 +3,7 @@
 RAG (Retrieval-Augmented Generation) module for the Quackster teaching NPC.
 
 This module provides functions for loading and retrieving content from
-Markdown documents to ground the NPC's knowledge in factual information.
+Markdown (and MDX) documents to ground the NPC's knowledge in factual information.
 """
 
 import os
@@ -80,22 +80,26 @@ def should_reload_docs(doc_dirs: list[Path]) -> bool:
         doc_dirs: List of document directories to check
 
     Returns:
-        True if documents should be reloaded, False otherwise
+        True if documents should be reloaded, False otherwise.
     """
     global _last_modified_times
 
     for doc_dir in doc_dirs:
-        # Search for Markdown files recursively
-        result = fs.find_files(str(doc_dir), "*.md", recursive=True)
-        if not result.success:
-            continue
+        files: list[str] = []
+        # Search for Markdown and MDX files recursively.
+        result_md = fs.find_files(str(doc_dir), "*.md", recursive=True)
+        if result_md.success:
+            files.extend(result_md.files)
+        result_mdx = fs.find_files(str(doc_dir), "*.mdx", recursive=True)
+        if result_mdx.success:
+            files.extend(result_mdx.files)
 
-        for file_path in result.files:
+        for file_path in files:
             info = fs.get_file_info(file_path)
             if not info.success:
                 continue
 
-            # Check if file is new or modified
+            # Check if file is new or modified.
             if (
                 file_path not in _last_modified_times
                 or info.modified_time > _last_modified_times.get(file_path, 0)
@@ -110,8 +114,8 @@ def load_docs_for_rag() -> str:
     """
     Load all tutorial documents for Retrieval-Augmented Generation (RAG).
 
-    This function gathers all Markdown (.md) files found in the tutorial
-    directories, reads their contents using the FS service, and then concatenates
+    This function gathers all Markdown (and MDX) files found in the tutorial
+    directories, reads their contents using the FS service, and concatenates
     them into one string. Each file's content is preceded by a header bearing
     the file name.
 
@@ -121,7 +125,7 @@ def load_docs_for_rag() -> str:
     global _doc_cache, _last_modified_times
     doc_dirs = get_doc_directories()
 
-    # If we've cached the docs and no files have changed, use the cache
+    # If we've cached the docs and no files have changed, use the cache.
     if _doc_cache and not should_reload_docs(doc_dirs):
         logger.debug("Using cached documents for RAG")
         return "\n\n".join(_doc_cache.values())
@@ -135,23 +139,27 @@ def load_docs_for_rag() -> str:
         return ""
 
     for doc_dir in doc_dirs:
-        # Search for Markdown files recursively.
-        result = fs.find_files(str(doc_dir), "*.md", recursive=True)
-        if not result.success:
-            logger.warning(f"Failed to search directory {doc_dir}: {result.error}")
-            continue
+        files: list[str] = []
+        # Search for Markdown and MDX files recursively.
+        result_md = fs.find_files(str(doc_dir), "*.md", recursive=True)
+        if result_md.success:
+            files.extend(result_md.files)
+        result_mdx = fs.find_files(str(doc_dir), "*.mdx", recursive=True)
+        if result_mdx.success:
+            files.extend(result_mdx.files)
 
-        for file_path in result.files:
+        for file_path in files:
             try:
-                # Get file modification time
+                # Get file modification time.
                 info = fs.get_file_info(str(file_path))
                 if info.success:
                     new_modified_times[str(file_path)] = info.modified_time
 
-                # Read the file content
+                # Read the file content.
                 read_result = fs.read_text(str(file_path))
                 if read_result.success:
                     filename = Path(file_path).name
+                    # Prepend a header with the filename.
                     content = f"# {filename}\n\n{read_result.content}\n\n"
                     docs[str(file_path)] = content
                 else:
@@ -163,7 +171,7 @@ def load_docs_for_rag() -> str:
         logger.warning("No tutorial documents found.")
         return ""
 
-    # Update cache and modification times
+    # Update cache and modification times.
     _doc_cache = docs
     _last_modified_times = new_modified_times
 
@@ -175,8 +183,9 @@ def retrieve_relevant_content(query: str, all_content: str, max_chunks: int = 3)
     Retrieve content relevant to a query from the full document content.
 
     The function splits the complete document content into chunks based on
-    Markdown headings, scores each chunk by counting the occurrences of keywords
-    (extracted from the query), and returns the top-scoring chunks (up to max_chunks).
+    Markdown headings (using only H2/H3 for chunking), scores each chunk by counting
+    keyword occurrences (keywords extracted from the query), and returns the top-scoring chunks
+    (up to max_chunks). Each chunk's heading is integrated into the scoring and output.
 
     Args:
         query: The query string to search for.
@@ -187,43 +196,76 @@ def retrieve_relevant_content(query: str, all_content: str, max_chunks: int = 3)
         A concatenated string of the selected relevant content chunks.
     """
     chunks = _get_content_chunks(all_content)
-    scored_chunks: list[tuple[str, int]] = []
+    scored_chunks: list[tuple[dict[str, str], int]] = []
     keywords = _extract_keywords(query)
 
     for chunk in chunks:
-        score = sum(chunk.lower().count(keyword.lower()) for keyword in keywords)
+        # Combine the heading (if it exists) and the content for scoring.
+        combined_text = (chunk["heading"] + " " if chunk["heading"] else "") + chunk[
+            "content"
+        ]
+        score = sum(
+            combined_text.lower().count(keyword.lower()) for keyword in keywords
+        )
         if score > 0:
             scored_chunks.append((chunk, score))
 
     scored_chunks.sort(key=lambda x: x[1], reverse=True)
     top_chunks = [chunk for chunk, _ in scored_chunks[:max_chunks]]
-    return "\n\n".join(top_chunks)
+
+    # Format the output to include the heading as a Markdown header if present.
+    result_chunks = []
+    for chunk in top_chunks:
+        if chunk["heading"]:
+            formatted = f"## {chunk['heading']}\n\n{chunk['content']}"
+        else:
+            formatted = chunk["content"]
+        result_chunks.append(formatted)
+    return "\n\n".join(result_chunks)
 
 
 @lru_cache(maxsize=10)
-def _get_content_chunks(content: str) -> list[str]:
+def _get_content_chunks(content: str) -> list[dict[str, str]]:
     """
-    Split content into chunks by Markdown headings.
+    Split content into chunks by Markdown headings, using headings of level 2 or 3
+    (i.e. lines starting with '##' or '###') to avoid including file titles.
 
-    Uses a regular expression to separate content at lines starting with 1-3 '#' characters.
-    Caches the results to avoid repeating the same splitting operations.
+    Each chunk is returned as a dictionary with metadata:
+      - "heading": the text of the heading (None if the chunk has no heading)
+      - "content": the body text following the heading
 
     Args:
         content: The Markdown content to split.
 
     Returns:
-        A list of content chunks, where each chunk starts with a Markdown heading.
+        A list of dictionaries each containing the keys "heading" and "content".
     """
-    heading_pattern = re.compile(r"^(#{1,3})\s+(.+)", re.MULTILINE)
-    headings = [(m.start(), m.group(0)) for m in heading_pattern.finditer(content)]
-    if not headings:
-        return [content]
+    # Regex now only matches headings starting with '##' or '###'
+    heading_pattern = re.compile(r"^(#{2,3})\s+(.+)", re.MULTILINE)
+    matches = list(heading_pattern.finditer(content))
 
-    chunks: list[str] = []
-    for i, (pos, _) in enumerate(headings):
-        end_pos = headings[i + 1][0] if i < len(headings) - 1 else len(content)
-        chunk = content[pos:end_pos].strip()
-        chunks.append(chunk)
+    chunks: list[dict[str, str]] = []
+    # If no headings found, return the whole content as one chunk.
+    if not matches:
+        return [{"heading": None, "content": content.strip()}]
+
+    # If there is content before the first heading, add it as a preliminary chunk.
+    if matches[0].start() > 0:
+        pre_content = content[: matches[0].start()].strip()
+        if pre_content:
+            chunks.append({"heading": None, "content": pre_content})
+
+    # Process each heading match.
+    for i, match in enumerate(matches):
+        heading_text = match.group(2).strip()
+        start_index = match.start()
+        end_index = matches[i + 1].start() if i < len(matches) - 1 else len(content)
+        # Extract the entire chunk and then remove the heading line from the content.
+        chunk_text = content[start_index:end_index].strip()
+        lines = chunk_text.splitlines()
+        # Assume the first line is the heading; skip it.
+        chunk_body = "\n".join(lines[1:]).strip() if len(lines) > 1 else ""
+        chunks.append({"heading": heading_text, "content": chunk_body})
     return chunks
 
 
@@ -522,20 +564,20 @@ def get_tutorial_topic(topic: str) -> dict[str, Any]:
         if key.lower() in lower_topic or lower_topic in key.lower():
             return content
 
-    # If we don't have an exact match, try to find the most relevant topic
+    # If we don't have an exact match, try to find the most relevant topic.
     best_match = None
     best_score = 0
     keywords = _extract_keywords(topic)
 
     for key, content in topics.items():
-        # Calculate relevance score based on keyword matches
+        # Calculate relevance score based on keyword matches.
         topic_text = f"{key} {content['title']} {content['description']}"
         score = sum(topic_text.lower().count(keyword.lower()) for keyword in keywords)
         if score > best_score:
             best_score = score
             best_match = content
 
-    # If we found something somewhat relevant, return it
+    # If we found something somewhat relevant, return it.
     if best_match and best_score > 0:
         return best_match
 

@@ -5,13 +5,12 @@ Tools for checking user progress, XP, and level information.
 This module provides functions for retrieving and displaying user progress metrics.
 """
 
-from typing import Any
-
 from quackcore.teaching.npc.schema import UserMemory
 from quackcore.teaching.npc.tools.common import standardize_tool_output
+from quackcore.teaching.npc.tools.schema import ProgressOutput
 
 
-def list_xp_and_level(user_memory: UserMemory) -> dict[str, Any]:
+def list_xp_and_level(user_memory: UserMemory) -> ProgressOutput:
     """
     Get information about a user's XP and level.
 
@@ -19,7 +18,7 @@ def list_xp_and_level(user_memory: UserMemory) -> dict[str, Any]:
         user_memory: User memory data
 
     Returns:
-        Dictionary with XP and level information
+        ProgressOutput with XP and level information
     """
     level = user_memory.level
     xp = user_memory.xp
@@ -50,4 +49,5 @@ def list_xp_and_level(user_memory: UserMemory) -> dict[str, Any]:
             "progress_bar": progress_bar,
             "formatted_text": formatted_text,
         },
+        return_type=ProgressOutput,
     )

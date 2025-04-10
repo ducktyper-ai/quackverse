@@ -7,13 +7,18 @@ including tool discovery and invocation.
 """
 
 import re
-from typing import Any
+from collections.abc import Sequence
+from typing import Any, TypeVar
 
 from quackcore.logging import get_logger
 from quackcore.teaching.npc.schema import UserMemory
 from quackcore.teaching.npc.tools import TOOL_REGISTRY
+from quackcore.teaching.npc.tools.schema import ToolOutput
 
 logger = get_logger(__name__)
+
+# Type variable for tool outputs
+T = TypeVar("T", bound=ToolOutput[Any])
 
 
 def detect_tool_triggers(
@@ -80,7 +85,7 @@ def detect_tool_triggers(
     return tools_to_run
 
 
-def run_tools(triggers: list[tuple[str, dict[str, Any]]]) -> list[dict[str, Any]]:
+def run_tools(triggers: Sequence[tuple[str, dict[str, Any]]]) -> list[ToolOutput[Any]]:
     """
     Run the specified tools with the given arguments.
 
@@ -88,9 +93,9 @@ def run_tools(triggers: list[tuple[str, dict[str, Any]]]) -> list[dict[str, Any]
         triggers: List of (tool_name, tool_args) tuples
 
     Returns:
-        List of tool outputs
+        List of tool outputs as Pydantic model instances
     """
-    outputs = []
+    outputs: list[ToolOutput[Any]] = []
 
     for tool_name, tool_args in triggers:
         try:
@@ -99,7 +104,13 @@ def run_tools(triggers: list[tuple[str, dict[str, Any]]]) -> list[dict[str, Any]
             if tool_func:
                 # Run the tool and collect output
                 output = tool_func(**tool_args)
-                outputs.append(output)
+                # Ensure it's a ToolOutput instance
+                if isinstance(output, ToolOutput):
+                    outputs.append(output)
+                else:
+                    logger.warning(
+                        f"Tool '{tool_name}' returned non-ToolOutput result: {type(output)}"
+                    )
             else:
                 logger.warning(f"Tool '{tool_name}' not found in registry")
         except Exception as e:

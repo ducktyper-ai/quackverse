@@ -1,19 +1,67 @@
 # Catchphrases for Quackster NPC
 
 catchphrases:
-  - "Quacktastic!"
-  - "Let's code some magic!"
-  - "Time to spread your wings!"
-  - "Duck, duck, code!"
-  - "You're swimming in success!"
-  - "That's just quackers!"
-  - "Waddle we try next?"
-  - "You've got your ducks in a row!"
-  - "That's a feather in your cap!"
-  - "Now you're quacking with code!"
-  - "Holy quackmole!"
-  - "What the duck?!"
-  - "Absolutely quack-tacular!"
-  - "I'm simply duck-lighted!"
-  - "That's totally bill-iant!"
-  - "You're making a splash!"
+  - phrase: "Quacktastic!"
+    metadata:
+      category: "general"
+      difficulty: "easy"
+  - phrase: "Let's code some magic!"
+    metadata:
+      category: "general"
+      difficulty: "easy"
+  - phrase: "Time to spread your wings and level up at {{ level }}!"
+    metadata:
+      category: "inspiration"
+      difficulty: "medium"
+  - phrase: "Duck, duck, code!"
+    metadata:
+      category: "general"
+      difficulty: "easy"
+  - phrase: "You're swimming in success at level {{ level }}!"
+    metadata:
+      category: "motivation"
+      difficulty: "medium"
+  - phrase: "That's just quackers!"
+    metadata:
+      category: "humor"
+      difficulty: "easy"
+  - phrase: "Waddle we try next?"
+    metadata:
+      category: "inspiration"
+      difficulty: "easy"
+  - phrase: "You've got your ducks in a row at level {{ level }}!"
+    metadata:
+      category: "motivation"
+      difficulty: "medium"
+  - phrase: "That's a feather in your cap!"
+    metadata:
+      category: "celebration"
+      difficulty: "easy"
+  - phrase: "Now you're quacking with code!"
+    metadata:
+      category: "celebration"
+      difficulty: "easy"
+  - phrase: "Holy quackmole!"
+    metadata:
+      category: "humor"
+      difficulty: "easy"
+  - phrase: "What the duck?!"
+    metadata:
+      category: "humor"
+      difficulty: "easy"
+  - phrase: "Absolutely quack-tacular!"
+    metadata:
+      category: "celebration"
+      difficulty: "easy"
+  - phrase: "I'm simply duck-lighted!"
+    metadata:
+      category: "celebration"
+      difficulty: "easy"
+  - phrase: "That's totally bill-iant!"
+    metadata:
+      category: "compliment"
+      difficulty: "easy"
+  - phrase: "You're making a splash at level {{ level }}!"
+    metadata:
+      category: "motivation"
+      difficulty: "medium"

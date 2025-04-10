@@ -23,6 +23,18 @@ from quackcore.teaching.npc.tools.quest_tools import (
     suggest_next_quest,
     verify_quest_completion,
 )
+from quackcore.teaching.npc.tools.schema import (
+    BadgeDetailOutput,
+    BadgeListOutput,
+    CertificateListOutput,
+    ProgressOutput,
+    QuestCompletionOutput,
+    QuestDetailOutput,
+    QuestListOutput,
+    ToolOutput,
+    ToolType,
+    TutorialOutput,
+)
 from quackcore.teaching.npc.tools.tutorial_tools import get_tutorial
 
 # Tool registry - maps tool names to their function implementations
@@ -61,4 +73,15 @@ __all__ = [
     "get_tutorial",
     # Certificate tools
     "get_certificate_info",
+    # Schemas
+    "ToolOutput",
+    "ToolType",
+    "QuestListOutput",
+    "QuestDetailOutput",
+    "QuestCompletionOutput",
+    "BadgeListOutput",
+    "BadgeDetailOutput",
+    "ProgressOutput",
+    "CertificateListOutput",
+    "TutorialOutput",
 ]

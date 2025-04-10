@@ -9,6 +9,7 @@ teaching NPC, including LLM integration and tool execution.
 import random
 import re
 from collections.abc import Sequence
+from datetime import datetime
 from typing import Any
 
 from quackcore.integrations.core import registry
@@ -24,7 +25,7 @@ from quackcore.teaching.npc.schema import (
 
 logger = get_logger(__name__)
 
-# Define the available tools for the NPC
+# Define the available tools for the NPC (for reference).
 NPC_TOOLS = {
     "list_xp_and_level": tools.list_xp_and_level,
     "list_badges": tools.list_badges,
@@ -38,6 +39,29 @@ NPC_TOOLS = {
 }
 
 
+def trim_conversation_context(
+    context: Sequence[dict[str, str]], max_messages: int = 10
+) -> list[dict[str, str]]:
+    """
+    Trim the conversation context to the most recent messages to avoid token bloating.
+
+    Each message is ensured to contain a timestamp. If a message is missing a timestamp,
+    the current UTC time in ISO format is inserted.
+
+    Args:
+        context: The full conversation history.
+        max_messages: Maximum number of recent messages to include.
+
+    Returns:
+        A list of the most recent conversation messages, each with a timestamp.
+    """
+    trimmed = list(context)[-max_messages:] if context else []
+    for msg in trimmed:
+        if "timestamp" not in msg:
+            msg["timestamp"] = datetime.now().isoformat()
+    return trimmed
+
+
 def run_npc_session(input: TeachingNPCInput) -> TeachingNPCResponse:
     """
     Run a session with the Quackster teaching NPC.
@@ -48,16 +72,26 @@ def run_npc_session(input: TeachingNPCInput) -> TeachingNPCResponse:
     Returns:
         NPC response
     """
-    # Load user memory
-    user_memory = memory.get_user_memory(input.github_username)
+    # Load user memory.
+    user_memory: UserMemory = memory.get_user_memory(input.github_username)
     user_memory = memory.update_user_memory(user_memory, input.user_input)
 
-    # Process the input
-    actions_taken = []
-    tool_outputs = []
+    # Add conversation history record with a timestamp.
+    if "conversation_history" not in user_memory.custom_data:
+        user_memory.custom_data["conversation_history"] = []
+    user_memory.custom_data["conversation_history"].append(
+        {
+            "role": "user",
+            "message": input.user_input,
+            "timestamp": datetime.now().isoformat(),
+        }
+    )
+
+    actions_taken: list[str] = []
+    tool_outputs: list[Any] = []
     should_verify_quests = False
 
-    # Detect if user is asking about a specific quest or badge
+    # Detect explicit matches for quest, badge, and tutorial queries.
     quest_match = re.search(
         r'quest[s\s]*[\'"]?([\w-]+)[\'"]?', input.user_input, re.IGNORECASE
     )
@@ -70,70 +104,87 @@ def run_npc_session(input: TeachingNPCInput) -> TeachingNPCResponse:
         re.IGNORECASE,
     )
 
-    # Check for specific tool triggers
-    if re.search(r"\b(xp|level|progress)\b", input.user_input, re.IGNORECASE):
-        actions_taken.append("Checking XP and level")
-        tool_outputs.append(tools.list_xp_and_level(user_memory))
+    # Dispatch common tool triggers via a mapping.
+    dispatch_map = [
+        {
+            "pattern": r"\b(xp|level|progress)\b",
+            "desc": "Checking XP and level",
+            "func": tools.list_xp_and_level,
+        },
+        {
+            "pattern": r"\bbadges?\b",
+            "desc": "Listing badges",
+            "func": tools.list_badges,
+            "exclude": badge_match is not None,  # Skip if explicit badge query exists.
+        },
+        {
+            "pattern": r"\bquests?\b",
+            "desc": "Listing quests",
+            "func": tools.list_quests,
+            "exclude": quest_match is not None,  # Skip if explicit quest query exists.
+        },
+        {
+            "pattern": r"\b(what next|next quest|suggest|do next)\b",
+            "desc": "Suggesting next quest",
+            "func": tools.suggest_next_quest,
+        },
+        {
+            "pattern": r"\bcertificates?\b",
+            "desc": "Getting certificate information",
+            "func": tools.get_certificate_info,
+        },
+    ]
 
-    if re.search(r"\bbadges?\b", input.user_input, re.IGNORECASE) and not badge_match:
-        actions_taken.append("Listing badges")
-        tool_outputs.append(tools.list_badges(user_memory))
+    for entry in dispatch_map:
+        if entry.get("exclude", False):
+            continue
+        if re.search(entry["pattern"], input.user_input, re.IGNORECASE):
+            actions_taken.append(entry["desc"])
+            tool_outputs.append(entry["func"](user_memory))
 
-    if re.search(r"\bquests?\b", input.user_input, re.IGNORECASE) and not quest_match:
-        actions_taken.append("Listing quests")
-        tool_outputs.append(tools.list_quests(user_memory))
-
+    # Process explicit quest queries.
     if quest_match:
         quest_id = quest_match.group(1).lower().strip()
         actions_taken.append(f"Getting details for quest: {quest_id}")
         tool_outputs.append(tools.get_quest_details(quest_id))
-
-        # Track this as a recently discussed quest
+        # Track this as a recently discussed quest.
         if "recent_quests_discussed" not in user_memory.custom_data:
             user_memory.custom_data["recent_quests_discussed"] = []
         if quest_id not in user_memory.custom_data["recent_quests_discussed"]:
             user_memory.custom_data["recent_quests_discussed"].append(quest_id)
-            # Keep only the 5 most recent
+            # Keep only the 5 most recent.
             if len(user_memory.custom_data["recent_quests_discussed"]) > 5:
                 user_memory.custom_data["recent_quests_discussed"] = (
                     user_memory.custom_data["recent_quests_discussed"][-5:]
                 )
 
+    # Process explicit badge queries.
     if badge_match:
         badge_id = badge_match.group(1).lower().strip()
         actions_taken.append(f"Getting details for badge: {badge_id}")
         tool_outputs.append(tools.get_badge_details(badge_id))
 
+    # Process explicit tutorial queries.
     if tutorial_match:
         topic = tutorial_match.group(1).lower().strip()
         actions_taken.append(f"Getting tutorial for: {topic}")
         tool_outputs.append(tools.get_tutorial(topic))
 
-    if re.search(
-        r"\b(what next|next quest|suggest|do next)\b", input.user_input, re.IGNORECASE
-    ):
-        actions_taken.append("Suggesting next quest")
-        tool_outputs.append(tools.suggest_next_quest(user_memory))
-
-    if re.search(r"\bcertificates?\b", input.user_input, re.IGNORECASE):
-        actions_taken.append("Getting certificate information")
-        tool_outputs.append(tools.get_certificate_info(user_memory))
-
-    # Check if user is mentioning they completed something
+    # Check if the user indicates completion of a quest.
     if re.search(r"\b(completed|finished|done|did)\b", input.user_input, re.IGNORECASE):
         actions_taken.append("Checking for quest completion")
         completion_result = tools.verify_quest_completion(user_memory)
         tool_outputs.append(completion_result)
         should_verify_quests = True
 
-    # Prepare relevant RAG content
+    # Prepare relevant RAG content.
     docs = rag.load_docs_for_rag()
     relevant_content = rag.retrieve_relevant_content(input.user_input, docs)
 
-    # Create NPC profile
-    npc_profile = config.get_npc_profile()
+    # Create NPC profile.
+    npc_profile: QuacksterProfile = config.get_npc_profile()
 
-    # Generate response using LLM
+    # Generate response using LLM.
     llm_response = call_llm(
         npc_profile=npc_profile,
         user_memory=user_memory,
@@ -143,14 +194,14 @@ def run_npc_session(input: TeachingNPCInput) -> TeachingNPCResponse:
         relevant_content=relevant_content,
     )
 
-    # Prepare suggested quests based on tool outputs
+    # Prepare suggested quests based on tool outputs.
     suggested_quests = None
     for output in tool_outputs:
         if isinstance(output, dict) and "suggested" in output:
             suggested_quests = output.get("suggested", None)
             break
 
-    # Create response
+    # Create and return the response.
     response = TeachingNPCResponse(
         response_text=llm_response,
         actions_taken=actions_taken,
@@ -190,59 +241,58 @@ def call_llm(
     Returns:
         Generated response from the LLM
     """
-    # Get LLM integration
+    # Get LLM integration.
     llm = get_llm_client()
     if llm is None:
         return mock_llm_response(user_input, tool_outputs)
 
-    # Generate the system prompt
+    # Generate the system prompt.
     system_prompt = persona.get_system_prompt(npc_profile, user_memory)
 
-    # Format the relevant content
+    # Format the relevant content.
     if relevant_content:
         system_prompt += "\n\nRELEVANT DOCUMENTATION:\n" + relevant_content
 
-    # Format the tool outputs
+    # Format the tool outputs.
     tool_output_text = ""
     if tool_outputs:
         tool_output_text = "TOOL OUTPUTS:\n"
         for i, output in enumerate(tool_outputs):
-            # Get tool name and formatted text in a standardized way
             tool_name = output.get("name", f"Tool {i + 1}")
             formatted_text = output.get("formatted_text", str(output))
             tool_output_text += f"\n--- {tool_name} ---\n{formatted_text}\n"
 
-    # Create the messages
+    # Create the messages list.
     messages = []
 
-    # Add system message
+    # Add the system message.
     messages.append({"role": "system", "content": system_prompt})
 
-    # Add few-shot examples if available
+    # Add a random few-shot example conversation, if available.
     example_conversations = persona.get_example_conversations()
     if example_conversations:
-        # Add one random example conversation
         example = random.choice(example_conversations)
         for msg in example.get("conversation", []):
             messages.append(msg)
 
-    # Add conversation context if available
+    # Trim and add the conversation context to limit tokens.
     if conversation_context:
-        for msg in conversation_context:
+        trimmed_context = trim_conversation_context(conversation_context)
+        for msg in trimmed_context:
             messages.append(msg)
 
-    # Add tool outputs if available
+    # Add the tool outputs, if any.
     if tool_output_text:
         messages.append({"role": "system", "content": tool_output_text})
 
-    # Add the user's message
+    # Add the user's message.
     messages.append({"role": "user", "content": user_input})
 
     try:
-        # Get model settings
+        # Get model settings.
         model_settings = config.get_model_settings()
 
-        # Call the LLM
+        # Call the LLM.
         response = llm.generate(
             messages=messages,
             model=model_settings.get("model"),
@@ -268,7 +318,7 @@ def get_llm_client():
         logger.warning("LLM integration not found in registry")
         return None
 
-    # Initialize if not already
+    # Initialize if not already.
     if not hasattr(llm_integration, "client") or llm_integration.client is None:
         result = llm_integration.initialize()
         if not result.success:
@@ -291,7 +341,6 @@ def mock_llm_response(
     Returns:
         Mock response
     """
-    # Get random greeting
     greetings = [
         "Quack! ",
         "Hello there! ",
@@ -301,37 +350,55 @@ def mock_llm_response(
     ]
     greeting = random.choice(greetings)
 
-    # Use DialogueRegistry to get catchphrase
     catchphrase = DialogueRegistry.get_catchphrase()
 
-    # For XP and level queries
     if re.search(r"\b(xp|level|progress)\b", user_input, re.IGNORECASE):
         if tool_outputs and tool_outputs[0].get("level"):
             data = tool_outputs[0]
-            return f"{greeting}You're currently at Level {data['level']} with {data['xp']} XP! You need {data['xp_needed']} more XP to reach Level {data['next_level']}. {catchphrase} Keep up the good work! 🦆"
-        return f"{greeting}You're making great progress on your coding journey! Keep completing quests to earn more XP and level up! 🦆"
+            return (
+                f"{greeting}You're currently at Level {data['level']} with {data['xp']} XP! "
+                f"You need {data['xp_needed']} more XP to reach Level {data['next_level']}. "
+                f"{catchphrase} Keep up the good work! 🦆"
+            )
+        return (
+            f"{greeting}You're making great progress on your coding journey! "
+            f"Keep completing quests to earn more XP and level up! 🦆"
+        )
 
-    # For badge queries
     if re.search(r"\bbadges?\b", user_input, re.IGNORECASE):
         if tool_outputs:
             data = tool_outputs[0]
             count = data.get("earned_count", 0)
-            return f"{greeting}You've earned {count} badges so far! Each badge represents an achievement in your coding journey. {catchphrase} Keep up the great work! 🦆"
-        return f"{greeting}Badges are special achievements you can earn in the QuackVerse. Complete quests and earn XP to unlock more badges! 🦆"
+            return (
+                f"{greeting}You've earned {count} badges so far! Each badge represents an achievement in your coding journey. "
+                f"{catchphrase} Keep up the great work! 🦆"
+            )
+        return (
+            f"{greeting}Badges are special achievements you can earn in the QuackVerse. "
+            f"Complete quests and earn XP to unlock more badges! 🦆"
+        )
 
-    # For quest queries
     if re.search(r"\bquests?\b", user_input, re.IGNORECASE):
-        return f"{greeting}Quests are challenges you can complete to earn XP and badges. Try starring the QuackCore repository on GitHub to complete your first quest! {catchphrase} 🦆"
+        return (
+            f"{greeting}Quests are challenges you can complete to earn XP and badges. "
+            f"Try starring the QuackCore repository on GitHub to complete your first quest! {catchphrase} 🦆"
+        )
 
-    # For "what's next" queries
     if re.search(
         r"\b(what next|next quest|suggest|do next)\b", user_input, re.IGNORECASE
     ):
-        return f"{greeting}I suggest trying to complete the 'Star QuackCore' quest next! It's an easy way to earn 50 XP and get your first badge. {catchphrase} 🦆"
+        return (
+            f"{greeting}I suggest trying to complete the 'Star QuackCore' quest next! "
+            f"It's an easy way to earn 50 XP and get your first badge. {catchphrase} 🦆"
+        )
 
-    # For "completed" statements
     if re.search(r"\b(completed|finished|done|did)\b", user_input, re.IGNORECASE):
-        return f"{greeting}That's fantastic! Let me check if you've completed any quests... {catchphrase} Keep up the great work! 🦆"
+        return (
+            f"{greeting}That's fantastic! Let me check if you've completed any quests... "
+            f"{catchphrase} Keep up the great work! 🦆"
+        )
 
-    # Default response
-    return f"{greeting}I'm Quackster, your friendly duck coding companion! I can help you track your progress, suggest quests, and guide you through the QuackVerse. What would you like to know? 🦆"
+    return (
+        f"{greeting}I'm Quackster, your friendly duck coding companion! "
+        f"I can help you track your progress, suggest quests, and guide you through the QuackVerse. What would you like to know? 🦆"
+    )

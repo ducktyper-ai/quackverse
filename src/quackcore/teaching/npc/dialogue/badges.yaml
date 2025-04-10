@@ -1,64 +1,96 @@
-# Badge dialogues for Quackster NPC
-
 # XP-based badges
 duck-initiate:
+  metadata:
+    difficulty: "beginner"
+    category: "xp"
+    xp_threshold: 10
   description: "The Duck Initiate badge is your first step on an epic coding journey with QuackVerse! It shows you've begun to explore and learn."
-  guidance: "This badge is earned automatically when you reach 10 XP. Just start using DuckTyper and completing simple tasks!"
+  guidance: "This badge is earned automatically when you reach {{ xp_threshold }} XP. Just start using DuckTyper and completing simple tasks!"
   fun_fact: "Every great programmer started with their very first line of code - this badge commemorates yours!"
-  flavor: "🥚 Your coding journey begins! From tiny beginnings come great things!"
+  flavor: "🥚 Your coding journey begins at level {{ level }}! From tiny beginnings come great things!"
 
 duck-novice:
+  metadata:
+    difficulty: "beginner"
+    category: "xp"
+    xp_threshold: 100
   description: "The Duck Novice badge shows you're getting comfortable with the QuackVerse ecosystem. You're no longer a complete beginner!"
-  guidance: "To earn this badge, reach 100 XP by completing quests and using DuckTyper regularly."
+  guidance: "To earn this badge, reach {{ xp_threshold }} XP by completing quests and using DuckTyper regularly."
   fun_fact: "The term 'novice' comes from Latin 'novicius' meaning 'newly imported' - just like your fresh coding skills!"
-  flavor: "🐣 Cracking through that shell! Your coding skills are hatching nicely!"
+  flavor: "🐣 Cracking through that shell at level {{ level }}! Your coding skills are hatching nicely!"
 
 duck-apprentice:
+  metadata:
+    difficulty: "intermediate"
+    category: "xp"
+    xp_threshold: 500
   description: "The Duck Apprentice badge marks your transition from casual user to devoted learner. You're building serious skills now!"
-  guidance: "Accumulate 500 XP through consistent use of DuckTyper and quest completion to earn this badge."
+  guidance: "Accumulate {{ xp_threshold }} XP through consistent use of DuckTyper and quest completion to earn this badge."
   fun_fact: "Medieval apprenticeships often lasted 7 years - thankfully your coding apprenticeship can move at your own pace!"
-  flavor: "🐥 Look at you growing those coding feathers! You're really taking flight!"
+  flavor: "🐥 Look at you growing those coding feathers at level {{ level }}! You're really taking flight!"
 
 duck-journeyman:
+  metadata:
+    difficulty: "advanced"
+    category: "xp"
+    xp_threshold: 1000
   description: "The Duck Journeyman badge shows you've mastered the fundamentals of QuackVerse and are ready for more advanced challenges."
-  guidance: "This prestigious badge is earned by reaching 1,000 XP through dedicated practice and quest completion."
+  guidance: "This prestigious badge is earned by reaching {{ xp_threshold }} XP through dedicated practice and quest completion."
   fun_fact: "Historically, a journeyman was someone who could work independently but hadn't yet achieved master status - you're well on your way!"
-  flavor: "🦆 A proper duck developer now! You're swimming confidently in the code pond!"
+  flavor: "🦆 A proper duck developer at level {{ level }} now! You're swimming confidently in the code pond!"
 
 # GitHub-based badges
 github-collaborator:
+  metadata:
+    difficulty: "beginner"
+    category: "github"
   description: "The GitHub Collaborator badge shows you're engaged with the community and following projects you find interesting."
   guidance: "This badge is earned by starring the QuackCore repository on GitHub. It's a simple way to show your support!"
   fun_fact: "GitHub's star feature was introduced in 2012 as a way to bookmark repositories of interest."
-  flavor: "⭐ Star light, star bright, first GitHub star tonight! Your open source journey begins!"
+  flavor: "⭐ Star light, star bright at level {{ level }}! Your open source journey begins with your first GitHub star!"
 
 duck-contributor:
+  metadata:
+    difficulty: "beginner"
+    category: "github"
   description: "The Duck Contributor badge marks your first contribution to the QuackVerse ecosystem. You're officially part of the community!"
   guidance: "To earn this badge, open a Pull Request to any QuackVerse repository with improvements or fixes."
   fun_fact: "The concept of 'pull requests' was popularized by GitHub to make code collaboration easier and more accessible."
-  flavor: "📝🦆 From user to contributor - the most important step in open source! Quack-tastic job!"
+  flavor: "📝🦆 Level {{ level }} and contributing! From user to contributor - a quack-tastic job!"
 
 duck-team-player:
+  metadata:
+    difficulty: "intermediate"
+    category: "github"
   description: "The Duck Team Player badge is a special achievement that shows your code has been accepted into the QuackVerse ecosystem."
   guidance: "Earn this badge by having one of your Pull Requests merged into a QuackVerse project."
   fun_fact: "The average time for PR review and merging in open source projects is about 4-5 days."
-  flavor: "🤝🦆 Your code is now part of QuackVerse! You're making the ecosystem better for everyone!"
+  flavor: "🤝🦆 At level {{ level }}, your code is now part of QuackVerse! You're making the ecosystem better for everyone!"
 
 # Special badges
 quackster-friend:
+  metadata:
+    difficulty: "special"
+    category: "community"
   description: "The Quackster's Friend badge shows you've developed a rapport with your friendly duck coding mentor (that's me!)."
   guidance: "Have 10 conversations with Quackster to earn this special badge."
   fun_fact: "Rubber duck debugging is a real programming practice where explaining your code to an inanimate object helps solve problems!"
-  flavor: "💬🦆 We've had some great chats! Duck debuggers make the best friends!"
+  flavor: "💬🦆 Level {{ level }} of friendship unlocked! We've had some great chats, and duck debuggers make the best friends!"
 
 duck-explorer:
+  metadata:
+    difficulty: "adventurous"
+    category: "special"
   description: "The Duck Explorer badge means you've completed the full tutorial series and are ready to chart your own course."
   guidance: "Complete all tutorial quests to earn this adventurous badge."
   fun_fact: "Explorer ducks are specially adapted with waterproof feathers that help them navigate new waters - just like you're navigating new code!"
-  flavor: "🧭🦆 You've mapped the QuackVerse territory! What will you discover next?"
+  flavor: "🧭🦆 Level {{ level }} explorer! You've mapped the QuackVerse territory! What will you discover next?"
 
 duck-graduate:
+  metadata:
+    difficulty: "academic"
+    category: "special"
   description: "The Duck Graduate badge is a prestigious award showing you've completed a full course in the QuackVerse ecosystem."
   guidance: "Earn a course certificate to receive this badge of academic achievement."
   fun_fact: "The graduation cap design dates back to the 14th century and symbolizes the freedom of scholarship."
-  flavor: "🎓🦆 Quack-gratulations, graduate! Your hard work has paid off!"
+  flavor: "🎓🦆 Level {{ level }} graduate! Quack-gratulations on your academic achievement!"

@@ -6,17 +6,16 @@ This module provides functions for retrieving and displaying tutorial content
 on various topics related to the QuackVerse ecosystem.
 """
 
-from typing import Any
-
 from quackcore.logging import get_logger
 from quackcore.teaching.npc import rag
 from quackcore.teaching.npc.dialogue import DialogueRegistry
 from quackcore.teaching.npc.tools.common import standardize_tool_output
+from quackcore.teaching.npc.tools.schema import TutorialOutput
 
 logger = get_logger(__name__)
 
 
-def get_tutorial(topic: str) -> dict[str, Any]:
+def get_tutorial(topic: str) -> TutorialOutput:
     """
     Get tutorial information for a specific topic.
 
@@ -24,7 +23,7 @@ def get_tutorial(topic: str) -> dict[str, Any]:
         topic: Topic to get tutorial for
 
     Returns:
-        Dictionary with tutorial information
+        TutorialOutput with tutorial information
     """
     # Get tutorial from RAG
     tutorial = rag.get_tutorial_topic(topic)
@@ -54,4 +53,6 @@ def get_tutorial(topic: str) -> dict[str, Any]:
         )
 
     tutorial_data["formatted_text"] = formatted_text
-    return standardize_tool_output("get_tutorial", tutorial_data)
+    return standardize_tool_output(
+        "get_tutorial", tutorial_data, return_type=TutorialOutput
+    )

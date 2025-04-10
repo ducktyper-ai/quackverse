@@ -9,12 +9,12 @@ Quackster teaching NPC.
 import argparse
 
 from quackcore.teaching import quests, utils, xp
-from quackcore.teaching.models import XPEvent
-from quackcore.teaching.npc import agent
+from quackcore.teaching.core.models import XPEvent
+from quackcore.teaching.npc import agent, config
 from quackcore.teaching.npc.schema import TeachingNPCInput
 
 
-def main():
+def main() -> None:
     """Run the Quackster NPC demo."""
     parser = argparse.ArgumentParser(description="Quackster NPC Demo")
     parser.add_argument("--debug", action="store_true", help="Enable debug output")
@@ -22,13 +22,29 @@ def main():
     parser.add_argument(
         "--reset", action="store_true", help="Reset user progress before starting"
     )
+    parser.add_argument(
+        "--mock-only",
+        action="store_true",
+        help="Skip real LLM calls and use mock responses",
+    )
+    parser.add_argument(
+        "--model",
+        type=str,
+        default="default",
+        help="Select LLM backend (e.g. OpenAI, Anthropic, etc.)",
+    )
     args = parser.parse_args()
+
+    # Update configuration for LLM integration based on arguments.
+    # These configuration variables are assumed to be used by agent.call_llm.
+    config.USE_MOCK_LLM = args.mock_only
+    config.MODEL_BACKEND = args.model
 
     # Initialize demo environment
     initialize_demo(args)
 
     # Store conversation history for context
-    conversation_history = []
+    conversation_history: list[dict[str, str]] = []
 
     print("\n" + "=" * 60)
     print("🦆 Welcome to the Quackster Teaching NPC Demo!")
@@ -74,7 +90,7 @@ def main():
                 conversation_context=conversation_history,
             )
 
-            # Run the NPC
+            # Run the NPC session
             result = agent.run_npc_session(npc_input)
 
             # Display result
@@ -89,19 +105,20 @@ def main():
                     print(f"Suggested quests: {len(result.suggested_quests)}")
                 print("=================")
 
-            # Update conversation history
+            # Update conversation history (limit to last 10 messages)
             conversation_history.append({"role": "user", "content": user_input})
             conversation_history.append(
                 {"role": "assistant", "content": result.response_text}
             )
-
-            # Keep conversation history limited to last 10 messages (5 exchanges)
             if len(conversation_history) > 10:
                 conversation_history = conversation_history[-10:]
 
             # Award XP for using the NPC
             if len(conversation_history) % 2 == 0:  # Every exchange (2 messages)
                 award_conversation_xp()
+
+            # Show progress and badges after each exchange
+            display_progress()
 
         except KeyboardInterrupt:
             print(
@@ -116,7 +133,7 @@ def main():
                 traceback.print_exc()
 
 
-def initialize_demo(args):
+def initialize_demo(args: argparse.Namespace) -> None:
     """Initialize the demo environment."""
     # Create a user if none exists
     user = utils.load_progress()
@@ -140,25 +157,20 @@ def initialize_demo(args):
         utils.save_progress(user)
 
 
-def award_conversation_xp():
+def award_conversation_xp() -> None:
     """Award XP for having a conversation with Quackster."""
     user = utils.load_progress()
-
-    # Calculate conversation count
+    # Calculate conversation count (using completed event IDs as a proxy)
     conversation_count = len(
         [e for e in user.completed_event_ids if e.startswith("quackster-conversation-")]
     )
-
     # Create event ID based on conversation count
     event_id = f"quackster-conversation-{conversation_count + 1}"
-
-    # Check if this specific conversation has already been counted
+    # Ensure event isn't already counted
     if event_id in user.completed_event_ids:
         return
-
     # Award XP (diminishing returns)
     xp_amount = 5 if conversation_count < 5 else (3 if conversation_count < 10 else 1)
-
     # Create and apply XP event
     event = XPEvent(
         id=event_id,
@@ -166,15 +178,34 @@ def award_conversation_xp():
         points=xp_amount,
     )
     xp.add_xp(user, event)
-
     # Check for any completed quests
     quests.apply_completed_quests(user)
-
     # Save progress
     utils.save_progress(user)
 
 
-def show_help():
+def display_progress() -> None:
+    """Display current progress including XP, level, and completed events as proxy for badges."""
+    user = utils.load_progress()
+    # Assume user has attributes: xp, level, and completed_event_ids.
+    # Adjust based on your actual user model.
+    print("\n=== Your Progress ===")
+    print(f"XP: {user.xp}")
+    # If the level attribute is not directly present, assume it is computed elsewhere.
+    try:
+        print(f"Level: {user.level}")
+    except AttributeError:
+        print("Level: (not computed)")
+    print(
+        f"Completed Conversations: {len([e for e in user.completed_event_ids if e.startswith('quackster-conversation-')])}"
+    )
+    # If you have badges, you may show badge count similarly.
+    if hasattr(user, "badges"):
+        print(f"Badges Earned: {len(user.badges)}")
+    print("=====================")
+
+
+def show_help() -> None:
     """Show help information for the demo."""
     help_text = """
 DEMO COMMANDS:
@@ -182,6 +213,8 @@ DEMO COMMANDS:
   exit    - Exit the demo (also 'quit' or 'bye')
   reset   - Reset your progress
   debug   - Toggle debug output
+  mock-only - Skip real LLM calls and use mock responses
+  model   - Specify the LLM backend (e.g., OpenAI, Anthropic)
 
 EXAMPLE QUESTIONS:
   What's my level?

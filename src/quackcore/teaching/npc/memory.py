@@ -6,8 +6,6 @@ This module provides functions for loading user information into a
 format that the NPC can use to personalize interactions.
 """
 
-import json
-import time
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any

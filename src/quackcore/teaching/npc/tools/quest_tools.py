@@ -6,19 +6,24 @@ This module provides functions for retrieving quest information,
 listing available quests, suggesting next quests, and verifying quest completion.
 """
 
-from typing import Any
-
 from quackcore.logging import get_logger
 from quackcore.teaching import badges, quests, utils
 from quackcore.teaching.npc import rag
 from quackcore.teaching.npc.dialogue import DialogueRegistry
 from quackcore.teaching.npc.schema import UserMemory
 from quackcore.teaching.npc.tools.common import standardize_tool_output
+from quackcore.teaching.npc.tools.schema import (
+    QuestCompletionDetail,
+    QuestCompletionOutput,
+    QuestDetailOutput,
+    QuestInfo,
+    QuestListOutput,
+)
 
 logger = get_logger(__name__)
 
 
-def list_quests(user_memory: UserMemory) -> dict[str, Any]:
+def list_quests(user_memory: UserMemory) -> QuestListOutput:
     """
     Get information about a user's quests.
 
@@ -26,7 +31,7 @@ def list_quests(user_memory: UserMemory) -> dict[str, Any]:
         user_memory: User memory data containing quest completion info
 
     Returns:
-        Dictionary with quest information
+        QuestListOutput with quest information
     """
     # Load full quest data
     user = utils.load_progress()  # Still needed for some operations
@@ -120,29 +125,67 @@ def list_quests(user_memory: UserMemory) -> dict[str, Any]:
         )
     )
 
+    # Convert quests to QuestInfo objects for the Pydantic model
+    quest_info_completed = [
+        QuestInfo(
+            id=quest.id,
+            name=quest.name,
+            description=quest.description,
+            reward_xp=quest.reward_xp,
+            badge_id=quest.badge_id,
+            is_completed=True,
+        )
+        for quest in completed
+    ]
+
+    quest_info_available = [
+        QuestInfo(
+            id=quest.id,
+            name=quest.name,
+            description=quest.description,
+            reward_xp=quest.reward_xp,
+            badge_id=quest.badge_id,
+            is_completed=False,
+        )
+        for quest in available
+    ]
+
+    quest_info_suggested = [
+        QuestInfo(
+            id=quest.id,
+            name=quest.name,
+            description=quest.description,
+            reward_xp=quest.reward_xp,
+            badge_id=quest.badge_id,
+            is_completed=False,
+        )
+        for quest in suggested
+    ]
+
     return standardize_tool_output(
         "list_quests",
         {
-            "completed": completed,
+            "completed": quest_info_completed,
             "completed_count": completed_count,
             "completed_formatted": completed_list
             if completed_list
             else ["No quests completed yet"],
-            "available": available,
+            "available": quest_info_available,
             "available_count": available_count,
             "available_formatted": available_list
             if available_list
             else ["No more quests available!"],
-            "suggested": suggested,
+            "suggested": quest_info_suggested,
             "suggested_formatted": [q["formatted"] for q in suggested_list]
             if suggested_list
             else ["No suggested quests available."],
             "formatted_text": formatted_text,
         },
+        return_type=QuestListOutput,
     )
 
 
-def get_quest_details(quest_id: str) -> dict[str, Any]:
+def get_quest_details(quest_id: str) -> QuestDetailOutput:
     """
     Get detailed information about a specific quest.
 
@@ -150,7 +193,7 @@ def get_quest_details(quest_id: str) -> dict[str, Any]:
         quest_id: ID of the quest to get details for
 
     Returns:
-        Dictionary with quest details
+        QuestDetailOutput with quest details
     """
     # Get custom quest dialogue
     quest_guidance = DialogueRegistry.get_quest_dialogue(quest_id, "guidance")
@@ -169,6 +212,7 @@ def get_quest_details(quest_id: str) -> dict[str, Any]:
 
     quest = quests.get_quest(quest_id)
     if not quest:
+        # Create a QuestInfo object for non-existent quest
         return standardize_tool_output(
             "get_quest_details",
             {
@@ -178,6 +222,7 @@ def get_quest_details(quest_id: str) -> dict[str, Any]:
                 "is_completed": is_completed,
                 "formatted_text": f"Quest '{info.get('name', quest_id)}' not found.",
             },
+            return_type=QuestDetailOutput,
         )
 
     # If quest has a badge, get badge info
@@ -215,10 +260,12 @@ def get_quest_details(quest_id: str) -> dict[str, Any]:
         )
 
     quest_data["formatted_text"] = formatted_text
-    return standardize_tool_output("get_quest_details", quest_data)
+    return standardize_tool_output(
+        "get_quest_details", quest_data, return_type=QuestDetailOutput
+    )
 
 
-def suggest_next_quest(user_memory: UserMemory) -> dict[str, Any]:
+def suggest_next_quest(user_memory: UserMemory) -> QuestDetailOutput:
     """
     Suggest the next quest for a user to complete.
 
@@ -226,7 +273,7 @@ def suggest_next_quest(user_memory: UserMemory) -> dict[str, Any]:
         user_memory: User memory data
 
     Returns:
-        Dictionary with quest suggestion
+        QuestDetailOutput with quest suggestion
     """
     # Get suggested quests
     suggested = user_memory.custom_data.get("suggested_quests", [])
@@ -236,12 +283,18 @@ def suggest_next_quest(user_memory: UserMemory) -> dict[str, Any]:
         user = utils.load_progress()
         quest_objects = quests.get_suggested_quests(user, limit=1)
         if not quest_objects:
+            # Create an empty QuestInfo for when there's no suggestion
             return standardize_tool_output(
                 "suggest_next_quest",
                 {
+                    "id": "",
+                    "name": "No suggestion available",
+                    "description": "No quests to suggest at this time.",
+                    "reward_xp": 0,
                     "has_suggestion": False,
                     "formatted_text": "No quest suggestions available at this time.",
                 },
+                return_type=QuestDetailOutput,
             )
 
         # Use the first suggested quest
@@ -252,12 +305,18 @@ def suggest_next_quest(user_memory: UserMemory) -> dict[str, Any]:
         quest_info = suggested[0]
         quest = quests.get_quest(quest_info["id"])
         if not quest:
+            # Create an empty QuestInfo for when there's no suggestion
             return standardize_tool_output(
                 "suggest_next_quest",
                 {
+                    "id": "",
+                    "name": "No suggestion available",
+                    "description": "No quests to suggest at this time.",
+                    "reward_xp": 0,
                     "has_suggestion": False,
                     "formatted_text": "No quest suggestions available at this time.",
                 },
+                return_type=QuestDetailOutput,
             )
 
     # Get custom quest guidance or use RAG
@@ -281,6 +340,7 @@ def suggest_next_quest(user_memory: UserMemory) -> dict[str, Any]:
         "badge": badge_info,
         "guidance": quest_guidance,
         "hint": DialogueRegistry.get_quest_dialogue(quest.id, "hint"),
+        "has_suggestion": True,
     }
 
     # Use template to generate formatted text
@@ -297,23 +357,13 @@ def suggest_next_quest(user_memory: UserMemory) -> dict[str, Any]:
             f"Guidance:\n{quest_guidance}"
         )
 
+    quest_data["formatted_text"] = formatted_text
     return standardize_tool_output(
-        "suggest_next_quest",
-        {
-            "has_suggestion": True,
-            "quest": quest,
-            "quest_id": quest.id,
-            "name": quest.name,
-            "description": quest.description,
-            "reward_xp": quest.reward_xp,
-            "badge": badge_info,
-            "guidance": quest_guidance,
-            "formatted_text": formatted_text,
-        },
+        "suggest_next_quest", quest_data, return_type=QuestDetailOutput
     )
 
 
-def verify_quest_completion(user_memory: UserMemory) -> dict[str, Any]:
+def verify_quest_completion(user_memory: UserMemory) -> QuestCompletionOutput:
     """
     Check for newly completed quests.
 
@@ -321,7 +371,7 @@ def verify_quest_completion(user_memory: UserMemory) -> dict[str, Any]:
         user_memory: User memory data with current quest status
 
     Returns:
-        Dictionary with quest verification results
+        QuestCompletionOutput with quest verification results following the standardized schema
     """
     # Load progress and check for completed quests
     user = utils.load_progress()
@@ -334,6 +384,10 @@ def verify_quest_completion(user_memory: UserMemory) -> dict[str, Any]:
     newly_completed = [
         quest for quest in newly_completed if quest.id not in already_completed
     ]
+
+    # Initialize XP gained
+    total_xp_gained = 0
+    badge_awarded = False
 
     if not newly_completed:
         # Check session history to personalize the message
@@ -348,19 +402,31 @@ def verify_quest_completion(user_memory: UserMemory) -> dict[str, Any]:
         if completion_attempts > 2:
             message = "I don't see any newly completed quests. Are you having trouble with a particular quest? I'd be happy to help!"
 
+        # Create and return a properly typed QuestCompletionOutput using return_type parameter
         return standardize_tool_output(
             "verify_quest_completion",
             {
                 "quests_completed": False,
                 "completed_quests": [],
+                "completed_details": [],
+                "total_completed_count": 0,
                 "formatted_text": message,
+                "badge_awarded": False,
+                "xp_gained": 0,
+                "level_up": False,
             },
+            return_type=QuestCompletionOutput,
         )
 
     # Apply completions and get quest details
     completed_details = []
+    old_level = user_memory.level
+
     for quest in newly_completed:
         quests.complete_quest(user, quest.id)
+
+        # Track XP gained
+        total_xp_gained += quest.reward_xp
 
         # Get badge info if one is awarded
         badge_info = None
@@ -368,6 +434,7 @@ def verify_quest_completion(user_memory: UserMemory) -> dict[str, Any]:
             badge = badges.get_badge(quest.badge_id)
             if badge:
                 badge_info = f"{badge.emoji} {badge.name}"
+                badge_awarded = True
 
         # Get custom completion message
         completion_msg = DialogueRegistry.get_quest_dialogue(quest.id, "completion")
@@ -395,7 +462,28 @@ def verify_quest_completion(user_memory: UserMemory) -> dict[str, Any]:
     # Use user_memory to personalize celebration based on level and completed quests
     total_completed = len(user_memory.completed_quests) + quest_count
 
-    if user_memory.level >= 5:
+    # Check if the user leveled up due to the XP gain
+    new_xp = user_memory.xp + total_xp_gained
+    xp_per_level = 100  # Assuming 100 XP per level as a baseline
+    new_level = 1 + (new_xp // xp_per_level)  # Simple level calculation
+    level_up = new_level > old_level
+
+    # Convert the newly_completed quests to QuestInfo objects for the Pydantic model
+    quest_info_list = [
+        QuestInfo(
+            id=quest.id,
+            name=quest.name,
+            description=quest.description,
+            reward_xp=quest.reward_xp,
+            badge_id=quest.badge_id,
+            is_completed=True,
+        )
+        for quest in newly_completed
+    ]
+
+    if level_up:
+        header = f"🎉 LEVEL UP! You're now level {new_level}! 🎉"
+    elif user_memory.level >= 5:
         header = "🎉 QUEST MASTERY ACHIEVED! 🎉"
     elif quest_count == 1:
         header = "🎉 QUEST COMPLETED! 🎉"
@@ -416,15 +504,42 @@ def verify_quest_completion(user_memory: UserMemory) -> dict[str, Any]:
         ]
     )
 
-    formatted_text = f"{header}\n\n{details_text}{milestone_text}"
+    # Add level up information to the formatted text if applicable
+    if level_up:
+        level_up_text = (
+            f"\n\n✨ You leveled up from level {old_level} to level {new_level}! ✨"
+        )
+        formatted_text = f"{header}\n\n{details_text}{milestone_text}{level_up_text}"
+    else:
+        formatted_text = f"{header}\n\n{details_text}{milestone_text}"
 
+    # Convert completed_details to proper QuestCompletionDetail objects
+    completion_details = [
+        QuestCompletionDetail(
+            id=detail["id"],
+            name=detail["name"],
+            reward_xp=detail["reward_xp"],
+            badge=detail.get("badge"),
+            completion_message=detail["completion_message"],
+            formatted=detail["formatted"],
+        )
+        for detail in completed_details
+    ]
+
+    # Return a properly typed QuestCompletionOutput using the return_type parameter
     return standardize_tool_output(
         "verify_quest_completion",
         {
             "quests_completed": True,
-            "completed_quests": newly_completed,
-            "completed_details": completed_details,
+            "completed_quests": quest_info_list,
+            "completed_details": completion_details,
             "total_completed_count": total_completed,
             "formatted_text": formatted_text,
+            "badge_awarded": badge_awarded,
+            "xp_gained": total_xp_gained,
+            "level_up": level_up,
+            "old_level": old_level,
+            "new_level": new_level,
         },
+        return_type=QuestCompletionOutput,
     )

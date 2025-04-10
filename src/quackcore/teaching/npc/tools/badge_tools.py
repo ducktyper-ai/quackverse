@@ -6,19 +6,22 @@ This module provides functions for retrieving badge information,
 listing earned badges, and checking badge progress.
 """
 
-from typing import Any
-
 from quackcore.logging import get_logger
 from quackcore.teaching import badges, utils
 from quackcore.teaching.npc import rag
 from quackcore.teaching.npc.dialogue import DialogueRegistry
 from quackcore.teaching.npc.schema import UserMemory
 from quackcore.teaching.npc.tools.common import standardize_tool_output
+from quackcore.teaching.npc.tools.schema import (
+    BadgeDetailOutput,
+    BadgeInfo,
+    BadgeListOutput,
+)
 
 logger = get_logger(__name__)
 
 
-def list_badges(user_memory: UserMemory) -> dict[str, Any]:
+def list_badges(user_memory: UserMemory) -> BadgeListOutput:
     """
     Get information about a user's badges.
 
@@ -26,7 +29,7 @@ def list_badges(user_memory: UserMemory) -> dict[str, Any]:
         user_memory: User memory data containing badge information
 
     Returns:
-        Dictionary with badge information
+        BadgeListOutput with badge information
     """
     # Use the user data from memory instead of loading it again
     user = utils.load_progress()  # Still needed for some badge operations
@@ -46,6 +49,21 @@ def list_badges(user_memory: UserMemory) -> dict[str, Any]:
     next_badges = badges.get_next_badges(user, limit=3)
     next_badge_list = []
 
+    # Convert badges to BadgeInfo objects
+    earned_badges = []
+    for badge in user_badges:
+        earned_badges.append(
+            BadgeInfo(
+                id=badge.id,
+                name=badge.name,
+                emoji=badge.emoji,
+                description=badge.description,
+                required_xp=badge.required_xp,
+                is_earned=True,
+                progress=100.0,
+            )
+        )
+
     for badge in next_badges:
         # Calculate progress - use user_memory.xp for XP-based badges
         if badge.required_xp > 0:
@@ -58,6 +76,18 @@ def list_badges(user_memory: UserMemory) -> dict[str, Any]:
             progress = badges.get_badge_progress(user, badge.id) * 100
 
         progress_str = f"({progress:.0f}% complete)"
+
+        # Create BadgeInfo object
+        badge_info = BadgeInfo(
+            id=badge.id,
+            name=badge.name,
+            emoji=badge.emoji,
+            description=badge.description,
+            required_xp=badge.required_xp,
+            is_earned=False,
+            progress=progress,
+        )
+
         next_badge_list.append(
             {
                 "id": badge.id,
@@ -67,6 +97,7 @@ def list_badges(user_memory: UserMemory) -> dict[str, Any]:
                 "required_xp": badge.required_xp,
                 "progress": progress,
                 "formatted": f"{badge.emoji} {badge.name} - {badge.description} {progress_str}",
+                "badge_info": badge_info,
             }
         )
 
@@ -104,22 +135,26 @@ def list_badges(user_memory: UserMemory) -> dict[str, Any]:
         )
     )
 
+    # Extract badge info objects from next_badge_list
+    next_badge_info = [item["badge_info"] for item in next_badge_list]
+
     return standardize_tool_output(
         "list_badges",
         {
-            "earned_badges": user_badges,
+            "earned_badges": earned_badges,
             "earned_count": badge_count,
             "earned_formatted": badge_list if badge_list else ["No badges earned yet"],
-            "next_badges": next_badges,
+            "next_badges": next_badge_info,
             "next_badges_formatted": [b["formatted"] for b in next_badge_list]
             if next_badge_list
             else ["Keep earning XP to unlock badges!"],
             "formatted_text": formatted_text,
         },
+        return_type=BadgeListOutput,
     )
 
 
-def get_badge_details(badge_id: str) -> dict[str, Any]:
+def get_badge_details(badge_id: str) -> BadgeDetailOutput:
     """
     Get detailed information about a specific badge.
 
@@ -127,7 +162,7 @@ def get_badge_details(badge_id: str) -> dict[str, Any]:
         badge_id: ID of the badge to get details for
 
     Returns:
-        Dictionary with badge details
+        BadgeDetailOutput with badge details
     """
     # Get custom badge dialogue
     badge_description = DialogueRegistry.get_badge_dialogue(badge_id, "description")
@@ -150,15 +185,24 @@ def get_badge_details(badge_id: str) -> dict[str, Any]:
 
     badge = badges.get_badge(badge_id)
     if not badge:
+        # Return a BadgeInfo with placeholder data for non-existent badges
         return standardize_tool_output(
             "get_badge_details",
             {
                 "id": badge_id,
                 "name": info.get("name", f"Unknown Badge ({badge_id})"),
+                "emoji": "❓",
                 "description": badge_description or "Badge information not found",
+                "required_xp": 0,
                 "is_earned": is_earned,
+                "progress": 0.0,
+                "progress_bar": "",
+                "guidance": "Badge not found in system.",
+                "fun_fact": "",
+                "flavor": "",
                 "formatted_text": f"Badge '{info.get('name', badge_id)}' not found.",
             },
+            return_type=BadgeDetailOutput,
         )
 
     # Get progress toward earning this badge
@@ -198,4 +242,6 @@ def get_badge_details(badge_id: str) -> dict[str, Any]:
         )
 
     badge_data["formatted_text"] = formatted_text
-    return standardize_tool_output("get_badge_details", badge_data)
+    return standardize_tool_output(
+        "get_badge_details", badge_data, return_type=BadgeDetailOutput
+    )

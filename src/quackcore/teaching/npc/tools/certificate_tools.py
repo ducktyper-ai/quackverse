@@ -6,14 +6,16 @@ This module provides functions for retrieving certificate information
 and checking certificate eligibility.
 """
 
-from typing import Any
-
 from quackcore.teaching import certificates, utils
 from quackcore.teaching.npc.schema import UserMemory
 from quackcore.teaching.npc.tools.common import standardize_tool_output
+from quackcore.teaching.npc.tools.schema import (
+    CertificateInfo,
+    CertificateListOutput,
+)
 
 
-def get_certificate_info(user_memory: UserMemory) -> dict[str, Any]:
+def get_certificate_info(user_memory: UserMemory) -> CertificateListOutput:
     """
     Get information about certificates that the user can earn.
 
@@ -21,7 +23,7 @@ def get_certificate_info(user_memory: UserMemory) -> dict[str, Any]:
         user_memory: User memory data with XP and completed quests
 
     Returns:
-        Dictionary with certificate information
+        CertificateListOutput with certificate information
     """
     # Load user progress
     user = utils.load_progress()  # Still needed for certificate validation
@@ -90,20 +92,20 @@ def get_certificate_info(user_memory: UserMemory) -> dict[str, Any]:
             progress_info = f"\n  Progress: {progress:.0f}% {progress_bar}"
 
         cert_list.append(
-            {
-                "id": cert["id"],
-                "name": cert["name"],
-                "description": cert["description"],
-                "earned": cert["earned"],
-                "requirements": cert["requirements"],
-                "progress": progress,
-                "progress_bar": progress_bar,
-                "formatted": f"{cert['name']} - {cert['description']}\n  Status: {status}{progress_info}",
-            }
+            CertificateInfo(
+                id=cert["id"],
+                name=cert["name"],
+                description=cert["description"],
+                earned=cert["earned"],
+                requirements=cert["requirements"],
+                progress=progress,
+                progress_bar=progress_bar,
+                formatted=f"{cert['name']} - {cert['description']}\n  Status: {status}{progress_info}",
+            )
         )
 
     # If any certificate is earned, mention how to generate it
-    earned_any = any(cert["earned"] for cert in available_certificates)
+    earned_any = any(cert.earned for cert in cert_list)
 
     # Use learning style from user_memory for personalization
     learning_style = user_memory.custom_data.get("learning_style", "")
@@ -137,17 +139,18 @@ Replace 'certificate_id' with the ID of the certificate you've earned.
     formatted_text = (
         f"{header}\n\n"
         f"{intro}\n\n"
-        + "\n\n".join([cert["formatted"] for cert in cert_list])
+        + "\n\n".join([cert.formatted for cert in cert_list])
         + generation_info
     )
 
     return standardize_tool_output(
         "get_certificate_info",
         {
-            "certificates": available_certificates,
+            "certificates": cert_list,
             "earned_any": earned_any,
-            "certificate_count": len(available_certificates),
-            "earned_count": sum(1 for cert in available_certificates if cert["earned"]),
+            "certificate_count": len(cert_list),
+            "earned_count": sum(1 for cert in cert_list if cert.earned),
             "formatted_text": formatted_text,
         },
+        return_type=CertificateListOutput,
     )

@@ -40,7 +40,7 @@ class TeachingNPCResponse(BaseModel):
     response_text: str = Field(description="The NPC's response message")
     actions_taken: list[str] | None = Field(
         default_factory=list,
-        description="list of actions taken by the NPC during processing",
+        description="List of actions taken by the NPC during processing",
     )
     suggested_quests: list[dict[str, Any]] | None = Field(
         default=None,
@@ -132,4 +132,8 @@ class UserMemory(BaseModel):
     )
     custom_data: dict[str, Any] = Field(
         default_factory=dict, description="Additional custom data about the user"
+    )
+    user_tags: list[str] = Field(
+        default_factory=list,
+        description="Tags associated with the user, for tracking topics and interests",
     )
