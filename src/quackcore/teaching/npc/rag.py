@@ -8,6 +8,7 @@ Markdown documents to ground the NPC's knowledge in factual information.
 
 import os
 import re
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -26,6 +27,10 @@ DEFAULT_DOC_PATHS = [
     "./tutorials",
     "./docs/tutorials",
 ]
+
+# Cache for chunked documents
+_doc_cache: dict[str, str] = {}
+_last_modified_times: dict[str, float] = {}
 
 
 def get_doc_directories() -> list[Path]:
@@ -51,9 +56,9 @@ def get_doc_directories() -> list[Path]:
     # Attempt to detect a content context for tutorials.
     content_context = resolver.detect_content_context(content_type="tutorial")
     if (
-        content_context
-        and content_context.content_dir
-        and content_context.content_dir.exists()
+            content_context
+            and content_context.content_dir
+            and content_context.content_dir.exists()
     ):
         return [content_context.content_dir]
 
@@ -67,20 +72,61 @@ def get_doc_directories() -> list[Path]:
     return paths
 
 
+def should_reload_docs(doc_dirs: list[Path]) -> bool:
+    """
+    Check if documents should be reloaded based on modification times.
+
+    Args:
+        doc_dirs: List of document directories to check
+
+    Returns:
+        True if documents should be reloaded, False otherwise
+    """
+    global _last_modified_times
+
+    for doc_dir in doc_dirs:
+        # Search for Markdown files recursively
+        result = fs.find_files(str(doc_dir), "*.md", recursive=True)
+        if not result.success:
+            continue
+
+        for file_path in result.files:
+            info = fs.get_file_info(file_path)
+            if not info.success:
+                continue
+
+            # Check if file is new or modified
+            if file_path not in _last_modified_times or info.modified_time > _last_modified_times.get(
+                    file_path, 0):
+                return True
+
+    return False
+
+
+@lru_cache(maxsize=1)
 def load_docs_for_rag() -> str:
     """
     Load all tutorial documents for Retrieval-Augmented Generation (RAG).
 
     This function gathers all Markdown (.md) files found in the tutorial
     directories, reads their contents using the FS service, and then concatenates
-    them into one string. Each file’s content is preceded by a header bearing
+    them into one string. Each file's content is preceded by a header bearing
     the file name.
 
     Returns:
         A concatenated string of all document contents, or an empty string if none are found.
     """
-    docs: list[str] = []
+    global _doc_cache, _last_modified_times
     doc_dirs = get_doc_directories()
+
+    # If we've cached the docs and no files have changed, use the cache
+    if _doc_cache and not should_reload_docs(doc_dirs):
+        logger.debug("Using cached documents for RAG")
+        return "\n\n".join(_doc_cache.values())
+
+    logger.info("Loading/reloading documents for RAG")
+    docs: dict[str, str] = {}
+    new_modified_times: dict[str, float] = {}
 
     if not doc_dirs:
         logger.warning("No tutorial directories found. RAG will be limited.")
@@ -95,11 +141,17 @@ def load_docs_for_rag() -> str:
 
         for file_path in result.files:
             try:
+                # Get file modification time
+                info = fs.get_file_info(str(file_path))
+                if info.success:
+                    new_modified_times[str(file_path)] = info.modified_time
+
+                # Read the file content
                 read_result = fs.read_text(str(file_path))
                 if read_result.success:
                     filename = Path(file_path).name
                     content = f"# {filename}\n\n{read_result.content}\n\n"
-                    docs.append(content)
+                    docs[str(file_path)] = content
                 else:
                     logger.warning(f"Failed to read {file_path}: {read_result.error}")
             except Exception as e:
@@ -109,7 +161,11 @@ def load_docs_for_rag() -> str:
         logger.warning("No tutorial documents found.")
         return ""
 
-    return "\n\n".join(docs)
+    # Update cache and modification times
+    _doc_cache = docs
+    _last_modified_times = new_modified_times
+
+    return "\n\n".join(docs.values())
 
 
 def retrieve_relevant_content(query: str, all_content: str, max_chunks: int = 3) -> str:
@@ -128,7 +184,7 @@ def retrieve_relevant_content(query: str, all_content: str, max_chunks: int = 3)
     Returns:
         A concatenated string of the selected relevant content chunks.
     """
-    chunks = _split_by_headings(all_content)
+    chunks = _get_content_chunks(all_content)
     scored_chunks: list[tuple[str, int]] = []
     keywords = _extract_keywords(query)
 
@@ -142,11 +198,13 @@ def retrieve_relevant_content(query: str, all_content: str, max_chunks: int = 3)
     return "\n\n".join(top_chunks)
 
 
-def _split_by_headings(content: str) -> list[str]:
+@lru_cache(maxsize=10)
+def _get_content_chunks(content: str) -> list[str]:
     """
     Split content into chunks by Markdown headings.
 
     Uses a regular expression to separate content at lines starting with 1-3 '#' characters.
+    Caches the results to avoid repeating the same splitting operations.
 
     Args:
         content: The Markdown content to split.
@@ -167,11 +225,13 @@ def _split_by_headings(content: str) -> list[str]:
     return chunks
 
 
+@lru_cache(maxsize=100)
 def _extract_keywords(query: str) -> list[str]:
     """
     Extract keywords from the query to aid in content matching.
 
     This function tokenizes the query, removes common stop words, and filters out tokens shorter than three characters.
+    Caches results to improve performance for repeated queries.
 
     Args:
         query: The query string.
@@ -180,76 +240,20 @@ def _extract_keywords(query: str) -> list[str]:
         A list of keywords.
     """
     stop_words = {
-        "a",
-        "an",
-        "the",
-        "is",
-        "are",
-        "was",
-        "were",
-        "be",
-        "been",
-        "being",
-        "in",
-        "on",
-        "at",
-        "to",
-        "for",
-        "with",
-        "by",
-        "about",
-        "of",
-        "that",
-        "and",
-        "or",
-        "not",
-        "but",
-        "what",
-        "which",
-        "who",
-        "whom",
-        "whose",
-        "when",
-        "where",
-        "why",
-        "how",
-        "this",
-        "these",
-        "those",
-        "it",
-        "they",
-        "them",
-        "their",
-        "there",
-        "here",
-        "do",
-        "does",
-        "did",
-        "can",
-        "could",
-        "will",
-        "would",
-        "shall",
-        "should",
-        "may",
-        "might",
-        "must",
-        "i",
-        "you",
-        "he",
-        "she",
-        "we",
-        "my",
-        "your",
-        "his",
-        "her",
-        "our",
+        "a", "an", "the", "is", "are", "was", "were", "be", "been", "being",
+        "in", "on", "at", "to", "for", "with", "by", "about", "of", "that",
+        "and", "or", "not", "but", "what", "which", "who", "whom", "whose",
+        "when", "where", "why", "how", "this", "these", "those", "it", "they",
+        "them", "their", "there", "here", "do", "does", "did", "can", "could",
+        "will", "would", "shall", "should", "may", "might", "must", "i", "you",
+        "he", "she", "we", "my", "your", "his", "her", "our",
     }
     tokens = re.findall(r"\b\w+\b", query.lower())
     keywords = [token for token in tokens if token not in stop_words and len(token) > 2]
     return keywords
 
 
+@lru_cache(maxsize=32)
 def get_quest_info(quest_id: str) -> dict[str, Any]:
     """
     Get detailed information about a quest from documentation.
@@ -307,6 +311,7 @@ def get_quest_info(quest_id: str) -> dict[str, Any]:
     }
 
 
+@lru_cache(maxsize=32)
 def get_badge_info(badge_id: str) -> dict[str, Any]:
     """
     Get detailed information about a badge from documentation.
@@ -367,6 +372,7 @@ def get_badge_info(badge_id: str) -> dict[str, Any]:
     }
 
 
+@lru_cache(maxsize=16)
 def get_tutorial_topic(topic: str) -> dict[str, Any]:
     """
     Get tutorial content for a specific topic.
@@ -415,6 +421,41 @@ def get_tutorial_topic(topic: str) -> dict[str, Any]:
                 "```bash\nducktyper progress\n```\n"
             ),
         },
+        "badges": {
+            "title": "Understanding Badges",
+            "description": "Learn about the badge system in QuackVerse.",
+            "content": (
+                "# Badges in QuackVerse\n\n"
+                "Badges are achievements you can earn to showcase your progress and skills.\n\n"
+                "## Types of Badges\n\n"
+                "There are several types of badges in the QuackVerse ecosystem:\n\n"
+                "1. **XP-based badges** - Earned by reaching certain XP thresholds\n"
+                "2. **Quest-based badges** - Earned by completing specific quests\n"
+                "3. **Special badges** - Earned through unique achievements\n\n"
+                "## Viewing Your Badges\n\n"
+                "To see your earned badges:\n\n"
+                "```bash\nducktyper badge list\n```\n\n"
+                "## Badge Benefits\n\n"
+                "Badges aren't just for show - they unlock special features and demonstrate your expertise to the community.\n"
+            ),
+        },
+        "github": {
+            "title": "GitHub Integration with QuackVerse",
+            "description": "How QuackVerse connects with GitHub.",
+            "content": (
+                "# GitHub Integration\n\n"
+                "QuackVerse deeply integrates with GitHub to provide a seamless development experience.\n\n"
+                "## GitHub Actions\n\n"
+                "Many quests involve GitHub actions such as:\n\n"
+                "- Starring repositories\n"
+                "- Opening Pull Requests\n"
+                "- Getting PRs merged\n\n"
+                "## Setting Up GitHub\n\n"
+                "To connect your GitHub account:\n\n"
+                "```bash\nducktyper github connect\n```\n\n"
+                "This will help QuackVerse track your GitHub activities for quest completion.\n"
+            ),
+        },
     }
 
     lower_topic = topic.lower()
@@ -422,10 +463,27 @@ def get_tutorial_topic(topic: str) -> dict[str, Any]:
         if key.lower() in lower_topic or lower_topic in key.lower():
             return content
 
+    # If we don't have an exact match, try to find the most relevant topic
+    best_match = None
+    best_score = 0
+    keywords = _extract_keywords(topic)
+
+    for key, content in topics.items():
+        # Calculate relevance score based on keyword matches
+        topic_text = f"{key} {content['title']} {content['description']}"
+        score = sum(topic_text.lower().count(keyword.lower()) for keyword in keywords)
+        if score > best_score:
+            best_score = score
+            best_match = content
+
+    # If we found something somewhat relevant, return it
+    if best_match and best_score > 0:
+        return best_match
+
     return {
         "title": "Topic Not Found",
         "description": f"No tutorial found for '{topic}'",
         "content": (
-            f"I don't have a specific tutorial on '{topic}' yet. Try asking about DuckTyper, quests, or badges."
+            f"I don't have a specific tutorial on '{topic}' yet. Try asking about DuckTyper, quests, badges, or GitHub integration."
         ),
     }

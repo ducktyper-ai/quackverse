@@ -1,4 +1,4 @@
-# src/quackcore/teaching/xp.py
+# src/quackcore/teaching/core/xp.py
 """
 XP management module for QuackCore teaching.
 

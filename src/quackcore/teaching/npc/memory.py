@@ -6,15 +6,112 @@ This module provides functions for loading user information into a
 format that the NPC can use to personalize interactions.
 """
 
-from datetime import datetime
+import json
+import time
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any
 
+from quackcore.fs import service as fs
 from quackcore.logging import get_logger
 from quackcore.teaching import badges, quests
-from quackcore.teaching.models import UserProgress
 from quackcore.teaching.npc.schema import UserMemory
-from quackcore.teaching.utils import load_progress
+from quackcore.teaching.core.utils import get_user_data_dir, load_progress
 
 logger = get_logger(__name__)
+
+# Memory persistence settings
+MEMORY_FILE_NAME = "quackster_memory.json"
+MEMORY_EXPIRES_DAYS = 30  # Memory expires after 30 days of inactivity
+
+
+def _get_memory_file_path() -> Path:
+    """
+    Get the path to the user's memory file.
+
+    Returns:
+        Path to the user memory file
+    """
+    data_dir = get_user_data_dir()
+    return data_dir / MEMORY_FILE_NAME
+
+
+def _load_persistent_memory(github_username: str | None) -> dict[str, Any] | None:
+    """
+    Load persistent memory from file.
+
+    Args:
+        github_username: GitHub username to load memory for
+
+    Returns:
+        User memory data or None if not found/expired
+    """
+    file_path = _get_memory_file_path()
+
+    # Check if memory file exists
+    result = fs.get_file_info(file_path)
+    if not result.success or not result.exists:
+        logger.debug(f"No memory file found at {file_path}")
+        return None
+
+    try:
+        # Read memory file
+        read_result = fs.read_json(file_path)
+        if not read_result.success:
+            logger.warning(f"Failed to read memory file: {read_result.error}")
+            return None
+
+        memory_data = read_result.data
+
+        # Check if memory is for this user
+        stored_username = memory_data.get("github_username")
+        if github_username and stored_username != github_username:
+            logger.debug(f"Memory file is for a different user: {stored_username}")
+            return None
+
+        # Check if memory has expired
+        last_interaction = memory_data.get("last_interaction")
+        if last_interaction:
+            try:
+                last_time = datetime.fromisoformat(last_interaction)
+                expiry_time = datetime.now() - timedelta(days=MEMORY_EXPIRES_DAYS)
+                if last_time < expiry_time:
+                    logger.debug("Memory has expired, creating fresh memory")
+                    return None
+            except (ValueError, TypeError):
+                logger.warning("Invalid timestamp in memory file")
+
+        return memory_data
+    except Exception as e:
+        logger.warning(f"Error loading memory: {str(e)}")
+        return None
+
+
+def _save_persistent_memory(memory: UserMemory) -> bool:
+    """
+    Save user memory to a persistent file.
+
+    Args:
+        memory: User memory to save
+
+    Returns:
+        True if saved successfully, False otherwise
+    """
+    file_path = _get_memory_file_path()
+
+    try:
+        # Convert to dict and save
+        memory_dict = memory.model_dump()
+        result = fs.write_json(file_path, memory_dict)
+        if not result.success:
+            logger.warning(f"Failed to save memory: {result.error}")
+            return False
+
+        logger.debug(f"Saved user memory for {memory.github_username}")
+        return True
+    except Exception as e:
+        logger.warning(f"Error saving memory: {str(e)}")
+        return False
 
 
 def get_user_memory(github_username: str = None) -> UserMemory:
@@ -35,6 +132,9 @@ def get_user_memory(github_username: str = None) -> UserMemory:
     if github_username:
         user.github_username = github_username
 
+    # Try loading persistent memory
+    persistent_memory = _load_persistent_memory(user.github_username)
+
     # Get badge and quest data
     user_badges = badges.get_user_badges(user)
     badge_names = [badge.name for badge in user_badges]
@@ -42,16 +142,19 @@ def get_user_memory(github_username: str = None) -> UserMemory:
     quest_data = quests.get_user_quests(user)
     completed_quests = [quest.name for quest in quest_data["completed"]]
 
-    # Create memory object
+    # Create base memory object
     memory = UserMemory(
         github_username=user.github_username,
         xp=user.xp,
         level=user.get_level(),
         completed_quests=user.completed_quest_ids,
         badges=user.earned_badge_ids,
-        # Other fields would be populated from persistent storage
-        conversation_count=0,
+        # Initialize with default values or values from persistent memory
+        conversation_count=persistent_memory.get("conversation_count",
+                                                 0) if persistent_memory else 0,
         last_interaction=datetime.now().isoformat(),
+        interests=persistent_memory.get("interests", []) if persistent_memory else [],
+        custom_data={},
     )
 
     # Add badge and quest names for easier reference
@@ -74,123 +177,32 @@ def get_user_memory(github_username: str = None) -> UserMemory:
         for q in suggested
     ]
 
-    return memory
+    # Add additional data from persistent memory if available
+    if persistent_memory and isinstance(persistent_memory, dict):
+        # Transfer long-term memory attributes
+        if "favorite_topics" in persistent_memory:
+            memory.custom_data["favorite_topics"] = persistent_memory.get(
+                "favorite_topics", [])
 
+        if "stuck_points" in persistent_memory:
+            memory.custom_data["stuck_points"] = persistent_memory.get("stuck_points",
+                                                                       [])
 
-def update_user_memory(memory: UserMemory, user_input: str) -> UserMemory:
-    """
-    Update user memory based on the current interaction.
+        if "recent_quests_discussed" in persistent_memory:
+            memory.custom_data["recent_quests_discussed"] = persistent_memory.get(
+                "recent_quests_discussed", [])
 
-    Args:
-        memory: Current user memory
-        user_input: User's latest input
+        if "learning_style" in persistent_memory:
+            memory.custom_data["learning_style"] = persistent_memory.get(
+                "learning_style")
 
-    Returns:
-        Updated user memory
-    """
-    # Increment conversation count
-    memory.conversation_count += 1
+        if "session_history" in persistent_memory:
+            memory.custom_data["session_history"] = persistent_memory.get(
+                "session_history", [])
 
-    # Update last interaction time
-    memory.last_interaction = datetime.now().isoformat()
-
-    # Track interests based on keywords in user input
-    # This is a simple implementation - a real one would use NLP
-    interest_keywords = {
-        "python": "Python programming",
-        "javascript": "JavaScript programming",
-        "cli": "Command-line interfaces",
-        "github": "GitHub",
-        "quack": "QuackVerse ecosystem",
-        "duck": "DuckTyper",
-        "badge": "Achievements and badges",
-        "quest": "Quests and challenges",
-        "certificate": "Course certificates",
-    }
-
-    if memory.interests is None:
-        memory.interests = []
-
-    lower_input = user_input.lower()
-    for keyword, interest in interest_keywords.items():
-        if keyword in lower_input and interest not in memory.interests:
-            memory.interests.append(interest)
+            # Limit session history to last 10 entries
+            if len(memory.custom_data["session_history"]) > 10:
+                memory.custom_data["session_history"] = memory.custom_data[
+                                                            "session_history"][-10:]
 
     return memory
-
-
-def format_memory_for_prompt(memory: UserMemory) -> str:
-    """
-    Format user memory into a string for inclusion in a prompt.
-
-    Args:
-        memory: User memory to format
-
-    Returns:
-        Formatted memory string
-    """
-    lines = []
-
-    # Add basic user info
-    github_username = memory.github_username or "Unknown User"
-    lines.append(f"User: {github_username}")
-    lines.append(f"XP: {memory.xp}")
-    lines.append(f"Level: {memory.level}")
-
-    # Add badges
-    badge_names = memory.custom_data.get("badge_names", [])
-    if badge_names:
-        lines.append(f"Badges: {', '.join(badge_names)}")
-    else:
-        lines.append("Badges: None yet")
-
-    # Add completed quests
-    quest_names = memory.custom_data.get("completed_quest_names", [])
-    if quest_names:
-        lines.append(f"Completed Quests: {', '.join(quest_names)}")
-    else:
-        lines.append("Completed Quests: None yet")
-
-    # Add suggested quests
-    suggested = memory.custom_data.get("suggested_quests", [])
-    if suggested:
-        lines.append("\nSuggested Quests:")
-        for quest in suggested:
-            lines.append(
-                f"- {quest['name']}: {quest['description']} ({quest['reward_xp']} XP)"
-            )
-
-    # Add level progression
-    xp_to_next = memory.custom_data.get("xp_to_next_level", 100)
-    next_level = memory.custom_data.get("next_level", memory.level + 1)
-    lines.append(f"\nNeeds {xp_to_next} XP to reach Level {next_level}")
-
-    # Add interests if available
-    if memory.interests:
-        lines.append(f"\nInterests: {', '.join(memory.interests)}")
-
-    # Add conversation count
-    lines.append(f"\nConversation Count: {memory.conversation_count}")
-
-    return "\n".join(lines)
-
-
-def get_conversation_history(
-    user: UserProgress, limit: int = 5
-) -> list[dict[str, str]]:
-    """
-    Get the conversation history for a user.
-
-    This would normally load from persistent storage. This is a placeholder
-    implementation that returns an empty history.
-
-    Args:
-        user: User to get conversation history for
-        limit: Maximum number of messages to return
-
-    Returns:
-        list of conversation messages
-    """
-    # This would normally load from a database or file
-    # For now, return an empty history
-    return []

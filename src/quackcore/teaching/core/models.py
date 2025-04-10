@@ -1,4 +1,4 @@
-# src/quackcore/teaching/models.py
+# src/quackcore/teaching/core/models.py
 """
 Core models for the QuackCore teaching module's gamification system.
 

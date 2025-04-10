@@ -1,4 +1,4 @@
-# src/quackcore/teaching/certificates.py
+# src/quackcore/teaching/core/certificates.py
 """
 Certificate generation and verification for completed courses.
 

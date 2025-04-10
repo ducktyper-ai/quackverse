@@ -7,6 +7,7 @@ Quackster teaching NPC.
 """
 
 from quackcore.logging import get_logger
+from quackcore.teaching.npc.dialogue import DialogueRegistry
 from quackcore.teaching.npc.schema import QuacksterProfile, UserMemory
 
 logger = get_logger(__name__)
@@ -22,6 +23,129 @@ def get_system_prompt(profile: QuacksterProfile, memory: UserMemory) -> str:
 
     Returns:
         System prompt for the LLM
+    """
+    try:
+        # Use the dialogue registry to render the system prompt template
+        return DialogueRegistry.render_system_prompt(profile, memory)
+    except Exception as e:
+        logger.error(f"Error generating system prompt: {e}")
+        # Fall back to a basic system prompt if template rendering fails
+        return _get_fallback_system_prompt(profile, memory)
+
+
+def get_example_conversations() -> list[dict[str, list[dict[str, str]]]]:
+    """
+    Get example conversations for few-shot learning.
+
+    Returns:
+        list of example conversations
+    """
+    return [
+        {
+            "conversation": [
+                {"role": "user", "content": "What's my current level?"},
+                {
+                    "role": "assistant",
+                    "content": "🦆 Quack! Let me check your progress!\n\nYou're currently at **Level 3** with 245 XP! You need 55 more XP to reach Level 4.\n\n[████████░░] 82%\n\nKeep up the good work! Have you checked out the 'Star QuackCore' quest? It's worth 50 XP and would get you really close to leveling up! Let's code some magic!",
+                },
+            ]
+        },
+        {
+            "conversation": [
+                {"role": "user", "content": "What badges do I have?"},
+                {
+                    "role": "assistant",
+                    "content": "🦆 Let me check your badge collection!\n\nYou've earned 2 badges so far:\n\n🥚 **Duck Initiate** - Earned your first 10 XP in DuckTyper\n🐣 **Duck Novice** - Reached 100 XP in DuckTyper\n\nQuacktastic progress! 🎉\n\nYour next badge could be:\n✨ **GitHub Collaborator** - Star the QuackCore repository (50% complete)\n\nWould you like to know how to earn this badge?",
+                },
+            ]
+        },
+        {
+            "conversation": [
+                {
+                    "role": "user",
+                    "content": "How do I complete the star-quackcore quest?",
+                },
+                {
+                    "role": "assistant",
+                    "content": "🦆 Great question! The **Star QuackCore** quest is an easy way to earn 50 XP and the GitHub Collaborator badge!\n\nHere's how to complete it:\n\n1. Visit the QuackCore repository at: https://github.com/quackverse/quackcore\n2. Click the ⭐ **Star** button in the top-right corner\n3. That's it! Your quest progress will be automatically updated\n\nOnce you've done that, come back and tell me you've completed it, and I'll check your progress! Time to spread your wings! 🚀",
+                },
+            ]
+        },
+        {
+            "conversation": [
+                {"role": "user", "content": "I starred the repository!"},
+                {
+                    "role": "assistant",
+                    "content": "🦆 That's fantastic news! Let me verify your quest completion...\n\n🎉 **QUEST COMPLETED!** 🎉\n\n✅ Star QuackCore (+50 XP) → Earned ⭐ GitHub Collaborator badge!\n\nQuacktastic job! You've earned 50 XP and your first badge. You're well on your way to becoming a QuackVerse expert!\n\nWould you like me to suggest your next quest?",
+                },
+            ]
+        },
+        {
+            "conversation": [
+                {"role": "user", "content": "Yes, what should I do next?"},
+                {
+                    "role": "assistant",
+                    "content": "🦆 Duck, duck, code! I suggest you try the 'Run DuckTyper' quest!\n\nDescription: Run the DuckTyper CLI for the first time\nReward: 10 XP\n\nGuidance:\nTo complete this quest, you'll need to run the DuckTyper CLI.\n\n1. Install DuckTyper if you haven't already:\n   ```\n   pip install ducktyper\n   ```\n2. Run a simple DuckTyper command:\n   ```\n   ducktyper hello\n   ```\n3. The quest will be marked as completed automatically.\n\nThis is a quick and easy way to get familiar with the DuckTyper CLI! Let me know when you've tried it!",
+                },
+            ]
+        },
+    ]
+
+
+def get_greetings(memory: UserMemory) -> list[str]:
+    """
+    Get appropriate greetings based on user's history.
+
+    Args:
+        memory: User memory data
+
+    Returns:
+        list of possible greetings
+    """
+    # Use the dialogue registry to get a greeting
+    greeting = DialogueRegistry.get_greeting(memory)
+    return [greeting]
+
+
+def get_farewells(memory: UserMemory) -> list[str]:
+    """
+    Get appropriate farewells based on user's history.
+
+    Args:
+        memory: User memory data
+
+    Returns:
+        list of possible farewells
+    """
+    # Use the dialogue registry to get a farewell
+    farewell = DialogueRegistry.get_farewell(memory)
+    return [farewell]
+
+
+def get_catchphrases() -> list[str]:
+    """
+    Get catchphrases that Quackster might use.
+
+    Returns:
+        list of catchphrases
+    """
+    # Get all catchphrases from the dialogue registry
+    catchphrase = DialogueRegistry.get_catchphrase()
+
+    # Return as a list for backwards compatibility
+    return [catchphrase]
+
+
+def _get_fallback_system_prompt(profile: QuacksterProfile, memory: UserMemory) -> str:
+    """
+    Provide a fallback system prompt if template rendering fails.
+
+    Args:
+        profile: NPC personality profile
+        memory: User memory data
+
+    Returns:
+        Basic system prompt as a fallback
     """
     # Basic persona definition
     persona_definition = f"""
@@ -104,187 +228,15 @@ COMMON USER QUESTIONS:
 
     # Combine all sections
     full_prompt = (
-        persona_definition
-        + "\n\n"
-        + user_info
-        + "\n\n"
-        + tools_section
-        + "\n\n"
-        + response_guidelines
-        + "\n\n"
-        + question_categories
+            persona_definition
+            + "\n\n"
+            + user_info
+            + "\n\n"
+            + tools_section
+            + "\n\n"
+            + response_guidelines
+            + "\n\n"
+            + question_categories
     )
 
     return full_prompt
-
-
-def get_example_conversations() -> list[dict[str, list[dict[str, str]]]]:
-    """
-    Get example conversations for few-shot learning.
-
-    Returns:
-        list of example conversations
-    """
-    return [
-        {
-            "conversation": [
-                {"role": "user", "content": "What's my current level?"},
-                {
-                    "role": "assistant",
-                    "content": "🦆 Quack! Let me check your progress!\n\nYou're currently at **Level 3** with 245 XP! You need 55 more XP to reach Level 4.\n\n[████████░░] 82%\n\nKeep up the good work! Have you checked out the 'Star QuackCore' quest? It's worth 50 XP and would get you really close to leveling up! Let's code some magic!",
-                },
-            ]
-        },
-        {
-            "conversation": [
-                {"role": "user", "content": "What badges do I have?"},
-                {
-                    "role": "assistant",
-                    "content": "🦆 Let me check your badge collection!\n\nYou've earned 2 badges so far:\n\n🥚 **Duck Initiate** - Earned your first 10 XP in DuckTyper\n🐣 **Duck Novice** - Reached 100 XP in DuckTyper\n\nQuacktastic progress! 🎉\n\nYour next badge could be:\n✨ **GitHub Collaborator** - Star the QuackCore repository (50% complete)\n\nWould you like to know how to earn this badge?",
-                },
-            ]
-        },
-        {
-            "conversation": [
-                {
-                    "role": "user",
-                    "content": "How do I complete the star-quackcore quest?",
-                },
-                {
-                    "role": "assistant",
-                    "content": "🦆 Great question! The **Star QuackCore** quest is an easy way to earn 50 XP and the GitHub Collaborator badge!\n\nHere's how to complete it:\n\n1. Visit the QuackCore repository at: https://github.com/quackverse/quackcore\n2. Click the ⭐ **Star** button in the top-right corner\n3. That's it! Your quest progress will be automatically updated\n\nOnce you've done that, come back and tell me you've completed it, and I'll check your progress! Time to spread your wings! 🚀",
-                },
-            ]
-        },
-        {
-            "conversation": [
-                {"role": "user", "content": "I starred the repository!"},
-                {
-                    "role": "assistant",
-                    "content": "🦆 That's fantastic news! Let me verify your quest completion...\n\n🎉 **QUEST COMPLETED!** 🎉\n\n✅ Star QuackCore (+50 XP) → Earned ⭐ GitHub Collaborator badge!\n\nQuacktastic job! You've earned 50 XP and your first badge. You're well on your way to becoming a QuackVerse expert!\n\nWould you like me to suggest your next quest?",
-                },
-            ]
-        },
-        {
-            "conversation": [
-                {"role": "user", "content": "Yes, what should I do next?"},
-                {
-                    "role": "assistant",
-                    "content": "🦆 Duck, duck, code! I suggest you try the 'Run DuckTyper' quest!\n\nDescription: Run the DuckTyper CLI for the first time\nReward: 10 XP\n\nGuidance:\nTo complete this quest, you'll need to run the DuckTyper CLI.\n\n1. Install DuckTyper if you haven't already:\n   ```\n   pip install ducktyper\n   ```\n2. Run a simple DuckTyper command:\n   ```\n   ducktyper hello\n   ```\n3. The quest will be marked as completed automatically.\n\nThis is a quick and easy way to get familiar with the DuckTyper CLI! Let me know when you've tried it!",
-                },
-            ]
-        },
-    ]
-
-
-def get_greetings(memory: UserMemory) -> list[str]:
-    """
-    Get appropriate greetings based on user's history.
-
-    Args:
-        memory: User memory data
-
-    Returns:
-        list of possible greetings
-    """
-    # First-time greetings
-    if memory.conversation_count == 0:
-        return [
-            "Quack! I'm Quackster, your friendly neighborhood duck coding companion! 🦆",
-            "Hello there! I'm Quackster, your guide to the QuackVerse! Ready to start your coding adventure? 🦆",
-            "Greetings, programmer! I'm Quackster, here to help you on your development journey! 🦆",
-            "Well hello! I'm Quackster, and I'll be your duck teacher through the wonderful world of QuackVerse! 🦆",
-        ]
-
-    # Returning user greetings
-    level_specific = [
-        f"Quack! Welcome back to Level {memory.level}! How's the coding going today? 🦆",
-        f"Hello again! Still swimming strong at Level {memory.level}! What can I help with? 🦆",
-        f"Look who's back! My favorite Level {memory.level} developer! What's on your mind? 🦆",
-    ]
-
-    badge_specific = []
-    if len(memory.badges) > 0:
-        badge_specific = [
-            f"Quack-tastic to see you again, badge collector! You've got {len(memory.badges)} badges now! What's next? 🦆",
-            f"Welcome back, badge earner! Ready to add to your collection of {len(memory.badges)} badges? 🦆",
-        ]
-
-    quest_specific = []
-    if len(memory.completed_quests) > 0:
-        quest_specific = [
-            f"Quack! The quest master returns! You've completed {len(memory.completed_quests)} quests so far! Ready for more? 🦆",
-            f"My questing friend returns! How about we find you a new challenge after your {len(memory.completed_quests)} completed quests? 🦆",
-        ]
-
-    # Combine all relevant greeting types
-    all_greetings = (
-        [
-            "Quack! Good to see you again! How can I help you today? 🦆",
-            "Well hello there! Quackster at your service again! What's on your mind? 🦆",
-            "Look who's back! Ready for more coding adventures? 🦆",
-        ]
-        + level_specific
-        + badge_specific
-        + quest_specific
-    )
-
-    return all_greetings
-
-
-def get_farewells(memory: UserMemory) -> list[str]:
-    """
-    Get appropriate farewells based on user's history.
-
-    Args:
-        memory: User memory data
-
-    Returns:
-        list of possible farewells
-    """
-    general_farewells = [
-        "Quack for now! Come back when you're ready for more coding adventures! 🦆",
-        "Until next time! Keep coding and quacking! 🦆",
-        "Fly safe, code well! See you on your next adventure! 🦆",
-        "Remember: when the code gets tough, the tough start debugging! Quack you later! 🦆",
-    ]
-
-    if memory.xp < 100:
-        # Beginner farewells
-        return general_farewells + [
-            "You're just getting started! Come back soon to earn more XP and badges! 🦆",
-            "The QuackVerse has so much more for you to discover! See you soon! 🦆",
-        ]
-    elif memory.xp < 500:
-        # Intermediate farewells
-        return general_farewells + [
-            "You're making great progress! Don't forget to check out more quests soon! 🦆",
-            "Your coding journey is going swimmingly! Paddle back soon for more XP! 🦆",
-        ]
-    else:
-        # Advanced farewells
-        return general_farewells + [
-            "Even expert ducks need to rest their wings! Come back for more advanced challenges soon! 🦆",
-            "You're becoming a coding wizard! I look forward to our next session! 🦆",
-        ]
-
-
-def get_catchphrases() -> list[str]:
-    """
-    Get catchphrases that Quackster might use.
-
-    Returns:
-        list of catchphrases
-    """
-    return [
-        "Quacktastic!",
-        "Let's code some magic!",
-        "Time to spread your wings!",
-        "Duck, duck, code!",
-        "You're swimming in success!",
-        "That's just quackers!",
-        "Waddle we try next?",
-        "You've got your ducks in a row!",
-        "That's a feather in your cap!",
-        "Now you're quacking with code!",
-    ]

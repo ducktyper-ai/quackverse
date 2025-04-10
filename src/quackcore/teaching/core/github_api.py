@@ -1,4 +1,4 @@
-# src/quackcore/teaching/github_api.py
+# src/quackcore/teaching/core/github_api.py
 """
 GitHub API utilities for checking user actions.
 

@@ -1,4 +1,4 @@
-# src/quackcore/teaching/quests.py
+# src/quackcore/teaching/core/quests.py
 """
 Quest definitions and management for QuackCore teaching.
 

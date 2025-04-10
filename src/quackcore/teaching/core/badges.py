@@ -1,4 +1,4 @@
-# src/quackcore/teaching/badges.py
+# src/quackcore/teaching/core/badges.py
 """
 Badge definitions and management for QuackCore teaching.
 

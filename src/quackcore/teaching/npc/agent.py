@@ -8,11 +8,13 @@ teaching NPC, including LLM integration and tool execution.
 
 import random
 import re
+from collections.abc import Sequence
 from typing import Any
 
 from quackcore.integrations.core import registry
 from quackcore.logging import get_logger
 from quackcore.teaching.npc import config, memory, persona, rag, tools
+from quackcore.teaching.npc.dialogue import DialogueRegistry
 from quackcore.teaching.npc.schema import (
     QuacksterProfile,
     TeachingNPCInput,
@@ -86,6 +88,16 @@ def run_npc_session(input: TeachingNPCInput) -> TeachingNPCResponse:
         actions_taken.append(f"Getting details for quest: {quest_id}")
         tool_outputs.append(tools.get_quest_details(quest_id))
 
+        # Track this as a recently discussed quest
+        if "recent_quests_discussed" not in user_memory.custom_data:
+            user_memory.custom_data["recent_quests_discussed"] = []
+        if quest_id not in user_memory.custom_data["recent_quests_discussed"]:
+            user_memory.custom_data["recent_quests_discussed"].append(quest_id)
+            # Keep only the 5 most recent
+            if len(user_memory.custom_data["recent_quests_discussed"]) > 5:
+                user_memory.custom_data["recent_quests_discussed"] = \
+                user_memory.custom_data["recent_quests_discussed"][-5:]
+
     if badge_match:
         badge_id = badge_match.group(1).lower().strip()
         actions_taken.append(f"Getting details for badge: {badge_id}")
@@ -97,7 +109,8 @@ def run_npc_session(input: TeachingNPCInput) -> TeachingNPCResponse:
         tool_outputs.append(tools.get_tutorial(topic))
 
     if re.search(
-        r"\b(what next|next quest|suggest|do next)\b", input.user_input, re.IGNORECASE
+            r"\b(what next|next quest|suggest|do next)\b", input.user_input,
+            re.IGNORECASE
     ):
         actions_taken.append("Suggesting next quest")
         tool_outputs.append(tools.suggest_next_quest(user_memory))
@@ -143,9 +156,11 @@ def run_npc_session(input: TeachingNPCInput) -> TeachingNPCResponse:
         actions_taken=actions_taken,
         suggested_quests=suggested_quests,
         used_tools=[
-            {"name": tool["name"], "result": tool["result"]}
-            for tool in tool_outputs
-            if "name" in tool
+            {
+                "name": output.get("name", f"Tool {i + 1}"),
+                "result": output.get("result", output)
+            }
+            for i, output in enumerate(tool_outputs)
         ],
         should_verify_quests=should_verify_quests,
     )
@@ -154,12 +169,12 @@ def run_npc_session(input: TeachingNPCInput) -> TeachingNPCResponse:
 
 
 def call_llm(
-    npc_profile: QuacksterProfile,
-    user_memory: UserMemory,
-    user_input: str,
-    conversation_context: list[dict[str, str]] = None,
-    tool_outputs: list[dict[str, Any]] = None,
-    relevant_content: str = "",
+        npc_profile: QuacksterProfile,
+        user_memory: UserMemory,
+        user_input: str,
+        conversation_context: Sequence[dict[str, str]] = None,
+        tool_outputs: Sequence[dict[str, Any]] = None,
+        relevant_content: str = "",
 ) -> str:
     """
     Call the LLM to generate a response.
@@ -192,6 +207,7 @@ def call_llm(
     if tool_outputs:
         tool_output_text = "TOOL OUTPUTS:\n"
         for i, output in enumerate(tool_outputs):
+            # Get tool name and formatted text in a standardized way
             tool_name = output.get("name", f"Tool {i + 1}")
             formatted_text = output.get("formatted_text", str(output))
             tool_output_text += f"\n--- {tool_name} ---\n{formatted_text}\n"
@@ -207,13 +223,13 @@ def call_llm(
     if example_conversations:
         # Add one random example conversation
         example = random.choice(example_conversations)
-        for message in example.get("conversation", []):
-            messages.append(message)
+        for msg in example.get("conversation", []):
+            messages.append(msg)
 
     # Add conversation context if available
     if conversation_context:
-        for message in conversation_context:
-            messages.append(message)
+        for msg in conversation_context:
+            messages.append(msg)
 
     # Add tool outputs if available
     if tool_output_text:
@@ -263,7 +279,7 @@ def get_llm_client():
 
 
 def mock_llm_response(
-    user_input: str, tool_outputs: list[dict[str, Any]] = None
+        user_input: str, tool_outputs: Sequence[dict[str, Any]] = None
 ) -> str:
     """
     Generate a mock LLM response for testing.
@@ -281,14 +297,18 @@ def mock_llm_response(
         "Hello there! ",
         "Greetings, developer! ",
         "Well hello! ",
+        "Welcome back! ",
     ]
     greeting = random.choice(greetings)
+
+    # Use DialogueRegistry to get catchphrase
+    catchphrase = DialogueRegistry.get_catchphrase()
 
     # For XP and level queries
     if re.search(r"\b(xp|level|progress)\b", user_input, re.IGNORECASE):
         if tool_outputs and tool_outputs[0].get("level"):
             data = tool_outputs[0]
-            return f"{greeting}You're currently at Level {data['level']} with {data['xp']} XP! You need {data['xp_needed']} more XP to reach Level {data['next_level']}. Keep up the good work! 🦆"
+            return f"{greeting}You're currently at Level {data['level']} with {data['xp']} XP! You need {data['xp_needed']} more XP to reach Level {data['next_level']}. {catchphrase} Keep up the good work! 🦆"
         return f"{greeting}You're making great progress on your coding journey! Keep completing quests to earn more XP and level up! 🦆"
 
     # For badge queries
@@ -296,46 +316,22 @@ def mock_llm_response(
         if tool_outputs:
             data = tool_outputs[0]
             count = data.get("earned_count", 0)
-            return f"{greeting}You've earned {count} badges so far! Each badge represents an achievement in your coding journey. Keep up the great work! 🦆"
+            return f"{greeting}You've earned {count} badges so far! Each badge represents an achievement in your coding journey. {catchphrase} Keep up the great work! 🦆"
         return f"{greeting}Badges are special achievements you can earn in the QuackVerse. Complete quests and earn XP to unlock more badges! 🦆"
 
     # For quest queries
     if re.search(r"\bquests?\b", user_input, re.IGNORECASE):
-        return f"{greeting}Quests are challenges you can complete to earn XP and badges. Try starring the QuackCore repository on GitHub to complete your first quest! 🦆"
+        return f"{greeting}Quests are challenges you can complete to earn XP and badges. Try starring the QuackCore repository on GitHub to complete your first quest! {catchphrase} 🦆"
 
     # For "what's next" queries
     if re.search(
-        r"\b(what next|next quest|suggest|do next)\b", user_input, re.IGNORECASE
+            r"\b(what next|next quest|suggest|do next)\b", user_input, re.IGNORECASE
     ):
-        return f"{greeting}I suggest trying to complete the 'Star QuackCore' quest next! It's an easy way to earn 50 XP and get your first badge. 🦆"
+        return f"{greeting}I suggest trying to complete the 'Star QuackCore' quest next! It's an easy way to earn 50 XP and get your first badge. {catchphrase} 🦆"
 
     # For "completed" statements
     if re.search(r"\b(completed|finished|done|did)\b", user_input, re.IGNORECASE):
-        return f"{greeting}That's fantastic! Let me check if you've completed any quests... Keep up the great work! 🦆"
+        return f"{greeting}That's fantastic! Let me check if you've completed any quests... {catchphrase} Keep up the great work! 🦆"
 
     # Default response
     return f"{greeting}I'm Quackster, your friendly duck coding companion! I can help you track your progress, suggest quests, and guide you through the QuackVerse. What would you like to know? 🦆"
-
-
-def demo_conversation():
-    """
-    Run a simple demo conversation with the Quackster NPC.
-
-    This is useful for testing the NPC functionality directly.
-    """
-    print("🦆 Quackster NPC Demo")
-    print("Type 'exit' to quit the demo")
-    print("-" * 50)
-
-    while True:
-        user_message = input("You: ")
-        if user_message.lower() in ("exit", "quit", "bye"):
-            break
-
-        result = run_npc_session(TeachingNPCInput(user_input=user_message))
-        print(f"\n🦆 Quackster: {result.response_text}\n")
-
-
-if __name__ == "__main__":
-    # Run the demo if this file is executed directly
-    demo_conversation()

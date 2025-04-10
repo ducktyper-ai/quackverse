@@ -1,4 +1,4 @@
-# src/quackcore/teaching/utils.py
+# src/quackcore/teaching/core/utils.py
 """
 Utility functions for the QuackCore teaching module.
 
