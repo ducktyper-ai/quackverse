@@ -16,8 +16,9 @@ from quackcore.teaching.npc.tools import TOOL_REGISTRY
 logger = get_logger(__name__)
 
 
-def detect_tool_triggers(user_input: str, user_memory: UserMemory) -> list[
-    tuple[str, dict[str, Any]]]:
+def detect_tool_triggers(
+    user_input: str, user_memory: UserMemory
+) -> list[tuple[str, dict[str, Any]]]:
     """
     Detect which tools should be triggered based on user input.
 
@@ -35,8 +36,9 @@ def detect_tool_triggers(user_input: str, user_memory: UserMemory) -> list[
         tools_to_run.append(("list_xp_and_level", {"user_memory": user_memory}))
 
     # Check for badge queries
-    badge_match = re.search(r'badge[s\s]*[\'"]?([\w-]+)[\'"]?', user_input,
-                            re.IGNORECASE)
+    badge_match = re.search(
+        r'badge[s\s]*[\'"]?([\w-]+)[\'"]?', user_input, re.IGNORECASE
+    )
     if badge_match:
         badge_id = badge_match.group(1).lower().strip()
         tools_to_run.append(("get_badge_details", {"badge_id": badge_id}))
@@ -44,8 +46,9 @@ def detect_tool_triggers(user_input: str, user_memory: UserMemory) -> list[
         tools_to_run.append(("list_badges", {"user_memory": user_memory}))
 
     # Check for quest queries
-    quest_match = re.search(r'quest[s\s]*[\'"]?([\w-]+)[\'"]?', user_input,
-                            re.IGNORECASE)
+    quest_match = re.search(
+        r'quest[s\s]*[\'"]?([\w-]+)[\'"]?', user_input, re.IGNORECASE
+    )
     if quest_match:
         quest_id = quest_match.group(1).lower().strip()
         tools_to_run.append(("get_quest_details", {"quest_id": quest_id}))
@@ -53,13 +56,15 @@ def detect_tool_triggers(user_input: str, user_memory: UserMemory) -> list[
         tools_to_run.append(("list_quests", {"user_memory": user_memory}))
 
     # Check for next quest suggestions
-    if re.search(r"\b(what next|next quest|suggest|do next)\b", user_input,
-                 re.IGNORECASE):
+    if re.search(
+        r"\b(what next|next quest|suggest|do next)\b", user_input, re.IGNORECASE
+    ):
         tools_to_run.append(("suggest_next_quest", {"user_memory": user_memory}))
 
     # Check for tutorial requests
-    tutorial_match = re.search(r'tutorial[s\s]*(?:on|about)?\s*[\'"]?([\w-]+)[\'"]?',
-                               user_input, re.IGNORECASE)
+    tutorial_match = re.search(
+        r'tutorial[s\s]*(?:on|about)?\s*[\'"]?([\w-]+)[\'"]?', user_input, re.IGNORECASE
+    )
     if tutorial_match:
         topic = tutorial_match.group(1).lower().strip()
         tools_to_run.append(("get_tutorial", {"topic": topic}))

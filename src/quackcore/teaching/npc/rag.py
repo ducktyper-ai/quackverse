@@ -56,9 +56,9 @@ def get_doc_directories() -> list[Path]:
     # Attempt to detect a content context for tutorials.
     content_context = resolver.detect_content_context(content_type="tutorial")
     if (
-            content_context
-            and content_context.content_dir
-            and content_context.content_dir.exists()
+        content_context
+        and content_context.content_dir
+        and content_context.content_dir.exists()
     ):
         return [content_context.content_dir]
 
@@ -96,8 +96,10 @@ def should_reload_docs(doc_dirs: list[Path]) -> bool:
                 continue
 
             # Check if file is new or modified
-            if file_path not in _last_modified_times or info.modified_time > _last_modified_times.get(
-                    file_path, 0):
+            if (
+                file_path not in _last_modified_times
+                or info.modified_time > _last_modified_times.get(file_path, 0)
+            ):
                 return True
 
     return False
@@ -240,13 +242,70 @@ def _extract_keywords(query: str) -> list[str]:
         A list of keywords.
     """
     stop_words = {
-        "a", "an", "the", "is", "are", "was", "were", "be", "been", "being",
-        "in", "on", "at", "to", "for", "with", "by", "about", "of", "that",
-        "and", "or", "not", "but", "what", "which", "who", "whom", "whose",
-        "when", "where", "why", "how", "this", "these", "those", "it", "they",
-        "them", "their", "there", "here", "do", "does", "did", "can", "could",
-        "will", "would", "shall", "should", "may", "might", "must", "i", "you",
-        "he", "she", "we", "my", "your", "his", "her", "our",
+        "a",
+        "an",
+        "the",
+        "is",
+        "are",
+        "was",
+        "were",
+        "be",
+        "been",
+        "being",
+        "in",
+        "on",
+        "at",
+        "to",
+        "for",
+        "with",
+        "by",
+        "about",
+        "of",
+        "that",
+        "and",
+        "or",
+        "not",
+        "but",
+        "what",
+        "which",
+        "who",
+        "whom",
+        "whose",
+        "when",
+        "where",
+        "why",
+        "how",
+        "this",
+        "these",
+        "those",
+        "it",
+        "they",
+        "them",
+        "their",
+        "there",
+        "here",
+        "do",
+        "does",
+        "did",
+        "can",
+        "could",
+        "will",
+        "would",
+        "shall",
+        "should",
+        "may",
+        "might",
+        "must",
+        "i",
+        "you",
+        "he",
+        "she",
+        "we",
+        "my",
+        "your",
+        "his",
+        "her",
+        "our",
     }
     tokens = re.findall(r"\b\w+\b", query.lower())
     keywords = [token for token in tokens if token not in stop_words and len(token) > 2]

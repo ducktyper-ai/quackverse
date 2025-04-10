@@ -16,7 +16,7 @@ from datetime import datetime
 from typing import Any
 
 from quackcore.logging import get_logger
-from quackcore.teaching.models import UserProgress
+from quackcore.teaching.core.models import UserProgress
 
 logger = get_logger(__name__)
 
@@ -78,6 +78,33 @@ def create_certificate(
     logger.info(
         f"Created certificate for {user.github_username} - Course: {course_id}, ID: {cert_id[:8]}..."
     )
+
+    # Integrate with gamification
+    try:
+        # Import here to avoid circular imports
+        from quackcore.teaching.core.gamification_service import GamificationService
+
+        gamifier = GamificationService()
+
+        # Mark the duck-graduate badge as earned if not already
+        if not user.has_earned_badge("duck-graduate"):
+            result = gamifier.award_badge("duck-graduate")
+            if result.message:
+                logger.info(result.message)
+
+        # Add XP for earning a certificate
+        course_name = (
+            additional_data.get("course_name", course_id)
+            if additional_data
+            else course_id
+        )
+        result = gamifier.handle_course_completion(course_id, course_name)
+        if result.message:
+            logger.info(result.message)
+
+    except Exception as e:
+        logger.debug(f"Error integrating certificate with gamification: {str(e)}")
+
     return certificate
 
 
@@ -248,3 +275,53 @@ def has_earned_certificate(user: UserProgress, course_id: str) -> bool:
 
     # For other courses, implement specific requirements
     return False
+
+
+def create_certificate(
+    user: UserProgress,
+    course_id: str,
+    issuer: str = "QuackVerse",
+    additional_data: dict[str, Any] = None,
+) -> dict[str, Any]:
+    """
+    Create a digital certificate for course completion.
+
+    Args:
+        user: User to create certificate for
+        course_id: ID of the completed course
+        issuer: Name of the certificate issuer
+        additional_data: Additional data to include in the certificate
+
+    Returns:
+        Certificate data
+    """
+    # Existing certificate creation logic
+    # ...
+
+    # After the certificate is created, integrate with gamification
+    try:
+        from quackcore.teaching.core.gamification_service import GamificationService
+
+        gamifier = GamificationService()
+
+        # Mark the duck-graduate badge as earned if not already
+        if not user.has_earned_badge("duck-graduate"):
+            result = gamifier.award_badge("duck-graduate")
+            if result.message:
+                logger.info(result.message)
+
+        # Add XP for earning a certificate
+        course_name = (
+            additional_data.get("course_name", course_id)
+            if additional_data
+            else course_id
+        )
+        result = gamifier.handle_course_completion(course_id, course_name)
+        if result.message:
+            logger.info(result.message)
+
+    except Exception as e:
+        logger.debug(f"Error integrating certificate with gamification: {str(e)}")
+
+    # Return the certificate
+    return certificate

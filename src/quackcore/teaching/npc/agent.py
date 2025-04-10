@@ -95,8 +95,9 @@ def run_npc_session(input: TeachingNPCInput) -> TeachingNPCResponse:
             user_memory.custom_data["recent_quests_discussed"].append(quest_id)
             # Keep only the 5 most recent
             if len(user_memory.custom_data["recent_quests_discussed"]) > 5:
-                user_memory.custom_data["recent_quests_discussed"] = \
-                user_memory.custom_data["recent_quests_discussed"][-5:]
+                user_memory.custom_data["recent_quests_discussed"] = (
+                    user_memory.custom_data["recent_quests_discussed"][-5:]
+                )
 
     if badge_match:
         badge_id = badge_match.group(1).lower().strip()
@@ -109,8 +110,7 @@ def run_npc_session(input: TeachingNPCInput) -> TeachingNPCResponse:
         tool_outputs.append(tools.get_tutorial(topic))
 
     if re.search(
-            r"\b(what next|next quest|suggest|do next)\b", input.user_input,
-            re.IGNORECASE
+        r"\b(what next|next quest|suggest|do next)\b", input.user_input, re.IGNORECASE
     ):
         actions_taken.append("Suggesting next quest")
         tool_outputs.append(tools.suggest_next_quest(user_memory))
@@ -158,7 +158,7 @@ def run_npc_session(input: TeachingNPCInput) -> TeachingNPCResponse:
         used_tools=[
             {
                 "name": output.get("name", f"Tool {i + 1}"),
-                "result": output.get("result", output)
+                "result": output.get("result", output),
             }
             for i, output in enumerate(tool_outputs)
         ],
@@ -169,12 +169,12 @@ def run_npc_session(input: TeachingNPCInput) -> TeachingNPCResponse:
 
 
 def call_llm(
-        npc_profile: QuacksterProfile,
-        user_memory: UserMemory,
-        user_input: str,
-        conversation_context: Sequence[dict[str, str]] = None,
-        tool_outputs: Sequence[dict[str, Any]] = None,
-        relevant_content: str = "",
+    npc_profile: QuacksterProfile,
+    user_memory: UserMemory,
+    user_input: str,
+    conversation_context: Sequence[dict[str, str]] = None,
+    tool_outputs: Sequence[dict[str, Any]] = None,
+    relevant_content: str = "",
 ) -> str:
     """
     Call the LLM to generate a response.
@@ -279,7 +279,7 @@ def get_llm_client():
 
 
 def mock_llm_response(
-        user_input: str, tool_outputs: Sequence[dict[str, Any]] = None
+    user_input: str, tool_outputs: Sequence[dict[str, Any]] = None
 ) -> str:
     """
     Generate a mock LLM response for testing.
@@ -325,7 +325,7 @@ def mock_llm_response(
 
     # For "what's next" queries
     if re.search(
-            r"\b(what next|next quest|suggest|do next)\b", user_input, re.IGNORECASE
+        r"\b(what next|next quest|suggest|do next)\b", user_input, re.IGNORECASE
     ):
         return f"{greeting}I suggest trying to complete the 'Star QuackCore' quest next! It's an easy way to earn 50 XP and get your first badge. {catchphrase} 🦆"
 

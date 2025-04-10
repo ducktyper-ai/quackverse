@@ -1,6 +1,7 @@
 # src/quackcore/teaching/github/grading.py
 """GitHub assignment grading utilities for QuackCore."""
 
+import re
 from typing import Any
 
 from quackcore.errors import QuackApiError
@@ -8,6 +9,8 @@ from quackcore.integrations.core import IntegrationResult
 from quackcore.integrations.github.client import GitHubClient
 from quackcore.integrations.github.models import PullRequest
 from quackcore.logging import get_logger
+from quackcore.teaching.core.gamification_service import GamificationService
+from quackcore.teaching.models import XPEvent
 
 from .models import GradeResult
 
@@ -109,6 +112,54 @@ class GitHubGrader:
             grade_result = GradeResult(
                 score=score, passed=passed, comments=feedback, details=results
             )
+
+            # Now integrate with the gamification system
+            if grade_result.passed:
+                try:
+                    # Create a service instance
+                    gamifier = GamificationService()
+
+                    # Create an XP event for the successful submission
+                    event = XPEvent(
+                        id=f"graded-pr-{pull_request.number}",
+                        label=f"Passed grading for PR #{pull_request.number}",
+                        points=int(grade_result.score * 50),
+                        # Scale points based on score
+                        metadata={
+                            "repo": pull_request.base_repo,
+                            "pr_number": pull_request.number,
+                            "score": grade_result.score,
+                            "grader": "github-auto",
+                        },
+                    )
+
+                    # Handle the event and get gamification results
+                    gamification_result = gamifier.handle_event(event)
+
+                    # Add gamification results to the grade result details
+                    grade_result.details["gamification"] = {
+                        "xp_added": gamification_result.xp_added,
+                        "level": gamification_result.level,
+                        "level_up": gamification_result.level_up,
+                        "completed_quests": gamification_result.completed_quests,
+                        "earned_badges": gamification_result.earned_badges,
+                        "message": gamification_result.message,
+                    }
+
+                    # If this was a PR to a quackverse repository, check for quest completion
+                    if "quackverse/" in pull_request.base_repo.lower():
+                        # Check for merged PR quest if the PR was merged
+                        if pull_request.merged:
+                            merge_result = gamifier.handle_github_pr_merged(
+                                pull_request.number, pull_request.base_repo
+                            )
+                            if merge_result.message:
+                                logger.info(merge_result.message)
+                except Exception as e:
+                    logger.error(
+                        f"Error integrating with gamification system: {str(e)}"
+                    )
+                    # Don't fail the grading process if gamification fails
 
             return IntegrationResult.success_result(
                 content=grade_result,

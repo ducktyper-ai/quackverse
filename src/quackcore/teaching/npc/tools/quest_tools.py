@@ -108,16 +108,16 @@ def list_quests(user_memory: UserMemory) -> dict[str, Any]:
             intro = f"Impressive! You've completed {completed_count} quests and have {available_count} more to explore."
 
     formatted_text = (
-            f"{intro}\n\n"
-            f"Completed Quests:\n"
-            + "\n".join(completed_list or ["No quests completed yet"])
-            + "\n\n"
-              f"Suggested Quests:\n"
-            + "\n".join(
-        [q["formatted"] for q in suggested_list]
-        if suggested_list
-        else ["No suggested quests available."]
-    )
+        f"{intro}\n\n"
+        f"Completed Quests:\n"
+        + "\n".join(completed_list or ["No quests completed yet"])
+        + "\n\n"
+        f"Suggested Quests:\n"
+        + "\n".join(
+            [q["formatted"] for q in suggested_list]
+            if suggested_list
+            else ["No suggested quests available."]
+        )
     )
 
     return standardize_tool_output(
@@ -138,7 +138,7 @@ def list_quests(user_memory: UserMemory) -> dict[str, Any]:
             if suggested_list
             else ["No suggested quests available."],
             "formatted_text": formatted_text,
-        }
+        },
     )
 
 
@@ -159,8 +159,9 @@ def get_quest_details(quest_id: str) -> dict[str, Any]:
     # Default to RAG if no custom dialogue found
     info = rag.get_quest_info(quest_id)
     if not quest_guidance and info:
-        quest_guidance = info.get("guidance",
-                                  "No specific guidance available for this quest.")
+        quest_guidance = info.get(
+            "guidance", "No specific guidance available for this quest."
+        )
 
     # Check if user has completed this quest
     user = utils.load_progress()
@@ -176,7 +177,7 @@ def get_quest_details(quest_id: str) -> dict[str, Any]:
                 "description": info.get("description", "Quest information not found"),
                 "is_completed": is_completed,
                 "formatted_text": f"Quest '{info.get('name', quest_id)}' not found.",
-            }
+            },
         )
 
     # If quest has a badge, get badge info
@@ -240,7 +241,7 @@ def suggest_next_quest(user_memory: UserMemory) -> dict[str, Any]:
                 {
                     "has_suggestion": False,
                     "formatted_text": "No quest suggestions available at this time.",
-                }
+                },
             )
 
         # Use the first suggested quest
@@ -256,7 +257,7 @@ def suggest_next_quest(user_memory: UserMemory) -> dict[str, Any]:
                 {
                     "has_suggestion": False,
                     "formatted_text": "No quest suggestions available at this time.",
-                }
+                },
             )
 
     # Get custom quest guidance or use RAG
@@ -308,7 +309,7 @@ def suggest_next_quest(user_memory: UserMemory) -> dict[str, Any]:
             "badge": badge_info,
             "guidance": quest_guidance,
             "formatted_text": formatted_text,
-        }
+        },
     )
 
 
@@ -330,15 +331,18 @@ def verify_quest_completion(user_memory: UserMemory) -> dict[str, Any]:
     newly_completed = quests.check_quest_completion(user)
 
     # Filter out quests that were already in user_memory as completed
-    newly_completed = [quest for quest in newly_completed if
-                       quest.id not in already_completed]
+    newly_completed = [
+        quest for quest in newly_completed if quest.id not in already_completed
+    ]
 
     if not newly_completed:
         # Check session history to personalize the message
         session_history = user_memory.custom_data.get("session_history", [])
-        completion_attempts = sum(1 for session in session_history if
-                                  "complete" in session.get("content_snippet",
-                                                            "").lower())
+        completion_attempts = sum(
+            1
+            for session in session_history
+            if "complete" in session.get("content_snippet", "").lower()
+        )
 
         message = "No newly completed quests found."
         if completion_attempts > 2:
@@ -350,7 +354,7 @@ def verify_quest_completion(user_memory: UserMemory) -> dict[str, Any]:
                 "quests_completed": False,
                 "completed_quests": [],
                 "formatted_text": message,
-            }
+            },
         )
 
     # Apply completions and get quest details
@@ -378,7 +382,7 @@ def verify_quest_completion(user_memory: UserMemory) -> dict[str, Any]:
                 "badge": badge_info,
                 "completion_message": completion_msg,
                 "formatted": f"✅ {quest.name} (+{quest.reward_xp} XP)"
-                             + (f" → Earned {badge_info}!" if badge_info else ""),
+                + (f" → Earned {badge_info}!" if badge_info else ""),
             }
         )
 
@@ -405,10 +409,12 @@ def verify_quest_completion(user_memory: UserMemory) -> dict[str, Any]:
     elif total_completed == 10:
         milestone_text = "\n\n🌟 Milestone: 10 quests completed! You're now a QuackVerse Quest Champion! 🌟"
 
-    details_text = "\n\n".join([
-        f"{details['formatted']}\n{details['completion_message']}"
-        for details in completed_details
-    ])
+    details_text = "\n\n".join(
+        [
+            f"{details['formatted']}\n{details['completion_message']}"
+            for details in completed_details
+        ]
+    )
 
     formatted_text = f"{header}\n\n{details_text}{milestone_text}"
 
@@ -420,5 +426,5 @@ def verify_quest_completion(user_memory: UserMemory) -> dict[str, Any]:
             "completed_details": completed_details,
             "total_completed_count": total_completed,
             "formatted_text": formatted_text,
-        }
+        },
     )

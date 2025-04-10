@@ -1,4 +1,4 @@
-# src/quackcore/teaching/lms/service.py
+# src/quackcore/teaching/academy/service.py
 """
 Teaching service module.
 
@@ -12,8 +12,9 @@ from quackcore.errors import QuackError
 from quackcore.fs import service as fs
 from quackcore.logging import get_logger
 from quackcore.paths import resolver
-from quackcore.teaching.lms.context import TeachingContext
-from quackcore.teaching.lms.results import AssignmentResult, TeachingResult
+from quackcore.teaching.academy.context import TeachingContext
+from quackcore.teaching.academy.results import AssignmentResult, TeachingResult
+from quackcore.teaching.core.gamification_service import GamificationService
 
 logger = get_logger(__name__)
 
@@ -136,6 +137,50 @@ class TeachingService:
             return self._context.github
         except QuackError:
             return None
+
+    def _integrate_with_gamification(self, action: str, **kwargs) -> None:
+        """
+        Integrate an academy action with the gamification system.
+
+        Args:
+            action: The type of action (module_completion, course_completion, etc.)
+            **kwargs: Additional data for the specific action
+        """
+        try:
+            gamifier = GamificationService()
+            result = None
+
+            if action == "module_completion":
+                result = gamifier.handle_module_completion(
+                    course_id=kwargs.get("course_id", ""),
+                    module_id=kwargs.get("module_id", ""),
+                    module_name=kwargs.get("module_name", "Unknown Module"),
+                )
+            elif action == "course_completion":
+                result = gamifier.handle_course_completion(
+                    course_id=kwargs.get("course_id", ""),
+                    course_name=kwargs.get("course_name", "Unknown Course"),
+                )
+            elif action == "assignment_completion":
+                result = gamifier.handle_assignment_completion(
+                    assignment_id=kwargs.get("assignment_id", ""),
+                    assignment_name=kwargs.get("assignment_name", "Unknown Assignment"),
+                    score=kwargs.get("score", 0.0),
+                    max_score=kwargs.get("max_score", 100.0),
+                )
+            elif action == "feedback_submission":
+                result = gamifier.handle_feedback_submission(
+                    feedback_id=kwargs.get("feedback_id", ""),
+                    context=kwargs.get("context", "Unknown Context"),
+                )
+
+            if result and result.message:
+                logger.info(result.message)
+
+        except Exception as e:
+            logger.debug(
+                f"Error integrating academy action with gamification: {str(e)}"
+            )
 
     def ensure_repo_exists(
         self, repo_name: str, private: bool = True, description: str | None = None
@@ -261,6 +306,7 @@ class TeachingService:
             except Exception as e:
                 logger.error(f"Error creating repository for {student}: {str(e)}")
                 failed_students.append(student)
+
         if failed_students:
             return AssignmentResult(
                 success=False,
@@ -269,12 +315,21 @@ class TeachingService:
                 repositories=created_repos,
                 failed_students=failed_students,
             )
+
         if not created_repos:
             return AssignmentResult(
                 success=False,
                 error="No repositories created",
                 message="Failed to create any assignment repositories",
             )
+
+        # If we successfully created repositories, integrate with gamification
+        self._integrate_with_gamification(
+            "assignment_creation",
+            assignment_id=assignment_name,
+            assignment_name=assignment_name,
+        )
+
         return AssignmentResult(
             success=True,
             message=f"Successfully created {len(created_repos)} assignment repositories",
@@ -329,6 +384,127 @@ class TeachingService:
             success=False,
             error="Finding all submissions is not yet implemented",
             message="Provide a specific student name to find submissions",
+        )
+
+    def record_module_completion(
+        self, course_id: str, module_id: str, module_name: str
+    ) -> TeachingResult:
+        """
+        Record completion of a module.
+
+        Args:
+            course_id: ID of the course
+            module_id: ID of the module
+            module_name: Name of the module
+
+        Returns:
+            TeachingResult indicating success or failure
+        """
+        if self._context is None:
+            return TeachingResult(
+                success=False,
+                error="Teaching service not initialized",
+                message="Call initialize() before using the service",
+            )
+
+        # Logic to record module completion in the academy system
+        # ...
+
+        # Integrate with gamification
+        self._integrate_with_gamification(
+            "module_completion",
+            course_id=course_id,
+            module_id=module_id,
+            module_name=module_name,
+        )
+
+        return TeachingResult(
+            success=True,
+            message=f"Successfully recorded completion of module '{module_name}'",
+        )
+
+    def record_course_completion(
+        self, course_id: str, course_name: str
+    ) -> TeachingResult:
+        """
+        Record completion of a course.
+
+        Args:
+            course_id: ID of the course
+            course_name: Name of the course
+
+        Returns:
+            TeachingResult indicating success or failure
+        """
+        if self._context is None:
+            return TeachingResult(
+                success=False,
+                error="Teaching service not initialized",
+                message="Call initialize() before using the service",
+            )
+
+        # Logic to record course completion in the academy system
+        # ...
+
+        # Integrate with gamification
+        self._integrate_with_gamification(
+            "course_completion", course_id=course_id, course_name=course_name
+        )
+
+        # Generate certificate if applicable
+        # ...
+
+        return TeachingResult(
+            success=True,
+            message=f"Successfully recorded completion of course '{course_name}'",
+        )
+
+    def grade_student_assignment(
+        self,
+        assignment_id: str,
+        student_github: str,
+        score: float,
+        feedback: str | None = None,
+    ) -> TeachingResult:
+        """
+        Grade a student's assignment.
+
+        Args:
+            assignment_id: ID of the assignment
+            student_github: GitHub username of the student
+            score: Score to assign (0-100)
+            feedback: Optional feedback text
+
+        Returns:
+            TeachingResult indicating success or failure
+        """
+        if self._context is None:
+            return TeachingResult(
+                success=False,
+                error="Teaching service not initialized",
+                message="Call initialize() before using the service",
+            )
+
+        # Get the assignment to find its name
+        # Placeholder logic - in real implementation, would fetch from storage
+        assignment_name = f"Assignment {assignment_id}"
+        max_score = 100.0
+
+        # Logic to record assignment grade in the academy system
+        # ...
+
+        # Integrate with gamification
+        self._integrate_with_gamification(
+            "assignment_completion",
+            assignment_id=assignment_id,
+            assignment_name=assignment_name,
+            score=score,
+            max_score=max_score,
+        )
+
+        return TeachingResult(
+            success=True,
+            message=f"Successfully graded assignment '{assignment_name}' for student {student_github}",
         )
 
     @staticmethod

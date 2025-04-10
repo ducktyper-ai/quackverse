@@ -6,6 +6,7 @@ from quackcore.integrations.core import IntegrationResult
 from quackcore.integrations.github.client import GitHubClient
 from quackcore.integrations.github.models import PullRequest
 from quackcore.logging import get_logger
+from quackcore.teaching.core.gamification_service import GamificationService
 
 logger = get_logger(__name__)
 
@@ -36,13 +37,33 @@ class GitHubTeachingAdapter:
         """
         try:
             # Check if the repo is already starred
-            if self.client.is_repo_starred(repo):
+            already_starred = self.client.is_repo_starred(repo)
+
+            if already_starred:
+                # Even if already starred, we might want to award XP if this is the first time we're checking
+                try:
+                    gamifier = GamificationService()
+                    result = gamifier.handle_github_star(repo)
+                    if result.message:
+                        logger.info(result.message)
+                except Exception as e:
+                    logger.debug(f"Error integrating star with gamification: {str(e)}")
+
                 return IntegrationResult.success_result(
                     content=True, message=f"Repository {repo} is already starred"
                 )
 
             # Star the repo
             self.client.star_repo(repo)
+
+            # Integrate with gamification system
+            try:
+                gamifier = GamificationService()
+                result = gamifier.handle_github_star(repo)
+                if result.message:
+                    logger.info(result.message)
+            except Exception as e:
+                logger.debug(f"Error integrating star with gamification: {str(e)}")
 
             return IntegrationResult.success_result(
                 content=True, message=f"Successfully starred repository {repo}"
@@ -135,6 +156,15 @@ class GitHubTeachingAdapter:
 
             # Convert HttpUrl to string to match the return type
             url_string = str(pr.url)
+
+            # Integrate with gamification system
+            try:
+                gamifier = GamificationService()
+                result = gamifier.handle_github_pr_submission(pr.number, base_repo)
+                if result.message:
+                    logger.info(result.message)
+            except Exception as e:
+                logger.debug(f"Error integrating PR with gamification: {str(e)}")
 
             return IntegrationResult.success_result(
                 content=url_string,

@@ -1,4 +1,4 @@
-# src/quackcore/teaching/lms/context.py
+# src/quackcore/teaching/academy/context.py
 """
 Teaching context management module.
 

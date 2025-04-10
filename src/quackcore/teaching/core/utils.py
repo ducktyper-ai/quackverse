@@ -12,7 +12,7 @@ from pathlib import Path
 
 from quackcore.fs import service as fs
 from quackcore.logging import get_logger
-from quackcore.teaching.models import UserProgress
+from quackcore.teaching.core.models import UserProgress
 
 logger = get_logger(__name__)
 

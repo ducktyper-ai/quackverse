@@ -49,5 +49,5 @@ def list_xp_and_level(user_memory: UserMemory) -> dict[str, Any]:
             "progress_pct": progress_pct,
             "progress_bar": progress_bar,
             "formatted_text": formatted_text,
-        }
+        },
     )

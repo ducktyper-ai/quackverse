@@ -1,4 +1,4 @@
-# src/quackcore/teaching/lms/grading.py
+# src/quackcore/teaching/academy/grading.py
 """
 Grading module for teaching applications.
 
@@ -14,6 +14,8 @@ from pydantic import BaseModel, Field, model_validator
 # Use QuackCore FS for file operations and path expansion.
 from quackcore.fs import service as fs
 from quackcore.logging import get_logger
+from quackcore.teaching.core.gamification_service import GamificationService
+from quackcore.teaching.core.models import XPEvent
 
 logger = get_logger(__name__)
 
@@ -398,3 +400,41 @@ class GradeResult(BaseModel):
                     lines.append(f"\n{comment}")
                 lines.append("")
         return "\n".join(lines)
+
+    def update_gamification(self) -> None:
+        """Update gamification based on this grade result."""
+        try:
+            # Import here to avoid circular imports
+            from quackcore.teaching.core.gamification_service import GamificationService
+            from quackcore.teaching.core.models import XPEvent
+
+            # Create a gamification service
+            gamifier = GamificationService()
+
+            # Create an XP event for the grade
+            # Scale XP based on score - between 10 and 50 points
+            score_ratio = self.score / self.max_points if self.max_points > 0 else 0
+            xp_points = int(10 + score_ratio * 40)
+
+            event = XPEvent(
+                id=f"academy-grade-{self.id}",
+                label=f"Graded assignment score: {self.score}/{self.max_points}",
+                points=xp_points,
+                metadata={
+                    "assignment_id": self.assignment_id,
+                    "submission_id": self.submission_id,
+                    "score": self.score,
+                    "max_score": self.max_points,
+                    "passed": self.passed,
+                },
+            )
+
+            # Handle the event
+            result = gamifier.handle_event(event)
+
+            # Log the result
+            if result.message:
+                logger.info(result.message)
+
+        except Exception as e:
+            logger.debug(f"Error integrating grade with gamification: {str(e)}")

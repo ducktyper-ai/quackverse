@@ -1,4 +1,4 @@
-# src/quackcore/teaching/lms/results.py
+# src/quackcore/teaching/academy/results.py
 """
 Result classes for teaching operations.
 

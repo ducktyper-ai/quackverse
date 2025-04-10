@@ -33,8 +33,11 @@ def list_badges(user_memory: UserMemory) -> dict[str, Any]:
 
     # Use badge IDs from user_memory
     badge_ids = user_memory.badges
-    user_badges = [badges.get_badge(badge_id) for badge_id in badge_ids if
-                   badges.get_badge(badge_id)]
+    user_badges = [
+        badges.get_badge(badge_id)
+        for badge_id in badge_ids
+        if badges.get_badge(badge_id)
+    ]
 
     # Format badge list with emojis
     badge_list = [f"{badge.emoji} {badge.name}" for badge in user_badges]
@@ -47,7 +50,10 @@ def list_badges(user_memory: UserMemory) -> dict[str, Any]:
         # Calculate progress - use user_memory.xp for XP-based badges
         if badge.required_xp > 0:
             progress = (
-                        user_memory.xp / badge.required_xp * 100) if badge.required_xp > 0 else 0
+                (user_memory.xp / badge.required_xp * 100)
+                if badge.required_xp > 0
+                else 0
+            )
         else:
             progress = badges.get_badge_progress(user, badge.id) * 100
 
@@ -69,8 +75,10 @@ def list_badges(user_memory: UserMemory) -> dict[str, Any]:
 
     # Use interests from user_memory to personalize the message
     interests = user_memory.interests or []
-    badge_interest = "badges" in " ".join(
-        interests).lower() or "achievements" in " ".join(interests).lower()
+    badge_interest = (
+        "badges" in " ".join(interests).lower()
+        or "achievements" in " ".join(interests).lower()
+    )
 
     if badge_count == 0:
         if badge_interest:
@@ -86,16 +94,14 @@ def list_badges(user_memory: UserMemory) -> dict[str, Any]:
             intro = f"You have earned {badge_count} badges. Keep up the great work!"
 
     formatted_text = (
-            f"{intro}\n\n"
-            f"Earned Badges:\n"
-            + "\n".join(badge_list or ["No badges earned yet"])
-            + "\n\n"
-              f"Next Badges:\n"
-            + "\n".join(
-        [b["formatted"] for b in next_badge_list]
-        if next_badge_list
-        else ["Keep earning XP to unlock badges!"]
-    )
+        f"{intro}\n\n"
+        f"Earned Badges:\n" + "\n".join(badge_list or ["No badges earned yet"]) + "\n\n"
+        f"Next Badges:\n"
+        + "\n".join(
+            [b["formatted"] for b in next_badge_list]
+            if next_badge_list
+            else ["Keep earning XP to unlock badges!"]
+        )
     )
 
     return standardize_tool_output(
@@ -109,7 +115,7 @@ def list_badges(user_memory: UserMemory) -> dict[str, Any]:
             if next_badge_list
             else ["Keep earning XP to unlock badges!"],
             "formatted_text": formatted_text,
-        }
+        },
     )
 
 
@@ -152,7 +158,7 @@ def get_badge_details(badge_id: str) -> dict[str, Any]:
                 "description": badge_description or "Badge information not found",
                 "is_earned": is_earned,
                 "formatted_text": f"Badge '{info.get('name', badge_id)}' not found.",
-            }
+            },
         )
 
     # Get progress toward earning this badge
@@ -169,7 +175,8 @@ def get_badge_details(badge_id: str) -> dict[str, Any]:
         "is_earned": is_earned,
         "progress": progress,
         "progress_bar": progress_bar,
-        "guidance": badge_guidance or "Complete related quests or earn XP to unlock this badge.",
+        "guidance": badge_guidance
+        or "Complete related quests or earn XP to unlock this badge.",
         "fun_fact": badge_fun_fact or "",
         "flavor": badge_flavor or "",
     }

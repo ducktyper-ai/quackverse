@@ -1,4 +1,4 @@
-# src/quackcore/teaching/lms/assignment.py
+# src/quackcore/teaching/academy/assignment.py
 """
 Assignment management module.
 

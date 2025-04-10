@@ -8,7 +8,7 @@ and handling level-up events.
 
 from quackcore.logging import get_logger
 from quackcore.teaching import badges
-from quackcore.teaching.models import UserProgress, XPEvent
+from quackcore.teaching.core.models import UserProgress, XPEvent
 
 logger = get_logger(__name__)
 

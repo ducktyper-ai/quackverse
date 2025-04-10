@@ -1,4 +1,4 @@
-# src/quackcore/teaching/lms/__init__.py
+# src/quackcore/teaching/academy/__init__.py
 """
 QuackCore Teaching LMS Module.
 
@@ -10,20 +10,24 @@ Note: This is the traditional LMS-style implementation, while the main teaching
 module now offers a gamified, CLI-first approach.
 """
 
-from quackcore.teaching.lms.assignment import Assignment, AssignmentStatus
-from quackcore.teaching.lms.context import TeachingContext
-from quackcore.teaching.lms.course import Course, CourseModule, ModuleItem
-from quackcore.teaching.lms.feedback import Annotation, Feedback, FeedbackItem
-from quackcore.teaching.lms.grading import GradeResult, GradingCriteria
-from quackcore.teaching.lms.results import (
+from quackcore.teaching.academy.assignment import Assignment, AssignmentStatus
+from quackcore.teaching.academy.context import TeachingContext
+from quackcore.teaching.academy.course import Course, CourseModule, ModuleItem
+from quackcore.teaching.academy.feedback import Annotation, Feedback, FeedbackItem
+from quackcore.teaching.academy.grading import GradeResult, GradingCriteria
+from quackcore.teaching.academy.results import (
     AssignmentResult,
     FeedbackResult,
     TeachingResult,
 )
 
 # Export the service instance
-from quackcore.teaching.lms.service import service
-from quackcore.teaching.lms.student import Student, StudentSubmission, SubmissionStatus
+from quackcore.teaching.academy.service import service
+from quackcore.teaching.academy.student import (
+    Student,
+    StudentSubmission,
+    SubmissionStatus,
+)
 
 __all__ = [
     # Core classes

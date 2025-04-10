@@ -1,4 +1,4 @@
-# src/quackcore/teaching/lms/student.py
+# src/quackcore/teaching/academy/student.py
 """
 Student management module.
 
@@ -17,6 +17,8 @@ from pydantic import BaseModel, EmailStr, Field, model_validator
 from quackcore.fs import service as fs
 from quackcore.logging import get_logger
 from quackcore.paths import resolver
+from quackcore.teaching.core import utils as core_utils
+from quackcore.teaching.core.gamification_service import GamificationService
 
 logger = get_logger(__name__)
 
@@ -123,6 +125,53 @@ class StudentSubmission(BaseModel):
 
         return self
 
+    def update_gamification(self) -> None:
+        """Update gamification based on this submission."""
+        if (
+            self.status != SubmissionStatus.SUBMITTED
+            and self.status != SubmissionStatus.GRADED
+        ):
+            return
+
+        try:
+            # Import here to avoid circular imports
+            from quackcore.teaching.core.gamification_service import GamificationService
+
+            # Create a gamification service
+            gamifier = GamificationService()
+
+            # If this is a GitHub PR submission
+            if self.pr_url:
+                # Extract PR number and repo from URL (simplified)
+                pr_parts = self.pr_url.split("/")
+                if len(pr_parts) >= 2:
+                    try:
+                        pr_number = int(pr_parts[-1])
+                        repo = "/".join(pr_parts[-4:-2])
+
+                        # Handle as GitHub PR submission
+                        result = gamifier.handle_github_pr_submission(pr_number, repo)
+                        if result.message:
+                            logger.info(result.message)
+
+                    except (ValueError, IndexError):
+                        logger.debug(f"Could not parse PR URL: {self.pr_url}")
+
+            # If the submission has been graded
+            if self.status == SubmissionStatus.GRADED and self.score is not None:
+                # Handle as assignment completion
+                result = gamifier.handle_assignment_completion(
+                    assignment_id=self.assignment_id,
+                    assignment_name=f"Assignment {self.assignment_id}",
+                    score=self.score,
+                    max_score=100.0,  # Assuming max score is 100
+                )
+                if result.message:
+                    logger.info(result.message)
+
+        except Exception as e:
+            logger.debug(f"Error integrating submission with gamification: {str(e)}")
+
 
 class Student(BaseModel):
     """
@@ -211,6 +260,32 @@ class Student(BaseModel):
         """
         return self.submissions.get(assignment_id)
 
+    def sync_with_progress(self) -> None:
+        """
+        Synchronize the student with the core UserProgress system.
+
+        This ensures that the student's GitHub username is properly
+        recorded in the UserProgress system, allowing for proper
+        attribution of gamification rewards.
+        """
+        try:
+            # Import here to avoid circular imports
+            from quackcore.teaching.core import utils as core_utils
+
+            # Load the current progress
+            progress = core_utils.load_progress()
+
+            # If the GitHub username is different, update it
+            if progress.github_username != self.github_username:
+                progress.github_username = self.github_username
+                core_utils.save_progress(progress)
+                logger.info(
+                    f"Updated progress GitHub username to {self.github_username}"
+                )
+
+        except Exception as e:
+            logger.debug(f"Error syncing student with progress: {str(e)}")
+
 
 class StudentRoster:
     """
@@ -234,6 +309,9 @@ class StudentRoster:
         """
         self.students[student.id] = student
         self.by_github[student.github_username.lower()] = student
+
+        # Sync with core progress
+        student.sync_with_progress()
 
     def get_student(self, student_id: str) -> Student | None:
         """

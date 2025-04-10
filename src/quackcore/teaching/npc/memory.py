@@ -15,8 +15,8 @@ from typing import Any
 from quackcore.fs import service as fs
 from quackcore.logging import get_logger
 from quackcore.teaching import badges, quests
-from quackcore.teaching.npc.schema import UserMemory
 from quackcore.teaching.core.utils import get_user_data_dir, load_progress
+from quackcore.teaching.npc.schema import UserMemory
 
 logger = get_logger(__name__)
 
@@ -150,8 +150,9 @@ def get_user_memory(github_username: str = None) -> UserMemory:
         completed_quests=user.completed_quest_ids,
         badges=user.earned_badge_ids,
         # Initialize with default values or values from persistent memory
-        conversation_count=persistent_memory.get("conversation_count",
-                                                 0) if persistent_memory else 0,
+        conversation_count=persistent_memory.get("conversation_count", 0)
+        if persistent_memory
+        else 0,
         last_interaction=datetime.now().isoformat(),
         interests=persistent_memory.get("interests", []) if persistent_memory else [],
         custom_data={},
@@ -182,27 +183,33 @@ def get_user_memory(github_username: str = None) -> UserMemory:
         # Transfer long-term memory attributes
         if "favorite_topics" in persistent_memory:
             memory.custom_data["favorite_topics"] = persistent_memory.get(
-                "favorite_topics", [])
+                "favorite_topics", []
+            )
 
         if "stuck_points" in persistent_memory:
-            memory.custom_data["stuck_points"] = persistent_memory.get("stuck_points",
-                                                                       [])
+            memory.custom_data["stuck_points"] = persistent_memory.get(
+                "stuck_points", []
+            )
 
         if "recent_quests_discussed" in persistent_memory:
             memory.custom_data["recent_quests_discussed"] = persistent_memory.get(
-                "recent_quests_discussed", [])
+                "recent_quests_discussed", []
+            )
 
         if "learning_style" in persistent_memory:
             memory.custom_data["learning_style"] = persistent_memory.get(
-                "learning_style")
+                "learning_style"
+            )
 
         if "session_history" in persistent_memory:
             memory.custom_data["session_history"] = persistent_memory.get(
-                "session_history", [])
+                "session_history", []
+            )
 
             # Limit session history to last 10 entries
             if len(memory.custom_data["session_history"]) > 10:
                 memory.custom_data["session_history"] = memory.custom_data[
-                                                            "session_history"][-10:]
+                    "session_history"
+                ][-10:]
 
     return memory

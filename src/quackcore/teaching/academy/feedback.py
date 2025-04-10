@@ -1,4 +1,4 @@
-# src/quackcore/teaching/lms/feedback.py
+# src/quackcore/teaching/academy/feedback.py
 """
 Feedback module for teaching applications.
 
@@ -20,6 +20,7 @@ from quackcore.logging import get_logger
 
 # Use QuackCore Paths for resolving file paths against project structure.
 from quackcore.paths import resolver
+from quackcore.teaching.core.gamification_service import GamificationService
 
 logger = get_logger(__name__)
 
@@ -319,6 +320,20 @@ class Feedback(BaseModel):
         self.score = total_score
         self.updated_at = datetime.now()
         return total_score
+
+    def update_gamification(self) -> None:
+        """Update gamification based on this feedback."""
+        try:
+            # Import here to avoid circular imports
+            from quackcore.teaching.core.gamification_service import GamificationService
+
+            context = f"Feedback for submission {self.submission_id}"
+            gamifier = GamificationService()
+            result = gamifier.handle_feedback_submission(self.id, context)
+            if result.message:
+                logger.info(result.message)
+        except Exception as e:
+            logger.debug(f"Error integrating feedback with gamification: {str(e)}")
 
 
 class FeedbackManager:

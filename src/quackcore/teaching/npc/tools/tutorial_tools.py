@@ -34,14 +34,16 @@ def get_tutorial(topic: str) -> dict[str, Any]:
         "topic": topic,
         "title": tutorial.get("title", f"Tutorial on {topic}"),
         "description": tutorial.get("description", ""),
-        "content": tutorial.get("content",
-                                "No tutorial content available for this topic."),
+        "content": tutorial.get(
+            "content", "No tutorial content available for this topic."
+        ),
     }
 
     # Use template to generate formatted text
     try:
-        formatted_text = DialogueRegistry.render_template("tutorial_intro.md.j2",
-                                                          tutorial_data)
+        formatted_text = DialogueRegistry.render_template(
+            "tutorial_intro.md.j2", tutorial_data
+        )
     except Exception as e:
         logger.error(f"Error rendering tutorial template: {e}")
         # Fallback formatted text

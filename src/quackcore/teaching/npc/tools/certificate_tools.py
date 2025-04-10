@@ -40,12 +40,16 @@ def get_certificate_info(user_memory: UserMemory) -> dict[str, Any]:
                 "Earn at least 100 XP",
             ],
             # Calculate progress based on user_memory
-            "progress": sum([
-                1 if "star-quackcore" in user_memory.completed_quests else 0,
-                1 if "run-ducktyper" in user_memory.completed_quests else 0,
-                1 if "complete-tutorial" in user_memory.completed_quests else 0,
-                1 if user_memory.xp >= 100 else 0
-            ]) / 4 * 100
+            "progress": sum(
+                [
+                    1 if "star-quackcore" in user_memory.completed_quests else 0,
+                    1 if "run-ducktyper" in user_memory.completed_quests else 0,
+                    1 if "complete-tutorial" in user_memory.completed_quests else 0,
+                    1 if user_memory.xp >= 100 else 0,
+                ]
+            )
+            / 4
+            * 100,
         },
         {
             "id": "github-contributor",
@@ -59,12 +63,16 @@ def get_certificate_info(user_memory: UserMemory) -> dict[str, Any]:
                 "Earn at least 300 XP",
             ],
             # Calculate progress based on user_memory
-            "progress": sum([
-                1 if "open-pr" in user_memory.completed_quests else 0,
-                1 if "merged-pr" in user_memory.completed_quests else 0,
-                1 if "duck-team-player" in user_memory.badges else 0,
-                1 if user_memory.xp >= 300 else 0
-            ]) / 4 * 100
+            "progress": sum(
+                [
+                    1 if "open-pr" in user_memory.completed_quests else 0,
+                    1 if "merged-pr" in user_memory.completed_quests else 0,
+                    1 if "duck-team-player" in user_memory.badges else 0,
+                    1 if user_memory.xp >= 300 else 0,
+                ]
+            )
+            / 4
+            * 100,
         },
     ]
 
@@ -141,5 +149,5 @@ Replace 'certificate_id' with the ID of the certificate you've earned.
             "certificate_count": len(available_certificates),
             "earned_count": sum(1 for cert in available_certificates if cert["earned"]),
             "formatted_text": formatted_text,
-        }
+        },
     )

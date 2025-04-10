@@ -42,5 +42,5 @@ def standardize_tool_output(
         "name": tool_name,
         "result": result,
         "formatted_text": result.get("formatted_text", ""),
-        **result
+        **result,
     }

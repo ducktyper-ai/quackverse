@@ -1,4 +1,4 @@
-# src/quackcore/teaching/lms/plugin.py
+# src/quackcore/teaching/academy/plugin.py
 """
 Plugin implementation for the QuackCore teaching module.
 
@@ -13,9 +13,9 @@ from quackcore.fs import service as fs
 from quackcore.logging import get_logger
 from quackcore.paths import resolver
 from quackcore.plugins.discovery import PluginInfo
-from quackcore.teaching.lms.context import TeachingContext
-from quackcore.teaching.lms.results import TeachingResult
-from quackcore.teaching.lms.service import TeachingService
+from quackcore.teaching.academy.context import TeachingContext
+from quackcore.teaching.academy.results import TeachingResult
+from quackcore.teaching.academy.service import TeachingService
 
 logger = get_logger(__name__)
 

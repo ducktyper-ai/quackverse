@@ -1,4 +1,4 @@
-# src/quackcore/teaching/lms/course.py
+# src/quackcore/teaching/academy/course.py
 """
 Course management module.
 

@@ -228,15 +228,15 @@ COMMON USER QUESTIONS:
 
     # Combine all sections
     full_prompt = (
-            persona_definition
-            + "\n\n"
-            + user_info
-            + "\n\n"
-            + tools_section
-            + "\n\n"
-            + response_guidelines
-            + "\n\n"
-            + question_categories
+        persona_definition
+        + "\n\n"
+        + user_info
+        + "\n\n"
+        + tools_section
+        + "\n\n"
+        + response_guidelines
+        + "\n\n"
+        + question_categories
     )
 
     return full_prompt

@@ -118,20 +118,30 @@ class DialogueRegistry:
                 options.append(greeting.replace("{{ level }}", str(memory.level)))
 
         # Add badge-specific greetings
-        if len(memory.badges) > 0 and "returning" in greetings and "badges" in \
-                greetings["returning"]:
+        if (
+            len(memory.badges) > 0
+            and "returning" in greetings
+            and "badges" in greetings["returning"]
+        ):
             badge_greetings = greetings["returning"]["badges"]
             for greeting in badge_greetings:
                 options.append(
-                    greeting.replace("{{ badge_count }}", str(len(memory.badges))))
+                    greeting.replace("{{ badge_count }}", str(len(memory.badges)))
+                )
 
         # Add quest-specific greetings
-        if len(memory.completed_quests) > 0 and "returning" in greetings and "quests" in \
-                greetings["returning"]:
+        if (
+            len(memory.completed_quests) > 0
+            and "returning" in greetings
+            and "quests" in greetings["returning"]
+        ):
             quest_greetings = greetings["returning"]["quests"]
             for greeting in quest_greetings:
-                options.append(greeting.replace("{{ quest_count }}",
-                                                str(len(memory.completed_quests))))
+                options.append(
+                    greeting.replace(
+                        "{{ quest_count }}", str(len(memory.completed_quests))
+                    )
+                )
 
         # If we have options, choose one randomly
         if options:
@@ -296,32 +306,32 @@ class DialogueRegistry:
                 "What a shiny achievement! ",
                 "Badge collectors unite! ",
                 "Your collection grows! ",
-                "Display this with pride! "
+                "Display this with pride! ",
             ],
             "quest": [
                 "Adventure awaits! ",
                 "Your quest journey continues! ",
                 "A challenge approaches! ",
-                "Ready for this mission? "
+                "Ready for this mission? ",
             ],
             "tutorial": [
                 "Learning time! ",
                 "Knowledge is power! ",
                 "Let me guide you! ",
-                "Time to learn something new! "
+                "Time to learn something new! ",
             ],
             "xp": [
                 "Level up progress! ",
                 "XP tracker activated! ",
                 "Growth metrics incoming! ",
-                "Your coding journey stats! "
+                "Your coding journey stats! ",
             ],
             "certificate": [
                 "Achievement unlocked! ",
                 "Official recognition! ",
                 "Your coding credentials! ",
-                "Proof of mastery! "
-            ]
+                "Proof of mastery! ",
+            ],
         }
 
         # Get category-specific flavors or use generic ones
