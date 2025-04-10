@@ -9,6 +9,7 @@ format that the NPC can use to personalize interactions.
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
+import re
 
 from quackcore.fs import service as fs
 from quackcore.logging import get_logger
@@ -112,6 +113,143 @@ def _save_persistent_memory(memory: UserMemory) -> bool:
         return False
 
 
+def update_user_memory(memory: UserMemory, user_input: str) -> UserMemory:
+    """
+    Update user memory based on the current interaction.
+
+    Args:
+        memory: The current user memory
+        user_input: The user's latest input message
+
+    Returns:
+        Updated user memory
+    """
+    # Update conversation count
+    memory.conversation_count += 1
+
+    # Update last interaction time
+    memory.last_interaction = datetime.now().isoformat()
+
+    # Extract interests from user input
+    potential_interests = _extract_interests(user_input)
+    for interest in potential_interests:
+        if interest not in memory.interests:
+            memory.interests.append(interest)
+
+    # Maintain max 10 interests
+    if len(memory.interests) > 10:
+        memory.interests = memory.interests[-10:]
+
+    # Update learning style if detected
+    learning_style = _detect_learning_style(user_input)
+    if learning_style:
+        memory.custom_data["learning_style"] = learning_style
+
+    # Update stuck points if detected
+    stuck_points = _extract_stuck_points(user_input)
+    if stuck_points:
+        if "stuck_points" not in memory.custom_data:
+            memory.custom_data["stuck_points"] = []
+
+        for point in stuck_points:
+            if point not in memory.custom_data["stuck_points"]:
+                memory.custom_data["stuck_points"].append(point)
+
+        # Maintain max 5 stuck points
+        if len(memory.custom_data["stuck_points"]) > 5:
+            memory.custom_data["stuck_points"] = memory.custom_data["stuck_points"][-5:]
+
+    # Save the updated memory
+    _save_persistent_memory(memory)
+
+    return memory
+
+
+def _extract_interests(text: str) -> list[str]:
+    """
+    Extract potential interests from user text.
+
+    Args:
+        text: User's input text
+
+    Returns:
+        List of extracted interests
+    """
+    # List of tech keywords to look for
+    keywords = [
+        "python", "javascript", "typescript", "react", "vue", "angular",
+        "github", "git", "docker", "kubernetes", "aws", "azure",
+        "machine learning", "ai", "data science", "backend", "frontend",
+        "fullstack", "web development", "mobile development", "devops"
+    ]
+
+    found_interests = []
+    for keyword in keywords:
+        if re.search(rf'\b{re.escape(keyword)}\b', text.lower()):
+            found_interests.append(keyword)
+
+    return found_interests
+
+
+def _detect_learning_style(text: str) -> str | None:
+    """
+    Detect user's learning style from their input.
+
+    Args:
+        text: User's input text
+
+    Returns:
+        Detected learning style or None
+    """
+    # Very simplified learning style detection
+    visual_indicators = ["show", "see", "look", "diagram", "visual", "picture"]
+    textual_indicators = ["read", "document", "explanation", "article", "textual"]
+    interactive_indicators = ["try", "practice", "example", "code", "exercise",
+                              "interactive"]
+
+    visual_count = sum(1 for word in visual_indicators if
+                       re.search(rf'\b{re.escape(word)}\b', text.lower()))
+    textual_count = sum(1 for word in textual_indicators if
+                        re.search(rf'\b{re.escape(word)}\b', text.lower()))
+    interactive_count = sum(1 for word in interactive_indicators if
+                            re.search(rf'\b{re.escape(word)}\b', text.lower()))
+
+    if visual_count > textual_count and visual_count > interactive_count:
+        return "visual"
+    elif textual_count > visual_count and textual_count > interactive_count:
+        return "textual"
+    elif interactive_count > visual_count and interactive_count > textual_count:
+        return "interactive"
+
+    return None
+
+
+def _extract_stuck_points(text: str) -> list[str]:
+    """
+    Extract potential stuck points from user text.
+
+    Args:
+        text: User's input text
+
+    Returns:
+        List of extracted stuck points
+    """
+    # Look for phrases that indicate confusion or being stuck
+    stuck_indicators = [
+        r"(?:I'm|I am) (?:stuck|confused) (?:on|about|with) (.+?)(?:\.|\?|$)",
+        r"(?:having|have) (?:trouble|issues|problems) (?:with|understanding) (.+?)(?:\.|\?|$)",
+        r"(?:don't|do not) understand (?:how to|what) (.+?)(?:\.|\?|$)",
+        r"(?:confused|struggling) (?:about|with) (.+?)(?:\.|\?|$)"
+    ]
+
+    found_stuck_points = []
+    for pattern in stuck_indicators:
+        matches = re.findall(pattern, text, re.IGNORECASE)
+        found_stuck_points.extend(match.strip() for match in matches if match.strip())
+
+    return found_stuck_points
+
+
 def get_user_memory(github_username: str = None) -> UserMemory:
     """
     Get memory data about a user for the NPC.
@@ -207,7 +345,7 @@ def get_user_memory(github_username: str = None) -> UserMemory:
             # Limit session history to last 10 entries
             if len(memory.custom_data["session_history"]) > 10:
                 memory.custom_data["session_history"] = memory.custom_data[
-                    "session_history"
-                ][-10:]
+                                                            "session_history"
+                                                        ][-10:]
 
     return memory
