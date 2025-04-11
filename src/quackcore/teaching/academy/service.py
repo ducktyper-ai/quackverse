@@ -3,12 +3,12 @@
 Teaching service module.
 
 This module provides the primary service for teaching operations,
-serving as the main entry point for the teaching module.
+serving as the main entry point for teaching operations.
 """
 
 from pathlib import Path
 
-from quackcore.errors import QuackError
+from quackcore.errors import QuackError, QuackFileNotFoundError
 from quackcore.fs import service as fs
 from quackcore.logging import get_logger
 from quackcore.paths import resolver
@@ -24,8 +24,9 @@ class TeachingService:
     """
     Service for teaching operations.
 
-    This class provides the main functionality for the teaching module,
-    serving as the entry point for teaching operations.
+    Provides methods for initialization, context creation,
+    repository and assignment management, and integration with
+    the gamification system.
     """
 
     def __init__(self) -> None:
@@ -41,25 +42,24 @@ class TeachingService:
 
         Args:
             config_path: Path to the configuration file.
-                If None, the default locations will be searched.
             base_dir: Base directory for teaching resources.
-                If None, it will be determined from the config file location.
 
         Returns:
             TeachingResult indicating success or failure.
         """
         try:
-            # Normalize config_path if provided
             if config_path is not None:
                 config_path = fs.expand_user_vars(str(config_path))
-            # Normalize base_dir: if provided but not absolute, resolve relative to project root
             if base_dir is not None:
                 base_dir_path = Path(base_dir)
                 if not base_dir_path.is_absolute():
                     try:
                         project_root = resolver.get_project_root()
                         base_dir = str(project_root / base_dir_path)
-                    except Exception:
+                    except QuackFileNotFoundError as err:
+                        logger.warning(
+                            f"Project root not found: {err}. Falling back to resolved base_dir."
+                        )
                         base_dir = str(base_dir_path.resolve())
             self._context = TeachingContext.from_config(config_path, base_dir)
             logger.info(
@@ -91,13 +91,15 @@ class TeachingService:
         Returns:
             TeachingResult indicating success or failure.
         """
-        # Normalize base_dir if provided and relative.
         if base_dir is not None:
             base_dir_path = Path(base_dir)
             if not base_dir_path.is_absolute():
                 try:
                     base_dir = str(resolver.get_project_root() / base_dir_path)
-                except Exception:
+                except QuackFileNotFoundError as err:
+                    logger.warning(
+                        f"Project root not found: {err}. Falling back to resolved base_dir."
+                    )
                     base_dir = str(base_dir_path.resolve())
         try:
             self._context = TeachingContext.create_default(
@@ -108,7 +110,7 @@ class TeachingService:
                 success=True,
                 message=f"Created new teaching context for course: {course_name}",
             )
-        except Exception as e:
+        except QuackError as e:
             logger.error(f"Failed to create teaching context: {str(e)}")
             return TeachingResult(
                 success=False, error=str(e), message="Failed to create teaching context"
@@ -144,13 +146,12 @@ class TeachingService:
         Integrate an academy action with the gamification system.
 
         Args:
-            action: The type of action (module_completion, course_completion, etc.)
-            **kwargs: Additional data for the specific action
+            action: The type of action (e.g. module_completion, course_completion, etc.)
+            **kwargs: Additional parameters for the action.
         """
         try:
             gamifier = GamificationService()
             result = None
-
             if action == "module_completion":
                 result = gamifier.handle_module_completion(
                     course_id=kwargs.get("course_id", ""),
@@ -174,11 +175,9 @@ class TeachingService:
                     feedback_id=kwargs.get("feedback_id", ""),
                     context=kwargs.get("context", "Unknown Context"),
                 )
-
             if result and result.message:
                 logger.info(result.message)
-
-        except Exception as e:
+        except QuackError as e:
             logger.debug(
                 f"Error integrating academy action with gamification: {str(e)}"
             )
@@ -227,13 +226,30 @@ class TeachingService:
                     error=f"Repository {full_repo_name} does not exist and auto-creation is disabled",
                     message="Enable auto_create_repos in config to create repositories automatically",
                 )
-            # Repository creation not yet implemented.
-            return TeachingResult(
-                success=False,
-                error=f"Repository {full_repo_name} does not exist",
-                message="Repository creation is not yet implemented in the GitHub integration",
+            # Create the repository using the available method.
+            repo_creation_result = github.create_repo(
+                org=org,
+                repo_name=repo_name,
+                private=private,
+                description=description,
             )
-        except Exception as e:
+            if repo_creation_result.success:
+                logger.info(f"Repository {full_repo_name} created successfully.")
+                return TeachingResult(
+                    success=True,
+                    message=f"Repository {full_repo_name} created successfully.",
+                    content=repo_creation_result.content,
+                )
+            else:
+                logger.error(
+                    f"Failed to create repository {full_repo_name}: {repo_creation_result.error}"
+                )
+                return TeachingResult(
+                    success=False,
+                    error=repo_creation_result.error,
+                    message=f"Failed to create repository {full_repo_name}",
+                )
+        except QuackError as e:
             logger.error(f"Error ensuring repository exists: {str(e)}")
             return TeachingResult(
                 success=False,
@@ -257,8 +273,8 @@ class TeachingService:
             template_repo: Name of the template repository.
             description: Optional assignment description.
             due_date: Optional due date (ISO format).
-            students: Optional list of student GitHub usernames.
-                     If None, the assignment will be created for all students.
+            students: List of student GitHub usernames.
+                      Must be provided.
 
         Returns:
             AssignmentResult with the created repositories on success.
@@ -277,6 +293,7 @@ class TeachingService:
                 message="GitHub integration is required but not available",
             )
         org = self._context.config.github.organization
+        # Ensure the template repository is qualified
         if not template_repo.startswith(f"{org}/"):
             template_repo = f"{org}/{template_repo}"
         template_result = github.get_repo(template_repo)
@@ -286,7 +303,7 @@ class TeachingService:
                 error=f"Template repository {template_repo} does not exist",
                 message="Ensure the template repository exists before creating an assignment",
             )
-        if students is None:
+        if not students:
             return AssignmentResult(
                 success=False,
                 error="Student list not provided",
@@ -295,42 +312,59 @@ class TeachingService:
         repo_name_base = assignment_name.lower().replace(" ", "-")
         created_repos = []
         failed_students = []
+        # For each student, check if their assignment repository exists;
+        # if not, create it using ensure_repo_exists.
         for student in students:
             student_repo_name = f"{repo_name_base}-{student}"
             full_repo_name = f"{org}/{student_repo_name}"
             try:
                 repo_result = github.get_repo(full_repo_name)
                 if repo_result.success:
+                    logger.info(f"Repository {full_repo_name} already exists")
                     created_repos.append(repo_result.content)
-                    continue
+                else:
+                    # Append due date (if provided) to description.
+                    new_description = description if description else ""
+                    if due_date:
+                        new_description += f" | Due: {due_date}"
+                    creation_result = self.ensure_repo_exists(
+                        repo_name=student_repo_name,
+                        private=True,
+                        description=new_description,
+                    )
+                    if creation_result.success:
+                        logger.info(
+                            f"Successfully created repository {full_repo_name} for student {student}"
+                        )
+                        created_repos.append(creation_result.content)
+                    else:
+                        logger.error(
+                            f"Failed to create repository for {student}: {creation_result.error}"
+                        )
+                        failed_students.append(student)
+            except QuackError as e:
+                logger.error(f"Error processing repository for {student}: {str(e)}")
                 failed_students.append(student)
-            except Exception as e:
-                logger.error(f"Error creating repository for {student}: {str(e)}")
-                failed_students.append(student)
-
         if failed_students:
             return AssignmentResult(
                 success=False,
                 error=f"Failed to create repositories for {len(failed_students)} students",
-                message=f"Successfully created {len(created_repos)} repositories, failed for {len(failed_students)} students",
+                message=f"Successfully created {len(created_repos)} repositories; failed for {len(failed_students)} students",
                 repositories=created_repos,
                 failed_students=failed_students,
             )
-
         if not created_repos:
             return AssignmentResult(
                 success=False,
                 error="No repositories created",
                 message="Failed to create any assignment repositories",
             )
-
-        # If we successfully created repositories, integrate with gamification
+        # Integrate assignment creation with gamification.
         self._integrate_with_gamification(
-            "assignment_creation",
+            "assignment_completion",
             assignment_id=assignment_name,
             assignment_name=assignment_name,
         )
-
         return AssignmentResult(
             success=True,
             message=f"Successfully created {len(created_repos)} assignment repositories",
@@ -345,11 +379,10 @@ class TeachingService:
 
         Args:
             assignment_name: Name of the assignment.
-            student: Optional student GitHub username.
-                     If provided, only submissions from this student will be returned.
+            student: Specific student GitHub username (required).
 
         Returns:
-            TeachingResult with the found submissions on success.
+            TeachingResult with the found submission.
         """
         if self._context is None:
             return TeachingResult(
@@ -394,12 +427,12 @@ class TeachingService:
         Record completion of a module.
 
         Args:
-            course_id: ID of the course
-            module_id: ID of the module
-            module_name: Name of the module
+            course_id: ID of the course.
+            module_id: ID of the module.
+            module_name: Name of the module.
 
         Returns:
-            TeachingResult indicating success or failure
+            TeachingResult indicating success or failure.
         """
         if self._context is None:
             return TeachingResult(
@@ -407,18 +440,12 @@ class TeachingService:
                 error="Teaching service not initialized",
                 message="Call initialize() before using the service",
             )
-
-        # Logic to record module completion in the academy system
-        # ...
-
-        # Integrate with gamification
         self._integrate_with_gamification(
             "module_completion",
             course_id=course_id,
             module_id=module_id,
             module_name=module_name,
         )
-
         return TeachingResult(
             success=True,
             message=f"Successfully recorded completion of module '{module_name}'",
@@ -431,11 +458,11 @@ class TeachingService:
         Record completion of a course.
 
         Args:
-            course_id: ID of the course
-            course_name: Name of the course
+            course_id: ID of the course.
+            course_name: Name of the course.
 
         Returns:
-            TeachingResult indicating success or failure
+            TeachingResult indicating success or failure.
         """
         if self._context is None:
             return TeachingResult(
@@ -443,18 +470,9 @@ class TeachingService:
                 error="Teaching service not initialized",
                 message="Call initialize() before using the service",
             )
-
-        # Logic to record course completion in the academy system
-        # ...
-
-        # Integrate with gamification
         self._integrate_with_gamification(
             "course_completion", course_id=course_id, course_name=course_name
         )
-
-        # Generate certificate if applicable
-        # ...
-
         return TeachingResult(
             success=True,
             message=f"Successfully recorded completion of course '{course_name}'",
@@ -471,13 +489,13 @@ class TeachingService:
         Grade a student's assignment.
 
         Args:
-            assignment_id: ID of the assignment
-            student_github: GitHub username of the student
-            score: Score to assign (0-100)
-            feedback: Optional feedback text
+            assignment_id: ID of the assignment.
+            student_github: GitHub username of the student.
+            score: Score to assign (0-100).
+            feedback: Optional feedback text.
 
         Returns:
-            TeachingResult indicating success or failure
+            TeachingResult indicating success or failure.
         """
         if self._context is None:
             return TeachingResult(
@@ -486,26 +504,27 @@ class TeachingService:
                 message="Call initialize() before using the service",
             )
 
-        # Get the assignment to find its name
-        # Placeholder logic - in real implementation, would fetch from storage
         assignment_name = f"Assignment {assignment_id}"
         max_score = 100.0
 
-        # Logic to record assignment grade in the academy system
-        # ...
-
-        # Integrate with gamification
+        # Pass feedback along with the other metadata to the gamification integration.
         self._integrate_with_gamification(
             "assignment_completion",
             assignment_id=assignment_id,
             assignment_name=assignment_name,
             score=score,
             max_score=max_score,
+            feedback=feedback,  # Using our custom error system and metadata
         )
+
+        # Build a success message that includes feedback if provided.
+        message = f"Successfully graded assignment '{assignment_name}' for student {student_github}."
+        if feedback is not None:
+            message += f" Feedback provided: {feedback}"
 
         return TeachingResult(
             success=True,
-            message=f"Successfully graded assignment '{assignment_name}' for student {student_github}",
+            message=message,
         )
 
     @staticmethod
@@ -527,7 +546,10 @@ class TeachingService:
             try:
                 project_root = resolver.get_project_root()
                 path_obj = project_root / path_obj
-            except Exception:
+            except QuackFileNotFoundError as err:
+                logger.warning(
+                    f"Project root not found: {err}. Falling back to current working directory."
+                )
                 path_obj = path_obj.resolve()
         return path_obj
 
@@ -537,7 +559,7 @@ class TeachingService:
 
         Args:
             config_path: Path where to save the configuration.
-                If None, the configuration will be saved to the default location.
+                        If None, uses the default location.
 
         Returns:
             TeachingResult indicating success or failure.
@@ -566,7 +588,7 @@ class TeachingService:
                     error=f"Failed to save configuration: {result.error}",
                     message=f"Could not save configuration to {config_path}",
                 )
-        except Exception as e:
+        except QuackError as e:
             logger.error(f"Error saving configuration: {str(e)}")
             return TeachingResult(
                 success=False,

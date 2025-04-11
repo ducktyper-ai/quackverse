@@ -431,7 +431,10 @@ class FeedbackManager:
             try:
                 project_root = resolver.get_project_root()
                 path_obj = project_root / path_obj
-            except Exception:
+            except FileNotFoundError as err:
+                logger.warning(
+                    f"Project root not found: {err}. Falling back to current working directory."
+                )
                 path_obj = path_obj.resolve()
         return path_obj
 

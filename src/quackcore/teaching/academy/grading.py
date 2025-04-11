@@ -102,23 +102,29 @@ class FileCheckCriterion(GradingCriterion):
         cls,
         name: str,
         points: float,
-        files: list[str],
         description: str | None = None,
         required: bool = False,
+        category: str | None = None,
+        rubric: dict | None = None,
+        files: list[str] | None = None,  # extra parameter made optional
     ) -> "FileCheckCriterion":
         """
         Create a new file check criterion.
 
         Args:
-            name: Name of the criterion
-            points: Maximum points possible
-            files: List of files that should be present
-            description: Optional description
-            required: Whether this criterion is required to pass
+            name: Name of the criterion.
+            points: Maximum points possible.
+            description: Optional description.
+            required: Whether this criterion is required to pass.
+            category: Ignored (will be set to "files").
+            rubric: Optional rubric (passed to the base for consistency).
+            files: List of files that should be present.
 
         Returns:
-            New file check criterion instance
+            New file check criterion instance.
         """
+        if files is None:
+            raise ValueError("files must be provided")
         return cls(
             id=str(uuid.uuid4()),
             name=name,
@@ -126,6 +132,7 @@ class FileCheckCriterion(GradingCriterion):
             points=points,
             required=required,
             category="files",
+            rubric=rubric,
             files=files,
         )
 
@@ -155,33 +162,40 @@ class PatternCheckCriterion(GradingCriterion):
         cls,
         name: str,
         points: float,
-        patterns: list[dict],
-        file_patterns: list[str] | None = None,
         description: str | None = None,
         required: bool = False,
+        category: str | None = None,
+        rubric: dict | None = None,
+        patterns: list[dict] | None = None,  # extra parameter made optional
+        file_patterns: list[str] | None = None,  # extra parameter made optional
     ) -> "PatternCheckCriterion":
         """
         Create a new pattern check criterion.
 
         Args:
-            name: Name of the criterion
-            points: Maximum points possible
-            patterns: List of pattern dicts with keys 'pattern' and 'description'
-            file_patterns: Optional list of file patterns to check
-            description: Optional description
-            required: Whether this criterion is required to pass
+            name: Name of the criterion.
+            points: Maximum points possible.
+            description: Optional description.
+            required: Whether this criterion is required to pass.
+            category: Ignored (will be set to "patterns").
+            rubric: Optional rubric (passed to the base for consistency).
+            patterns: List of pattern dicts with keys 'pattern' and 'description'.
+            file_patterns: Optional list of file patterns to check.
 
         Returns:
-            New pattern check criterion instance
+            New pattern check criterion instance.
         """
+        if patterns is None:
+            raise ValueError("patterns must be provided")
         return cls(
             id=str(uuid.uuid4()),
             name=name,
             description=description
-            or f"Check for code patterns in {file_patterns or '*.py'} files",
+            or f"Check for code patterns in {file_patterns or ['*.py']} files",
             points=points,
             required=required,
             category="patterns",
+            rubric=rubric,
             patterns=patterns,
             file_patterns=file_patterns or ["*.py"],
         )

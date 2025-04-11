@@ -15,6 +15,7 @@ import time
 from datetime import datetime
 from typing import Any
 
+from quackcore.errors import QuackError  # Dogfood our errors
 from quackcore.logging import get_logger
 
 from .models import UserProgress
@@ -22,7 +23,7 @@ from .models import UserProgress
 logger = get_logger(__name__)
 
 # Certificate secret key
-# In a real implementation, this would be stored securely
+# In a real implementation, this would be stored securely.
 CERTIFICATE_SECRET = os.environ.get("QUACK_CERTIFICATE_SECRET", "quack-secret-key")
 
 
@@ -36,22 +37,24 @@ def create_certificate(
     Create a digital certificate for course completion.
 
     Args:
-        user: User to create certificate for
-        course_id: ID of the completed course
-        issuer: Name of the certificate issuer
-        additional_data: Additional data to include in the certificate
+        user: User to create certificate for.
+        course_id: ID of the completed course.
+        issuer: Name of the certificate issuer.
+        additional_data: Additional data to include in the certificate.
 
     Returns:
-        Certificate data
+        Certificate data.
+
+    Raises:
+        QuackError: If required data is missing.
     """
     if not user.github_username:
-        raise ValueError("User must have a GitHub username to create a certificate")
+        raise QuackError("User must have a GitHub username to create a certificate")
 
-    # Prepare certificate data
     now = datetime.now()
     timestamp = int(time.time())
 
-    certificate = {
+    certificate: dict[str, Any] = {
         "version": "1.0",
         "type": "course-completion",
         "course_id": course_id,
@@ -63,7 +66,6 @@ def create_certificate(
         "level": user.get_level(),
     }
 
-    # Add additional data if provided
     if additional_data:
         certificate.update(additional_data)
 
@@ -82,7 +84,6 @@ def create_certificate(
 
     # Integrate with gamification
     try:
-        # Import here to avoid circular imports
         from quackcore.teaching.core.gamification_service import GamificationService
 
         gamifier = GamificationService()
@@ -93,7 +94,7 @@ def create_certificate(
             if result.message:
                 logger.info(result.message)
 
-        # Add XP for earning a certificate
+        # Use course name from additional_data if available
         course_name = (
             additional_data.get("course_name", course_id)
             if additional_data
@@ -114,12 +115,11 @@ def verify_certificate(certificate: dict[str, Any]) -> bool:
     Verify a certificate's authenticity.
 
     Args:
-        certificate: Certificate data to verify
+        certificate: Certificate data to verify.
 
     Returns:
-        True if the certificate is valid, False otherwise
+        True if the certificate is valid, False otherwise.
     """
-    # Check for required fields
     required_fields = [
         "id",
         "version",
@@ -135,17 +135,11 @@ def verify_certificate(certificate: dict[str, Any]) -> bool:
             logger.warning(f"Certificate missing required field: {field}")
             return False
 
-    # Extract the signature
     signature = certificate.get("signature")
-
-    # Create a copy of the certificate without the signature
     cert_copy = certificate.copy()
     cert_copy.pop("signature", None)
-
-    # Generate a new signature and compare
     expected_signature = _sign_certificate(cert_copy)
 
-    # Verify the signature
     if signature != expected_signature:
         logger.warning("Certificate signature verification failed")
         return False
@@ -161,12 +155,19 @@ def certificate_to_string(certificate: dict[str, Any]) -> str:
     Convert a certificate to a shareable string format.
 
     Args:
-        certificate: Certificate data
+        certificate: Certificate data.
 
     Returns:
-        Certificate as a base64-encoded string
+        Certificate as a base64-encoded string.
+
+    Raises:
+        QuackError: If certificate serialization fails.
     """
-    cert_json = json.dumps(certificate)
+    try:
+        cert_json = json.dumps(certificate)
+    except Exception as e:
+        logger.error(f"Error serializing certificate: {str(e)}")
+        raise QuackError("Error serializing certificate", original_error=e)
     cert_bytes = cert_json.encode("utf-8")
     cert_b64 = base64.b64encode(cert_bytes)
     return cert_b64.decode("utf-8")
@@ -177,10 +178,13 @@ def string_to_certificate(cert_string: str) -> dict[str, Any]:
     Convert a certificate string back to dictionary format.
 
     Args:
-        cert_string: Certificate as a base64-encoded string
+        cert_string: Certificate as a base64-encoded string.
 
     Returns:
-        Certificate data
+        Certificate data.
+
+    Raises:
+        QuackError: If the certificate string is invalid.
     """
     try:
         cert_bytes = base64.b64decode(cert_string)
@@ -189,7 +193,7 @@ def string_to_certificate(cert_string: str) -> dict[str, Any]:
         return certificate
     except Exception as e:
         logger.error(f"Error decoding certificate string: {str(e)}")
-        raise ValueError("Invalid certificate string")
+        raise QuackError("Invalid certificate string", original_error=e)
 
 
 def format_certificate_markdown(certificate: dict[str, Any]) -> str:
@@ -197,10 +201,10 @@ def format_certificate_markdown(certificate: dict[str, Any]) -> str:
     Format a certificate as a markdown string for display or sharing.
 
     Args:
-        certificate: Certificate data
+        certificate: Certificate data.
 
     Returns:
-        Certificate as a formatted markdown string
+        Certificate as a formatted markdown string.
     """
     course_id = certificate.get("course_id", "Unknown Course")
     recipient = certificate.get("recipient", "Unknown")
@@ -230,15 +234,19 @@ def _sign_certificate(certificate: dict[str, Any]) -> str:
     Create a signature for a certificate.
 
     Args:
-        certificate: Certificate data to sign
+        certificate: Certificate data to sign.
 
     Returns:
-        Signature string
+        Signature string.
     """
-    # Sort keys for consistent ordering
-    cert_json = json.dumps(certificate, sort_keys=True)
+    try:
+        cert_json = json.dumps(certificate, sort_keys=True)
+    except Exception as e:
+        logger.error(f"Error serializing certificate for signature: {str(e)}")
+        raise QuackError(
+            "Error serializing certificate for signature", original_error=e
+        )
 
-    # Create HMAC-SHA256 signature
     signature = hmac.new(
         CERTIFICATE_SECRET.encode(), cert_json.encode(), hashlib.sha256
     ).hexdigest()
@@ -255,74 +263,19 @@ def has_earned_certificate(user: UserProgress, course_id: str) -> bool:
     for the course.
 
     Args:
-        user: User to check
-        course_id: ID of the course
+        user: User to check.
+        course_id: ID of the course.
 
     Returns:
-        True if the user has earned a certificate, False otherwise
+        True if the user has earned a certificate, False otherwise.
     """
     if course_id == "quackverse-basics":
-        # Check if user has completed the required quests
         required_quests = ["star-quackcore", "run-ducktyper", "complete-tutorial"]
         for quest_id in required_quests:
             if not user.has_completed_quest(quest_id):
                 return False
-
-        # Check if the user has at least 100 XP
         if user.xp < 100:
             return False
-
         return True
 
-    # For other courses, implement specific requirements
     return False
-
-
-def create_certificate(
-    user: UserProgress,
-    course_id: str,
-    issuer: str = "QuackVerse",
-    additional_data: dict[str, Any] = None,
-) -> dict[str, Any]:
-    """
-    Create a digital certificate for course completion.
-
-    Args:
-        user: User to create certificate for
-        course_id: ID of the completed course
-        issuer: Name of the certificate issuer
-        additional_data: Additional data to include in the certificate
-
-    Returns:
-        Certificate data
-    """
-    # Existing certificate creation logic
-    # ...
-
-    # After the certificate is created, integrate with gamification
-    try:
-        from quackcore.teaching.core.gamification_service import GamificationService
-
-        gamifier = GamificationService()
-
-        # Mark the duck-graduate badge as earned if not already
-        if not user.has_earned_badge("duck-graduate"):
-            result = gamifier.award_badge("duck-graduate")
-            if result.message:
-                logger.info(result.message)
-
-        # Add XP for earning a certificate
-        course_name = (
-            additional_data.get("course_name", course_id)
-            if additional_data
-            else course_id
-        )
-        result = gamifier.handle_course_completion(course_id, course_name)
-        if result.message:
-            logger.info(result.message)
-
-    except Exception as e:
-        logger.debug(f"Error integrating certificate with gamification: {str(e)}")
-
-    # Return the certificate
-    return certificate

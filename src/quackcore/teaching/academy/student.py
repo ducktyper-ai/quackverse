@@ -14,6 +14,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, EmailStr, Field, model_validator
 
+# Dogfood our errors by using our own error types
+from quackcore.errors import QuackFileNotFoundError, QuackValidationError
 from quackcore.fs import service as fs
 from quackcore.logging import get_logger
 from quackcore.paths import resolver
@@ -135,34 +137,26 @@ class StudentSubmission(BaseModel):
             # Import here to avoid circular imports
             from quackcore.teaching.core.gamification_service import GamificationService
 
-            # Create a gamification service
             gamifier = GamificationService()
 
-            # If this is a GitHub PR submission
             if self.pr_url:
-                # Extract PR number and repo from URL (simplified)
                 pr_parts = self.pr_url.split("/")
                 if len(pr_parts) >= 2:
                     try:
                         pr_number = int(pr_parts[-1])
                         repo = "/".join(pr_parts[-4:-2])
-
-                        # Handle as GitHub PR submission
                         result = gamifier.handle_github_pr_submission(pr_number, repo)
                         if result.message:
                             logger.info(result.message)
-
                     except (ValueError, IndexError):
                         logger.debug(f"Could not parse PR URL: {self.pr_url}")
 
-            # If the submission has been graded
             if self.status == SubmissionStatus.GRADED and self.score is not None:
-                # Handle as assignment completion
                 result = gamifier.handle_assignment_completion(
                     assignment_id=self.assignment_id,
                     assignment_name=f"Assignment {self.assignment_id}",
                     score=self.score,
-                    max_score=100.0,  # Assuming max score is 100
+                    max_score=100.0,
                 )
                 if result.message:
                     logger.info(result.message)
@@ -267,20 +261,15 @@ class Student(BaseModel):
         attribution of gamification rewards.
         """
         try:
-            # Import here to avoid circular imports
             from quackcore.teaching.core import utils as core_utils
 
-            # Load the current progress
             progress = core_utils.load_progress()
-
-            # If the GitHub username is different, update it
             if progress.github_username != self.github_username:
                 progress.github_username = self.github_username
                 core_utils.save_progress(progress)
                 logger.info(
                     f"Updated progress GitHub username to {self.github_username}"
                 )
-
         except Exception as e:
             logger.debug(f"Error syncing student with progress: {str(e)}")
 
@@ -307,8 +296,6 @@ class StudentRoster:
         """
         self.students[student.id] = student
         self.by_github[student.github_username.lower()] = student
-
-        # Sync with core progress
         student.sync_with_progress()
 
     def get_student(self, student_id: str) -> Student | None:
@@ -388,8 +375,8 @@ class StudentRoster:
         """
         Resolve a file path to an absolute path.
 
-        If the given file_path is relative, resolve it relative to the project root
-        using the QuackCore Paths resolver. If that fails, fall back to the current working directory.
+        If file_path is relative, resolve it relative to the project root
+        using the QuackCore Paths resolver; if that fails, fall back to the current working directory.
 
         Args:
             file_path: The path to resolve.
@@ -402,7 +389,10 @@ class StudentRoster:
             try:
                 project_root = resolver.get_project_root()
                 path_obj = project_root / path_obj
-            except Exception:
+            except QuackFileNotFoundError as err:
+                logger.warning(
+                    f"Project root not found: {err}. Falling back to current working directory."
+                )
                 path_obj = path_obj.resolve()
         return path_obj
 
@@ -418,18 +408,21 @@ class StudentRoster:
             Loaded student roster.
 
         Raises:
-            FileNotFoundError: If the file doesn't exist.
-            ValueError: If the file format is invalid.
+            QuackFileNotFoundError: If the file doesn't exist.
+            QuackValidationError: If the file format is invalid.
         """
         resolved_path = cls._resolve_file_path(file_path)
         result = fs.read_yaml(str(resolved_path))
         if not result.success:
-            raise FileNotFoundError(
-                f"Could not read student roster from {resolved_path}: {result.error}"
+            raise QuackFileNotFoundError(
+                resolved_path,
+                f"Could not read student roster from {resolved_path}: {result.error}",
             )
         data = result.data
         if not isinstance(data, dict) or "students" not in data:
-            raise ValueError(f"Invalid student roster format in {resolved_path}")
+            raise QuackValidationError(
+                str(resolved_path), f"Invalid student roster format in {resolved_path}"
+            )
         roster = cls()
         for student_data in data["students"]:
             try:

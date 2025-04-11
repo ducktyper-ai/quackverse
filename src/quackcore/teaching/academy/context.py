@@ -116,7 +116,10 @@ class TeachingContext:
         if base_dir is None:
             try:
                 self.base_dir = resolver.get_project_root()
-            except Exception:
+            except FileNotFoundError as err:
+                logger.warning(
+                    f"Could not determine project root: {err}. Falling back to current working directory."
+                )
                 self.base_dir = Path.cwd()
         else:
             self.base_dir = Path(base_dir)

@@ -44,24 +44,29 @@ class GitHubGrader:
                 f"Grading submission PR #{pull_request.number} from {pull_request.author.username}"
             )
 
-            # If grading criteria not provided, use default simple criteria
+            # Use default criteria if none provided.
             if not grading_criteria:
                 grading_criteria = self._default_grading_criteria()
 
-            # Get the files changed in the PR
+            # Get the files changed in the PR.
             files_changed = self._get_pr_files(pull_request)
             if not files_changed.success:
-                return files_changed
+                # Instead of returning files_changed directly (which has the wrong type),
+                # wrap the error information to match the expected return type.
+                return IntegrationResult.error_result(
+                    error=files_changed.error,
+                    message=files_changed.message,
+                )
 
             changed_files = files_changed.content or []
 
-            # Run the grading checks
+            # Initialize result containers.
             results = {}
             total_points = 0
             max_points = 0
             comments = []
 
-            # Check for required files
+            # Check for required files.
             if "required_files" in grading_criteria:
                 req_files_result = self._check_required_files(
                     changed_files, grading_criteria["required_files"]
@@ -71,7 +76,7 @@ class GitHubGrader:
                 max_points += req_files_result["points_possible"]
                 comments.append(req_files_result["comment"])
 
-            # Check for required changes (if specified)
+            # Check for required changes (if specified).
             if "required_changes" in grading_criteria:
                 req_changes_result = self._check_required_changes(
                     pull_request, changed_files, grading_criteria["required_changes"]
@@ -81,7 +86,7 @@ class GitHubGrader:
                 max_points += req_changes_result["points_possible"]
                 comments.append(req_changes_result["comment"])
 
-            # Check for prohibited patterns (if specified)
+            # Check for prohibited patterns (if specified).
             if "prohibited_patterns" in grading_criteria:
                 prohibited_result = self._check_prohibited_patterns(
                     pull_request, changed_files, grading_criteria["prohibited_patterns"]
@@ -91,39 +96,32 @@ class GitHubGrader:
                 max_points += prohibited_result["points_possible"]
                 comments.append(prohibited_result["comment"])
 
-            # Calculate final score (normalize to 0-1 range)
+            # Calculate final score and evaluate pass criteria.
             score = total_points / max_points if max_points > 0 else 0
             passed = score >= grading_criteria.get("passing_threshold", 0.7)
 
-            # Create combined feedback
+            # Combine all comments with a header.
             feedback = "\n".join([f"## {comment}" for comment in comments if comment])
-
-            # Add summary header
             header = (
                 f"# Grading Results\n\n"
                 f"Score: {total_points}/{max_points} ({score * 100:.1f}%)\n"
                 f"Status: {'PASSED' if passed else 'NEEDS IMPROVEMENT'}\n\n"
             )
-
             feedback = header + feedback
 
-            # Create the result
+            # Build the GradeResult.
             grade_result = GradeResult(
                 score=score, passed=passed, comments=feedback, details=results
             )
 
-            # Now integrate with the gamification system
+            # Integrate with the gamification system if the PR passed.
             if grade_result.passed:
                 try:
-                    # Create a service instance
                     gamifier = GamificationService()
-
-                    # Create an XP event for the successful submission
                     event = XPEvent(
                         id=f"graded-pr-{pull_request.number}",
                         label=f"Passed grading for PR #{pull_request.number}",
                         points=int(grade_result.score * 50),
-                        # Scale points based on score
                         metadata={
                             "repo": pull_request.base_repo,
                             "pr_number": pull_request.number,
@@ -131,11 +129,7 @@ class GitHubGrader:
                             "grader": "github-auto",
                         },
                     )
-
-                    # Handle the event and get gamification results
                     gamification_result = gamifier.handle_event(event)
-
-                    # Add gamification results to the grade result details
                     grade_result.details["gamification"] = {
                         "xp_added": gamification_result.xp_added,
                         "level": gamification_result.level,
@@ -145,9 +139,8 @@ class GitHubGrader:
                         "message": gamification_result.message,
                     }
 
-                    # If this was a PR to a quackverse repository, check for quest completion
+                    # Handle special quest rules.
                     if "quackverse/" in pull_request.base_repo.lower():
-                        # Check for merged PR quest if the PR was merged
                         if pull_request.merged:
                             merge_result = gamifier.handle_github_pr_merged(
                                 pull_request.number, pull_request.base_repo
@@ -158,7 +151,7 @@ class GitHubGrader:
                     logger.error(
                         f"Error integrating with gamification system: {str(e)}"
                     )
-                    # Don't fail the grading process if gamification fails
+                    # Do not fail the grading process if gamification fails.
 
             return IntegrationResult.success_result(
                 content=grade_result,
@@ -448,14 +441,11 @@ class GitHubGrader:
                 "passed": True,
             }
 
-        # In a real implementation, we would fetch file contents for each changed file
-        # For this example, we'll simulate file content
+        # Simulate file content for demonstration purposes.
         file_contents = {}
         for file in changed_files:
             filename = file["filename"]
             try:
-                # Try to get actual file content using the client
-                # Note: This requires implementing get_pr_file_content in the GitHub client
                 try:
                     content, _ = self.client.get_repository_file_content(
                         repo=pull_request.base_repo,
@@ -464,7 +454,6 @@ class GitHubGrader:
                     )
                     file_contents[filename] = content
                 except Exception:
-                    # Fallback to simulated content for demonstration
                     if filename.endswith(".py"):
                         file_contents[filename] = (
                             "def main():\n    print('Hello, world!')\n\nif __name__ == '__main__':\n    main()"
@@ -478,14 +467,12 @@ class GitHubGrader:
             except Exception as e:
                 logger.warning(f"Failed to get content for {filename}: {e}")
 
-        # Check each file for prohibited patterns
+        # Check each file for prohibited patterns.
         violations = []
-
         for filename, content in file_contents.items():
             for pattern_info in prohibited_patterns:
                 pattern = pattern_info.get("pattern", "")
                 description = pattern_info.get("description", "Prohibited pattern")
-
                 if re.search(pattern, content):
                     violations.append(
                         {
@@ -495,19 +482,18 @@ class GitHubGrader:
                         }
                     )
 
-        # Calculate points
-        # If there are violations, deduct points proportionally
+        # Calculate points deduction.
         if violations:
             points_per_violation = points_possible / len(prohibited_patterns)
-            unique_patterns_violated = len(set(v["pattern"] for v in violations))
+            unique_patterns_violated = len({v["pattern"] for v in violations})
             points_deducted = min(
-                points_possible, unique_patterns_violated * points_per_violation
+                points_possible, int(unique_patterns_violated * points_per_violation)
             )
             points_earned = points_possible - points_deducted
         else:
             points_earned = points_possible
 
-        # Generate comment
+        # Generate comment.
         if violations:
             comment = f"Prohibited Patterns Check: Found {len(violations)} violations.\n\nViolations:\n"
             for violation in violations:

@@ -9,6 +9,7 @@ integration with the QuackCore plugin system.
 from pathlib import Path
 from typing import Any
 
+from quackcore.errors import QuackFileNotFoundError  # Dogfood our errors
 from quackcore.fs import service as fs
 from quackcore.logging import get_logger
 from quackcore.paths import resolver
@@ -83,9 +84,11 @@ class TeachingPlugin(QuackPlugin):
             if not base_dir_path.is_absolute():
                 try:
                     # Use the project root if available.
-                    project_root = resolver.get_project_root()
-                    base_dir = str(project_root / base_dir)
-                except Exception:
+                    base_dir = str(resolver.get_project_root() / base_dir)
+                except QuackFileNotFoundError as err:
+                    logger.warning(
+                        f"Project root not found: {err}. Falling back to resolved path."
+                    )
                     base_dir = str(base_dir_path.resolve())
         # Pass resolved options to the teaching service.
         result = self._service.initialize(config_path, base_dir)
@@ -112,7 +115,10 @@ class TeachingPlugin(QuackPlugin):
         if base_dir and not Path(base_dir).is_absolute():
             try:
                 base_dir = str(resolver.get_project_root() / base_dir)
-            except Exception:
+            except QuackFileNotFoundError as err:
+                logger.warning(
+                    f"Project root not found: {err}. Falling back to resolved base_dir."
+                )
                 base_dir = str(Path(base_dir).resolve())
         return self._service.create_context(course_name, github_org, base_dir)
 
@@ -193,7 +199,7 @@ class TeachingPlugin(QuackPlugin):
             **kwargs: Method arguments.
 
         Returns:
-            Method result or None if method doesn't exist.
+            Method result.
 
         Raises:
             AttributeError: If the method doesn't exist.
