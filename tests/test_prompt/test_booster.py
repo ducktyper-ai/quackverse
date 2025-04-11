@@ -1,18 +1,15 @@
-# tests/test_prompt/test_booster.py
 """
 Tests for the PromptBooster class.
 """
 
 import json
-import os
-from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
+from unittest.mock import patch, MagicMock
 
 from quackcore.prompt.booster import PromptBooster
-from quackcore.prompt.registry import clear_registry, register_prompt_strategy
 from quackcore.prompt.strategy_base import PromptStrategy
+from quackcore.prompt.registry import register_prompt_strategy, clear_registry
 
 
 @pytest.fixture
@@ -31,7 +28,7 @@ def sample_strategy():
         description="A strategy for testing",
         input_vars=["task_description", "schema"],
         render_fn=render_fn,
-        tags=["test"],
+        tags=["test"]
     )
 
     return strategy
@@ -65,7 +62,7 @@ def test_booster_initialization():
         schema='{"name": "string", "founded": "string"}',
         examples=["Example 1", "Example 2"],
         tags=["structured", "extraction"],
-        strategy_id="multi-shot-structured",
+        strategy_id="multi-shot-structured"
     )
 
     assert booster_full.raw_prompt == "Extract company information"
@@ -98,7 +95,10 @@ def test_booster_select_strategy_by_tags(sample_strategy):
     register_prompt_strategy(sample_strategy)
 
     # Create a booster with matching tags
-    booster = PromptBooster(raw_prompt="Test prompt", tags=["test"])
+    booster = PromptBooster(
+        raw_prompt="Test prompt",
+        tags=["test"]
+    )
 
     # Select strategy without specifying ID
     selected = booster.select_strategy()
@@ -113,11 +113,8 @@ def test_booster_select_strategy_with_schema_examples():
     """Test strategy selection based on schema and examples."""
 
     # Register some strategies
-    def render_fn(
-        task_description: str,
-        schema: str | None = None,
-        examples: list[str] | None = None,
-    ) -> str:
+    def render_fn(task_description: str, schema: str | None = None,
+                  examples: list[str] | None = None) -> str:
         return "Test strategy"
 
     multi_shot = PromptStrategy(
@@ -125,7 +122,7 @@ def test_booster_select_strategy_with_schema_examples():
         label="Multi-shot Structured",
         description="Multi-shot strategy",
         input_vars=["task_description", "schema", "examples"],
-        render_fn=render_fn,
+        render_fn=render_fn
     )
 
     single_shot = PromptStrategy(
@@ -133,7 +130,7 @@ def test_booster_select_strategy_with_schema_examples():
         label="Single-shot Structured",
         description="Single-shot strategy",
         input_vars=["task_description", "schema", "example"],
-        render_fn=render_fn,
+        render_fn=render_fn
     )
 
     register_prompt_strategy(multi_shot)
@@ -143,7 +140,7 @@ def test_booster_select_strategy_with_schema_examples():
     booster1 = PromptBooster(
         raw_prompt="Extract entities",
         schema='{"entities": []}',
-        examples=["Example 1", "Example 2"],
+        examples=["Example 1", "Example 2"]
     )
 
     selected1 = booster1.select_strategy()
@@ -153,7 +150,7 @@ def test_booster_select_strategy_with_schema_examples():
     booster2 = PromptBooster(
         raw_prompt="Extract entities",
         schema='{"entities": []}',
-        examples="Single example",
+        examples="Single example"
     )
 
     selected2 = booster2.select_strategy()
@@ -169,40 +166,34 @@ def test_booster_render(sample_strategy):
     booster = PromptBooster(
         raw_prompt="Generate a story",
         schema='{"title": "string", "content": "string"}',
-        strategy_id="test-strategy",
+        strategy_id="test-strategy"
     )
 
     # Render the prompt
     rendered = booster.render()
 
     # Check the rendered prompt
-    assert (
-        rendered
-        == 'Task: Generate a story\nSchema: {"title": "string", "content": "string"}'
-    )
+    assert rendered == 'Task: Generate a story\nSchema: {"title": "string", "content": "string"}'
     assert booster.optimized_prompt == rendered
 
 
 def test_booster_render_with_llm():
     """Test rendering a prompt with LLM enhancement."""
-    # Create a mock enhancer module
-    with (
-        patch("quackcore.prompt.booster.PromptBooster.select_strategy") as mock_select,
-        patch("quackcore.prompt.enhancer.enhance_with_llm") as mock_enhance,
-    ):
-        # Configure the mocks
-        mock_strategy = MagicMock()
-        mock_strategy.id = "test-strategy"
-        mock_strategy.input_vars = ["task_description"]
-        mock_strategy.render_fn = (
-            lambda task_description, **kwargs: f"Basic: {task_description}"
-        )
+    # Create mock strategy
+    mock_strategy = MagicMock()
+    mock_strategy.id = "test-strategy"
+    mock_strategy.input_vars = ["task_description"]
+    mock_strategy.render_fn = lambda task_description, **kwargs: f"Basic: {task_description}"
 
-        mock_select.return_value = mock_strategy
+    # Create a booster with this strategy already set
+    booster = PromptBooster(raw_prompt="Generate a story about AI")
+    booster.strategy = mock_strategy
+    booster.strategy_id = "test-strategy"
+
+    # Create a mock for enhance_with_llm
+    with patch('quackcore.prompt.enhancer.enhance_with_llm') as mock_enhance:
+        # Configure the mock
         mock_enhance.return_value = "Enhanced: Generate a story about AI"
-
-        # Create a booster
-        booster = PromptBooster(raw_prompt="Generate a story about AI")
 
         # Render with LLM enhancement
         rendered = booster.render(use_llm=True)
@@ -218,7 +209,7 @@ def test_booster_render_with_llm():
             examples=None,
             strategy_name="test-strategy",
             model=None,
-            provider=None,
+            provider=None
         )
 
 
@@ -228,13 +219,14 @@ def test_booster_render_llm_failure(sample_strategy):
     register_prompt_strategy(sample_strategy)
 
     # Create a booster
-    booster = PromptBooster(raw_prompt="Generate a story", strategy_id="test-strategy")
+    booster = PromptBooster(
+        raw_prompt="Generate a story",
+        strategy_id="test-strategy"
+    )
 
     # Mock the enhancer to raise an exception
-    with patch(
-        "quackcore.prompt.enhancer.enhance_with_llm",
-        side_effect=ImportError("Test error"),
-    ):
+    with patch('quackcore.prompt.enhancer.enhance_with_llm',
+               side_effect=ImportError("Test error")):
         # Render with LLM enhancement
         rendered = booster.render(use_llm=True)
 
@@ -254,7 +246,7 @@ def test_booster_metadata(sample_strategy):
         schema='{"info": "string"}',
         examples=["Example"],
         tags=["extraction"],
-        strategy_id="test-strategy",
+        strategy_id="test-strategy"
     )
 
     # Render to set optimized_prompt
@@ -277,12 +269,9 @@ def test_booster_metadata(sample_strategy):
 def test_booster_metadata_with_token_count():
     """Test metadata with token count estimation."""
     # Create a mock token count function
-    with (
-        patch("quackcore.prompt.booster.PromptBooster.select_strategy") as mock_select,
-        patch(
-            "quackcore.prompt.booster.PromptBooster.estimate_token_count"
-        ) as mock_count,
-    ):
+    with patch('quackcore.prompt.booster.PromptBooster.select_strategy') as mock_select, \
+            patch(
+                'quackcore.prompt.booster.PromptBooster.estimate_token_count') as mock_count:
         # Configure the mocks
         mock_select.return_value = MagicMock(id="test-strategy")
         mock_count.return_value = 42
@@ -304,7 +293,10 @@ def test_booster_explain(sample_strategy):
     register_prompt_strategy(sample_strategy)
 
     # Create a booster
-    booster = PromptBooster(raw_prompt="Test prompt", strategy_id="test-strategy")
+    booster = PromptBooster(
+        raw_prompt="Test prompt",
+        strategy_id="test-strategy"
+    )
 
     # Get explanation
     explanation = booster.explain()
@@ -334,7 +326,10 @@ def test_booster_export(sample_strategy, tmp_path):
     register_prompt_strategy(sample_strategy)
 
     # Create a booster
-    booster = PromptBooster(raw_prompt="Export test", strategy_id="test-strategy")
+    booster = PromptBooster(
+        raw_prompt="Export test",
+        strategy_id="test-strategy"
+    )
 
     # Render to set optimized_prompt
     booster.render()
@@ -377,7 +372,10 @@ def test_booster_export_fallback(sample_strategy, tmp_path):
     register_prompt_strategy(sample_strategy)
 
     # Create a booster
-    booster = PromptBooster(raw_prompt="Export test", strategy_id="test-strategy")
+    booster = PromptBooster(
+        raw_prompt="Export test",
+        strategy_id="test-strategy"
+    )
 
     # Render to set optimized_prompt
     booster.render()
@@ -386,12 +384,12 @@ def test_booster_export_fallback(sample_strategy, tmp_path):
     text_path = tmp_path / "export.txt"
 
     # Mock fs.write_json to fail for the temporary file
-    with (
-        patch("quackcore.fs.service.write_json") as mock_write_json,
-        patch("json.dumps") as mock_dumps,
-    ):
+    with patch('quackcore.fs.service.write_json') as mock_write_json, \
+            patch('json.dumps') as mock_dumps:
         # First call succeeds (for metadata), second call fails (for temp file)
-        mock_write_json.side_effect = [MagicMock(success=False, error="Test error")]
+        mock_write_json.side_effect = [
+            MagicMock(success=False, error="Test error")
+        ]
         mock_dumps.return_value = '{"mock": "json"}'
 
         # Export using the fallback
@@ -404,7 +402,7 @@ def test_booster_export_fallback(sample_strategy, tmp_path):
 def test_booster_estimate_token_count():
     """Test token count estimation."""
     # Create a mock token count function
-    with patch("quackcore.prompt.enhancer.count_prompt_tokens") as mock_count:
+    with patch('quackcore.prompt.enhancer.count_prompt_tokens') as mock_count:
         # Configure the mock
         mock_count.return_value = 123
 
@@ -413,7 +411,7 @@ def test_booster_estimate_token_count():
             raw_prompt="Count tokens test",
             schema='{"test": "schema"}',
             examples=["Example 1", "Example 2"],
-            strategy_id="test-strategy",
+            strategy_id="test-strategy"
         )
 
         # Set a mock strategy
@@ -430,17 +428,15 @@ def test_booster_estimate_token_count():
             task_description="Count tokens test",
             schema='{"test": "schema"}',
             examples=["Example 1", "Example 2"],
-            strategy_name="test-strategy",
+            strategy_name="test-strategy"
         )
 
 
 def test_booster_estimate_token_count_error():
     """Test token count estimation when an error occurs."""
     # Create a mock token count function that raises an exception
-    with patch(
-        "quackcore.prompt.enhancer.count_prompt_tokens",
-        side_effect=ImportError("Test error"),
-    ):
+    with patch('quackcore.prompt.enhancer.count_prompt_tokens',
+               side_effect=ImportError("Test error")):
         # Create a booster
         booster = PromptBooster(raw_prompt="Count tokens test")
 
