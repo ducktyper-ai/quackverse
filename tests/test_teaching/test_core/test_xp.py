@@ -4,10 +4,11 @@ Tests for the teaching XP management module.
 
 This module tests the XP management functionality in quackcore.teaching.core.xp.
 """
+
 from unittest.mock import MagicMock, patch
 
-from quackcore.teaching.core.models import UserProgress, XPEvent
 from quackcore.teaching.core import xp
+from quackcore.teaching.core.models import UserProgress, XPEvent
 
 
 class TestXPManagement:
@@ -61,7 +62,9 @@ class TestXPManagement:
     @patch("quackcore.teaching.core.xp.badges.get_all_badges")
     @patch("quackcore.teaching.core.xp.logger")
     @patch("quackcore.teaching.core.xp._handle_level_up")
-    def test_add_xp_level_up(self, mock_handle_level_up, mock_logger, mock_get_all_badges):
+    def test_add_xp_level_up(
+        self, mock_handle_level_up, mock_logger, mock_get_all_badges
+    ):
         """Test adding XP causes a level up."""
         # Setup
         mock_get_all_badges.return_value = []

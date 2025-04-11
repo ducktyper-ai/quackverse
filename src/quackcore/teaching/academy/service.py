@@ -12,9 +12,10 @@ from quackcore.errors import QuackError
 from quackcore.fs import service as fs
 from quackcore.logging import get_logger
 from quackcore.paths import resolver
-from quackcore.teaching.academy.context import TeachingContext
-from quackcore.teaching.academy.results import AssignmentResult, TeachingResult
 from quackcore.teaching.core.gamification_service import GamificationService
+
+from .context import TeachingContext
+from .results import AssignmentResult, TeachingResult
 
 logger = get_logger(__name__)
 

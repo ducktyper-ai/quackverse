@@ -2,12 +2,13 @@
 """
 Tests for the TeachingService class.
 """
+
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from quackcore.errors import QuackError
-from quackcore.teaching.academy.service import TeachingService
 from quackcore.teaching.academy.results import TeachingResult
+from quackcore.teaching.academy.service import TeachingService
 
 
 class TestTeachingService:
@@ -24,7 +25,9 @@ class TestTeachingService:
         service = TeachingService()
 
         # Mock TeachingContext.from_config
-        with patch("quackcore.teaching.academy.context.TeachingContext.from_config") as mock_from_config:
+        with patch(
+            "quackcore.teaching.academy.context.TeachingContext.from_config"
+        ) as mock_from_config:
             mock_context = MagicMock()
             mock_context.config.course_name = "Test Course"
             mock_from_config.return_value = mock_context
@@ -33,7 +36,9 @@ class TestTeachingService:
             result = service.initialize("/path/to/config.yaml", "/base/dir")
 
             # Verify TeachingContext.from_config was called
-            mock_from_config.assert_called_once_with("/path/to/config.yaml", "/base/dir")
+            mock_from_config.assert_called_once_with(
+                "/path/to/config.yaml", "/base/dir"
+            )
 
             # Verify the result
             assert result.success
@@ -56,7 +61,9 @@ class TestTeachingService:
         service = TeachingService()
         mock_resolver.get_project_root.return_value = Path("/project/root")
 
-        with patch("quackcore.teaching.academy.context.TeachingContext.from_config") as mock_from_config:
+        with patch(
+            "quackcore.teaching.academy.context.TeachingContext.from_config"
+        ) as mock_from_config:
             service.initialize(base_dir="relative/dir")
 
             # Verify base_dir was resolved relative to project root
@@ -70,7 +77,9 @@ class TestTeachingService:
         service = TeachingService()
         mock_resolver.get_project_root.side_effect = Exception("Project root not found")
 
-        with patch("quackcore.teaching.academy.context.TeachingContext.from_config") as mock_from_config:
+        with patch(
+            "quackcore.teaching.academy.context.TeachingContext.from_config"
+        ) as mock_from_config:
             with patch("pathlib.Path.resolve") as mock_resolve:
                 mock_resolve.return_value = Path("/resolved/path")
                 service.initialize(base_dir="relative/dir")
@@ -86,7 +95,9 @@ class TestTeachingService:
         service = TeachingService()
 
         # Mock TeachingContext.from_config to raise an error
-        with patch("quackcore.teaching.academy.context.TeachingContext.from_config") as mock_from_config:
+        with patch(
+            "quackcore.teaching.academy.context.TeachingContext.from_config"
+        ) as mock_from_config:
             mock_from_config.side_effect = QuackError("Configuration error")
 
             # Initialize the service
@@ -103,7 +114,9 @@ class TestTeachingService:
         service = TeachingService()
 
         # Mock TeachingContext.create_default
-        with patch("quackcore.teaching.academy.context.TeachingContext.create_default") as mock_create_default:
+        with patch(
+            "quackcore.teaching.academy.context.TeachingContext.create_default"
+        ) as mock_create_default:
             mock_context = MagicMock()
             mock_create_default.return_value = mock_context
 
@@ -111,7 +124,9 @@ class TestTeachingService:
             result = service.create_context("Test Course", "test-org", "/base/dir")
 
             # Verify TeachingContext.create_default was called
-            mock_create_default.assert_called_once_with("Test Course", "test-org", "/base/dir")
+            mock_create_default.assert_called_once_with(
+                "Test Course", "test-org", "/base/dir"
+            )
 
             # Verify the result
             assert result.success
@@ -123,18 +138,24 @@ class TestTeachingService:
         service = TeachingService()
         mock_resolver.get_project_root.return_value = Path("/project/root")
 
-        with patch("quackcore.teaching.academy.context.TeachingContext.create_default") as mock_create_default:
+        with patch(
+            "quackcore.teaching.academy.context.TeachingContext.create_default"
+        ) as mock_create_default:
             service.create_context("Test Course", "test-org", "relative/dir")
 
             # Verify base_dir was resolved relative to project root
-            mock_create_default.assert_called_once_with("Test Course", "test-org", "/project/root/relative/dir")
+            mock_create_default.assert_called_once_with(
+                "Test Course", "test-org", "/project/root/relative/dir"
+            )
 
     def test_create_context_error(self, mock_fs, mock_resolver):
         """Test context creation when an error occurs."""
         service = TeachingService()
 
         # Mock TeachingContext.create_default to raise an error
-        with patch("quackcore.teaching.academy.context.TeachingContext.create_default") as mock_create_default:
+        with patch(
+            "quackcore.teaching.academy.context.TeachingContext.create_default"
+        ) as mock_create_default:
             mock_create_default.side_effect = Exception("Creation error")
 
             # Create a context
@@ -190,23 +211,18 @@ class TestTeachingService:
             "module_completion",
             course_id="course-1",
             module_id="module-1",
-            module_name="Test Module"
+            module_name="Test Module",
         )
         mock_gamification_service.return_value.handle_module_completion.assert_called_once_with(
-            course_id="course-1",
-            module_id="module-1",
-            module_name="Test Module"
+            course_id="course-1", module_id="module-1", module_name="Test Module"
         )
 
         # Test course completion
         service._integrate_with_gamification(
-            "course_completion",
-            course_id="course-1",
-            course_name="Test Course"
+            "course_completion", course_id="course-1", course_name="Test Course"
         )
         mock_gamification_service.return_value.handle_course_completion.assert_called_once_with(
-            course_id="course-1",
-            course_name="Test Course"
+            course_id="course-1", course_name="Test Course"
         )
 
         # Test assignment completion
@@ -215,37 +231,38 @@ class TestTeachingService:
             assignment_id="assignment-1",
             assignment_name="Test Assignment",
             score=85.0,
-            max_score=100.0
+            max_score=100.0,
         )
         mock_gamification_service.return_value.handle_assignment_completion.assert_called_once_with(
             assignment_id="assignment-1",
             assignment_name="Test Assignment",
             score=85.0,
-            max_score=100.0
+            max_score=100.0,
         )
 
         # Test feedback submission
         service._integrate_with_gamification(
             "feedback_submission",
             feedback_id="feedback-1",
-            context="Assignment feedback"
+            context="Assignment feedback",
         )
         mock_gamification_service.return_value.handle_feedback_submission.assert_called_once_with(
-            feedback_id="feedback-1",
-            context="Assignment feedback"
+            feedback_id="feedback-1", context="Assignment feedback"
         )
 
     def test_integrate_with_gamification_error(self, mock_gamification_service):
         """Test integration with gamification when an error occurs."""
         service = TeachingService()
-        mock_gamification_service.return_value.handle_module_completion.side_effect = Exception("Gamification error")
+        mock_gamification_service.return_value.handle_module_completion.side_effect = (
+            Exception("Gamification error")
+        )
 
         # Should not raise an exception
         service._integrate_with_gamification(
             "module_completion",
             course_id="course-1",
             module_id="module-1",
-            module_name="Test Module"
+            module_name="Test Module",
         )
 
     def test_ensure_repo_exists_not_initialized(self):
@@ -276,7 +293,9 @@ class TestTeachingService:
 
         # Mock get_repo to return success
         mock_repo = MagicMock()
-        mock_github.get_repo.return_value = TeachingResult(success=True, content=mock_repo)
+        mock_github.get_repo.return_value = TeachingResult(
+            success=True, content=mock_repo
+        )
 
         result = service.ensure_repo_exists("repo-name")
 
@@ -293,7 +312,9 @@ class TestTeachingService:
         service._github = mock_github
 
         # Mock get_repo to return failure
-        mock_github.get_repo.return_value = TeachingResult(success=False, error="Repo not found")
+        mock_github.get_repo.return_value = TeachingResult(
+            success=False, error="Repo not found"
+        )
 
         result = service.ensure_repo_exists("repo-name")
 
@@ -309,7 +330,9 @@ class TestTeachingService:
         service._github = mock_github
 
         # Mock get_repo to return failure
-        mock_github.get_repo.return_value = TeachingResult(success=False, error="Repo not found")
+        mock_github.get_repo.return_value = TeachingResult(
+            success=False, error="Repo not found"
+        )
 
         result = service.ensure_repo_exists("repo-name")
 
@@ -334,7 +357,9 @@ class TestTeachingService:
     def test_create_assignment_from_template_not_initialized(self):
         """Test create_assignment_from_template when service is not initialized."""
         service = TeachingService()
-        result = service.create_assignment_from_template("Assignment", "template-repo", students=["student1"])
+        result = service.create_assignment_from_template(
+            "Assignment", "template-repo", students=["student1"]
+        )
 
         assert not result.success
         assert "Teaching service not initialized" in result.error
@@ -345,7 +370,9 @@ class TestTeachingService:
         service._context = MagicMock()
         service._github = None
 
-        result = service.create_assignment_from_template("Assignment", "template-repo", students=["student1"])
+        result = service.create_assignment_from_template(
+            "Assignment", "template-repo", students=["student1"]
+        )
 
         assert not result.success
         assert "GitHub integration not available" in result.error
@@ -358,9 +385,13 @@ class TestTeachingService:
         service._github = mock_github
 
         # Mock get_repo to return failure for template
-        mock_github.get_repo.return_value = TeachingResult(success=False, error="Template not found")
+        mock_github.get_repo.return_value = TeachingResult(
+            success=False, error="Template not found"
+        )
 
-        result = service.create_assignment_from_template("Assignment", "template-repo", students=["student1"])
+        result = service.create_assignment_from_template(
+            "Assignment", "template-repo", students=["student1"]
+        )
 
         assert not result.success
         assert "Template repository" in result.error
@@ -373,14 +404,18 @@ class TestTeachingService:
         service._github = mock_github
 
         # Mock get_repo to return success for template
-        mock_github.get_repo.return_value = TeachingResult(success=True, content=MagicMock())
+        mock_github.get_repo.return_value = TeachingResult(
+            success=True, content=MagicMock()
+        )
 
         result = service.create_assignment_from_template("Assignment", "template-repo")
 
         assert not result.success
         assert "Student list not provided" in result.error
 
-    def test_create_assignment_from_template_success(self, mock_github, mock_gamification_service):
+    def test_create_assignment_from_template_success(
+        self, mock_github, mock_gamification_service
+    ):
         """Test successful create_assignment_from_template."""
         service = TeachingService()
         service._context = MagicMock()
@@ -389,7 +424,9 @@ class TestTeachingService:
 
         # Mock get_repo to return success for template
         mock_template = MagicMock()
-        mock_github.get_repo.return_value = TeachingResult(success=True, content=mock_template)
+        mock_github.get_repo.return_value = TeachingResult(
+            success=True, content=mock_template
+        )
 
         # Mock get_repo for student repos
         student_repos = []
@@ -398,14 +435,16 @@ class TestTeachingService:
             student_repos.append(repo)
             mock_github.get_repo.side_effect = [
                 TeachingResult(success=True, content=mock_template),  # Template repo
-                TeachingResult(success=True, content=student_repos[0]),  # Student 1 repo
-                TeachingResult(success=True, content=student_repos[1])   # Student 2 repo
+                TeachingResult(
+                    success=True, content=student_repos[0]
+                ),  # Student 1 repo
+                TeachingResult(
+                    success=True, content=student_repos[1]
+                ),  # Student 2 repo
             ]
 
         result = service.create_assignment_from_template(
-            "Test Assignment",
-            "template-repo",
-            students=["student1", "student2"]
+            "Test Assignment", "template-repo", students=["student1", "student2"]
         )
 
         assert result.success
@@ -415,7 +454,9 @@ class TestTeachingService:
         # Verify gamification integration
         mock_gamification_service.return_value.handle_assignment_completion.assert_called_once()
 
-    def test_create_assignment_from_template_partial_success(self, mock_github, mock_gamification_service):
+    def test_create_assignment_from_template_partial_success(
+        self, mock_github, mock_gamification_service
+    ):
         """Test create_assignment_from_template with some failures."""
         service = TeachingService()
         service._context = MagicMock()
@@ -428,13 +469,11 @@ class TestTeachingService:
         mock_github.get_repo.side_effect = [
             TeachingResult(success=True, content=mock_template),  # Template repo
             TeachingResult(success=True, content=mock_student1_repo),  # Student 1 repo
-            Exception("GitHub error")  # Student 2 repo fails
+            Exception("GitHub error"),  # Student 2 repo fails
         ]
 
         result = service.create_assignment_from_template(
-            "Test Assignment",
-            "template-repo",
-            students=["student1", "student2"]
+            "Test Assignment", "template-repo", students=["student1", "student2"]
         )
 
         assert not result.success
@@ -457,13 +496,11 @@ class TestTeachingService:
         mock_github.get_repo.side_effect = [
             TeachingResult(success=True, content=mock_template),  # Template repo
             Exception("GitHub error"),  # Student 1 repo fails
-            Exception("GitHub error")   # Student 2 repo fails
+            Exception("GitHub error"),  # Student 2 repo fails
         ]
 
         result = service.create_assignment_from_template(
-            "Test Assignment",
-            "template-repo",
-            students=["student1", "student2"]
+            "Test Assignment", "template-repo", students=["student1", "student2"]
         )
 
         assert not result.success
@@ -499,13 +536,17 @@ class TestTeachingService:
 
         # Mock get_repo to return success
         mock_repo = MagicMock()
-        mock_github.get_repo.return_value = TeachingResult(success=True, content=mock_repo)
+        mock_github.get_repo.return_value = TeachingResult(
+            success=True, content=mock_repo
+        )
 
         result = service.find_student_submissions("Test Assignment", "student1")
 
         assert result.success
         assert result.content == mock_repo
-        mock_github.get_repo.assert_called_once_with("test-org/test-assignment-student1")
+        mock_github.get_repo.assert_called_once_with(
+            "test-org/test-assignment-student1"
+        )
 
     def test_find_student_submissions_not_found(self, mock_github):
         """Test find_student_submissions when repo not found."""
@@ -515,7 +556,9 @@ class TestTeachingService:
         service._github = mock_github
 
         # Mock get_repo to return failure
-        mock_github.get_repo.return_value = TeachingResult(success=False, error="Repo not found")
+        mock_github.get_repo.return_value = TeachingResult(
+            success=False, error="Repo not found"
+        )
 
         result = service.find_student_submissions("Test Assignment", "student1")
 
@@ -550,9 +593,7 @@ class TestTeachingService:
         assert result.success
         assert "Successfully recorded completion" in result.message
         mock_gamification_service.return_value.handle_module_completion.assert_called_once_with(
-            course_id="course-1",
-            module_id="module-1",
-            module_name="Test Module"
+            course_id="course-1", module_id="module-1", module_name="Test Module"
         )
 
     def test_record_course_completion(self, mock_gamification_service):
@@ -571,8 +612,7 @@ class TestTeachingService:
         assert result.success
         assert "Successfully recorded completion" in result.message
         mock_gamification_service.return_value.handle_course_completion.assert_called_once_with(
-            course_id="course-1",
-            course_name="Test Course"
+            course_id="course-1", course_name="Test Course"
         )
 
     def test_grade_student_assignment(self, mock_gamification_service):
@@ -586,7 +626,9 @@ class TestTeachingService:
 
         # Initialized
         service._context = MagicMock()
-        result = service.grade_student_assignment("assignment-1", "student1", 85.0, "Good work")
+        result = service.grade_student_assignment(
+            "assignment-1", "student1", 85.0, "Good work"
+        )
 
         assert result.success
         assert "Successfully graded assignment" in result.message
@@ -640,7 +682,9 @@ class TestTeachingService:
 
         assert result.success
         assert "Configuration saved" in result.message
-        mock_fs.write_yaml.assert_called_once_with("/base/dir/teaching_config.yaml", {"key": "value"})
+        mock_fs.write_yaml.assert_called_once_with(
+            "/base/dir/teaching_config.yaml", {"key": "value"}
+        )
 
     def test_save_config_custom_path(self, mock_fs):
         """Test save_config with custom path."""
@@ -658,7 +702,9 @@ class TestTeachingService:
 
             assert result.success
             assert "Configuration saved" in result.message
-            mock_fs.write_yaml.assert_called_once_with("/custom/path/config.yaml", {"key": "value"})
+            mock_fs.write_yaml.assert_called_once_with(
+                "/custom/path/config.yaml", {"key": "value"}
+            )
 
     def test_save_config_error(self, mock_fs):
         """Test save_config when write fails."""

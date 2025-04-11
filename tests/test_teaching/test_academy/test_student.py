@@ -2,14 +2,18 @@
 """
 Tests for the Student module.
 """
+
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from quackcore.teaching.academy.student import (
-    Student, StudentSubmission, SubmissionStatus, StudentRoster
+    Student,
+    StudentRoster,
+    StudentSubmission,
+    SubmissionStatus,
 )
 
 
@@ -19,8 +23,7 @@ class TestStudentSubmission:
     def test_create(self):
         """Test creating a student submission."""
         submission = StudentSubmission.create(
-            student_id="student-1",
-            assignment_id="assignment-1"
+            student_id="student-1", assignment_id="assignment-1"
         )
 
         assert submission.student_id == "student-1"
@@ -38,14 +41,13 @@ class TestStudentSubmission:
     def test_mark_submitted(self):
         """Test marking a submission as submitted."""
         submission = StudentSubmission.create(
-            student_id="student-1",
-            assignment_id="assignment-1"
+            student_id="student-1", assignment_id="assignment-1"
         )
 
         # Mark as submitted with PR URL and repo URL
         result = submission.mark_submitted(
             pr_url="https://github.com/org/repo/pull/1",
-            repo_url="https://github.com/org/repo"
+            repo_url="https://github.com/org/repo",
         )
 
         assert result == submission  # Method chaining works
@@ -57,16 +59,12 @@ class TestStudentSubmission:
     def test_mark_graded(self):
         """Test marking a submission as graded."""
         submission = StudentSubmission.create(
-            student_id="student-1",
-            assignment_id="assignment-1"
+            student_id="student-1", assignment_id="assignment-1"
         )
         submission.mark_submitted()
 
         # Mark as graded with score and feedback
-        result = submission.mark_graded(
-            score=85.5,
-            feedback_id="feedback-1"
-        )
+        result = submission.mark_graded(score=85.5, feedback_id="feedback-1")
 
         assert result == submission  # Method chaining works
         assert submission.status == SubmissionStatus.GRADED
@@ -77,8 +75,7 @@ class TestStudentSubmission:
     def test_update_gamification_not_submitted(self, mock_gamification_service):
         """Test update_gamification when submission is not submitted."""
         submission = StudentSubmission.create(
-            student_id="student-1",
-            assignment_id="assignment-1"
+            student_id="student-1", assignment_id="assignment-1"
         )
 
         # Should not call gamification service
@@ -89,8 +86,7 @@ class TestStudentSubmission:
     def test_update_gamification_submitted_pr(self, mock_gamification_service):
         """Test update_gamification when submission has PR URL."""
         submission = StudentSubmission.create(
-            student_id="student-1",
-            assignment_id="assignment-1"
+            student_id="student-1", assignment_id="assignment-1"
         )
         submission.mark_submitted(pr_url="https://github.com/org/repo/pull/123")
 
@@ -103,8 +99,7 @@ class TestStudentSubmission:
     def test_update_gamification_graded(self, mock_gamification_service):
         """Test update_gamification when submission is graded."""
         submission = StudentSubmission.create(
-            student_id="student-1",
-            assignment_id="assignment-1"
+            student_id="student-1", assignment_id="assignment-1"
         )
         submission.mark_submitted()
         submission.mark_graded(score=85.0)
@@ -114,21 +109,23 @@ class TestStudentSubmission:
         mock_gamification_service.return_value.handle_assignment_completion.assert_called_once()
 
         # Verify call arguments
-        args, kwargs = mock_gamification_service.return_value.handle_assignment_completion.call_args
+        args, kwargs = (
+            mock_gamification_service.return_value.handle_assignment_completion.call_args
+        )
         assert kwargs["assignment_id"] == "assignment-1"
         assert kwargs["score"] == 85.0
 
     def test_update_gamification_error(self, mock_gamification_service):
         """Test update_gamification when an error occurs."""
         submission = StudentSubmission.create(
-            student_id="student-1",
-            assignment_id="assignment-1"
+            student_id="student-1", assignment_id="assignment-1"
         )
         submission.mark_submitted(pr_url="https://github.com/org/repo/pull/invalid")
 
         # Mock handle_github_pr_submission to raise an exception
         mock_gamification_service.return_value.handle_github_pr_submission.side_effect = Exception(
-            "Gamification error")
+            "Gamification error"
+        )
 
         # Should not raise an exception
         submission.update_gamification()
@@ -140,10 +137,7 @@ class TestStudent:
     def test_create(self):
         """Test creating a student."""
         # Basic create
-        student = Student.create(
-            github_username="student1",
-            name="Student One"
-        )
+        student = Student.create(github_username="student1", name="Student One")
 
         assert student.github_username == "student1"
         assert student.name == "Student One"
@@ -159,7 +153,7 @@ class TestStudent:
             github_username="student2",
             name="Student Two",
             email="student2@example.com",
-            group="Group A"
+            group="Group A",
         )
 
         assert student.github_username == "student2"
@@ -172,30 +166,21 @@ class TestStudent:
     def test_ensure_id(self):
         """Test that ID is generated if not provided."""
         # Create with no ID
-        student = Student(
-            github_username="student1",
-            name="Student One"
-        )
+        student = Student(github_username="student1", name="Student One")
         assert student.id is not None
 
         # Create with provided ID
         student = Student(
-            id="custom-id",
-            github_username="student1",
-            name="Student One"
+            id="custom-id", github_username="student1", name="Student One"
         )
         assert student.id == "custom-id"
 
     def test_add_submission(self):
         """Test adding a submission for a student."""
-        student = Student.create(
-            github_username="student1",
-            name="Student One"
-        )
+        student = Student.create(github_username="student1", name="Student One")
 
         submission = StudentSubmission.create(
-            student_id=student.id,
-            assignment_id="assignment-1"
+            student_id=student.id, assignment_id="assignment-1"
         )
 
         # Add submission
@@ -206,14 +191,10 @@ class TestStudent:
 
     def test_add_submission_wrong_student(self):
         """Test adding a submission for a different student."""
-        student = Student.create(
-            github_username="student1",
-            name="Student One"
-        )
+        student = Student.create(github_username="student1", name="Student One")
 
         submission = StudentSubmission.create(
-            student_id="different-student",
-            assignment_id="assignment-1"
+            student_id="different-student", assignment_id="assignment-1"
         )
 
         # Add submission for different student should raise ValueError
@@ -222,14 +203,10 @@ class TestStudent:
 
     def test_get_submission(self):
         """Test getting a student's submission for an assignment."""
-        student = Student.create(
-            github_username="student1",
-            name="Student One"
-        )
+        student = Student.create(github_username="student1", name="Student One")
 
         submission = StudentSubmission.create(
-            student_id=student.id,
-            assignment_id="assignment-1"
+            student_id=student.id, assignment_id="assignment-1"
         )
         student.add_submission(submission)
 
@@ -243,15 +220,13 @@ class TestStudent:
 
     def test_sync_with_progress(self):
         """Test synchronizing student with progress system."""
-        student = Student.create(
-            github_username="student1",
-            name="Student One"
-        )
+        student = Student.create(github_username="student1", name="Student One")
 
         # Mock core_utils.load_progress and save_progress
         with patch("quackcore.teaching.core.utils.load_progress") as mock_load_progress:
             with patch(
-                    "quackcore.teaching.core.utils.save_progress") as mock_save_progress:
+                "quackcore.teaching.core.utils.save_progress"
+            ) as mock_save_progress:
                 # Mock progress with different GitHub username
                 mock_progress = MagicMock()
                 mock_progress.github_username = "old-username"
@@ -266,15 +241,13 @@ class TestStudent:
 
     def test_sync_with_progress_same_username(self):
         """Test synchronizing student when username is already correct."""
-        student = Student.create(
-            github_username="student1",
-            name="Student One"
-        )
+        student = Student.create(github_username="student1", name="Student One")
 
         # Mock core_utils.load_progress and save_progress
         with patch("quackcore.teaching.core.utils.load_progress") as mock_load_progress:
             with patch(
-                    "quackcore.teaching.core.utils.save_progress") as mock_save_progress:
+                "quackcore.teaching.core.utils.save_progress"
+            ) as mock_save_progress:
                 # Mock progress with same GitHub username
                 mock_progress = MagicMock()
                 mock_progress.github_username = "student1"
@@ -288,10 +261,7 @@ class TestStudent:
 
     def test_sync_with_progress_error(self, mock_logger):
         """Test synchronizing student when an error occurs."""
-        student = Student.create(
-            github_username="student1",
-            name="Student One"
-        )
+        student = Student.create(github_username="student1", name="Student One")
 
         # Mock core_utils.load_progress to raise an exception
         with patch("quackcore.teaching.core.utils.load_progress") as mock_load_progress:
@@ -301,8 +271,10 @@ class TestStudent:
             student.sync_with_progress()
 
             # Should log error
-            assert any("Error syncing student with progress" in str(call) for call in
-                       mock_logger.debug.call_args_list)
+            assert any(
+                "Error syncing student with progress" in str(call)
+                for call in mock_logger.debug.call_args_list
+            )
 
 
 class TestStudentRoster:
@@ -317,10 +289,7 @@ class TestStudentRoster:
     def test_add_student(self):
         """Test adding a student."""
         roster = StudentRoster()
-        student = Student.create(
-            github_username="student1",
-            name="Student One"
-        )
+        student = Student.create(github_username="student1", name="Student One")
 
         # Mock sync_with_progress
         with patch.object(Student, "sync_with_progress") as mock_sync:
@@ -337,10 +306,7 @@ class TestStudentRoster:
     def test_get_student(self):
         """Test getting a student by ID."""
         roster = StudentRoster()
-        student = Student.create(
-            github_username="student1",
-            name="Student One"
-        )
+        student = Student.create(github_username="student1", name="Student One")
 
         with patch.object(Student, "sync_with_progress"):
             roster.add_student(student)
@@ -358,7 +324,7 @@ class TestStudentRoster:
         roster = StudentRoster()
         student = Student.create(
             github_username="Student1",  # Mixed case
-            name="Student One"
+            name="Student One",
         )
 
         with patch.object(Student, "sync_with_progress"):
@@ -379,14 +345,8 @@ class TestStudentRoster:
     def test_add_students(self):
         """Test adding multiple students."""
         roster = StudentRoster()
-        student1 = Student.create(
-            github_username="student1",
-            name="Student One"
-        )
-        student2 = Student.create(
-            github_username="student2",
-            name="Student Two"
-        )
+        student1 = Student.create(github_username="student1", name="Student One")
+        student2 = Student.create(github_username="student2", name="Student Two")
 
         with patch.object(Student, "sync_with_progress"):
             roster.add_students([student1, student2])
@@ -400,14 +360,8 @@ class TestStudentRoster:
     def test_remove_student(self):
         """Test removing a student."""
         roster = StudentRoster()
-        student1 = Student.create(
-            github_username="student1",
-            name="Student One"
-        )
-        student2 = Student.create(
-            github_username="student2",
-            name="Student Two"
-        )
+        student1 = Student.create(github_username="student1", name="Student One")
+        student2 = Student.create(github_username="student2", name="Student Two")
 
         with patch.object(Student, "sync_with_progress"):
             roster.add_students([student1, student2])
@@ -451,21 +405,15 @@ class TestStudentRoster:
         """Test getting students by group."""
         roster = StudentRoster()
         student1 = Student.create(
-            github_username="student1",
-            name="Student One",
-            group="Group A"
+            github_username="student1", name="Student One", group="Group A"
         )
 
         student2 = Student.create(
-            github_username="student2",
-            name="Student Two",
-            group="Group B"
+            github_username="student2", name="Student Two", group="Group B"
         )
 
         student3 = Student.create(
-            github_username="student3",
-            name="Student Three",
-            group="Group A"
+            github_username="student3", name="Student Three", group="Group A"
         )
 
         with patch.object(Student, "sync_with_progress"):
@@ -528,16 +476,16 @@ class TestStudentRoster:
                             "student_id": "student-1",
                             "assignment_id": "assignment-1",
                             "status": "SUBMITTED",
-                            "submitted_at": "2023-01-01T12:00:00"
+                            "submitted_at": "2023-01-01T12:00:00",
                         }
-                    }
+                    },
                 },
                 {
                     "id": "student-2",
                     "github_username": "student2",
                     "name": "Student Two",
-                    "active": False
-                }
+                    "active": False,
+                },
             ]
         }
         mock_fs.read_yaml.return_value = MagicMock(success=True, data=students_data)
@@ -572,15 +520,17 @@ class TestStudentRoster:
                 assert submission.assignment_id == "assignment-1"
                 assert submission.status == SubmissionStatus.SUBMITTED
                 assert submission.submitted_at == datetime.fromisoformat(
-                    "2023-01-01T12:00:00")
+                    "2023-01-01T12:00:00"
+                )
 
     def test_load_from_file_file_not_found(self, mock_fs):
         """Test loading students when file is not found."""
         file_path = "/path/to/students.yaml"
 
         # Mock read_yaml to return failure
-        mock_fs.read_yaml.return_value = MagicMock(success=False,
-                                                   error="File not found")
+        mock_fs.read_yaml.return_value = MagicMock(
+            success=False, error="File not found"
+        )
 
         # Load from file should raise FileNotFoundError
         with patch.object(StudentRoster, "_resolve_file_path") as mock_resolve:

@@ -2,13 +2,14 @@
 """
 Tests for the Teaching plugin module.
 """
+
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
 from quackcore.teaching.academy.plugin import TeachingPlugin
-from quackcore.teaching.academy.results import TeachingResult, AssignmentResult
+from quackcore.teaching.academy.results import AssignmentResult, TeachingResult
 
 
 class TestTeachingPlugin:
@@ -35,23 +36,24 @@ class TestTeachingPlugin:
 
         # Mock _service.initialize to return success
         plugin._service.initialize = MagicMock(
-            return_value=TeachingResult(success=True,
-                                        message="Initialization successful")
+            return_value=TeachingResult(
+                success=True, message="Initialization successful"
+            )
         )
 
         # Initialize the plugin
-        result = plugin.initialize({
-            "config_path": "/path/to/config.yaml",
-            "base_dir": "/base/dir"
-        })
+        result = plugin.initialize(
+            {"config_path": "/path/to/config.yaml", "base_dir": "/base/dir"}
+        )
 
         assert result.success is True
         assert "Initialization successful" in result.message
         assert plugin._initialized is True
 
         # Verify _service.initialize was called with correct arguments
-        plugin._service.initialize.assert_called_once_with("/path/to/config.yaml",
-                                                           "/base/dir")
+        plugin._service.initialize.assert_called_once_with(
+            "/path/to/config.yaml", "/base/dir"
+        )
 
     def test_initialize_already_initialized(self):
         """Test initializing when already initialized."""
@@ -102,8 +104,9 @@ class TestTeachingPlugin:
         mock_fs.expand_user_vars.assert_called_once_with("~/config.yaml")
 
         # Verify _service.initialize was called with expanded path
-        plugin._service.initialize.assert_called_once_with("/expanded/path/config.yaml",
-                                                           None)
+        plugin._service.initialize.assert_called_once_with(
+            "/expanded/path/config.yaml", None
+        )
 
     def test_initialize_with_relative_base_dir(self, mock_resolver):
         """Test initialization with relative base_dir."""
@@ -119,8 +122,9 @@ class TestTeachingPlugin:
         plugin.initialize({"base_dir": "relative/dir"})
 
         # Verify _service.initialize was called with resolved path
-        plugin._service.initialize.assert_called_once_with(None,
-                                                           "/project/root/relative/dir")
+        plugin._service.initialize.assert_called_once_with(
+            None, "/project/root/relative/dir"
+        )
 
     def test_create_context_success(self):
         """Test successful create_context."""
@@ -132,20 +136,14 @@ class TestTeachingPlugin:
         )
 
         # Create context
-        result = plugin.create_context(
-            "Test Course",
-            "test-org",
-            "/base/dir"
-        )
+        result = plugin.create_context("Test Course", "test-org", "/base/dir")
 
         assert result.success is True
         assert "Context created" in result.message
 
         # Verify _service.create_context was called with correct arguments
         plugin._service.create_context.assert_called_once_with(
-            "Test Course",
-            "test-org",
-            "/base/dir"
+            "Test Course", "test-org", "/base/dir"
         )
 
     def test_create_context_with_relative_base_dir(self, mock_resolver):
@@ -159,17 +157,11 @@ class TestTeachingPlugin:
         )
 
         # Create context with relative base_dir
-        plugin.create_context(
-            "Test Course",
-            "test-org",
-            "relative/dir"
-        )
+        plugin.create_context("Test Course", "test-org", "relative/dir")
 
         # Verify _service.create_context was called with resolved path
         plugin._service.create_context.assert_called_once_with(
-            "Test Course",
-            "test-org",
-            "/project/root/relative/dir"
+            "Test Course", "test-org", "/project/root/relative/dir"
         )
 
     def test_create_assignment_not_initialized(self):
@@ -181,9 +173,7 @@ class TestTeachingPlugin:
         plugin._service.create_assignment_from_template = MagicMock()
 
         result = plugin.create_assignment(
-            "Test Assignment",
-            "template-repo",
-            students=["student1"]
+            "Test Assignment", "template-repo", students=["student1"]
         )
 
         assert result.success is False
@@ -197,9 +187,7 @@ class TestTeachingPlugin:
 
         # Mock _service.create_assignment_from_template
         expected_result = AssignmentResult(
-            success=True,
-            message="Assignment created",
-            repositories=[MagicMock()]
+            success=True, message="Assignment created", repositories=[MagicMock()]
         )
         plugin._service.create_assignment_from_template = MagicMock(
             return_value=expected_result
@@ -211,7 +199,7 @@ class TestTeachingPlugin:
             "template-repo",
             description="Assignment description",
             due_date="2023-12-31",
-            students=["student1", "student2"]
+            students=["student1", "student2"],
         )
 
         assert result is expected_result
@@ -222,7 +210,7 @@ class TestTeachingPlugin:
             template_repo="template-repo",
             description="Assignment description",
             due_date="2023-12-31",
-            students=["student1", "student2"]
+            students=["student1", "student2"],
         )
 
     def test_find_student_submissions_not_initialized(self):
@@ -246,9 +234,7 @@ class TestTeachingPlugin:
 
         # Mock _service.find_student_submissions
         expected_result = TeachingResult(
-            success=True,
-            message="Submission found",
-            content=MagicMock()
+            success=True, message="Submission found", content=MagicMock()
         )
         plugin._service.find_student_submissions = MagicMock(
             return_value=expected_result
@@ -260,8 +246,9 @@ class TestTeachingPlugin:
         assert result is expected_result
 
         # Verify _service.find_student_submissions was called with correct arguments
-        plugin._service.find_student_submissions.assert_called_once_with("Assignment",
-                                                                         "student1")
+        plugin._service.find_student_submissions.assert_called_once_with(
+            "Assignment", "student1"
+        )
 
     def test_get_context_not_initialized(self):
         """Test get_context when not initialized."""
@@ -298,16 +285,14 @@ class TestTeachingPlugin:
             "create_context",
             course_name="Test Course",
             github_org="test-org",
-            base_dir="/base/dir"
+            base_dir="/base/dir",
         )
 
         assert result is expected_result
 
         # Verify create_context was called with correct arguments
         plugin.create_context.assert_called_once_with(
-            course_name="Test Course",
-            github_org="test-org",
-            base_dir="/base/dir"
+            course_name="Test Course", github_org="test-org", base_dir="/base/dir"
         )
 
     def test_call_invalid_method(self):

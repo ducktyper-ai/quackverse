@@ -2,14 +2,19 @@
 """
 Tests for the Feedback module.
 """
+
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from quackcore.teaching.academy.feedback import (
-    Annotation, AnnotationType, FeedbackItem, FeedbackItemType,
-    Feedback, FeedbackManager
+    Annotation,
+    AnnotationType,
+    Feedback,
+    FeedbackItem,
+    FeedbackItemType,
+    FeedbackManager,
 )
 
 
@@ -22,7 +27,7 @@ class TestAnnotation:
         annotation = Annotation.create(
             file_path="main.py",
             line_start=10,
-            text="Consider using a more descriptive variable name"
+            text="Consider using a more descriptive variable name",
         )
 
         assert annotation.file_path == "main.py"
@@ -43,7 +48,7 @@ class TestAnnotation:
             text="Consider using a more descriptive variable name",
             type=AnnotationType.SUGGESTION,
             line_end=12,
-            suggestion="user_count = len(users)"
+            suggestion="user_count = len(users)",
         )
 
         assert annotation.file_path == "main.py"
@@ -58,18 +63,13 @@ class TestAnnotation:
         """Test that ID is generated if not provided."""
         # Create with no ID
         annotation = Annotation(
-            file_path="main.py",
-            line_start=10,
-            text="Test annotation"
+            file_path="main.py", line_start=10, text="Test annotation"
         )
         assert annotation.id is not None
 
         # Create with provided ID
         annotation = Annotation(
-            id="custom-id",
-            file_path="main.py",
-            line_start=10,
-            text="Test annotation"
+            id="custom-id", file_path="main.py", line_start=10, text="Test annotation"
         )
         assert annotation.id == "custom-id"
 
@@ -80,7 +80,7 @@ class TestAnnotation:
             file_path="main.py",
             line_start=10,
             text="This is a comment",
-            type=AnnotationType.COMMENT
+            type=AnnotationType.COMMENT,
         )
 
         formatted = annotation.format_for_github_pr()
@@ -92,12 +92,13 @@ class TestAnnotation:
             line_start=10,
             text="Consider using a more descriptive variable name",
             type=AnnotationType.SUGGESTION,
-            suggestion="user_count = len(users)"
+            suggestion="user_count = len(users)",
         )
 
         formatted = annotation.format_for_github_pr()
         assert formatted.startswith(
-            "**SUGGESTION**: Consider using a more descriptive variable name")
+            "**SUGGESTION**: Consider using a more descriptive variable name"
+        )
         assert "```suggestion" in formatted
         assert "user_count = len(users)" in formatted
 
@@ -106,7 +107,7 @@ class TestAnnotation:
             file_path="main.py",
             line_start=10,
             text="Warning message",
-            type=AnnotationType.WARNING
+            type=AnnotationType.WARNING,
         )
 
         formatted = annotation.format_for_github_pr()
@@ -123,7 +124,10 @@ class TestFeedbackItem:
             text="Your code is well-structured but could use more comments"
         )
 
-        assert feedback_item.text == "Your code is well-structured but could use more comments"
+        assert (
+            feedback_item.text
+            == "Your code is well-structured but could use more comments"
+        )
         assert feedback_item.id is not None
         assert feedback_item.type == FeedbackItemType.GENERAL  # Default
         assert feedback_item.score is None
@@ -131,16 +135,14 @@ class TestFeedbackItem:
 
         # Create with optional fields
         annotation = Annotation.create(
-            file_path="main.py",
-            line_start=10,
-            text="Add a comment here"
+            file_path="main.py", line_start=10, text="Add a comment here"
         )
 
         feedback_item = FeedbackItem.create(
             text="Your code needs more comments",
             type=FeedbackItemType.DOCUMENTATION,
             score=8.5,
-            annotations=[annotation]
+            annotations=[annotation],
         )
 
         assert feedback_item.text == "Your code needs more comments"
@@ -153,16 +155,11 @@ class TestFeedbackItem:
     def test_ensure_id(self):
         """Test that ID is generated if not provided."""
         # Create with no ID
-        feedback_item = FeedbackItem(
-            text="Test feedback"
-        )
+        feedback_item = FeedbackItem(text="Test feedback")
         assert feedback_item.id is not None
 
         # Create with provided ID
-        feedback_item = FeedbackItem(
-            id="custom-id",
-            text="Test feedback"
-        )
+        feedback_item = FeedbackItem(id="custom-id", text="Test feedback")
         assert feedback_item.id == "custom-id"
 
     def test_add_annotation(self):
@@ -174,9 +171,7 @@ class TestFeedbackItem:
 
         # Add an annotation
         annotation = Annotation.create(
-            file_path="main.py",
-            line_start=10,
-            text="Add a comment here"
+            file_path="main.py", line_start=10, text="Add a comment here"
         )
         feedback_item.add_annotation(annotation)
 
@@ -193,7 +188,7 @@ class TestFeedback:
         feedback = Feedback.create(
             submission_id="submission-1",
             student_id="student-1",
-            assignment_id="assignment-1"
+            assignment_id="assignment-1",
         )
 
         assert feedback.submission_id == "submission-1"
@@ -215,7 +210,7 @@ class TestFeedback:
             assignment_id="assignment-1",
             score=85.0,
             summary="Overall good work with some areas for improvement",
-            reviewer="instructor-1"
+            reviewer="instructor-1",
         )
 
         assert feedback.submission_id == "submission-1"
@@ -236,7 +231,7 @@ class TestFeedback:
         feedback = Feedback(
             submission_id="submission-1",
             student_id="student-1",
-            assignment_id="assignment-1"
+            assignment_id="assignment-1",
         )
         assert feedback.id is not None
 
@@ -245,7 +240,7 @@ class TestFeedback:
             id="custom-id",
             submission_id="submission-1",
             student_id="student-1",
-            assignment_id="assignment-1"
+            assignment_id="assignment-1",
         )
         assert feedback.id == "custom-id"
 
@@ -254,13 +249,14 @@ class TestFeedback:
         feedback = Feedback.create(
             submission_id="submission-1",
             student_id="student-1",
-            assignment_id="assignment-1"
+            assignment_id="assignment-1",
         )
 
         original_updated_at = feedback.updated_at
 
         # Wait a moment to ensure updated_at changes
         import time
+
         time.sleep(0.001)
 
         # Add an item
@@ -278,7 +274,7 @@ class TestFeedback:
         feedback = Feedback.create(
             submission_id="submission-1",
             student_id="student-1",
-            assignment_id="assignment-1"
+            assignment_id="assignment-1",
         )
         assert feedback.status == "draft"
 
@@ -286,6 +282,7 @@ class TestFeedback:
 
         # Wait a moment to ensure updated_at changes
         import time
+
         time.sleep(0.001)
 
         # Set status
@@ -302,20 +299,20 @@ class TestFeedback:
             student_id="student-1",
             assignment_id="assignment-1",
             score=85.0,
-            summary="Overall good work with some areas for improvement"
+            summary="Overall good work with some areas for improvement",
         )
 
         # Add feedback items
         item1 = FeedbackItem.create(
             text="Your code is well-structured",
             type=FeedbackItemType.CODE_QUALITY,
-            score=9.0
+            score=9.0,
         )
 
         item2 = FeedbackItem.create(
             text="Could use more comments",
             type=FeedbackItemType.DOCUMENTATION,
-            score=7.5
+            score=7.5,
         )
 
         feedback.add_item(item1)
@@ -339,19 +336,13 @@ class TestFeedback:
         feedback = Feedback.create(
             submission_id="submission-1",
             student_id="student-1",
-            assignment_id="assignment-1"
+            assignment_id="assignment-1",
         )
 
         # Add feedback items with scores
-        item1 = FeedbackItem.create(
-            text="Item 1",
-            score=35.0
-        )
+        item1 = FeedbackItem.create(text="Item 1", score=35.0)
 
-        item2 = FeedbackItem.create(
-            text="Item 2",
-            score=45.0
-        )
+        item2 = FeedbackItem.create(text="Item 2", score=45.0)
 
         item3 = FeedbackItem.create(
             text="Item 3 (no score)"  # No score
@@ -366,6 +357,7 @@ class TestFeedback:
 
         # Wait a moment to ensure updated_at changes
         import time
+
         time.sleep(0.001)
 
         score = feedback.calculate_score()
@@ -379,17 +371,13 @@ class TestFeedback:
         feedback = Feedback.create(
             submission_id="submission-1",
             student_id="student-1",
-            assignment_id="assignment-1"
+            assignment_id="assignment-1",
         )
 
         # Add feedback items without scores
-        item1 = FeedbackItem.create(
-            text="Item 1 (no score)"
-        )
+        item1 = FeedbackItem.create(text="Item 1 (no score)")
 
-        item2 = FeedbackItem.create(
-            text="Item 2 (no score)"
-        )
+        item2 = FeedbackItem.create(text="Item 2 (no score)")
 
         feedback.add_item(item1)
         feedback.add_item(item2)
@@ -405,7 +393,7 @@ class TestFeedback:
         feedback = Feedback.create(
             submission_id="submission-1",
             student_id="student-1",
-            assignment_id="assignment-1"
+            assignment_id="assignment-1",
         )
 
         # Update gamification
@@ -413,8 +401,7 @@ class TestFeedback:
 
         # Verify GamificationService.handle_feedback_submission was called
         mock_gamification_service.return_value.handle_feedback_submission.assert_called_once_with(
-            feedback.id,
-            f"Feedback for submission submission-1"
+            feedback.id, f"Feedback for submission submission-1"
         )
 
     def test_update_gamification_error(self, mock_gamification_service, mock_logger):
@@ -422,20 +409,22 @@ class TestFeedback:
         feedback = Feedback.create(
             submission_id="submission-1",
             student_id="student-1",
-            assignment_id="assignment-1"
+            assignment_id="assignment-1",
         )
 
         # Mock handle_feedback_submission to raise an exception
         mock_gamification_service.return_value.handle_feedback_submission.side_effect = Exception(
-            "Gamification error")
+            "Gamification error"
+        )
 
         # Should not raise an exception
         feedback.update_gamification()
 
         # Should log error
         assert any(
-            "Error integrating feedback with gamification" in str(call) for call in
-            mock_logger.debug.call_args_list)
+            "Error integrating feedback with gamification" in str(call)
+            for call in mock_logger.debug.call_args_list
+        )
 
 
 class TestFeedbackManager:
@@ -453,7 +442,7 @@ class TestFeedbackManager:
         feedback = Feedback.create(
             submission_id="submission-1",
             student_id="student-1",
-            assignment_id="assignment-1"
+            assignment_id="assignment-1",
         )
 
         manager.add_feedback(feedback)
@@ -469,7 +458,7 @@ class TestFeedbackManager:
         feedback = Feedback.create(
             submission_id="submission-1",
             student_id="student-1",
-            assignment_id="assignment-1"
+            assignment_id="assignment-1",
         )
 
         manager.add_feedback(feedback)
@@ -488,7 +477,7 @@ class TestFeedbackManager:
         feedback = Feedback.create(
             submission_id="submission-1",
             student_id="student-1",
-            assignment_id="assignment-1"
+            assignment_id="assignment-1",
         )
 
         manager.add_feedback(feedback)
@@ -508,13 +497,13 @@ class TestFeedbackManager:
         feedback1 = Feedback.create(
             submission_id="submission-1",
             student_id="student-1",
-            assignment_id="assignment-1"
+            assignment_id="assignment-1",
         )
 
         feedback2 = Feedback.create(
             submission_id="submission-2",
             student_id="student-2",
-            assignment_id="assignment-2"
+            assignment_id="assignment-2",
         )
 
         manager.add_multiple_feedback([feedback1, feedback2])
@@ -532,13 +521,13 @@ class TestFeedbackManager:
         feedback1 = Feedback.create(
             submission_id="submission-1",
             student_id="student-1",
-            assignment_id="assignment-1"
+            assignment_id="assignment-1",
         )
 
         feedback2 = Feedback.create(
             submission_id="submission-2",
             student_id="student-2",
-            assignment_id="assignment-2"
+            assignment_id="assignment-2",
         )
 
         manager.add_feedback(feedback1)
@@ -612,11 +601,11 @@ class TestFeedbackManager:
                                     "type": "COMMENT",
                                     "file_path": "main.py",
                                     "line_start": 10,
-                                    "text": "Nice work here"
+                                    "text": "Nice work here",
                                 }
-                            ]
+                            ],
                         }
-                    ]
+                    ],
                 }
             ]
         }
@@ -665,8 +654,9 @@ class TestFeedbackManager:
         file_path = "/path/to/feedback.yaml"
 
         # Mock read_yaml to return failure
-        mock_fs.read_yaml.return_value = MagicMock(success=False,
-                                                   error="File not found")
+        mock_fs.read_yaml.return_value = MagicMock(
+            success=False, error="File not found"
+        )
 
         # Load from file should raise FileNotFoundError
         with patch.object(FeedbackManager, "_resolve_file_path") as mock_resolve:
@@ -699,12 +689,12 @@ class TestFeedbackManager:
                     "id": "feedback-1",
                     "submission_id": "submission-1",
                     "student_id": "student-1",
-                    "assignment_id": "assignment-1"
+                    "assignment_id": "assignment-1",
                 },
                 {
                     # Missing required fields
                     "id": "feedback-2"
-                }
+                },
             ]
         }
         mock_fs.read_yaml.return_value = MagicMock(success=True, data=feedback_data)
@@ -731,12 +721,12 @@ class TestFeedbackManager:
         feedback1 = Feedback.create(
             submission_id="submission-1",
             student_id="student-1",
-            assignment_id="assignment-1"
+            assignment_id="assignment-1",
         )
         feedback2 = Feedback.create(
             submission_id="submission-2",
             student_id="student-2",
-            assignment_id="assignment-2"
+            assignment_id="assignment-2",
         )
         manager.add_multiple_feedback([feedback1, feedback2])
 
@@ -766,7 +756,7 @@ class TestFeedbackManager:
         feedback = Feedback.create(
             submission_id="submission-1",
             student_id="student-1",
-            assignment_id="assignment-1"
+            assignment_id="assignment-1",
         )
         manager.add_feedback(feedback)
 

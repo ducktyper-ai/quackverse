@@ -2,14 +2,19 @@
 """
 Tests for the Course module.
 """
+
 from datetime import datetime, timedelta
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from quackcore.teaching.academy.course import (
-    Course, CourseModule, ModuleItem, ItemType, CourseManager
+    Course,
+    CourseManager,
+    CourseModule,
+    ItemType,
+    ModuleItem,
 )
 
 
@@ -20,9 +25,7 @@ class TestModuleItem:
         """Test creating a module item."""
         # Basic create
         item = ModuleItem.create(
-            title="Test Item",
-            type=ItemType.LECTURE,
-            description="Test description"
+            title="Test Item", type=ItemType.LECTURE, description="Test description"
         )
         assert item.title == "Test Item"
         assert item.type == ItemType.LECTURE
@@ -41,7 +44,7 @@ class TestModuleItem:
             assignment_id="assignment-1",
             due_date=due_date_str,
             points=100.0,
-            published=False
+            published=False,
         )
         assert item.title == "Test Assignment"
         assert item.type == ItemType.ASSIGNMENT
@@ -56,18 +59,11 @@ class TestModuleItem:
     def test_ensure_id(self):
         """Test that ID is generated if not provided."""
         # Create with no ID
-        item = ModuleItem(
-            title="Test Item",
-            type=ItemType.LECTURE
-        )
+        item = ModuleItem(title="Test Item", type=ItemType.LECTURE)
         assert item.id is not None
 
         # Create with provided ID
-        item = ModuleItem(
-            id="custom-id",
-            title="Test Item",
-            type=ItemType.LECTURE
-        )
+        item = ModuleItem(id="custom-id", title="Test Item", type=ItemType.LECTURE)
         assert item.id == "custom-id"
 
 
@@ -78,8 +74,7 @@ class TestCourseModule:
         """Test creating a course module."""
         # Basic create
         module = CourseModule.create(
-            title="Test Module",
-            description="Test description"
+            title="Test Module", description="Test description"
         )
         assert module.title == "Test Module"
         assert module.description == "Test description"
@@ -94,12 +89,7 @@ class TestCourseModule:
         # Create with optional fields
         start_date_str = "2023-01-01T00:00:00"
         end_date_str = "2023-01-31T23:59:59"
-        items = [
-            ModuleItem.create(
-                title="Test Item",
-                type=ItemType.LECTURE
-            )
-        ]
+        items = [ModuleItem.create(title="Test Item", type=ItemType.LECTURE)]
         prerequisites = ["module-1"]
 
         module = CourseModule.create(
@@ -110,7 +100,7 @@ class TestCourseModule:
             items=items,
             prerequisites=prerequisites,
             start_date=start_date_str,
-            end_date=end_date_str
+            end_date=end_date_str,
         )
         assert module.title == "Advanced Module"
         assert module.description == "Advanced topics"
@@ -126,16 +116,11 @@ class TestCourseModule:
     def test_ensure_id(self):
         """Test that ID is generated if not provided."""
         # Create with no ID
-        module = CourseModule(
-            title="Test Module"
-        )
+        module = CourseModule(title="Test Module")
         assert module.id is not None
 
         # Create with provided ID
-        module = CourseModule(
-            id="custom-id",
-            title="Test Module"
-        )
+        module = CourseModule(id="custom-id", title="Test Module")
         assert module.id == "custom-id"
 
     def test_add_item(self):
@@ -189,8 +174,9 @@ class TestCourseModule:
         """Test getting published items."""
         module = CourseModule.create(title="Test Module")
         item1 = ModuleItem.create(title="Item 1", type=ItemType.LECTURE, published=True)
-        item2 = ModuleItem.create(title="Item 2", type=ItemType.LECTURE,
-                                  published=False)
+        item2 = ModuleItem.create(
+            title="Item 2", type=ItemType.LECTURE, published=False
+        )
 
         module.add_item(item1)
         module.add_item(item2)
@@ -204,48 +190,34 @@ class TestCourseModule:
         now = datetime.now()
 
         # Published, no dates
-        module = CourseModule.create(
-            title="Test Module",
-            published=True
-        )
+        module = CourseModule.create(title="Test Module", published=True)
         assert module.is_active() is True
 
         # Not published
-        module = CourseModule.create(
-            title="Test Module",
-            published=False
-        )
+        module = CourseModule.create(title="Test Module", published=False)
         assert module.is_active() is False
 
         # Published, with start date in the past
         module = CourseModule.create(
-            title="Test Module",
-            published=True,
-            start_date=now - timedelta(days=1)
+            title="Test Module", published=True, start_date=now - timedelta(days=1)
         )
         assert module.is_active() is True
 
         # Published, with start date in the future
         module = CourseModule.create(
-            title="Test Module",
-            published=True,
-            start_date=now + timedelta(days=1)
+            title="Test Module", published=True, start_date=now + timedelta(days=1)
         )
         assert module.is_active() is False
 
         # Published, with end date in the future
         module = CourseModule.create(
-            title="Test Module",
-            published=True,
-            end_date=now + timedelta(days=1)
+            title="Test Module", published=True, end_date=now + timedelta(days=1)
         )
         assert module.is_active() is True
 
         # Published, with end date in the past
         module = CourseModule.create(
-            title="Test Module",
-            published=True,
-            end_date=now - timedelta(days=1)
+            title="Test Module", published=True, end_date=now - timedelta(days=1)
         )
         assert module.is_active() is False
 
@@ -254,7 +226,7 @@ class TestCourseModule:
             title="Test Module",
             published=True,
             start_date=now - timedelta(days=1),
-            end_date=now + timedelta(days=1)
+            end_date=now + timedelta(days=1),
         )
         assert module.is_active() is True
 
@@ -263,7 +235,7 @@ class TestCourseModule:
             title="Test Module",
             published=True,
             start_date=now + timedelta(days=1),
-            end_date=now + timedelta(days=2)
+            end_date=now + timedelta(days=2),
         )
         assert module.is_active() is False
 
@@ -272,7 +244,7 @@ class TestCourseModule:
             title="Test Module",
             published=True,
             start_date=now - timedelta(days=2),
-            end_date=now - timedelta(days=1)
+            end_date=now - timedelta(days=1),
         )
         assert module.is_active() is False
 
@@ -284,9 +256,7 @@ class TestCourse:
         """Test creating a course."""
         # Basic create
         course = Course.create(
-            name="Test Course",
-            code="TEST101",
-            description="A test course"
+            name="Test Course", code="TEST101", description="A test course"
         )
         assert course.name == "Test Course"
         assert course.code == "TEST101"
@@ -312,7 +282,7 @@ class TestCourse:
             end_date=end_date_str,
             instructors=instructors,
             syllabus_url="https://example.com/syllabus",
-            homepage_content="# Welcome to the course"
+            homepage_content="# Welcome to the course",
         )
         assert course.name == "Advanced Course"
         assert course.code == "ADV202"
@@ -328,16 +298,11 @@ class TestCourse:
     def test_ensure_id(self):
         """Test that ID is generated if not provided."""
         # Create with no ID
-        course = Course(
-            name="Test Course"
-        )
+        course = Course(name="Test Course")
         assert course.id is not None
 
         # Create with provided ID
-        course = Course(
-            id="custom-id",
-            name="Test Course"
-        )
+        course = Course(id="custom-id", name="Test Course")
         assert course.id == "custom-id"
 
     def test_add_module(self):
@@ -437,9 +402,7 @@ class TestCourse:
 
         # Inactive module (published, future start date)
         module3 = CourseModule.create(
-            title="Module 3",
-            published=True,
-            start_date=now + timedelta(days=1)
+            title="Module 3", published=True, start_date=now + timedelta(days=1)
         )
 
         # Active module (published, past start date, future end date)
@@ -447,7 +410,7 @@ class TestCourse:
             title="Module 4",
             published=True,
             start_date=now - timedelta(days=1),
-            end_date=now + timedelta(days=1)
+            end_date=now + timedelta(days=1),
         )
 
         course.add_module(module1)
@@ -555,29 +518,20 @@ class TestCourseManager:
         course1 = Course.create(name="Course 1")
 
         # Active course (past start date, no end date)
-        course2 = Course.create(
-            name="Course 2",
-            start_date=now - timedelta(days=10)
-        )
+        course2 = Course.create(name="Course 2", start_date=now - timedelta(days=10))
 
         # Active course (past start date, future end date)
         course3 = Course.create(
             name="Course 3",
             start_date=now - timedelta(days=10),
-            end_date=now + timedelta(days=10)
+            end_date=now + timedelta(days=10),
         )
 
         # Inactive course (future start date)
-        course4 = Course.create(
-            name="Course 4",
-            start_date=now + timedelta(days=10)
-        )
+        course4 = Course.create(name="Course 4", start_date=now + timedelta(days=10))
 
         # Inactive course (past end date)
-        course5 = Course.create(
-            name="Course 5",
-            end_date=now - timedelta(days=10)
-        )
+        course5 = Course.create(name="Course 5", end_date=now - timedelta(days=10))
 
         manager.add_courses([course1, course2, course3, course4, course5])
 
@@ -632,20 +586,12 @@ class TestCourseManager:
                             "title": "Module 1",
                             "description": "Module description",
                             "items": [
-                                {
-                                    "id": "item-1",
-                                    "title": "Item 1",
-                                    "type": "LECTURE"
-                                }
-                            ]
+                                {"id": "item-1", "title": "Item 1", "type": "LECTURE"}
+                            ],
                         }
-                    ]
+                    ],
                 },
-                {
-                    "id": "course-2",
-                    "name": "Course 2",
-                    "code": "C2"
-                }
+                {"id": "course-2", "name": "Course 2", "code": "C2"},
             ]
         }
         mock_fs.read_yaml.return_value = MagicMock(success=True, data=courses_data)
@@ -683,8 +629,9 @@ class TestCourseManager:
         file_path = "/path/to/courses.yaml"
 
         # Mock read_yaml to return failure
-        mock_fs.read_yaml.return_value = MagicMock(success=False,
-                                                   error="File not found")
+        mock_fs.read_yaml.return_value = MagicMock(
+            success=False, error="File not found"
+        )
 
         # Load from file should raise FileNotFoundError
         with patch.object(CourseManager, "_resolve_file_path") as mock_resolve:
@@ -713,14 +660,11 @@ class TestCourseManager:
         # Mock read_yaml to return success with invalid course data
         courses_data = {
             "courses": [
-                {
-                    "id": "course-1",
-                    "name": "Course 1"
-                },
+                {"id": "course-1", "name": "Course 1"},
                 {
                     # Missing required name field
                     "id": "course-2"
-                }
+                },
             ]
         }
         mock_fs.read_yaml.return_value = MagicMock(success=True, data=courses_data)
@@ -760,9 +704,7 @@ class TestCourseManager:
             assert result is True
 
             # Verify write_yaml was called with correct data
-            expected_data = {
-                "courses": [course1.model_dump(), course2.model_dump()]
-            }
+            expected_data = {"courses": [course1.model_dump(), course2.model_dump()]}
             mock_fs.write_yaml.assert_called_once_with(file_path, expected_data)
 
     def test_save_to_file_error(self, mock_fs, mock_logger):

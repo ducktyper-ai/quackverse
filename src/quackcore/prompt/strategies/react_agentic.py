@@ -6,8 +6,8 @@ This strategy combines reasoning and acting steps for interactive agents,
 based on the ReAct paper by Yao et al.
 """
 
-from ..registry import register_prompt_strategy
-from ..strategy_base import PromptStrategy
+from quackcore.prompt.registry import register_prompt_strategy
+from quackcore.prompt.strategy_base import PromptStrategy
 
 
 def render(

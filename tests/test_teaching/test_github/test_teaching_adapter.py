@@ -4,6 +4,7 @@ Tests for the GitHub teaching adapter.
 
 This module tests the GitHub teaching adapter in quackcore.teaching.github.teaching_adapter.
 """
+
 from unittest.mock import MagicMock, patch
 
 from quackcore.errors import QuackApiError
@@ -55,7 +56,8 @@ class TestGitHubTeachingAdapter:
 
         # Verify gamification integration
         mock_gamification_service.handle_github_star.assert_called_once_with(
-            "test/repo")
+            "test/repo"
+        )
 
     @patch("quackcore.teaching.github.teaching_adapter.GamificationService")
     def test_ensure_starred_new_star(self, mock_gamification_service_class):
@@ -86,7 +88,8 @@ class TestGitHubTeachingAdapter:
 
         # Verify gamification integration
         mock_gamification_service.handle_github_star.assert_called_once_with(
-            "test/repo")
+            "test/repo"
+        )
 
     @patch("quackcore.teaching.github.teaching_adapter.GamificationService")
     def test_ensure_starred_error(self, mock_gamification_service_class):

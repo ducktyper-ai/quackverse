@@ -1,8 +1,10 @@
+# tests/test_teaching/test_npc/test_tools/conftest.py
 """
 Pytest fixtures for testing quackcore.teaching.npc.tools.
 
 This module provides common fixtures for testing the tools functionality.
 """
+
 from unittest.mock import MagicMock
 
 import pytest

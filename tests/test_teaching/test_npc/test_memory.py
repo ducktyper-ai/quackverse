@@ -4,6 +4,7 @@ Tests for the Quackster NPC memory management.
 
 This module tests the memory management functionality in quackcore.teaching.npc.memory.
 """
+
 from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -21,8 +22,10 @@ class TestNPCMemory:
         # Setup
         mock_data_dir = Path("/test/data/dir")
 
-        with patch("quackcore.teaching.npc.memory.get_user_data_dir",
-                   return_value=mock_data_dir):
+        with patch(
+            "quackcore.teaching.npc.memory.get_user_data_dir",
+            return_value=mock_data_dir,
+        ):
             # Act
             result = memory._get_memory_file_path()
 
@@ -32,8 +35,9 @@ class TestNPCMemory:
     @patch("quackcore.teaching.npc.memory.fs.get_file_info")
     @patch("quackcore.teaching.npc.memory._get_memory_file_path")
     @patch("quackcore.teaching.npc.memory.logger")
-    def test_load_persistent_memory_not_found(self, mock_logger, mock_get_path,
-                                              mock_get_file_info):
+    def test_load_persistent_memory_not_found(
+        self, mock_logger, mock_get_path, mock_get_file_info
+    ):
         """Test loading persistent memory when the file doesn't exist."""
         # Setup
         mock_path = MagicMock(spec=Path)
@@ -54,8 +58,9 @@ class TestNPCMemory:
     @patch("quackcore.teaching.npc.memory.fs.read_json")
     @patch("quackcore.teaching.npc.memory._get_memory_file_path")
     @patch("quackcore.teaching.npc.memory.logger")
-    def test_load_persistent_memory_read_error(self, mock_logger, mock_get_path,
-                                               mock_read_json, mock_get_file_info):
+    def test_load_persistent_memory_read_error(
+        self, mock_logger, mock_get_path, mock_read_json, mock_get_file_info
+    ):
         """Test loading persistent memory when there's an error reading the file."""
         # Setup
         mock_path = MagicMock(spec=Path)
@@ -76,8 +81,9 @@ class TestNPCMemory:
     @patch("quackcore.teaching.npc.memory.fs.get_file_info")
     @patch("quackcore.teaching.npc.memory.fs.read_json")
     @patch("quackcore.teaching.npc.memory._get_memory_file_path")
-    def test_load_persistent_memory_wrong_user(self, mock_get_path, mock_read_json,
-                                               mock_get_file_info):
+    def test_load_persistent_memory_wrong_user(
+        self, mock_get_path, mock_read_json, mock_get_file_info
+    ):
         """Test loading persistent memory for a different user."""
         # Setup
         mock_path = MagicMock(spec=Path)
@@ -87,8 +93,10 @@ class TestNPCMemory:
         mock_get_file_info.return_value = MagicMock(success=True, exists=True)
         mock_read_json.return_value = MagicMock(
             success=True,
-            data={"github_username": "otheruser",
-                  "last_interaction": datetime.now().isoformat()},
+            data={
+                "github_username": "otheruser",
+                "last_interaction": datetime.now().isoformat(),
+            },
         )
 
         # Act
@@ -101,8 +109,9 @@ class TestNPCMemory:
     @patch("quackcore.teaching.npc.memory.fs.read_json")
     @patch("quackcore.teaching.npc.memory._get_memory_file_path")
     @patch("quackcore.teaching.npc.memory.logger")
-    def test_load_persistent_memory_expired(self, mock_logger, mock_get_path,
-                                            mock_read_json, mock_get_file_info):
+    def test_load_persistent_memory_expired(
+        self, mock_logger, mock_get_path, mock_read_json, mock_get_file_info
+    ):
         """Test loading persistent memory that has expired."""
         # Setup
         mock_path = MagicMock(spec=Path)
@@ -116,8 +125,10 @@ class TestNPCMemory:
 
         mock_read_json.return_value = MagicMock(
             success=True,
-            data={"github_username": "testuser",
-                  "last_interaction": old_date.isoformat()},
+            data={
+                "github_username": "testuser",
+                "last_interaction": old_date.isoformat(),
+            },
         )
 
         # Act
@@ -126,13 +137,15 @@ class TestNPCMemory:
         # Assert
         assert result is None
         mock_logger.debug.assert_called_with(
-            "Memory has expired, creating fresh memory")
+            "Memory has expired, creating fresh memory"
+        )
 
     @patch("quackcore.teaching.npc.memory.fs.get_file_info")
     @patch("quackcore.teaching.npc.memory.fs.read_json")
     @patch("quackcore.teaching.npc.memory._get_memory_file_path")
-    def test_load_persistent_memory_success(self, mock_get_path, mock_read_json,
-                                            mock_get_file_info):
+    def test_load_persistent_memory_success(
+        self, mock_get_path, mock_read_json, mock_get_file_info
+    ):
         """Test successfully loading persistent memory."""
         # Setup
         mock_path = MagicMock(spec=Path)
@@ -166,8 +179,9 @@ class TestNPCMemory:
     @patch("quackcore.teaching.npc.memory._get_memory_file_path")
     @patch("quackcore.teaching.npc.memory.fs.write_json")
     @patch("quackcore.teaching.npc.memory.logger")
-    def test_save_persistent_memory_success(self, mock_logger, mock_write_json,
-                                            mock_get_path):
+    def test_save_persistent_memory_success(
+        self, mock_logger, mock_write_json, mock_get_path
+    ):
         """Test successfully saving persistent memory."""
         # Setup
         mock_path = MagicMock(spec=Path)
@@ -195,8 +209,9 @@ class TestNPCMemory:
     @patch("quackcore.teaching.npc.memory._get_memory_file_path")
     @patch("quackcore.teaching.npc.memory.fs.write_json")
     @patch("quackcore.teaching.npc.memory.logger")
-    def test_save_persistent_memory_error(self, mock_logger, mock_write_json,
-                                          mock_get_path):
+    def test_save_persistent_memory_error(
+        self, mock_logger, mock_write_json, mock_get_path
+    ):
         """Test error when saving persistent memory."""
         # Setup
         mock_path = MagicMock(spec=Path)
@@ -290,8 +305,9 @@ class TestNPCMemory:
     @patch("quackcore.teaching.npc.memory.utils.load_progress")
     @patch("quackcore.teaching.npc.memory.quests")
     @patch("quackcore.teaching.npc.memory.badges")
-    def test_get_user_memory_new(self, mock_badges, mock_quests, mock_load_progress,
-                                 mock_load_persistent):
+    def test_get_user_memory_new(
+        self, mock_badges, mock_quests, mock_load_progress, mock_load_persistent
+    ):
         """Test getting user memory for a new user (no persistent memory)."""
         # Setup
         # Mock user progress

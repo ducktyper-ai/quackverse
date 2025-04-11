@@ -4,6 +4,7 @@ Tests for the teaching GitHub API integration.
 
 This module tests the GitHub API utility functions in quackcore.teaching.core.github_api.
 """
+
 from unittest.mock import MagicMock, patch
 
 from quackcore.teaching.core import github_api
@@ -41,7 +42,8 @@ class TestGitHubAPI:
         # Assert
         mock_registry.get_integration.assert_called_with("GitHub")
         mock_logger.warning.assert_called_with(
-            "GitHub integration not found in registry")
+            "GitHub integration not found in registry"
+        )
         assert client is None
 
     @patch("quackcore.teaching.core.github_api.registry")
@@ -69,8 +71,9 @@ class TestGitHubAPI:
         # Setup
         mock_github = MagicMock()
         mock_github.client = None
-        mock_github.initialize.return_value = MagicMock(success=False,
-                                                        error="Init error")
+        mock_github.initialize.return_value = MagicMock(
+            success=False, error="Init error"
+        )
         mock_registry.get_integration.return_value = mock_github
 
         # Act

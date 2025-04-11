@@ -4,10 +4,11 @@ Tests for badge-related functionality in the gamification service.
 
 This module tests badge award and management in the gamification service.
 """
+
 from unittest.mock import MagicMock, patch
 
-from quackcore.teaching.core.models import UserProgress
 from quackcore.teaching.core.gamification_service import GamificationService
+from quackcore.teaching.core.models import UserProgress
 
 
 class TestGamificationServiceBadges:

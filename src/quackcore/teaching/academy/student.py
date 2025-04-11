@@ -17,8 +17,6 @@ from pydantic import BaseModel, EmailStr, Field, model_validator
 from quackcore.fs import service as fs
 from quackcore.logging import get_logger
 from quackcore.paths import resolver
-from quackcore.teaching.core import utils as core_utils
-from quackcore.teaching.core.gamification_service import GamificationService
 
 logger = get_logger(__name__)
 

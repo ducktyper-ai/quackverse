@@ -16,11 +16,12 @@ from pydantic import ValidationError
 
 from quackcore.errors import QuackPluginError
 from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
-from quackcore.plugins.protocols import QuackPluginProtocol, QuackPluginMetadata
+from quackcore.plugins.protocols import QuackPluginMetadata, QuackPluginProtocol
 
 
 class PluginInfo(QuackPluginMetadata):
     """Plugin information used for validation."""
+
     name: str
 
 
@@ -38,7 +39,7 @@ class PluginLoader:
         self.logger.setLevel(log_level)
 
     def _validate_plugin(
-            self, plugin: QuackPluginProtocol, module_path: str
+        self, plugin: QuackPluginProtocol, module_path: str
     ) -> QuackPluginProtocol:
         """
         Validate that the plugin has the required attributes using pydantic.
@@ -60,13 +61,14 @@ class PluginLoader:
 
             # Validate the get_metadata method and its return value
             if not hasattr(plugin, "get_metadata") or not callable(
-                    getattr(plugin, "get_metadata")):
+                getattr(plugin, "get_metadata")
+            ):
                 # For backward compatibility, create minimal metadata if get_metadata is not implemented
                 metadata = QuackPluginMetadata(
                     name=plugin.name,
                     version="0.1.0",
                     description=f"Plugin from {module_path}",
-                    capabilities=[]
+                    capabilities=[],
                 )
             else:
                 # Get the metadata, but handle the case where it might be a mock or other non-standard object
@@ -82,7 +84,8 @@ class PluginLoader:
                     else:
                         # For other types, this should fail validation
                         raise TypeError(
-                            f"get_metadata() must return a QuackPluginMetadata object, got {type(metadata)}")
+                            f"get_metadata() must return a QuackPluginMetadata object, got {type(metadata)}"
+                        )
 
             # Validate the metadata
             PluginInfo(**metadata.model_dump())
@@ -259,7 +262,7 @@ class PluginLoader:
         return plugins
 
     def load_entry_points(
-            self, group: str = "quackcore.plugins"
+        self, group: str = "quackcore.plugins"
     ) -> list[QuackPluginProtocol]:
         """
         Load plugins from entry points.
@@ -281,7 +284,8 @@ class PluginLoader:
                 eps = entry_points(group=group)
                 discovered_eps = list(eps)
                 self.logger.debug(
-                    f"Found {len(discovered_eps)} entry points in group '{group}'")
+                    f"Found {len(discovered_eps)} entry points in group '{group}'"
+                )
 
                 for ep in discovered_eps:
                     self.logger.debug(f"Entry point: {ep.name} from {ep.value}")
@@ -310,8 +314,11 @@ class PluginLoader:
                         else:
                             try:
                                 metadata = plugin.get_metadata()
-                                capabilities = ', '.join(
-                                    metadata.capabilities) if metadata.capabilities else "none"
+                                capabilities = (
+                                    ", ".join(metadata.capabilities)
+                                    if metadata.capabilities
+                                    else "none"
+                                )
                                 self.logger.info(
                                     f"Loaded external plugin '{plugin.name}' v{metadata.version} "
                                     f"from entry point {ep.name} with capabilities: {capabilities}"

@@ -1,8 +1,10 @@
+# tests/test_teaching/test_npc/test_tools/test_schema.py
 """
 Tests for the schema models in quackcore.teaching.npc.tools.schema.
 
 This module tests the Pydantic model definitions and their behaviors.
 """
+
 import pytest
 from pydantic import ValidationError
 

@@ -2,15 +2,21 @@
 """
 Tests for the QuackCore teaching core utils module.
 """
-from pathlib import Path
-from unittest.mock import patch, MagicMock
 
-from quackcore.teaching.core.utils import (
-    get_user_data_dir, get_progress_file_path, get_github_username,
-    load_progress, save_progress, create_new_progress, reset_progress,
-    backup_progress
-)
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
 from quackcore.teaching.core.models import UserProgress
+from quackcore.teaching.core.utils import (
+    backup_progress,
+    create_new_progress,
+    get_github_username,
+    get_progress_file_path,
+    get_user_data_dir,
+    load_progress,
+    reset_progress,
+    save_progress,
+)
 
 
 class TestGetUserDataDir:
@@ -28,8 +34,9 @@ class TestGetUserDataDir:
         # Check the result and mock calls
         assert result == Path("/home/user/.quack")
         mock_fs.expand_user_vars.assert_called_once_with("~/.quack")
-        mock_fs.create_directory.assert_called_once_with(Path("/home/user/.quack"),
-                                                         exist_ok=True)
+        mock_fs.create_directory.assert_called_once_with(
+            Path("/home/user/.quack"), exist_ok=True
+        )
 
     def test_custom_directory_from_env(self, mock_fs, monkeypatch):
         """Test getting a custom user data directory from environment variable."""
@@ -46,8 +53,9 @@ class TestGetUserDataDir:
         # Check the result and mock calls
         assert result == Path("/home/user/custom_data")
         mock_fs.expand_user_vars.assert_called_once_with("~/custom_data")
-        mock_fs.create_directory.assert_called_once_with(Path("/home/user/custom_data"),
-                                                         exist_ok=True)
+        mock_fs.create_directory.assert_called_once_with(
+            Path("/home/user/custom_data"), exist_ok=True
+        )
 
 
 class TestGetProgressFilePath:
@@ -116,7 +124,7 @@ class TestGetGithubUsername:
                 ["git", "config", "user.name"],
                 capture_output=True,
                 text=True,
-                check=False
+                check=False,
             )
 
     def test_from_git_config_failure(self, monkeypatch):
@@ -186,7 +194,8 @@ class TestLoadProgress:
         """Test loading progress from an existing file."""
         # Setup mocks
         with patch(
-                "quackcore.teaching.core.utils.get_progress_file_path") as mock_get_path:
+            "quackcore.teaching.core.utils.get_progress_file_path"
+        ) as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
@@ -203,7 +212,7 @@ class TestLoadProgress:
                 "current_streak": 5,
                 "longest_streak": 10,
                 "last_active_date": "2023-01-15",
-                "metadata": {"key": "value"}
+                "metadata": {"key": "value"},
             }
             mock_fs.read_json.return_value = MagicMock(success=True, data=progress_data)
 
@@ -226,19 +235,24 @@ class TestLoadProgress:
 
             # Verify mock calls
             mock_fs.get_file_info.assert_called_once_with(
-                Path("/home/user/.quack/ducktyper_user.json"))
+                Path("/home/user/.quack/ducktyper_user.json")
+            )
             mock_fs.read_json.assert_called_once_with(
-                Path("/home/user/.quack/ducktyper_user.json"))
+                Path("/home/user/.quack/ducktyper_user.json")
+            )
 
             # Verify log message
-            assert any("Loaded user progress" in str(call) for call in
-                       mock_logger.debug.call_args_list)
+            assert any(
+                "Loaded user progress" in str(call)
+                for call in mock_logger.debug.call_args_list
+            )
 
     def test_load_nonexistent_file(self, mock_fs, mock_logger):
         """Test loading progress when the file doesn't exist."""
         # Setup mocks
         with patch(
-                "quackcore.teaching.core.utils.get_progress_file_path") as mock_get_path:
+            "quackcore.teaching.core.utils.get_progress_file_path"
+        ) as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file doesn't exist
@@ -246,7 +260,8 @@ class TestLoadProgress:
 
             # Mock create_new_progress
             with patch(
-                    "quackcore.teaching.core.utils.create_new_progress") as mock_create_progress:
+                "quackcore.teaching.core.utils.create_new_progress"
+            ) as mock_create_progress:
                 mock_progress = UserProgress(github_username="new-user")
                 mock_create_progress.return_value = mock_progress
 
@@ -258,30 +273,36 @@ class TestLoadProgress:
 
                 # Verify mock calls
                 mock_fs.get_file_info.assert_called_once_with(
-                    Path("/home/user/.quack/ducktyper_user.json"))
+                    Path("/home/user/.quack/ducktyper_user.json")
+                )
                 mock_create_progress.assert_called_once()
 
                 # Verify log message
-                assert any("Progress file not found" in str(call) for call in
-                           mock_logger.debug.call_args_list)
+                assert any(
+                    "Progress file not found" in str(call)
+                    for call in mock_logger.debug.call_args_list
+                )
 
     def test_load_invalid_file(self, mock_fs, mock_logger):
         """Test loading progress when the file has invalid format."""
         # Setup mocks
         with patch(
-                "quackcore.teaching.core.utils.get_progress_file_path") as mock_get_path:
+            "quackcore.teaching.core.utils.get_progress_file_path"
+        ) as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
             mock_fs.get_file_info.return_value = MagicMock(success=True, exists=True)
 
             # Mock fs.read_json to return error
-            mock_fs.read_json.return_value = MagicMock(success=False,
-                                                       error="Invalid JSON")
+            mock_fs.read_json.return_value = MagicMock(
+                success=False, error="Invalid JSON"
+            )
 
             # Mock create_new_progress
             with patch(
-                    "quackcore.teaching.core.utils.create_new_progress") as mock_create_progress:
+                "quackcore.teaching.core.utils.create_new_progress"
+            ) as mock_create_progress:
                 mock_progress = UserProgress(github_username="new-user")
                 mock_create_progress.return_value = mock_progress
 
@@ -293,20 +314,25 @@ class TestLoadProgress:
 
                 # Verify mock calls
                 mock_fs.get_file_info.assert_called_once_with(
-                    Path("/home/user/.quack/ducktyper_user.json"))
+                    Path("/home/user/.quack/ducktyper_user.json")
+                )
                 mock_fs.read_json.assert_called_once_with(
-                    Path("/home/user/.quack/ducktyper_user.json"))
+                    Path("/home/user/.quack/ducktyper_user.json")
+                )
                 mock_create_progress.assert_called_once()
 
                 # Verify log message
-                assert any("Failed to read progress file" in str(call) for call in
-                           mock_logger.warning.call_args_list)
+                assert any(
+                    "Failed to read progress file" in str(call)
+                    for call in mock_logger.warning.call_args_list
+                )
 
     def test_load_validation_error(self, mock_fs, mock_logger):
         """Test loading progress when the file content is invalid."""
         # Setup mocks
         with patch(
-                "quackcore.teaching.core.utils.get_progress_file_path") as mock_get_path:
+            "quackcore.teaching.core.utils.get_progress_file_path"
+        ) as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
@@ -318,7 +344,8 @@ class TestLoadProgress:
 
             # Mock create_new_progress
             with patch(
-                    "quackcore.teaching.core.utils.create_new_progress") as mock_create_progress:
+                "quackcore.teaching.core.utils.create_new_progress"
+            ) as mock_create_progress:
                 mock_progress = UserProgress(github_username="new-user")
                 mock_create_progress.return_value = mock_progress
 
@@ -330,14 +357,18 @@ class TestLoadProgress:
 
                 # Verify mock calls
                 mock_fs.get_file_info.assert_called_once_with(
-                    Path("/home/user/.quack/ducktyper_user.json"))
+                    Path("/home/user/.quack/ducktyper_user.json")
+                )
                 mock_fs.read_json.assert_called_once_with(
-                    Path("/home/user/.quack/ducktyper_user.json"))
+                    Path("/home/user/.quack/ducktyper_user.json")
+                )
                 mock_create_progress.assert_called_once()
 
                 # Verify log message
-                assert any("Error loading progress file" in str(call) for call in
-                           mock_logger.warning.call_args_list)
+                assert any(
+                    "Error loading progress file" in str(call)
+                    for call in mock_logger.warning.call_args_list
+                )
 
 
 class TestSaveProgress:
@@ -351,12 +382,13 @@ class TestSaveProgress:
             display_name="Test User",
             xp=1000,
             level=2,
-            completed_quest_ids=["quest1", "quest2"]
+            completed_quest_ids=["quest1", "quest2"],
         )
 
         # Setup mocks
         with patch(
-                "quackcore.teaching.core.utils.get_progress_file_path") as mock_get_path:
+            "quackcore.teaching.core.utils.get_progress_file_path"
+        ) as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.write_json to succeed
@@ -370,13 +402,14 @@ class TestSaveProgress:
 
             # Verify mock calls
             mock_fs.write_json.assert_called_once_with(
-                Path("/home/user/.quack/ducktyper_user.json"),
-                progress.model_dump()
+                Path("/home/user/.quack/ducktyper_user.json"), progress.model_dump()
             )
 
             # Verify log message
-            assert any("Saved user progress" in str(call) for call in
-                       mock_logger.debug.call_args_list)
+            assert any(
+                "Saved user progress" in str(call)
+                for call in mock_logger.debug.call_args_list
+            )
 
     def test_save_progress_failure(self, mock_fs, mock_logger):
         """Test handling save failure."""
@@ -385,12 +418,14 @@ class TestSaveProgress:
 
         # Setup mocks
         with patch(
-                "quackcore.teaching.core.utils.get_progress_file_path") as mock_get_path:
+            "quackcore.teaching.core.utils.get_progress_file_path"
+        ) as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.write_json to fail
-            mock_fs.write_json.return_value = MagicMock(success=False,
-                                                        error="Write error")
+            mock_fs.write_json.return_value = MagicMock(
+                success=False, error="Write error"
+            )
 
             # Call the function
             result = save_progress(progress)
@@ -400,13 +435,14 @@ class TestSaveProgress:
 
             # Verify mock calls
             mock_fs.write_json.assert_called_once_with(
-                Path("/home/user/.quack/ducktyper_user.json"),
-                progress.model_dump()
+                Path("/home/user/.quack/ducktyper_user.json"), progress.model_dump()
             )
 
             # Verify log message
-            assert any("Failed to save progress file" in str(call) for call in
-                       mock_logger.error.call_args_list)
+            assert any(
+                "Failed to save progress file" in str(call)
+                for call in mock_logger.error.call_args_list
+            )
 
     def test_save_progress_exception(self, mock_fs, mock_logger):
         """Test handling unexpected exception."""
@@ -415,7 +451,8 @@ class TestSaveProgress:
 
         # Setup mocks
         with patch(
-                "quackcore.teaching.core.utils.get_progress_file_path") as mock_get_path:
+            "quackcore.teaching.core.utils.get_progress_file_path"
+        ) as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.write_json to raise exception
@@ -429,13 +466,14 @@ class TestSaveProgress:
 
             # Verify mock calls
             mock_fs.write_json.assert_called_once_with(
-                Path("/home/user/.quack/ducktyper_user.json"),
-                progress.model_dump()
+                Path("/home/user/.quack/ducktyper_user.json"), progress.model_dump()
             )
 
             # Verify log message
-            assert any("Error saving progress file" in str(call) for call in
-                       mock_logger.error.call_args_list)
+            assert any(
+                "Error saving progress file" in str(call)
+                for call in mock_logger.error.call_args_list
+            )
 
 
 class TestCreateNewProgress:
@@ -445,7 +483,8 @@ class TestCreateNewProgress:
         """Test creating new progress."""
         # Setup mocks
         with patch(
-                "quackcore.teaching.core.utils.get_github_username") as mock_get_username:
+            "quackcore.teaching.core.utils.get_github_username"
+        ) as mock_get_username:
             mock_get_username.return_value = "test-user"
 
             # Mock save_progress
@@ -474,7 +513,8 @@ class TestResetProgress:
         """Test resetting existing progress."""
         # Setup mocks
         with patch(
-                "quackcore.teaching.core.utils.get_progress_file_path") as mock_get_path:
+            "quackcore.teaching.core.utils.get_progress_file_path"
+        ) as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
@@ -491,19 +531,24 @@ class TestResetProgress:
 
             # Verify mock calls
             mock_fs.get_file_info.assert_called_once_with(
-                Path("/home/user/.quack/ducktyper_user.json"))
+                Path("/home/user/.quack/ducktyper_user.json")
+            )
             mock_fs.delete.assert_called_once_with(
-                Path("/home/user/.quack/ducktyper_user.json"))
+                Path("/home/user/.quack/ducktyper_user.json")
+            )
 
             # Verify log message
-            assert any("Reset user progress" in str(call) for call in
-                       mock_logger.info.call_args_list)
+            assert any(
+                "Reset user progress" in str(call)
+                for call in mock_logger.info.call_args_list
+            )
 
     def test_reset_nonexistent_progress(self, mock_fs, mock_logger):
         """Test resetting when progress file doesn't exist."""
         # Setup mocks
         with patch(
-                "quackcore.teaching.core.utils.get_progress_file_path") as mock_get_path:
+            "quackcore.teaching.core.utils.get_progress_file_path"
+        ) as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file doesn't exist
@@ -517,18 +562,22 @@ class TestResetProgress:
 
             # Verify mock calls
             mock_fs.get_file_info.assert_called_once_with(
-                Path("/home/user/.quack/ducktyper_user.json"))
+                Path("/home/user/.quack/ducktyper_user.json")
+            )
             mock_fs.delete.assert_not_called()
 
             # Verify log message
-            assert any("No progress file to reset" in str(call) for call in
-                       mock_logger.debug.call_args_list)
+            assert any(
+                "No progress file to reset" in str(call)
+                for call in mock_logger.debug.call_args_list
+            )
 
     def test_reset_progress_failure(self, mock_fs, mock_logger):
         """Test handling reset failure."""
         # Setup mocks
         with patch(
-                "quackcore.teaching.core.utils.get_progress_file_path") as mock_get_path:
+            "quackcore.teaching.core.utils.get_progress_file_path"
+        ) as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
@@ -545,13 +594,17 @@ class TestResetProgress:
 
             # Verify mock calls
             mock_fs.get_file_info.assert_called_once_with(
-                Path("/home/user/.quack/ducktyper_user.json"))
+                Path("/home/user/.quack/ducktyper_user.json")
+            )
             mock_fs.delete.assert_called_once_with(
-                Path("/home/user/.quack/ducktyper_user.json"))
+                Path("/home/user/.quack/ducktyper_user.json")
+            )
 
             # Verify log message
-            assert any("Failed to delete progress file" in str(call) for call in
-                       mock_logger.error.call_args_list)
+            assert any(
+                "Failed to delete progress file" in str(call)
+                for call in mock_logger.error.call_args_list
+            )
 
 
 class TestBackupProgress:
@@ -561,7 +614,8 @@ class TestBackupProgress:
         """Test backing up progress with default name."""
         # Setup mocks
         with patch(
-                "quackcore.teaching.core.utils.get_progress_file_path") as mock_get_path:
+            "quackcore.teaching.core.utils.get_progress_file_path"
+        ) as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
@@ -569,7 +623,8 @@ class TestBackupProgress:
 
             # Mock get_user_data_dir
             with patch(
-                    "quackcore.teaching.core.utils.get_user_data_dir") as mock_get_dir:
+                "quackcore.teaching.core.utils.get_user_data_dir"
+            ) as mock_get_dir:
                 mock_get_dir.return_value = Path("/home/user/.quack")
 
                 # Mock fs.copy to succeed
@@ -589,22 +644,25 @@ class TestBackupProgress:
 
                     # Verify mock calls
                     mock_fs.get_file_info.assert_called_once_with(
-                        Path("/home/user/.quack/ducktyper_user.json"))
+                        Path("/home/user/.quack/ducktyper_user.json")
+                    )
                     mock_fs.copy.assert_called_once_with(
                         Path("/home/user/.quack/ducktyper_user.json"),
-                        Path("/home/user/.quack/ducktyper_user_20230101_120000.json")
+                        Path("/home/user/.quack/ducktyper_user_20230101_120000.json"),
                     )
 
                     # Verify log message
                     assert any(
-                        "Created backup of user progress" in str(call) for call in
-                        mock_logger.info.call_args_list)
+                        "Created backup of user progress" in str(call)
+                        for call in mock_logger.info.call_args_list
+                    )
 
     def test_backup_with_custom_name(self, mock_fs, mock_logger):
         """Test backing up progress with custom name."""
         # Setup mocks
         with patch(
-                "quackcore.teaching.core.utils.get_progress_file_path") as mock_get_path:
+            "quackcore.teaching.core.utils.get_progress_file_path"
+        ) as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
@@ -612,7 +670,8 @@ class TestBackupProgress:
 
             # Mock get_user_data_dir
             with patch(
-                    "quackcore.teaching.core.utils.get_user_data_dir") as mock_get_dir:
+                "quackcore.teaching.core.utils.get_user_data_dir"
+            ) as mock_get_dir:
                 mock_get_dir.return_value = Path("/home/user/.quack")
 
                 # Mock fs.copy to succeed
@@ -626,21 +685,25 @@ class TestBackupProgress:
 
                 # Verify mock calls
                 mock_fs.get_file_info.assert_called_once_with(
-                    Path("/home/user/.quack/ducktyper_user.json"))
+                    Path("/home/user/.quack/ducktyper_user.json")
+                )
                 mock_fs.copy.assert_called_once_with(
                     Path("/home/user/.quack/ducktyper_user.json"),
-                    Path("/home/user/.quack/custom_backup.json")
+                    Path("/home/user/.quack/custom_backup.json"),
                 )
 
                 # Verify log message
-                assert any("Created backup of user progress" in str(call) for call in
-                           mock_logger.info.call_args_list)
+                assert any(
+                    "Created backup of user progress" in str(call)
+                    for call in mock_logger.info.call_args_list
+                )
 
     def test_backup_nonexistent_file(self, mock_fs, mock_logger):
         """Test backing up when progress file doesn't exist."""
         # Setup mocks
         with patch(
-                "quackcore.teaching.core.utils.get_progress_file_path") as mock_get_path:
+            "quackcore.teaching.core.utils.get_progress_file_path"
+        ) as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file doesn't exist
@@ -654,18 +717,22 @@ class TestBackupProgress:
 
             # Verify mock calls
             mock_fs.get_file_info.assert_called_once_with(
-                Path("/home/user/.quack/ducktyper_user.json"))
+                Path("/home/user/.quack/ducktyper_user.json")
+            )
             mock_fs.copy.assert_not_called()
 
             # Verify log message
-            assert any("No progress file to backup" in str(call) for call in
-                       mock_logger.debug.call_args_list)
+            assert any(
+                "No progress file to backup" in str(call)
+                for call in mock_logger.debug.call_args_list
+            )
 
     def test_backup_failure(self, mock_fs, mock_logger):
         """Test handling backup failure."""
         # Setup mocks
         with patch(
-                "quackcore.teaching.core.utils.get_progress_file_path") as mock_get_path:
+            "quackcore.teaching.core.utils.get_progress_file_path"
+        ) as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
@@ -673,7 +740,8 @@ class TestBackupProgress:
 
             # Mock get_user_data_dir
             with patch(
-                    "quackcore.teaching.core.utils.get_user_data_dir") as mock_get_dir:
+                "quackcore.teaching.core.utils.get_user_data_dir"
+            ) as mock_get_dir:
                 mock_get_dir.return_value = Path("/home/user/.quack")
 
                 # Mock fs.copy to fail
@@ -687,9 +755,12 @@ class TestBackupProgress:
 
                 # Verify mock calls
                 mock_fs.get_file_info.assert_called_once_with(
-                    Path("/home/user/.quack/ducktyper_user.json"))
+                    Path("/home/user/.quack/ducktyper_user.json")
+                )
                 mock_fs.copy.assert_called_once()
 
                 # Verify log message
-                assert any("Failed to create backup" in str(call) for call in
-                           mock_logger.error.call_args_list)
+                assert any(
+                    "Failed to create backup" in str(call)
+                    for call in mock_logger.error.call_args_list
+                )

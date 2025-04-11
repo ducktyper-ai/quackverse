@@ -1,9 +1,11 @@
+# tests/test_teaching/test_npc/test_tools/test_certificate_tools.py
 """
 Tests for the certificate tools in quackcore.teaching.npc.tools.certificate_tools.
 
 This module tests the functions for retrieving certificate information
 and checking certificate eligibility.
 """
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -64,16 +66,19 @@ class TestCertificateTools:
             custom_data={"learning_style": "visual"},
         )
 
-    def test_get_certificate_info_no_certificates(self, mocker, mock_user,
-                                                  user_memory_basics_incomplete):
+    def test_get_certificate_info_no_certificates(
+        self, mocker, mock_user, user_memory_basics_incomplete
+    ):
         """Test get_certificate_info with no earned certificates."""
         # Mock dependencies
         mock_utils = mocker.patch(
-            "quackcore.teaching.npc.tools.certificate_tools.utils")
+            "quackcore.teaching.npc.tools.certificate_tools.utils"
+        )
         mock_utils.load_progress.return_value = mock_user
 
         mock_certificates = mocker.patch(
-            "quackcore.teaching.npc.tools.certificate_tools.certificates")
+            "quackcore.teaching.npc.tools.certificate_tools.certificates"
+        )
         # No certificates earned
         mock_certificates.has_earned_certificate.return_value = False
 
@@ -92,10 +97,12 @@ class TestCertificateTools:
 
         # Verify dependencies were called correctly
         mock_utils.load_progress.assert_called_once()
-        mock_certificates.has_earned_certificate.assert_any_call(mock_user,
-                                                                 "quackverse-basics")
-        mock_certificates.has_earned_certificate.assert_any_call(mock_user,
-                                                                 "github-contributor")
+        mock_certificates.has_earned_certificate.assert_any_call(
+            mock_user, "quackverse-basics"
+        )
+        mock_certificates.has_earned_certificate.assert_any_call(
+            mock_user, "github-contributor"
+        )
         mock_standardize.assert_called_once()
 
         # Verify result
@@ -109,22 +116,27 @@ class TestCertificateTools:
         assert args[1]["earned_count"] == 0
         assert "certificates" in args[1]
         assert "formatted_text" in args[1]
-        assert "Certificate Path" in args[1][
-            "formatted_text"]  # Step by step learning style
+        assert (
+            "Certificate Path" in args[1]["formatted_text"]
+        )  # Step by step learning style
 
-    def test_get_certificate_info_with_earned_certificate(self, mocker, mock_user,
-                                                          user_memory_basics_complete):
+    def test_get_certificate_info_with_earned_certificate(
+        self, mocker, mock_user, user_memory_basics_complete
+    ):
         """Test get_certificate_info with earned certificates."""
         # Mock dependencies
         mock_utils = mocker.patch(
-            "quackcore.teaching.npc.tools.certificate_tools.utils")
+            "quackcore.teaching.npc.tools.certificate_tools.utils"
+        )
         mock_utils.load_progress.return_value = mock_user
 
         mock_certificates = mocker.patch(
-            "quackcore.teaching.npc.tools.certificate_tools.certificates")
+            "quackcore.teaching.npc.tools.certificate_tools.certificates"
+        )
         # First certificate earned, second not earned
-        mock_certificates.has_earned_certificate.side_effect = lambda u,
-                                                                      cert_id: cert_id == "quackverse-basics"
+        mock_certificates.has_earned_certificate.side_effect = (
+            lambda u, cert_id: cert_id == "quackverse-basics"
+        )
 
         # Mock standardize_tool_output
         mock_standardize = mocker.patch(
@@ -141,10 +153,12 @@ class TestCertificateTools:
 
         # Verify dependencies were called correctly
         mock_utils.load_progress.assert_called_once()
-        mock_certificates.has_earned_certificate.assert_any_call(mock_user,
-                                                                 "quackverse-basics")
-        mock_certificates.has_earned_certificate.assert_any_call(mock_user,
-                                                                 "github-contributor")
+        mock_certificates.has_earned_certificate.assert_any_call(
+            mock_user, "quackverse-basics"
+        )
+        mock_certificates.has_earned_certificate.assert_any_call(
+            mock_user, "github-contributor"
+        )
         mock_standardize.assert_called_once()
 
         # Verify result
@@ -158,20 +172,24 @@ class TestCertificateTools:
         assert args[1]["earned_count"] == 1
         assert "certificates" in args[1]
         assert "formatted_text" in args[1]
-        assert "Certificate Challenges" in args[1][
-            "formatted_text"]  # Challenge learning style
+        assert (
+            "Certificate Challenges" in args[1]["formatted_text"]
+        )  # Challenge learning style
         assert "To generate your certificate" in args[1]["formatted_text"]
 
-    def test_get_certificate_info_all_certificates_earned(self, mocker, mock_user,
-                                                          user_memory_github_complete):
+    def test_get_certificate_info_all_certificates_earned(
+        self, mocker, mock_user, user_memory_github_complete
+    ):
         """Test get_certificate_info with all certificates earned."""
         # Mock dependencies
         mock_utils = mocker.patch(
-            "quackcore.teaching.npc.tools.certificate_tools.utils")
+            "quackcore.teaching.npc.tools.certificate_tools.utils"
+        )
         mock_utils.load_progress.return_value = mock_user
 
         mock_certificates = mocker.patch(
-            "quackcore.teaching.npc.tools.certificate_tools.certificates")
+            "quackcore.teaching.npc.tools.certificate_tools.certificates"
+        )
         # All certificates earned
         mock_certificates.has_earned_certificate.return_value = True
 
@@ -190,10 +208,12 @@ class TestCertificateTools:
 
         # Verify dependencies were called correctly
         mock_utils.load_progress.assert_called_once()
-        mock_certificates.has_earned_certificate.assert_any_call(mock_user,
-                                                                 "quackverse-basics")
-        mock_certificates.has_earned_certificate.assert_any_call(mock_user,
-                                                                 "github-contributor")
+        mock_certificates.has_earned_certificate.assert_any_call(
+            mock_user, "quackverse-basics"
+        )
+        mock_certificates.has_earned_certificate.assert_any_call(
+            mock_user, "github-contributor"
+        )
         mock_standardize.assert_called_once()
 
         # Verify result
@@ -209,16 +229,19 @@ class TestCertificateTools:
         assert "formatted_text" in args[1]
         assert "To generate your certificate" in args[1]["formatted_text"]
 
-    def test_certificate_progress_calculation(self, mocker, mock_user,
-                                              user_memory_basics_incomplete):
+    def test_certificate_progress_calculation(
+        self, mocker, mock_user, user_memory_basics_incomplete
+    ):
         """Test that certificate progress is calculated correctly."""
         # Mock dependencies
         mock_utils = mocker.patch(
-            "quackcore.teaching.npc.tools.certificate_tools.utils")
+            "quackcore.teaching.npc.tools.certificate_tools.utils"
+        )
         mock_utils.load_progress.return_value = mock_user
 
         mock_certificates = mocker.patch(
-            "quackcore.teaching.npc.tools.certificate_tools.certificates")
+            "quackcore.teaching.npc.tools.certificate_tools.certificates"
+        )
         mock_certificates.has_earned_certificate.return_value = False
 
         # Mock standardize_tool_output
@@ -240,14 +263,16 @@ class TestCertificateTools:
 
         # Find the quackverse-basics certificate
         basics_cert = next(
-            cert for cert in certificates if cert.id == "quackverse-basics")
+            cert for cert in certificates if cert.id == "quackverse-basics"
+        )
 
         # User has 2 out of 3 quests and 50/100 XP, so progress should be 50%
         assert basics_cert.progress == 50.0
 
         # Find the github-contributor certificate
         github_cert = next(
-            cert for cert in certificates if cert.id == "github-contributor")
+            cert for cert in certificates if cert.id == "github-contributor"
+        )
 
         # User has 0 out of 4 requirements, so progress should be 0%
         assert github_cert.progress == 0.0

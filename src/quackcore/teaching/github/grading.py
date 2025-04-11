@@ -1,7 +1,6 @@
 # src/quackcore/teaching/github/grading.py
 """GitHub assignment grading utilities for QuackCore."""
 
-import re
 from typing import Any
 
 from quackcore.errors import QuackApiError
@@ -10,7 +9,7 @@ from quackcore.integrations.github.client import GitHubClient
 from quackcore.integrations.github.models import PullRequest
 from quackcore.logging import get_logger
 from quackcore.teaching.core.gamification_service import GamificationService
-from quackcore.teaching.models import XPEvent
+from quackcore.teaching.core.models import XPEvent
 
 from .models import GradeResult
 

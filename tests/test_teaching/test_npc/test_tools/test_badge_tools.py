@@ -1,9 +1,11 @@
+# tests/test_teaching/test_npc/test_tools/test_badge_tools.py
 """
 Tests for the badge tools in quackcore.teaching.npc.tools.badge_tools.
 
 This module tests the functions for retrieving badge information,
 listing earned badges, and checking badge progress.
 """
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -284,7 +286,9 @@ class TestBadgeTools:
             "quackcore.teaching.npc.tools.badge_tools.DialogueRegistry"
         )
         mock_registry.get_badge_dialogue.return_value = "Badge description"
-        mock_registry.render_badge_status.return_value = "Rendered badge status (earned)"
+        mock_registry.render_badge_status.return_value = (
+            "Rendered badge status (earned)"
+        )
 
         # Mock standardize_tool_output
         mock_standardize = mocker.patch(

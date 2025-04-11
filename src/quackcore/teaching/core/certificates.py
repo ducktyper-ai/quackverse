@@ -16,7 +16,8 @@ from datetime import datetime
 from typing import Any
 
 from quackcore.logging import get_logger
-from quackcore.teaching.core.models import UserProgress
+
+from .models import UserProgress
 
 logger = get_logger(__name__)
 

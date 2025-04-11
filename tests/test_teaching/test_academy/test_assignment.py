@@ -2,13 +2,17 @@
 """
 Tests for the Assignment module.
 """
+
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
 import pytest
 
 from quackcore.teaching.academy.assignment import (
-    Assignment, AssignmentStatus, AssignmentType, AssignmentManager
+    Assignment,
+    AssignmentManager,
+    AssignmentStatus,
+    AssignmentType,
 )
 
 
@@ -19,8 +23,7 @@ class TestAssignment:
         """Test creating an assignment."""
         # Basic create
         assignment = Assignment.create(
-            name="Test Assignment",
-            description="Test description"
+            name="Test Assignment", description="Test description"
         )
         assert assignment.name == "Test Assignment"
         assert assignment.description == "Test description"
@@ -44,7 +47,7 @@ class TestAssignment:
             description="Advanced topics",
             assignment_type=AssignmentType.GROUP,
             due_date=due_date_str,
-            points=200.0
+            points=200.0,
         )
         assert assignment.name == "Advanced Assignment"
         assert assignment.description == "Advanced topics"
@@ -57,16 +60,11 @@ class TestAssignment:
     def test_ensure_id(self):
         """Test that ID is generated if not provided."""
         # Create with no ID
-        assignment = Assignment(
-            name="Test Assignment"
-        )
+        assignment = Assignment(name="Test Assignment")
         assert assignment.id is not None
 
         # Create with provided ID
-        assignment = Assignment(
-            id="custom-id",
-            name="Test Assignment"
-        )
+        assignment = Assignment(id="custom-id", name="Test Assignment")
         assert assignment.id == "custom-id"
 
     def test_publish(self):
@@ -103,15 +101,13 @@ class TestAssignment:
 
         # Due date in the future
         assignment = Assignment.create(
-            name="Test Assignment",
-            due_date=now + timedelta(days=1)
+            name="Test Assignment", due_date=now + timedelta(days=1)
         )
         assert assignment.is_past_due() is False
 
         # Due date in the past
         assignment = Assignment.create(
-            name="Test Assignment",
-            due_date=now - timedelta(days=1)
+            name="Test Assignment", due_date=now - timedelta(days=1)
         )
         assert assignment.is_past_due() is True
 
@@ -366,7 +362,7 @@ class TestAssignmentManager:
                     "description": "Description 1",
                     "status": "DRAFT",
                     "assignment_type": "INDIVIDUAL",
-                    "points": 100.0
+                    "points": 100.0,
                 },
                 {
                     "id": "assignment-2",
@@ -374,8 +370,8 @@ class TestAssignmentManager:
                     "status": "PUBLISHED",
                     "assignment_type": "GROUP",
                     "points": 200.0,
-                    "published_at": "2023-01-01T12:00:00"
-                }
+                    "published_at": "2023-01-01T12:00:00",
+                },
             ]
         }
         mock_fs.read_yaml.return_value = MagicMock(success=True, data=assignments_data)
@@ -408,8 +404,9 @@ class TestAssignmentManager:
         file_path = "/path/to/assignments.yaml"
 
         # Mock read_yaml to return failure
-        mock_fs.read_yaml.return_value = MagicMock(success=False,
-                                                   error="File not found")
+        mock_fs.read_yaml.return_value = MagicMock(
+            success=False, error="File not found"
+        )
 
         # Load from file should raise FileNotFoundError
         with pytest.raises(FileNotFoundError):
@@ -434,14 +431,11 @@ class TestAssignmentManager:
         # Mock read_yaml to return success with one invalid assignment
         assignments_data = {
             "assignments": [
-                {
-                    "id": "assignment-1",
-                    "name": "Assignment 1"
-                },
+                {"id": "assignment-1", "name": "Assignment 1"},
                 {
                     # Missing required name field
                     "id": "assignment-2"
-                }
+                },
             ]
         }
         mock_fs.read_yaml.return_value = MagicMock(success=True, data=assignments_data)

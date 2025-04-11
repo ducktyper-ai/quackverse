@@ -7,8 +7,9 @@ and handling level-up events.
 """
 
 from quackcore.logging import get_logger
-from quackcore.teaching import badges
-from quackcore.teaching.core.models import UserProgress, XPEvent
+
+from . import badges  # Use relative import from the same package, not the top-level
+from .models import UserProgress, XPEvent
 
 logger = get_logger(__name__)
 
@@ -66,7 +67,9 @@ def add_xp_from_quest(user: UserProgress, quest_id: str, xp_amount: int) -> None
     """
     # Create a synthetic XP event for this quest completion
     event = XPEvent(
-        id=f"quest-{quest_id}", label=f"Completed Quest: {quest_id}", points=xp_amount
+        id=f"quest-{quest_id}",
+        label=f"Completed Quest: {quest_id}",
+        points=xp_amount,
     )
 
     # Add the XP using the standard function

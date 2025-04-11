@@ -4,11 +4,12 @@ Tests for the teaching utilities module.
 
 This module tests the utility functions in quackcore.teaching.core.utils.
 """
+
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from quackcore.teaching.core.models import UserProgress
 from quackcore.teaching.core import utils
+from quackcore.teaching.core.models import UserProgress
 
 
 class TestTeachingUtils:
@@ -18,7 +19,9 @@ class TestTeachingUtils:
     @patch("quackcore.teaching.core.utils.fs.expand_user_vars")
     @patch("quackcore.teaching.core.utils.Path")
     @patch("quackcore.teaching.core.utils.fs.create_directory")
-    def test_get_user_data_dir_default(self, mock_create_dir, mock_path, mock_expand, mock_env_get):
+    def test_get_user_data_dir_default(
+        self, mock_create_dir, mock_path, mock_expand, mock_env_get
+    ):
         """Test getting the user data directory with default path."""
         # Setup
         mock_env_get.return_value = None
@@ -40,7 +43,9 @@ class TestTeachingUtils:
     @patch("quackcore.teaching.core.utils.fs.expand_user_vars")
     @patch("quackcore.teaching.core.utils.Path")
     @patch("quackcore.teaching.core.utils.fs.create_directory")
-    def test_get_user_data_dir_custom(self, mock_create_dir, mock_path, mock_expand, mock_env_get):
+    def test_get_user_data_dir_custom(
+        self, mock_create_dir, mock_path, mock_expand, mock_env_get
+    ):
         """Test getting the user data directory with custom path."""
         # Setup
         mock_env_get.return_value = "/custom/path"
@@ -66,13 +71,20 @@ class TestTeachingUtils:
         mock_data_dir.__truediv__.return_value = expected_file_path
 
         # Mock the get_user_data_dir function
-        with patch("quackcore.teaching.core.utils.get_user_data_dir", return_value=mock_data_dir):
-            with patch("quackcore.teaching.core.utils.os.environ.get", return_value=None):
+        with patch(
+            "quackcore.teaching.core.utils.get_user_data_dir",
+            return_value=mock_data_dir,
+        ):
+            with patch(
+                "quackcore.teaching.core.utils.os.environ.get", return_value=None
+            ):
                 # Act
                 result = utils.get_progress_file_path()
 
                 # Assert
-                mock_data_dir.__truediv__.assert_called_with(utils.DEFAULT_PROGRESS_FILE)
+                mock_data_dir.__truediv__.assert_called_with(
+                    utils.DEFAULT_PROGRESS_FILE
+                )
                 assert result == expected_file_path
 
     @patch("quackcore.teaching.core.utils.os.environ.get")
@@ -94,9 +106,7 @@ class TestTeachingUtils:
         """Test getting GitHub username from git config."""
         # Setup
         mock_env_get.return_value = None
-        mock_run.return_value = MagicMock(
-            returncode=0, stdout="test-user\n", stderr=""
-        )
+        mock_run.return_value = MagicMock(returncode=0, stdout="test-user\n", stderr="")
 
         # Act
         result = utils.get_github_username()
@@ -133,7 +143,9 @@ class TestTeachingUtils:
     @patch("quackcore.teaching.core.utils.subprocess.run")
     @patch("builtins.input")
     @patch("quackcore.teaching.core.utils.getpass.getuser")
-    def test_get_github_username_fallback(self, mock_getuser, mock_input, mock_run, mock_env_get):
+    def test_get_github_username_fallback(
+        self, mock_getuser, mock_input, mock_run, mock_env_get
+    ):
         """Test fallback to system username when other methods fail."""
         # Setup
         mock_env_get.return_value = None
@@ -156,7 +168,9 @@ class TestTeachingUtils:
     @patch("quackcore.teaching.core.utils.get_progress_file_path")
     @patch("quackcore.teaching.core.utils.fs.get_file_info")
     @patch("quackcore.teaching.core.utils.create_new_progress")
-    def test_load_progress_file_not_found(self, mock_create_new, mock_get_file_info, mock_get_path):
+    def test_load_progress_file_not_found(
+        self, mock_create_new, mock_get_file_info, mock_get_path
+    ):
         """Test loading progress when file doesn't exist."""
         # Setup
         mock_path = MagicMock(spec=Path)
@@ -181,8 +195,14 @@ class TestTeachingUtils:
     @patch("quackcore.teaching.core.utils.fs.read_json")
     @patch("quackcore.teaching.core.utils.UserProgress.model_validate")
     @patch("quackcore.teaching.core.utils.logger")
-    def test_load_progress_success(self, mock_logger, mock_validate, mock_read_json,
-                                   mock_get_file_info, mock_get_path):
+    def test_load_progress_success(
+        self,
+        mock_logger,
+        mock_validate,
+        mock_read_json,
+        mock_get_file_info,
+        mock_get_path,
+    ):
         """Test successfully loading progress from file."""
         # Setup
         mock_path = MagicMock(spec=Path)
@@ -221,8 +241,14 @@ class TestTeachingUtils:
     @patch("quackcore.teaching.core.utils.fs.read_json")
     @patch("quackcore.teaching.core.utils.create_new_progress")
     @patch("quackcore.teaching.core.utils.logger")
-    def test_load_progress_read_error(self, mock_logger, mock_create_new, mock_read_json,
-                                      mock_get_file_info, mock_get_path):
+    def test_load_progress_read_error(
+        self,
+        mock_logger,
+        mock_create_new,
+        mock_read_json,
+        mock_get_file_info,
+        mock_get_path,
+    ):
         """Test handling errors when reading progress file."""
         # Setup
         mock_path = MagicMock(spec=Path)
@@ -268,7 +294,9 @@ class TestTeachingUtils:
     @patch("quackcore.teaching.core.utils.fs.get_file_info")
     @patch("quackcore.teaching.core.utils.fs.delete")
     @patch("quackcore.teaching.core.utils.logger")
-    def test_reset_progress_success(self, mock_logger, mock_delete, mock_get_file_info, mock_get_path):
+    def test_reset_progress_success(
+        self, mock_logger, mock_delete, mock_get_file_info, mock_get_path
+    ):
         """Test successfully resetting progress."""
         # Setup
         mock_path = MagicMock(spec=Path)
@@ -289,7 +317,9 @@ class TestTeachingUtils:
     @patch("quackcore.teaching.core.utils.get_progress_file_path")
     @patch("quackcore.teaching.core.utils.fs.get_file_info")
     @patch("quackcore.teaching.core.utils.logger")
-    def test_reset_progress_no_file(self, mock_logger, mock_get_file_info, mock_get_path):
+    def test_reset_progress_no_file(
+        self, mock_logger, mock_get_file_info, mock_get_path
+    ):
         """Test resetting progress when file doesn't exist."""
         # Setup
         mock_path = MagicMock(spec=Path)
@@ -308,7 +338,9 @@ class TestTeachingUtils:
     @patch("quackcore.teaching.core.utils.fs.get_file_info")
     @patch("quackcore.teaching.core.utils.fs.delete")
     @patch("quackcore.teaching.core.utils.logger")
-    def test_reset_progress_error(self, mock_logger, mock_delete, mock_get_file_info, mock_get_path):
+    def test_reset_progress_error(
+        self, mock_logger, mock_delete, mock_get_file_info, mock_get_path
+    ):
         """Test handling errors when resetting progress."""
         # Setup
         mock_path = MagicMock(spec=Path)
@@ -330,15 +362,24 @@ class TestTeachingUtils:
     @patch("quackcore.teaching.core.utils.fs.copy")
     @patch("quackcore.teaching.core.utils.logger")
     @patch("quackcore.teaching.core.utils.datetime")
-    def test_backup_progress_success(self, mock_datetime, mock_logger, mock_copy,
-                                     mock_get_file_info, mock_get_path, mock_get_data_dir):
+    def test_backup_progress_success(
+        self,
+        mock_datetime,
+        mock_logger,
+        mock_copy,
+        mock_get_file_info,
+        mock_get_path,
+        mock_get_data_dir,
+    ):
         """Test successfully backing up progress."""
         # Setup
         mock_path = MagicMock(spec=Path)
         mock_get_path.return_value = mock_path
         mock_get_file_info.return_value = MagicMock(success=True, exists=True)
 
-        mock_datetime.datetime.now.return_value.strftime.return_value = "20250410_123456"
+        mock_datetime.datetime.now.return_value.strftime.return_value = (
+            "20250410_123456"
+        )
 
         mock_data_dir = MagicMock(spec=Path)
         mock_get_data_dir.return_value = mock_data_dir
@@ -354,8 +395,12 @@ class TestTeachingUtils:
         mock_get_path.assert_called_once()
         mock_get_file_info.assert_called_with(mock_path)
         mock_datetime.datetime.now.assert_called_once()
-        mock_datetime.datetime.now.return_value.strftime.assert_called_with("%Y%m%d_%H%M%S")
-        mock_data_dir.__truediv__.assert_called_with(f"ducktyper_user_20250410_123456.json")
+        mock_datetime.datetime.now.return_value.strftime.assert_called_with(
+            "%Y%m%d_%H%M%S"
+        )
+        mock_data_dir.__truediv__.assert_called_with(
+            f"ducktyper_user_20250410_123456.json"
+        )
         mock_copy.assert_called_with(mock_path, mock_backup_path)
         mock_logger.info.assert_called()
         assert result is True
@@ -363,7 +408,9 @@ class TestTeachingUtils:
     @patch("quackcore.teaching.core.utils.get_progress_file_path")
     @patch("quackcore.teaching.core.utils.fs.get_file_info")
     @patch("quackcore.teaching.core.utils.logger")
-    def test_backup_progress_no_file(self, mock_logger, mock_get_file_info, mock_get_path):
+    def test_backup_progress_no_file(
+        self, mock_logger, mock_get_file_info, mock_get_path
+    ):
         """Test backing up progress when file doesn't exist."""
         # Setup
         mock_path = MagicMock(spec=Path)
@@ -383,8 +430,14 @@ class TestTeachingUtils:
     @patch("quackcore.teaching.core.utils.fs.get_file_info")
     @patch("quackcore.teaching.core.utils.fs.copy")
     @patch("quackcore.teaching.core.utils.logger")
-    def test_backup_progress_custom_name(self, mock_logger, mock_copy, mock_get_file_info,
-                                         mock_get_path, mock_get_data_dir):
+    def test_backup_progress_custom_name(
+        self,
+        mock_logger,
+        mock_copy,
+        mock_get_file_info,
+        mock_get_path,
+        mock_get_data_dir,
+    ):
         """Test backing up progress with a custom backup name."""
         # Setup
         mock_path = MagicMock(spec=Path)
@@ -414,8 +467,14 @@ class TestTeachingUtils:
     @patch("quackcore.teaching.core.utils.fs.get_file_info")
     @patch("quackcore.teaching.core.utils.fs.copy")
     @patch("quackcore.teaching.core.utils.logger")
-    def test_backup_progress_error(self, mock_logger, mock_copy, mock_get_file_info,
-                                   mock_get_path, mock_get_data_dir):
+    def test_backup_progress_error(
+        self,
+        mock_logger,
+        mock_copy,
+        mock_get_file_info,
+        mock_get_path,
+        mock_get_data_dir,
+    ):
         """Test handling errors when backing up progress."""
         # Setup
         mock_path = MagicMock(spec=Path)
@@ -438,7 +497,9 @@ class TestTeachingUtils:
         assert result is False
 
     @patch("quackcore.teaching.core.utils.create_new_progress")
-    def test_load_progress_file_not_found(self, mock_create_new, mock_get_file_info, mock_get_path):
+    def test_load_progress_file_not_found(
+        self, mock_create_new, mock_get_file_info, mock_get_path
+    ):
         """Test loading progress when file doesn't exist."""
         # Setup
         mock_path = MagicMock(spec=Path)
@@ -463,8 +524,14 @@ class TestTeachingUtils:
     @patch("quackcore.teaching.core.utils.fs.read_json")
     @patch("quackcore.teaching.core.utils.UserProgress.model_validate")
     @patch("quackcore.teaching.core.utils.logger")
-    def test_load_progress_success(self, mock_logger, mock_validate, mock_read_json,
-                                   mock_get_file_info, mock_get_path):
+    def test_load_progress_success(
+        self,
+        mock_logger,
+        mock_validate,
+        mock_read_json,
+        mock_get_file_info,
+        mock_get_path,
+    ):
         """Test successfully loading progress from file."""
         # Setup
         mock_path = MagicMock(spec=Path)
@@ -503,8 +570,14 @@ class TestTeachingUtils:
     @patch("quackcore.teaching.core.utils.fs.read_json")
     @patch("quackcore.teaching.core.utils.create_new_progress")
     @patch("quackcore.teaching.core.utils.logger")
-    def test_load_progress_read_error(self, mock_logger, mock_create_new, mock_read_json,
-                                      mock_get_file_info, mock_get_path):
+    def test_load_progress_read_error(
+        self,
+        mock_logger,
+        mock_create_new,
+        mock_read_json,
+        mock_get_file_info,
+        mock_get_path,
+    ):
         """Test handling errors when reading progress file."""
         # Setup
         mock_path = MagicMock(spec=Path)

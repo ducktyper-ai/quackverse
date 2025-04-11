@@ -10,7 +10,7 @@ import pytest
 
 from quackcore.errors import QuackPluginError
 from quackcore.plugins.discovery import PluginLoader
-from quackcore.plugins.protocols import QuackPluginProtocol, QuackPluginMetadata
+from quackcore.plugins.protocols import QuackPluginMetadata, QuackPluginProtocol
 
 
 # Mock plugin implementation for testing
@@ -27,7 +27,7 @@ class MockPlugin(QuackPluginProtocol):
             name=self.name,
             version="1.0.0",
             description="Mock plugin for testing",
-            capabilities=[]
+            capabilities=[],
         )
 
 

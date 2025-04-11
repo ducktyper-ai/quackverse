@@ -6,8 +6,8 @@ This strategy provides a template for extracting structured data
 using a single example and a schema.
 """
 
-from ..registry import register_prompt_strategy
-from ..strategy_base import PromptStrategy
+from quackcore.prompt.registry import register_prompt_strategy
+from quackcore.prompt.strategy_base import PromptStrategy
 
 
 def render(task_description: str, schema: str, example: str | None = None) -> str:

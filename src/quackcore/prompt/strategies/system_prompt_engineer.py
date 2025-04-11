@@ -13,8 +13,8 @@ and instructs the LLM to rewrite and improve it by:
 The output should be the rewritten prompt only.
 """
 
-from ..registry import register_prompt_strategy
-from ..strategy_base import PromptStrategy
+from quackcore.prompt.registry import register_prompt_strategy
+from quackcore.prompt.strategy_base import PromptStrategy
 
 
 def render(strategy: str) -> str:

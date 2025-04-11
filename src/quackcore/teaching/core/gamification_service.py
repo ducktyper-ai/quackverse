@@ -13,8 +13,9 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from quackcore.logging import get_logger
-from quackcore.teaching.core import badges, quests, utils, xp
-from quackcore.teaching.core.models import UserProgress, XPEvent
+
+from . import badges, quests, utils, xp
+from .models import UserProgress, XPEvent
 
 logger = get_logger(__name__)
 

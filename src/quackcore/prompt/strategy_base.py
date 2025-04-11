@@ -9,7 +9,7 @@ for all prompt enhancement strategies in the QuackCore ecosystem.
 from collections.abc import Callable
 from typing import TypeVar
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 T = TypeVar("T")
 
@@ -47,7 +47,5 @@ class PromptStrategy(BaseModel):
         None, description="Source of the strategy (paper, blog, etc.)"
     )
 
-    class Config:
-        """Pydantic model configuration."""
-
-        arbitrary_types_allowed = True
+    # New Pydantic configuration using ConfigDict (replaces class Config)
+    model_config = ConfigDict(arbitrary_types_allowed=True)

@@ -4,10 +4,11 @@ Tests for the base functionality of the gamification service.
 
 This module tests initialization and basic event handling in the gamification service.
 """
+
 from unittest.mock import MagicMock, patch
 
-from quackcore.teaching.core.models import UserProgress
 from quackcore.teaching.core.gamification_service import GamificationService
+from quackcore.teaching.core.models import UserProgress
 
 
 class TestGamificationServiceBase:

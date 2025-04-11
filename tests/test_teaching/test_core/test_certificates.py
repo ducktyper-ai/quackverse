@@ -4,6 +4,7 @@ Tests for the teaching certificates module.
 
 This module tests the certificate functionality in quackcore.teaching.core.certificates.
 """
+
 import base64
 import hashlib
 import json
@@ -11,8 +12,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from quackcore.teaching.core.models import UserProgress
 from quackcore.teaching.core import certificates
+from quackcore.teaching.core.models import UserProgress
 
 
 class TestCertificates:
@@ -48,10 +49,14 @@ class TestCertificates:
 
         mock_course_completion_result = MagicMock()
         mock_course_completion_result.message = "Course completed"
-        mock_gamification_service.handle_course_completion.return_value = mock_course_completion_result
+        mock_gamification_service.handle_course_completion.return_value = (
+            mock_course_completion_result
+        )
 
-        with patch("quackcore.teaching.core.certificates.GamificationService",
-                   return_value=mock_gamification_service):
+        with patch(
+            "quackcore.teaching.core.certificates.GamificationService",
+            return_value=mock_gamification_service,
+        ):
             # Act
             certificate = certificates.create_certificate(
                 user, course_id, issuer, additional_data
@@ -163,7 +168,8 @@ class TestCertificates:
         # Assert
         assert result is False
         mock_logger.warning.assert_called_with(
-            "Certificate signature verification failed")
+            "Certificate signature verification failed"
+        )
 
     def test_certificate_to_string(self):
         """Test converting a certificate to a string format."""
@@ -283,8 +289,11 @@ class TestCertificates:
         user = UserProgress(
             github_username="testuser",
             xp=150,
-            completed_quest_ids=["star-quackcore", "run-ducktyper",
-                                 "complete-tutorial"],
+            completed_quest_ids=[
+                "star-quackcore",
+                "run-ducktyper",
+                "complete-tutorial",
+            ],
         )
 
         # Act
@@ -299,8 +308,11 @@ class TestCertificates:
         user = UserProgress(
             github_username="testuser",
             xp=80,  # Not enough XP
-            completed_quest_ids=["star-quackcore", "run-ducktyper",
-                                 "complete-tutorial"],
+            completed_quest_ids=[
+                "star-quackcore",
+                "run-ducktyper",
+                "complete-tutorial",
+            ],
         )
 
         # Act
@@ -331,8 +343,11 @@ class TestCertificates:
         user = UserProgress(
             github_username="testuser",
             xp=150,
-            completed_quest_ids=["star-quackcore", "run-ducktyper",
-                                 "complete-tutorial"],
+            completed_quest_ids=[
+                "star-quackcore",
+                "run-ducktyper",
+                "complete-tutorial",
+            ],
         )
 
         # Act

@@ -2,6 +2,7 @@
 """
 Tests for module initialization and import structure.
 """
+
 import importlib
 
 
@@ -13,15 +14,25 @@ def test_import_module():
 
 def test_module_exports():
     """Test that all expected entities are exported."""
-    from quackcore.teaching.academy import (
-        # Core classes
-        Assignment, AssignmentStatus, TeachingContext, Student, StudentSubmission,
-        SubmissionStatus, Course, CourseModule, ModuleItem, Feedback, FeedbackItem,
-        Annotation, GradingCriteria, GradeResult,
-        # Result classes
-        TeachingResult, AssignmentResult, FeedbackResult,
-        # Service
-        service
+    from quackcore.teaching.academy import (  # Core classes; Result classes; Service
+        Annotation,
+        Assignment,
+        AssignmentResult,
+        AssignmentStatus,
+        Course,
+        CourseModule,
+        Feedback,
+        FeedbackItem,
+        FeedbackResult,
+        GradeResult,
+        GradingCriteria,
+        ModuleItem,
+        Student,
+        StudentSubmission,
+        SubmissionStatus,
+        TeachingContext,
+        TeachingResult,
+        service,
     )
 
     # Verify these are the expected types
@@ -29,15 +40,19 @@ def test_module_exports():
 
     # Core class checks
     from quackcore.teaching.academy.assignment import Assignment as _Assignment
+
     assert Assignment is _Assignment
 
     from quackcore.teaching.academy.context import TeachingContext as _TeachingContext
+
     assert TeachingContext is _TeachingContext
 
     from quackcore.teaching.academy.student import Student as _Student
+
     assert Student is _Student
 
     from quackcore.teaching.academy.course import Course as _Course
+
     assert Course is _Course
 
 
@@ -50,6 +65,7 @@ def test_service_singleton():
 
     # Also verify it's the same as directly importing
     from quackcore.teaching.academy.service import service as service3
+
     assert service1 is service3
 
 

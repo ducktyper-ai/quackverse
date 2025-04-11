@@ -8,9 +8,11 @@ providing a common interface for all plugins to implement.
 
 from collections.abc import Callable
 from typing import Any, Protocol, TypeVar, runtime_checkable
+
 from pydantic import BaseModel, Field
 
 T = TypeVar("T")  # Generic return type
+
 
 class QuackPluginMetadata(BaseModel):
     """Metadata for QuackCore plugins."""
@@ -20,6 +22,7 @@ class QuackPluginMetadata(BaseModel):
     description: str
     author: str | None = None
     capabilities: list[str] = Field(default_factory=list)
+
 
 @runtime_checkable
 class QuackPluginProtocol(Protocol):
@@ -43,6 +46,7 @@ class QuackPluginProtocol(Protocol):
             QuackPluginMetadata: Plugin metadata
         """
         ...
+
 
 class PluginRegistryProtocol(Protocol):
     """Protocol for a plugin registry."""

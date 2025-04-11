@@ -1,3 +1,4 @@
+# tests/test_teaching/test_npc/test_tools/test_tutorial_tools.py
 """
 Tests for the tutorial tools in quackcore.teaching.npc.tools.tutorial_tools.
 
@@ -22,7 +23,9 @@ class TestTutorialTools:
             "content": "Python is a versatile programming language...",
         }
 
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.tutorial_tools.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.tutorial_tools.DialogueRegistry"
+        )
         mock_registry.render_template.return_value = "Rendered Python tutorial"
 
         # Mock standardize_tool_output
@@ -64,8 +67,12 @@ class TestTutorialTools:
             # No description or content
         }
 
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.tutorial_tools.DialogueRegistry")
-        mock_registry.render_template.return_value = "Rendered tutorial with default content"
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.tutorial_tools.DialogueRegistry"
+        )
+        mock_registry.render_template.return_value = (
+            "Rendered tutorial with default content"
+        )
 
         # Mock standardize_tool_output
         mock_standardize = mocker.patch(
@@ -107,7 +114,9 @@ class TestTutorialTools:
             "content": "Python is a versatile programming language...",
         }
 
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.tutorial_tools.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.tutorial_tools.DialogueRegistry"
+        )
         # Simulate a rendering error
         mock_registry.render_template.side_effect = Exception("Rendering error")
 
@@ -138,7 +147,9 @@ class TestTutorialTools:
         assert args[0] == "get_tutorial"
         assert "# Python Tutorial" in args[1]["formatted_text"]
         assert "Learn Python basics" in args[1]["formatted_text"]
-        assert "Python is a versatile programming language..." in args[1]["formatted_text"]
+        assert (
+            "Python is a versatile programming language..." in args[1]["formatted_text"]
+        )
 
         # Verify result
         assert isinstance(result, TutorialOutput)
@@ -149,7 +160,9 @@ class TestTutorialTools:
         mock_rag = mocker.patch("quackcore.teaching.npc.tools.tutorial_tools.rag")
         mock_rag.get_tutorial_topic.return_value = {}  # Empty response
 
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.tutorial_tools.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.tutorial_tools.DialogueRegistry"
+        )
         mock_registry.render_template.return_value = "Rendered empty tutorial"
 
         # Mock standardize_tool_output

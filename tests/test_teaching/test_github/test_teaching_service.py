@@ -4,6 +4,7 @@ Tests for the GitHub teaching integration service.
 
 This module tests the GitHub teaching integration service in quackcore.teaching.github.teaching_service.
 """
+
 from unittest.mock import MagicMock, patch
 
 from quackcore.teaching.github.teaching_service import GitHubTeachingIntegration
@@ -270,8 +271,9 @@ class TestGitHubTeachingIntegration:
 
         # Assert
         assert result is expected_result
-        mock_adapter.get_latest_submission.assert_called_once_with("test/repo",
-                                                                   "student")
+        mock_adapter.get_latest_submission.assert_called_once_with(
+            "test/repo", "student"
+        )
 
     @patch("quackcore.teaching.github.teaching_service.GitHubGrader")
     def test_grade_submission_success(self, mock_grader_class):
@@ -328,8 +330,9 @@ class TestGitHubTeachingIntegration:
         # Assert
         assert result is expected_result
         mock_github.get_pull_request.assert_called_once_with("test/repo", 42)
-        mock_grader.grade_submission.assert_called_once_with(mock_pr_result.content,
-                                                             None)
+        mock_grader.grade_submission.assert_called_once_with(
+            mock_pr_result.content, None
+        )
 
     @patch("quackcore.teaching.github.teaching_service.GitHubGrader")
     def test_grade_submission_by_number_pr_not_found(self, mock_grader_class):

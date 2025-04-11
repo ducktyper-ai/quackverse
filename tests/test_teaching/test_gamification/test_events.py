@@ -4,11 +4,14 @@ Tests for event handling in the gamification service.
 
 This module tests event handling functionality in the gamification service.
 """
+
 from unittest.mock import MagicMock, patch
 
+from quackcore.teaching.core.gamification_service import (
+    GamificationResult,
+    GamificationService,
+)
 from quackcore.teaching.core.models import UserProgress, XPEvent
-from quackcore.teaching.core.gamification_service import GamificationResult, \
-    GamificationService
 
 
 class TestGamificationServiceEvents:
@@ -18,8 +21,9 @@ class TestGamificationServiceEvents:
     @patch("quackcore.teaching.core.gamification_service.quests.apply_completed_quests")
     @patch("quackcore.teaching.core.gamification_service.xp._check_xp_badges")
     @patch("quackcore.teaching.core.gamification_service.utils.save_progress")
-    def test_handle_event_new(self, mock_save, mock_check_badges, mock_apply_quests,
-                              mock_add_xp):
+    def test_handle_event_new(
+        self, mock_save, mock_check_badges, mock_apply_quests, mock_add_xp
+    ):
         """Test handling a new XP event."""
         # Setup
         user = UserProgress(github_username="testuser", xp=50)
@@ -61,8 +65,9 @@ class TestGamificationServiceEvents:
     @patch("quackcore.teaching.core.gamification_service.quests.apply_completed_quests")
     @patch("quackcore.teaching.core.gamification_service.xp._check_xp_badges")
     @patch("quackcore.teaching.core.gamification_service.utils.save_progress")
-    def test_handle_event_level_up(self, mock_save, mock_check_badges,
-                                   mock_apply_quests, mock_add_xp):
+    def test_handle_event_level_up(
+        self, mock_save, mock_check_badges, mock_apply_quests, mock_add_xp
+    ):
         """Test handling an event that causes a level up."""
         # Setup
         user = UserProgress(github_username="testuser", xp=90)
@@ -130,7 +135,7 @@ class TestGamificationServiceEvents:
             level_up=False,
             completed_quests=["quest1"],
             earned_badges=[],
-            message="Result 1"
+            message="Result 1",
         )
 
         mock_result2 = GamificationResult(
@@ -139,10 +144,10 @@ class TestGamificationServiceEvents:
             level_up=False,
             completed_quests=[],
             earned_badges=["badge1"],
-            message="Result 2"
+            message="Result 2",
         )
 
-        with patch.object(service, 'handle_event') as mock_handle_event:
+        with patch.object(service, "handle_event") as mock_handle_event:
             mock_handle_event.side_effect = [mock_result1, mock_result2]
 
             # Act

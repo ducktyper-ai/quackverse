@@ -4,6 +4,7 @@ Tests for the Quackster NPC dialogue registry.
 
 This module tests the dialogue registry functionality in quackcore.teaching.npc.dialogue.registry.
 """
+
 from unittest.mock import MagicMock, patch
 
 from quackcore.teaching.npc.dialogue.registry import DialogueRegistry
@@ -100,7 +101,9 @@ class TestDialogueRegistry:
         }
 
         # Mock random.choice to always return the badge greeting
-        mock_choice.return_value = "Welcome badge collector with {{ badge_count }} badges!"
+        mock_choice.return_value = (
+            "Welcome badge collector with {{ badge_count }} badges!"
+        )
 
         user_memory = UserMemory(
             github_username="testuser",
@@ -261,8 +264,10 @@ class TestDialogueRegistry:
 
         # Don't add a quack catchphrase
         mock_load_yaml.return_value = {"catchphrases": ["Quacktastic!"]}
-        mock_random.random.side_effect = [0.1,
-                                          0.5]  # First random for flavor category, second for catchphrase
+        mock_random.random.side_effect = [
+            0.1,
+            0.5,
+        ]  # First random for flavor category, second for catchphrase
 
         # Act
         result = DialogueRegistry.flavor_text("tutorial", "Learn Python basics")
@@ -277,8 +282,10 @@ class TestDialogueRegistry:
         """Test adding flavor text with a catchphrase."""
         # Setup
         # Mock random to predictably add flavor and catchphrase
-        mock_random.random.side_effect = [0.5,
-                                          0.1]  # Skip category flavor, add catchphrase
+        mock_random.random.side_effect = [
+            0.5,
+            0.1,
+        ]  # Skip category flavor, add catchphrase
         mock_random.choice.return_value = "Quacktastic!"  # The catchphrase
 
         mock_load_yaml.return_value = {"catchphrases": ["Quacktastic!"]}

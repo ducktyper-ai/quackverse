@@ -12,8 +12,9 @@ from quackcore.plugins.protocols import (
     CommandPluginProtocol,
     ExtensionPluginProtocol,
     ProviderPluginProtocol,
+    QuackPluginMetadata,
     QuackPluginProtocol,
-    WorkflowPluginProtocol, QuackPluginMetadata,
+    WorkflowPluginProtocol,
 )
 from quackcore.plugins.registry import PluginRegistry
 
@@ -32,7 +33,7 @@ class BasicPlugin(QuackPluginProtocol):
             name=self.name,
             version="1.0.0",
             description="Basic plugin for testing",
-            capabilities=[]
+            capabilities=[],
         )
 
 
@@ -586,7 +587,7 @@ class TestPluginRegistry:
                     name=self._name,
                     version="1.0.0",
                     description=f"Plugin {self._name}",
-                    capabilities=self._capabilities
+                    capabilities=self._capabilities,
                 )
 
         registry = PluginRegistry()
@@ -619,9 +620,9 @@ class TestPluginRegistry:
 
     def test_reload_plugin(self) -> None:
         """Test reloading a plugin."""
-        import types
         import sys
-        from unittest.mock import patch, MagicMock
+        import types
+        from unittest.mock import MagicMock, patch
 
         # Since we can't easily mock importlib.reload properly,
         # we'll mock the entire reload_plugin method
@@ -639,7 +640,7 @@ class TestPluginRegistry:
                     name=self.name,
                     version="1.0.0",
                     description="Test plugin",
-                    capabilities=["test"]
+                    capabilities=["test"],
                 )
 
         class UpdatedTestPlugin(QuackPluginProtocol):
@@ -652,7 +653,7 @@ class TestPluginRegistry:
                     name=self.name,
                     version="1.1.0",  # Updated version
                     description="Updated test plugin",
-                    capabilities=["test", "new_capability"]  # New capability
+                    capabilities=["test", "new_capability"],  # New capability
                 )
 
         original_plugin = TestPlugin()
@@ -682,9 +683,10 @@ class TestPluginRegistry:
 
     def test_plugin_metadata_validation(self) -> None:
         """Test validation of plugin metadata."""
-        from quackcore.plugins.discovery import PluginLoader
         from typing import cast
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import MagicMock, patch
+
+        from quackcore.plugins.discovery import PluginLoader
 
         loader = PluginLoader()
 
@@ -699,7 +701,7 @@ class TestPluginRegistry:
                     name=self.name,
                     version="1.0.0",
                     description="Valid plugin",
-                    capabilities=["test"]
+                    capabilities=["test"],
                 )
 
         valid_plugin = ValidPlugin()
@@ -733,14 +735,15 @@ class TestPluginRegistry:
             return original_validate(plugin, module_path)
 
         # Replace the method temporarily
-        with patch.object(loader, '_validate_plugin',
-                          side_effect=mock_validate_that_raises):
+        with patch.object(
+            loader, "_validate_plugin", side_effect=mock_validate_that_raises
+        ):
             # Patch the get_metadata to return invalid data
             with patch.object(
-                    invalid_plugin,
-                    'get_metadata',
-                    return_value={"name": invalid_plugin.name}
-                    # Missing required fields
+                invalid_plugin,
+                "get_metadata",
+                return_value={"name": invalid_plugin.name},
+                # Missing required fields
             ):
                 # This should now raise a QuackPluginError
                 with pytest.raises(QuackPluginError):
@@ -757,14 +760,16 @@ class TestPluginRegistry:
         # This should create minimal metadata for backward compatibility
         # We cast to satisfy the type checker
         try:
-            loader._validate_plugin(cast(QuackPluginProtocol, legacy_plugin),
-                                    "test.module")
+            loader._validate_plugin(
+                cast(QuackPluginProtocol, legacy_plugin), "test.module"
+            )
         except QuackPluginError:
             pytest.fail("Legacy plugin should be accepted with minimal metadata")
 
     def test_load_builtin_plugin(self) -> None:
         """Test loading a built-in plugin."""
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import MagicMock, patch
+
         from quackcore.plugins.discovery import PluginLoader
 
         loader = PluginLoader()
@@ -780,16 +785,17 @@ class TestPluginRegistry:
         mock_ep.load.return_value = mock_factory
 
         # Test loading from entry points
-        with patch('importlib.metadata.entry_points', return_value=[mock_ep]):
+        with patch("importlib.metadata.entry_points", return_value=[mock_ep]):
             # Patch the validate_plugin method to not actually validate
-            with patch.object(loader, '_validate_plugin', return_value=mock_plugin):
+            with patch.object(loader, "_validate_plugin", return_value=mock_plugin):
                 plugins = loader.load_entry_points()
                 assert len(plugins) == 1
                 assert plugins[0].name == "basic_plugin"
 
     def test_discover_external_plugin(self) -> None:
         """Test discovering an external plugin."""
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import MagicMock, patch
+
         from quackcore.plugins.discovery import PluginLoader
 
         loader = PluginLoader()
@@ -805,9 +811,9 @@ class TestPluginRegistry:
         mock_ep.load.return_value = mock_factory
 
         # Test loading from entry points
-        with patch('importlib.metadata.entry_points', return_value=[mock_ep]):
+        with patch("importlib.metadata.entry_points", return_value=[mock_ep]):
             # Patch the validate_plugin method to not actually validate
-            with patch.object(loader, '_validate_plugin', return_value=mock_plugin):
+            with patch.object(loader, "_validate_plugin", return_value=mock_plugin):
                 plugins = loader.load_entry_points()
                 assert len(plugins) == 1
                 assert plugins[0].name == "basic_plugin"

@@ -1,3 +1,4 @@
+# tests/test_teaching/test_npc/test_tools/test_init.py
 """
 Tests for the module initialization and registry in quackcore.teaching.npc.tools.
 

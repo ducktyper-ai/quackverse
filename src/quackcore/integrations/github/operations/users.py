@@ -5,8 +5,8 @@ from typing import Any
 
 import requests
 
-from ..models import GitHubUser
-from ..utils.api import make_request
+from quackcore.integrations.github.models import GitHubUser
+from quackcore.integrations.github.utils.api import make_request
 
 
 def get_user(

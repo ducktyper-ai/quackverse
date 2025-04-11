@@ -7,9 +7,8 @@ from typing import Any
 import requests
 
 from quackcore.errors import QuackApiError
-
-from ..models import GitHubRepo, GitHubUser
-from ..utils.api import make_request
+from quackcore.integrations.github.models import GitHubRepo, GitHubUser
+from quackcore.integrations.github.utils.api import make_request
 
 
 def get_repo(

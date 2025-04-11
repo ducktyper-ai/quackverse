@@ -6,10 +6,10 @@ This module provides functions for loading user information into a
 format that the NPC can use to personalize interactions.
 """
 
+import re
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
-import re
 
 from quackcore.fs import service as fs
 from quackcore.logging import get_logger
@@ -177,15 +177,32 @@ def _extract_interests(text: str) -> list[str]:
     """
     # List of tech keywords to look for
     keywords = [
-        "python", "javascript", "typescript", "react", "vue", "angular",
-        "github", "git", "docker", "kubernetes", "aws", "azure",
-        "machine learning", "ai", "data science", "backend", "frontend",
-        "fullstack", "web development", "mobile development", "devops"
+        "python",
+        "javascript",
+        "typescript",
+        "react",
+        "vue",
+        "angular",
+        "github",
+        "git",
+        "docker",
+        "kubernetes",
+        "aws",
+        "azure",
+        "machine learning",
+        "ai",
+        "data science",
+        "backend",
+        "frontend",
+        "fullstack",
+        "web development",
+        "mobile development",
+        "devops",
     ]
 
     found_interests = []
     for keyword in keywords:
-        if re.search(rf'\b{re.escape(keyword)}\b', text.lower()):
+        if re.search(rf"\b{re.escape(keyword)}\b", text.lower()):
             found_interests.append(keyword)
 
     return found_interests
@@ -204,15 +221,30 @@ def _detect_learning_style(text: str) -> str | None:
     # Very simplified learning style detection
     visual_indicators = ["show", "see", "look", "diagram", "visual", "picture"]
     textual_indicators = ["read", "document", "explanation", "article", "textual"]
-    interactive_indicators = ["try", "practice", "example", "code", "exercise",
-                              "interactive"]
+    interactive_indicators = [
+        "try",
+        "practice",
+        "example",
+        "code",
+        "exercise",
+        "interactive",
+    ]
 
-    visual_count = sum(1 for word in visual_indicators if
-                       re.search(rf'\b{re.escape(word)}\b', text.lower()))
-    textual_count = sum(1 for word in textual_indicators if
-                        re.search(rf'\b{re.escape(word)}\b', text.lower()))
-    interactive_count = sum(1 for word in interactive_indicators if
-                            re.search(rf'\b{re.escape(word)}\b', text.lower()))
+    visual_count = sum(
+        1
+        for word in visual_indicators
+        if re.search(rf"\b{re.escape(word)}\b", text.lower())
+    )
+    textual_count = sum(
+        1
+        for word in textual_indicators
+        if re.search(rf"\b{re.escape(word)}\b", text.lower())
+    )
+    interactive_count = sum(
+        1
+        for word in interactive_indicators
+        if re.search(rf"\b{re.escape(word)}\b", text.lower())
+    )
 
     if visual_count > textual_count and visual_count > interactive_count:
         return "visual"
@@ -239,7 +271,7 @@ def _extract_stuck_points(text: str) -> list[str]:
         r"(?:I'm|I am) (?:stuck|confused) (?:on|about|with) (.+?)(?:\.|\?|$)",
         r"(?:having|have) (?:trouble|issues|problems) (?:with|understanding) (.+?)(?:\.|\?|$)",
         r"(?:don't|do not) understand (?:how to|what) (.+?)(?:\.|\?|$)",
-        r"(?:confused|struggling) (?:about|with) (.+?)(?:\.|\?|$)"
+        r"(?:confused|struggling) (?:about|with) (.+?)(?:\.|\?|$)",
     ]
 
     found_stuck_points = []
@@ -345,7 +377,7 @@ def get_user_memory(github_username: str = None) -> UserMemory:
             # Limit session history to last 10 entries
             if len(memory.custom_data["session_history"]) > 10:
                 memory.custom_data["session_history"] = memory.custom_data[
-                                                            "session_history"
-                                                        ][-10:]
+                    "session_history"
+                ][-10:]
 
     return memory

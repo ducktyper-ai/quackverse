@@ -14,8 +14,6 @@ from pydantic import BaseModel, Field, model_validator
 # Use QuackCore FS for file operations and path expansion.
 from quackcore.fs import service as fs
 from quackcore.logging import get_logger
-from quackcore.teaching.core.gamification_service import GamificationService
-from quackcore.teaching.core.models import XPEvent
 
 logger = get_logger(__name__)
 

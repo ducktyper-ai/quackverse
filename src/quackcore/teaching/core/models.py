@@ -9,7 +9,7 @@ and user progress tracking.
 from collections.abc import Callable
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class XPEvent(BaseModel):
@@ -72,8 +72,7 @@ class Quest(BaseModel):
         description="Function to verify if this quest is completed",
     )
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class UserProgress(BaseModel):

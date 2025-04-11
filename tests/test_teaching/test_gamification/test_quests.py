@@ -4,10 +4,11 @@ Tests for quest-related functionality in the gamification service.
 
 This module tests quest completion and management in the gamification service.
 """
+
 from unittest.mock import MagicMock, patch
 
-from quackcore.teaching.core.models import UserProgress
 from quackcore.teaching.core.gamification_service import GamificationService
+from quackcore.teaching.core.models import UserProgress
 
 
 class TestGamificationServiceQuests:
@@ -18,8 +19,9 @@ class TestGamificationServiceQuests:
     @patch("quackcore.teaching.core.gamification_service.badges")
     @patch("quackcore.teaching.core.gamification_service.utils.save_progress")
     @patch("quackcore.teaching.core.gamification_service.logger")
-    def test_complete_quest(self, mock_logger, mock_save, mock_badges, mock_xp,
-                            mock_quests):
+    def test_complete_quest(
+        self, mock_logger, mock_save, mock_badges, mock_xp, mock_quests
+    ):
         """Test completing a quest."""
         # Setup
         user = UserProgress(github_username="testuser", xp=50)

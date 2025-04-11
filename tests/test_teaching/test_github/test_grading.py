@@ -4,6 +4,7 @@ Tests for the GitHub grading functionality.
 
 This module tests the GitHub grading functionality in quackcore.teaching.github.grading.
 """
+
 from unittest.mock import MagicMock, patch
 
 from quackcore.errors import QuackApiError
@@ -133,7 +134,9 @@ class TestGitHubGrader:
         mock_pr_merged_result.message = "PR merge recorded"
 
         mock_gamification_service.handle_event.return_value = mock_event_result
-        mock_gamification_service.handle_github_pr_merged.return_value = mock_pr_merged_result
+        mock_gamification_service.handle_github_pr_merged.return_value = (
+            mock_pr_merged_result
+        )
 
         # Create grader and pull request
         grader = GitHubGrader(mock_client)
@@ -540,12 +543,17 @@ class TestGitHubGrader:
         assert "No required changes specified" in result["comment"]
         assert result["passed"] is True
 
-    @patch.object(GitHubGrader, '_check_prohibited_patterns')
-    @patch.object(GitHubGrader, '_check_required_changes')
-    @patch.object(GitHubGrader, '_check_required_files')
-    @patch.object(GitHubGrader, '_get_pr_files')
-    def test_grade_submission_custom_criteria(self, mock_get_pr_files, mock_check_files,
-                                              mock_check_changes, mock_check_patterns):
+    @patch.object(GitHubGrader, "_check_prohibited_patterns")
+    @patch.object(GitHubGrader, "_check_required_changes")
+    @patch.object(GitHubGrader, "_check_required_files")
+    @patch.object(GitHubGrader, "_get_pr_files")
+    def test_grade_submission_custom_criteria(
+        self,
+        mock_get_pr_files,
+        mock_check_files,
+        mock_check_changes,
+        mock_check_patterns,
+    ):
         """Test grading using custom criteria."""
         # Setup
         mock_client = MagicMock()
@@ -600,10 +608,12 @@ class TestGitHubGrader:
 
         # Verify correct criteria was passed to each check
         mock_check_files.assert_called_once_with(mock_files, criteria["required_files"])
-        mock_check_changes.assert_called_once_with(mock_pr, mock_files,
-                                                   criteria["required_changes"])
-        mock_check_patterns.assert_called_once_with(mock_pr, mock_files,
-                                                    criteria["prohibited_patterns"])
+        mock_check_changes.assert_called_once_with(
+            mock_pr, mock_files, criteria["required_changes"]
+        )
+        mock_check_patterns.assert_called_once_with(
+            mock_pr, mock_files, criteria["prohibited_patterns"]
+        )
 
         # Verify score calculation
         grade_result = result.content

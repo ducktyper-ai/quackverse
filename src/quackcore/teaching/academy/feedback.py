@@ -20,7 +20,6 @@ from quackcore.logging import get_logger
 
 # Use QuackCore Paths for resolving file paths against project structure.
 from quackcore.paths import resolver
-from quackcore.teaching.core.gamification_service import GamificationService
 
 logger = get_logger(__name__)
 

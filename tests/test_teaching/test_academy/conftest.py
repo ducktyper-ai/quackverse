@@ -2,6 +2,7 @@
 """
 Fixtures for testing the QuackCore teaching academy module.
 """
+
 import os
 import uuid
 from datetime import datetime, timedelta
@@ -10,21 +11,28 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from quackcore.teaching.academy.context import TeachingContext, TeachingConfig, \
-    GitHubConfig
-from quackcore.teaching.academy.course import Course, CourseModule, ModuleItem, ItemType
-from quackcore.teaching.academy.assignment import Assignment, \
-    AssignmentType
-from quackcore.teaching.academy.student import Student, StudentSubmission
-from quackcore.teaching.academy.grading import GradingCriterion, GradingCriteria, \
-    GradeResult
-from quackcore.teaching.academy.feedback import (
-    Feedback, FeedbackItem, FeedbackItemType, Annotation, AnnotationType
-)
-from quackcore.teaching.academy.results import (
-    TeachingResult
-)
 from quackcore.integrations.github.models import GitHubRepo
+from quackcore.teaching.academy.assignment import Assignment, AssignmentType
+from quackcore.teaching.academy.context import (
+    GitHubConfig,
+    TeachingConfig,
+    TeachingContext,
+)
+from quackcore.teaching.academy.course import Course, CourseModule, ItemType, ModuleItem
+from quackcore.teaching.academy.feedback import (
+    Annotation,
+    AnnotationType,
+    Feedback,
+    FeedbackItem,
+    FeedbackItemType,
+)
+from quackcore.teaching.academy.grading import (
+    GradeResult,
+    GradingCriteria,
+    GradingCriterion,
+)
+from quackcore.teaching.academy.results import TeachingResult
+from quackcore.teaching.academy.student import Student, StudentSubmission
 
 
 # Mock GitHub integration
@@ -49,7 +57,7 @@ class MockGitHub:
         # Create a mock repo for testing
         repo = GitHubRepo(
             id=str(uuid.uuid4()),
-            name=repo_name.split('/')[-1],
+            name=repo_name.split("/")[-1],
             full_name=repo_name,
             html_url=f"https://github.com/{repo_name}",
             description=f"Mock repo for {repo_name}",
@@ -114,20 +122,27 @@ def mock_integration_registry():
 def mock_gamification_service():
     """Mock GamificationService."""
     with patch(
-            "quackcore.teaching.core.gamification_service.GamificationService") as mock_gamification:
+        "quackcore.teaching.core.gamification_service.GamificationService"
+    ) as mock_gamification:
         mock_service = MagicMock()
-        mock_service.handle_module_completion.return_value = MagicMock(success=True,
-                                                                       message="Module completed")
-        mock_service.handle_course_completion.return_value = MagicMock(success=True,
-                                                                       message="Course completed")
-        mock_service.handle_assignment_completion.return_value = MagicMock(success=True,
-                                                                           message="Assignment completed")
-        mock_service.handle_feedback_submission.return_value = MagicMock(success=True,
-                                                                         message="Feedback submitted")
-        mock_service.handle_github_pr_submission.return_value = MagicMock(success=True,
-                                                                          message="PR submitted")
-        mock_service.handle_event.return_value = MagicMock(success=True,
-                                                           message="Event handled")
+        mock_service.handle_module_completion.return_value = MagicMock(
+            success=True, message="Module completed"
+        )
+        mock_service.handle_course_completion.return_value = MagicMock(
+            success=True, message="Course completed"
+        )
+        mock_service.handle_assignment_completion.return_value = MagicMock(
+            success=True, message="Assignment completed"
+        )
+        mock_service.handle_feedback_submission.return_value = MagicMock(
+            success=True, message="Feedback submitted"
+        )
+        mock_service.handle_github_pr_submission.return_value = MagicMock(
+            success=True, message="PR submitted"
+        )
+        mock_service.handle_event.return_value = MagicMock(
+            success=True, message="Event handled"
+        )
 
         mock_gamification.return_value = mock_service
         yield mock_gamification
@@ -139,22 +154,20 @@ def teaching_config():
     return TeachingConfig(
         course_name="Test Course",
         course_id="test-course",
-        github=GitHubConfig(
-            organization="test-org",
-            auto_create_repos=True
-        ),
+        github=GitHubConfig(organization="test-org", auto_create_repos=True),
         assignments_dir="assignments",
         feedback_dir="feedback",
         grading_dir="grading",
         submissions_dir="submissions",
         students_file="students.yaml",
-        course_config_file="course.yaml"
+        course_config_file="course.yaml",
     )
 
 
 @pytest.fixture
-def teaching_context(teaching_config, mock_fs, mock_resolver, mock_integration_registry,
-                     temp_dir):
+def teaching_context(
+    teaching_config, mock_fs, mock_resolver, mock_integration_registry, temp_dir
+):
     """Create a teaching context."""
     context = TeachingContext(teaching_config, temp_dir)
     return context
@@ -171,7 +184,7 @@ def sample_course():
             ModuleItem.create(
                 title="Welcome Lecture",
                 type=ItemType.LECTURE,
-                description="Welcome to the course"
+                description="Welcome to the course",
             ),
             ModuleItem.create(
                 title="Assignment 1",
@@ -179,9 +192,9 @@ def sample_course():
                 description="First assignment",
                 assignment_id="assignment-1",
                 due_date=datetime.now() + timedelta(days=7),
-                points=100.0
-            )
-        ]
+                points=100.0,
+            ),
+        ],
     )
 
     module2 = CourseModule.create(
@@ -192,7 +205,7 @@ def sample_course():
             ModuleItem.create(
                 title="Advanced Lecture",
                 type=ItemType.LECTURE,
-                description="Advanced topics lecture"
+                description="Advanced topics lecture",
             ),
             ModuleItem.create(
                 title="Assignment 2",
@@ -200,9 +213,9 @@ def sample_course():
                 description="Second assignment",
                 assignment_id="assignment-2",
                 due_date=datetime.now() + timedelta(days=14),
-                points=100.0
-            )
-        ]
+                points=100.0,
+            ),
+        ],
     )
 
     course = Course.create(
@@ -211,7 +224,7 @@ def sample_course():
         description="A test course",
         start_date=datetime.now(),
         end_date=datetime.now() + timedelta(days=90),
-        instructors=["test-instructor"]
+        instructors=["test-instructor"],
     )
 
     course.add_module(module1)
@@ -228,7 +241,7 @@ def sample_assignment():
         description="A test assignment",
         assignment_type=AssignmentType.INDIVIDUAL,
         due_date=datetime.now() + timedelta(days=7),
-        points=100.0
+        points=100.0,
     )
 
 
@@ -236,9 +249,7 @@ def sample_assignment():
 def sample_student():
     """Create a sample student."""
     return Student.create(
-        github_username="test-student",
-        name="Test Student",
-        email="test@example.com"
+        github_username="test-student", name="Test Student", email="test@example.com"
     )
 
 
@@ -246,8 +257,7 @@ def sample_student():
 def sample_submission(sample_student, sample_assignment):
     """Create a sample submission."""
     submission = StudentSubmission.create(
-        student_id=sample_student.id,
-        assignment_id=sample_assignment.id
+        student_id=sample_student.id, assignment_id=sample_assignment.id
     )
     return submission
 
@@ -259,7 +269,7 @@ def sample_grading_criteria():
         name="Code Quality",
         points=40.0,
         description="Quality of the code",
-        category="quality"
+        category="quality",
     )
 
     criterion2 = GradingCriterion.create(
@@ -267,14 +277,14 @@ def sample_grading_criteria():
         points=60.0,
         description="Functionality of the solution",
         category="functionality",
-        required=True
+        required=True,
     )
 
     criteria = GradingCriteria.create(
         name="Assignment Criteria",
         assignment_id="test-assignment",
         criteria=[criterion1, criterion2],
-        passing_threshold=0.7
+        passing_threshold=0.7,
     )
 
     return criteria
@@ -290,11 +300,8 @@ def sample_grade_result(sample_student, sample_assignment):
         score=85.0,
         max_points=100.0,
         passed=True,
-        criterion_scores={
-            "criterion1": 35.0,
-            "criterion2": 50.0
-        },
-        comments="Good work overall"
+        criterion_scores={"criterion1": 35.0, "criterion2": 50.0},
+        comments="Good work overall",
     )
 
 
@@ -306,14 +313,14 @@ def sample_feedback(sample_student, sample_assignment):
         line_start=10,
         text="Consider using a more descriptive variable name",
         type=AnnotationType.SUGGESTION,
-        suggestion="user_count = len(users)"
+        suggestion="user_count = len(users)",
     )
 
     feedback_item = FeedbackItem.create(
         text="Your code is well-structured but could use more descriptive variable names",
         type=FeedbackItemType.CODE_QUALITY,
         score=8.5,
-        annotations=[annotation]
+        annotations=[annotation],
     )
 
     feedback = Feedback.create(
@@ -321,7 +328,7 @@ def sample_feedback(sample_student, sample_assignment):
         student_id=sample_student.id,
         assignment_id=sample_assignment.id,
         score=85.0,
-        summary="Good work overall with some minor suggestions for improvement"
+        summary="Good work overall with some minor suggestions for improvement",
     )
 
     feedback.add_item(feedback_item)

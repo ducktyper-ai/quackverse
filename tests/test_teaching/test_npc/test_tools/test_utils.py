@@ -1,3 +1,4 @@
+# tests/test_teaching/test_npc/test_tools/test_utils.py
 """
 Tests for the utility functions in quackcore.teaching.npc.tools.utils.
 
@@ -56,52 +57,63 @@ class TestToolUtils:
 
         # Input for specific badge details
         detail_triggers = utils.detect_tool_triggers(
-            "Tell me about the github-collaborator badge", user_memory)
+            "Tell me about the github-collaborator badge", user_memory
+        )
         badge_trigger = next(
-            (t for t in detail_triggers if t[0] == "get_badge_details"), None)
+            (t for t in detail_triggers if t[0] == "get_badge_details"), None
+        )
         assert badge_trigger is not None
         assert badge_trigger[1]["badge_id"] == "github-collaborator"
 
     def test_detect_tool_triggers_quests(self, user_memory):
         """Test detecting quest tool triggers."""
         # Input for list_quests
-        list_triggers = utils.detect_tool_triggers("What quests are available?",
-                                                   user_memory)
+        list_triggers = utils.detect_tool_triggers(
+            "What quests are available?", user_memory
+        )
         assert any(trigger[0] == "list_quests" for trigger in list_triggers)
 
         # Input for specific quest details
         detail_triggers = utils.detect_tool_triggers(
-            "How do I complete the star-quackcore quest?", user_memory)
+            "How do I complete the star-quackcore quest?", user_memory
+        )
         quest_trigger = next(
-            (t for t in detail_triggers if t[0] == "get_quest_details"), None)
+            (t for t in detail_triggers if t[0] == "get_quest_details"), None
+        )
         assert quest_trigger is not None
         assert quest_trigger[1]["quest_id"] == "star-quackcore"
 
         # Input for next quest suggestion
-        suggest_triggers = utils.detect_tool_triggers("What should I do next?",
-                                                      user_memory)
+        suggest_triggers = utils.detect_tool_triggers(
+            "What should I do next?", user_memory
+        )
         assert any(trigger[0] == "suggest_next_quest" for trigger in suggest_triggers)
 
         # Input for quest completion verification
-        verify_triggers = utils.detect_tool_triggers("I completed the tutorial",
-                                                     user_memory)
+        verify_triggers = utils.detect_tool_triggers(
+            "I completed the tutorial", user_memory
+        )
         assert any(
-            trigger[0] == "verify_quest_completion" for trigger in verify_triggers)
+            trigger[0] == "verify_quest_completion" for trigger in verify_triggers
+        )
 
     def test_detect_tool_triggers_certificates(self, user_memory):
         """Test detecting certificate tool triggers."""
         # Input for certificate info
-        cert_triggers = utils.detect_tool_triggers("Show me my certificates",
-                                                   user_memory)
+        cert_triggers = utils.detect_tool_triggers(
+            "Show me my certificates", user_memory
+        )
         assert any(trigger[0] == "get_certificate_info" for trigger in cert_triggers)
 
     def test_detect_tool_triggers_tutorials(self, user_memory):
         """Test detecting tutorial tool triggers."""
         # Input for tutorial on a specific topic
         tutorial_triggers = utils.detect_tool_triggers(
-            "Show me a tutorial on GitHub integration", user_memory)
-        tut_trigger = next((t for t in tutorial_triggers if t[0] == "get_tutorial"),
-                           None)
+            "Show me a tutorial on GitHub integration", user_memory
+        )
+        tut_trigger = next(
+            (t for t in tutorial_triggers if t[0] == "get_tutorial"), None
+        )
         assert tut_trigger is not None
         assert tut_trigger[1]["topic"] == "github"
 
@@ -247,22 +259,27 @@ class TestToolUtils:
         assert empty_triggers == []
 
         # Unrelated message
-        unrelated_triggers = utils.detect_tool_triggers("Hello, how are you?",
-                                                        user_memory)
+        unrelated_triggers = utils.detect_tool_triggers(
+            "Hello, how are you?", user_memory
+        )
         assert unrelated_triggers == []
 
         # Exact quoted badge name
-        badge_triggers = utils.detect_tool_triggers('Tell me about badge "team-leader"',
-                                                    user_memory)
-        badge_trigger = next((t for t in badge_triggers if t[0] == "get_badge_details"),
-                             None)
+        badge_triggers = utils.detect_tool_triggers(
+            'Tell me about badge "team-leader"', user_memory
+        )
+        badge_trigger = next(
+            (t for t in badge_triggers if t[0] == "get_badge_details"), None
+        )
         assert badge_trigger is not None
         assert badge_trigger[1]["badge_id"] == "team-leader"
 
         # Exact quoted quest name
         quest_triggers = utils.detect_tool_triggers(
-            'How do I complete quest "clone-repo"', user_memory)
-        quest_trigger = next((t for t in quest_triggers if t[0] == "get_quest_details"),
-                             None)
+            'How do I complete quest "clone-repo"', user_memory
+        )
+        quest_trigger = next(
+            (t for t in quest_triggers if t[0] == "get_quest_details"), None
+        )
         assert quest_trigger is not None
         assert quest_trigger[1]["quest_id"] == "clone-repo"

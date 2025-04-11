@@ -3,11 +3,15 @@
 Tests for the Results module.
 """
 
-from quackcore.teaching.academy.results import (
-    TeachingResult, AssignmentResult, SubmissionResult, FeedbackResult,
-    StudentResult, CourseResult
-)
 from quackcore.integrations.github.models import GitHubRepo, PullRequest
+from quackcore.teaching.academy.results import (
+    AssignmentResult,
+    CourseResult,
+    FeedbackResult,
+    StudentResult,
+    SubmissionResult,
+    TeachingResult,
+)
 
 
 class TestTeachingResult:
@@ -27,7 +31,7 @@ class TestTeachingResult:
             success=False,
             message="Operation failed",
             error="Error details",
-            content={"key": "value"}
+            content={"key": "value"},
         )
         assert result.success is False
         assert result.message == "Operation failed"
@@ -69,7 +73,7 @@ class TestAssignmentResult:
             error="Some repositories could not be created",
             content={"key": "value"},
             repositories=[repo1, repo2],
-            failed_students=["student3", "student4"]
+            failed_students=["student3", "student4"],
         )
         assert result.success is False
         assert result.message == "Assignment creation partially failed"
@@ -104,7 +108,7 @@ class TestSubmissionResult:
             content={"key": "value"},
             pull_request=pr,
             student_github="student1",
-            assignment_id="assignment-1"
+            assignment_id="assignment-1",
         )
         assert result.success is True
         assert result.message == "Submission successful"
@@ -138,7 +142,7 @@ class TestFeedbackResult:
             content={"key": "value"},
             feedback_id="feedback-1",
             submission_id="submission-1",
-            score=85.0
+            score=85.0,
         )
         assert result.success is True
         assert result.message == "Feedback provided"
@@ -170,7 +174,7 @@ class TestStudentResult:
             error=None,
             content={"key": "value"},
             student_id="student-1",
-            github_username="student1"
+            github_username="student1",
         )
         assert result.success is True
         assert result.message == "Student operation successful"
@@ -201,7 +205,7 @@ class TestCourseResult:
             error=None,
             content={"key": "value"},
             course_id="course-1",
-            course_name="Python 101"
+            course_name="Python 101",
         )
         assert result.success is True
         assert result.message == "Course operation successful"

@@ -1,8 +1,10 @@
+# tests/test_teaching/test_npc/test_tools/test_progress_tools.py
 """
 Tests for the progress tools in quackcore.teaching.npc.tools.progress_tools.
 
 This module tests the functions for checking user progress, XP, and level information.
 """
+
 import pytest
 
 from quackcore.teaching.npc.schema import UserMemory
@@ -107,8 +109,9 @@ class TestProgressTools:
         # Verify result
         assert isinstance(result, ProgressOutput)
 
-    def test_list_xp_and_level_default_next_level(self, mocker,
-                                                  user_memory_no_next_level):
+    def test_list_xp_and_level_default_next_level(
+        self, mocker, user_memory_no_next_level
+    ):
         """Test list_xp_and_level with no xp_to_next_level in custom_data."""
         # Mock standardize_tool_output
         mock_standardize = mocker.patch(
@@ -201,7 +204,7 @@ class TestProgressTools:
 
         mock_standardize_patch = mocker.patch(
             "quackcore.teaching.npc.tools.progress_tools.standardize_tool_output",
-            side_effect=mock_standardize
+            side_effect=mock_standardize,
         )
 
         # Call the function
@@ -219,5 +222,8 @@ class TestProgressTools:
         assert "░" in formatted_text
 
         # Should contain XP needed for next level
-        assert f"{user_memory_basic.custom_data['xp_to_next_level']} XP needed" in formatted_text
+        assert (
+            f"{user_memory_basic.custom_data['xp_to_next_level']} XP needed"
+            in formatted_text
+        )
         assert f"Level {user_memory_basic.level + 1}" in formatted_text

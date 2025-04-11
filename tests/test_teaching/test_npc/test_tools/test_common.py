@@ -1,8 +1,10 @@
+# tests/test_teaching/test_npc/test_tools/test_common.py
 """
 Tests for the common utilities in quackcore.teaching.npc.tools.common.
 
 This module tests the standardize_tool_output function and other common utilities.
 """
+
 from collections.abc import Mapping
 from typing import Any
 
@@ -30,7 +32,9 @@ class TestStandardizeToolOutput:
     def test_basic_functionality(self, mocker):
         """Test basic functionality of standardize_tool_output."""
         # Mock DialogueRegistry to avoid external dependencies
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.common.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.common.DialogueRegistry"
+        )
         mock_registry.flavor_text.return_value = "Quacktastic! Result text 🦆"
 
         # Input data
@@ -61,7 +65,9 @@ class TestStandardizeToolOutput:
     def test_without_flavor(self, mocker):
         """Test standardize_tool_output with flavor disabled."""
         # Mock DialogueRegistry to avoid external dependencies
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.common.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.common.DialogueRegistry"
+        )
 
         # Input data
         tool_name = "test_tool"
@@ -79,7 +85,9 @@ class TestStandardizeToolOutput:
     def test_with_metadata(self, mocker):
         """Test standardize_tool_output with metadata fields."""
         # Mock DialogueRegistry to avoid external dependencies
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.common.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.common.DialogueRegistry"
+        )
         mock_registry.flavor_text.return_value = "Flavored text"
 
         # Input data with metadata fields
@@ -104,7 +112,9 @@ class TestStandardizeToolOutput:
     def test_with_explicit_tool_type(self, mocker):
         """Test standardize_tool_output with explicit tool type."""
         # Mock DialogueRegistry to avoid external dependencies
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.common.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.common.DialogueRegistry"
+        )
         mock_registry.flavor_text.return_value = "Flavored text"
 
         # Input data
@@ -114,7 +124,9 @@ class TestStandardizeToolOutput:
         }
 
         # Call the function with explicit tool_type
-        output = common.standardize_tool_output(tool_name, result, tool_type=ToolType.QUEST)
+        output = common.standardize_tool_output(
+            tool_name, result, tool_type=ToolType.QUEST
+        )
 
         # Assertions
         assert output.type == ToolType.QUEST
@@ -122,7 +134,9 @@ class TestStandardizeToolOutput:
     def test_with_no_formatted_text(self, mocker):
         """Test standardize_tool_output with no formatted_text in result."""
         # Mock DialogueRegistry to avoid external dependencies
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.common.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.common.DialogueRegistry"
+        )
         mock_registry.flavor_text.return_value = "Flavored text"
 
         # Input data without formatted_text
@@ -156,7 +170,9 @@ class TestStandardizeToolOutput:
     def test_tool_type_inference(self, mocker, tool_name, expected_type):
         """Test tool type inference based on tool name."""
         # Mock DialogueRegistry to avoid external dependencies
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.common.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.common.DialogueRegistry"
+        )
         mock_registry.flavor_text.return_value = "Flavored text"
 
         # Input data
@@ -173,7 +189,9 @@ class TestStandardizeToolOutput:
     def test_with_explicit_type_in_result(self, mocker):
         """Test standardize_tool_output with explicit type in result."""
         # Mock DialogueRegistry to avoid external dependencies
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.common.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.common.DialogueRegistry"
+        )
         mock_registry.flavor_text.return_value = "Flavored text"
 
         # Input data with explicit type
@@ -192,7 +210,9 @@ class TestStandardizeToolOutput:
     def test_quest_list_output(self, mocker):
         """Test standardize_tool_output with QuestListOutput return type."""
         # Mock DialogueRegistry to avoid external dependencies
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.common.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.common.DialogueRegistry"
+        )
         mock_registry.flavor_text.return_value = "Quest list 🦆"
 
         # Input data
@@ -226,7 +246,9 @@ class TestStandardizeToolOutput:
     def test_quest_detail_output(self, mocker):
         """Test standardize_tool_output with QuestDetailOutput return type."""
         # Mock DialogueRegistry to avoid external dependencies
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.common.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.common.DialogueRegistry"
+        )
         mock_registry.flavor_text.return_value = "Quest detail 🦆"
 
         # Input data
@@ -263,7 +285,9 @@ class TestStandardizeToolOutput:
     def test_quest_completion_output(self, mocker):
         """Test standardize_tool_output with QuestCompletionOutput return type."""
         # Mock DialogueRegistry to avoid external dependencies
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.common.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.common.DialogueRegistry"
+        )
         mock_registry.flavor_text.return_value = "Quest completion 🦆"
 
         # Input data
@@ -296,7 +320,9 @@ class TestStandardizeToolOutput:
     def test_badge_list_output(self, mocker):
         """Test standardize_tool_output with BadgeListOutput return type."""
         # Mock DialogueRegistry to avoid external dependencies
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.common.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.common.DialogueRegistry"
+        )
         mock_registry.flavor_text.return_value = "Badge list 🦆"
 
         # Input data
@@ -326,7 +352,9 @@ class TestStandardizeToolOutput:
     def test_badge_detail_output(self, mocker):
         """Test standardize_tool_output with BadgeDetailOutput return type."""
         # Mock DialogueRegistry to avoid external dependencies
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.common.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.common.DialogueRegistry"
+        )
         mock_registry.flavor_text.return_value = "Badge detail 🦆"
 
         # Input data
@@ -363,7 +391,9 @@ class TestStandardizeToolOutput:
     def test_progress_output(self, mocker):
         """Test standardize_tool_output with ProgressOutput return type."""
         # Mock DialogueRegistry to avoid external dependencies
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.common.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.common.DialogueRegistry"
+        )
         mock_registry.flavor_text.return_value = "Progress 🦆"
 
         # Input data
@@ -398,7 +428,9 @@ class TestStandardizeToolOutput:
     def test_certificate_output(self, mocker):
         """Test standardize_tool_output with CertificateListOutput return type."""
         # Mock DialogueRegistry to avoid external dependencies
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.common.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.common.DialogueRegistry"
+        )
         mock_registry.flavor_text.return_value = "Certificate info 🦆"
 
         # Input data
@@ -428,7 +460,9 @@ class TestStandardizeToolOutput:
     def test_tutorial_output(self, mocker):
         """Test standardize_tool_output with TutorialOutput return type."""
         # Mock DialogueRegistry to avoid external dependencies
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.common.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.common.DialogueRegistry"
+        )
         mock_registry.flavor_text.return_value = "Tutorial 🦆"
 
         # Input data
@@ -459,7 +493,9 @@ class TestStandardizeToolOutput:
     def test_custom_return_type(self, mocker):
         """Test standardize_tool_output with a custom return type."""
         # Mock DialogueRegistry to avoid external dependencies
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.common.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.common.DialogueRegistry"
+        )
         mock_registry.flavor_text.return_value = "Custom output 🦆"
 
         # Define a custom result type

@@ -1,9 +1,11 @@
+# tests/test_teaching/test_npc/test_tools/test_quest_tools.py
 """
 Tests for the quest tools in quackcore.teaching.npc.tools.quest_tools.
 
 This module tests the functions for retrieving quest information,
 listing available quests, suggesting next quests, and verifying quest completion.
 """
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -97,7 +99,9 @@ class TestQuestTools:
         mock_utils = mocker.patch("quackcore.teaching.npc.tools.quest_tools.utils")
         mock_utils.load_progress.return_value = mock_user
 
-        mock_quests_module = mocker.patch("quackcore.teaching.npc.tools.quest_tools.quests")
+        mock_quests_module = mocker.patch(
+            "quackcore.teaching.npc.tools.quest_tools.quests"
+        )
         mock_quests_module.get_user_quests.return_value = {
             "completed": mock_quests[:2],  # First two quests completed
             "available": [mock_quests[2]],  # Third quest available
@@ -120,7 +124,9 @@ class TestQuestTools:
         # Verify dependencies were called correctly
         mock_utils.load_progress.assert_called_once()
         mock_quests_module.get_user_quests.assert_called_once_with(mock_user)
-        mock_quests_module.get_suggested_quests.assert_called_once_with(mock_user, limit=3)
+        mock_quests_module.get_suggested_quests.assert_called_once_with(
+            mock_user, limit=3
+        )
         mock_standardize.assert_called_once()
 
         # Check the data passed to standardize_tool_output
@@ -136,13 +142,17 @@ class TestQuestTools:
         # Verify result
         assert isinstance(result, QuestListOutput)
 
-    def test_list_quests_with_suggested_quests(self, mocker, mock_user, mock_quests, user_memory_with_suggested_quests):
+    def test_list_quests_with_suggested_quests(
+        self, mocker, mock_user, mock_quests, user_memory_with_suggested_quests
+    ):
         """Test list_quests with suggested quests in user_memory."""
         # Mock dependencies
         mock_utils = mocker.patch("quackcore.teaching.npc.tools.quest_tools.utils")
         mock_utils.load_progress.return_value = mock_user
 
-        mock_quests_module = mocker.patch("quackcore.teaching.npc.tools.quest_tools.quests")
+        mock_quests_module = mocker.patch(
+            "quackcore.teaching.npc.tools.quest_tools.quests"
+        )
         mock_quests_module.get_user_quests.return_value = {
             "completed": mock_quests[:2],  # First two quests completed
             "available": [mock_quests[2]],  # Third quest available
@@ -175,20 +185,26 @@ class TestQuestTools:
         assert args[1]["available_count"] == 1
         assert len(args[1]["suggested"]) == 1
         assert args[1]["suggested"][0].id == "quest3"
-        assert "recent_quests_discussed" in user_memory_with_suggested_quests.custom_data
+        assert (
+            "recent_quests_discussed" in user_memory_with_suggested_quests.custom_data
+        )
         assert "formatted_text" in args[1]
         assert "asking about 'quest3'" in args[1]["formatted_text"]
 
         # Verify result
         assert isinstance(result, QuestListOutput)
 
-    def test_list_quests_with_learning_style(self, mocker, mock_user, mock_quests, user_memory_with_learning_style):
+    def test_list_quests_with_learning_style(
+        self, mocker, mock_user, mock_quests, user_memory_with_learning_style
+    ):
         """Test list_quests with learning style in user_memory."""
         # Mock dependencies
         mock_utils = mocker.patch("quackcore.teaching.npc.tools.quest_tools.utils")
         mock_utils.load_progress.return_value = mock_user
 
-        mock_quests_module = mocker.patch("quackcore.teaching.npc.tools.quest_tools.quests")
+        mock_quests_module = mocker.patch(
+            "quackcore.teaching.npc.tools.quest_tools.quests"
+        )
         mock_quests_module.get_user_quests.return_value = {
             "completed": mock_quests[:2],  # First two quests completed
             "available": [mock_quests[2]],  # Third quest available
@@ -211,7 +227,9 @@ class TestQuestTools:
         # Verify dependencies were called correctly
         mock_utils.load_progress.assert_called_once()
         mock_quests_module.get_user_quests.assert_called_once_with(mock_user)
-        mock_quests_module.get_suggested_quests.assert_called_once_with(mock_user, limit=3)
+        mock_quests_module.get_suggested_quests.assert_called_once_with(
+            mock_user, limit=3
+        )
         mock_standardize.assert_called_once()
 
         # Check the data passed to standardize_tool_output
@@ -219,7 +237,9 @@ class TestQuestTools:
         assert "learning_style" in user_memory_with_learning_style.custom_data
         assert "formatted_text" in args[1]
         # The response should be adapted for challenge learning style
-        assert "challenge" in user_memory_with_learning_style.custom_data["learning_style"]
+        assert (
+            "challenge" in user_memory_with_learning_style.custom_data["learning_style"]
+        )
 
         # Verify result
         assert isinstance(result, QuestListOutput)
@@ -230,10 +250,14 @@ class TestQuestTools:
         mock_utils = mocker.patch("quackcore.teaching.npc.tools.quest_tools.utils")
         mock_utils.load_progress.return_value = mock_user
 
-        mock_quests_module = mocker.patch("quackcore.teaching.npc.tools.quest_tools.quests")
+        mock_quests_module = mocker.patch(
+            "quackcore.teaching.npc.tools.quest_tools.quests"
+        )
         mock_quests_module.get_quest.return_value = mock_quests[0]
 
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.quest_tools.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.quest_tools.DialogueRegistry"
+        )
         mock_registry.get_quest_dialogue.side_effect = lambda quest_id, dialogue_type: {
             "guidance": "Quest guidance",
             "hint": "Quest hint",
@@ -285,7 +309,9 @@ class TestQuestTools:
         mock_utils = mocker.patch("quackcore.teaching.npc.tools.quest_tools.utils")
         mock_utils.load_progress.return_value = mock_user
 
-        mock_quests_module = mocker.patch("quackcore.teaching.npc.tools.quest_tools.quests")
+        mock_quests_module = mocker.patch(
+            "quackcore.teaching.npc.tools.quest_tools.quests"
+        )
         mock_quests_module.get_quest.return_value = None  # Quest not found
 
         mock_rag = mocker.patch("quackcore.teaching.npc.tools.quest_tools.rag")
@@ -330,10 +356,14 @@ class TestQuestTools:
         mock_utils = mocker.patch("quackcore.teaching.npc.tools.quest_tools.utils")
         mock_utils.load_progress.return_value = mock_user
 
-        mock_quests_module = mocker.patch("quackcore.teaching.npc.tools.quest_tools.quests")
+        mock_quests_module = mocker.patch(
+            "quackcore.teaching.npc.tools.quest_tools.quests"
+        )
         mock_quests_module.get_quest.return_value = mock_quests[0]
 
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.quest_tools.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.quest_tools.DialogueRegistry"
+        )
         mock_registry.get_quest_dialogue.return_value = "Quest guidance"
         mock_registry.render_quest_intro.return_value = "Rendered completed quest intro"
 
@@ -371,10 +401,14 @@ class TestQuestTools:
         mock_utils = mocker.patch("quackcore.teaching.npc.tools.quest_tools.utils")
         mock_utils.load_progress.return_value = mock_user
 
-        mock_quests_module = mocker.patch("quackcore.teaching.npc.tools.quest_tools.quests")
+        mock_quests_module = mocker.patch(
+            "quackcore.teaching.npc.tools.quest_tools.quests"
+        )
         mock_quests_module.get_quest.return_value = mock_quests[0]
 
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.quest_tools.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.quest_tools.DialogueRegistry"
+        )
         mock_registry.get_quest_dialogue.return_value = "Quest guidance"
         # Simulate a rendering error
         mock_registry.render_quest_intro.side_effect = Exception("Rendering error")
@@ -405,16 +439,22 @@ class TestQuestTools:
         # Verify result
         assert isinstance(result, QuestDetailOutput)
 
-    def test_suggest_next_quest_from_memory(self, mocker, mock_user, mock_quests, user_memory_with_suggested_quests):
+    def test_suggest_next_quest_from_memory(
+        self, mocker, mock_user, mock_quests, user_memory_with_suggested_quests
+    ):
         """Test suggest_next_quest using quests from user_memory."""
         # Mock dependencies
         mock_utils = mocker.patch("quackcore.teaching.npc.tools.quest_tools.utils")
         mock_utils.load_progress.return_value = mock_user
 
-        mock_quests_module = mocker.patch("quackcore.teaching.npc.tools.quest_tools.quests")
+        mock_quests_module = mocker.patch(
+            "quackcore.teaching.npc.tools.quest_tools.quests"
+        )
         mock_quests_module.get_quest.return_value = mock_quests[2]
 
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.quest_tools.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.quest_tools.DialogueRegistry"
+        )
         mock_registry.get_quest_dialogue.side_effect = lambda quest_id, dialogue_type: {
             "guidance": "Quest guidance",
             "hint": "Quest hint",
@@ -458,17 +498,23 @@ class TestQuestTools:
         # Verify result
         assert isinstance(result, QuestDetailOutput)
 
-    def test_suggest_next_quest_from_quests_module(self, mocker, mock_user, mock_quests, user_memory_basic):
+    def test_suggest_next_quest_from_quests_module(
+        self, mocker, mock_user, mock_quests, user_memory_basic
+    ):
         """Test suggest_next_quest using quests from quests module."""
         # Mock dependencies
         mock_utils = mocker.patch("quackcore.teaching.npc.tools.quest_tools.utils")
         mock_utils.load_progress.return_value = mock_user
 
-        mock_quests_module = mocker.patch("quackcore.teaching.npc.tools.quest_tools.quests")
+        mock_quests_module = mocker.patch(
+            "quackcore.teaching.npc.tools.quest_tools.quests"
+        )
         mock_quests_module.get_suggested_quests.return_value = [mock_quests[2]]
         mock_quests_module.get_quest.return_value = mock_quests[2]
 
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.quest_tools.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.quest_tools.DialogueRegistry"
+        )
         mock_registry.get_quest_dialogue.side_effect = lambda quest_id, dialogue_type: {
             "guidance": "Quest guidance",
             "hint": "Quest hint",
@@ -495,20 +541,26 @@ class TestQuestTools:
 
         # Verify dependencies were called correctly
         mock_utils.load_progress.assert_called_once()
-        mock_quests_module.get_suggested_quests.assert_called_once_with(mock_user, limit=1)
+        mock_quests_module.get_suggested_quests.assert_called_once_with(
+            mock_user, limit=1
+        )
         mock_registry.render_quest_intro.assert_called_once()
         mock_standardize.assert_called_once()
 
         # Verify result
         assert isinstance(result, QuestDetailOutput)
 
-    def test_suggest_next_quest_no_suggestions(self, mocker, mock_user, user_memory_basic):
+    def test_suggest_next_quest_no_suggestions(
+        self, mocker, mock_user, user_memory_basic
+    ):
         """Test suggest_next_quest with no available suggestions."""
         # Mock dependencies
         mock_utils = mocker.patch("quackcore.teaching.npc.tools.quest_tools.utils")
         mock_utils.load_progress.return_value = mock_user
 
-        mock_quests_module = mocker.patch("quackcore.teaching.npc.tools.quest_tools.quests")
+        mock_quests_module = mocker.patch(
+            "quackcore.teaching.npc.tools.quest_tools.quests"
+        )
         mock_quests_module.get_suggested_quests.return_value = []  # No suggested quests
 
         # Mock standardize_tool_output
@@ -526,7 +578,9 @@ class TestQuestTools:
 
         # Verify dependencies were called correctly
         mock_utils.load_progress.assert_called_once()
-        mock_quests_module.get_suggested_quests.assert_called_once_with(mock_user, limit=1)
+        mock_quests_module.get_suggested_quests.assert_called_once_with(
+            mock_user, limit=1
+        )
         mock_standardize.assert_called_once()
 
         # Check the data passed to standardize_tool_output
@@ -538,13 +592,17 @@ class TestQuestTools:
         # Verify result
         assert isinstance(result, QuestDetailOutput)
 
-    def test_verify_quest_completion_no_new_quests(self, mocker, mock_user, user_memory_basic):
+    def test_verify_quest_completion_no_new_quests(
+        self, mocker, mock_user, user_memory_basic
+    ):
         """Test verify_quest_completion with no newly completed quests."""
         # Mock dependencies
         mock_utils = mocker.patch("quackcore.teaching.npc.tools.quest_tools.utils")
         mock_utils.load_progress.return_value = mock_user
 
-        mock_quests_module = mocker.patch("quackcore.teaching.npc.tools.quest_tools.quests")
+        mock_quests_module = mocker.patch(
+            "quackcore.teaching.npc.tools.quest_tools.quests"
+        )
         mock_quests_module.check_quest_completion.return_value = []  # No newly completed quests
 
         # Mock standardize_tool_output
@@ -576,24 +634,34 @@ class TestQuestTools:
         # Verify result
         assert isinstance(result, QuestCompletionOutput)
 
-    def test_verify_quest_completion_with_new_quests(self, mocker, mock_user, mock_quests, user_memory_basic):
+    def test_verify_quest_completion_with_new_quests(
+        self, mocker, mock_user, mock_quests, user_memory_basic
+    ):
         """Test verify_quest_completion with newly completed quests."""
         # Mock dependencies
         mock_utils = mocker.patch("quackcore.teaching.npc.tools.quest_tools.utils")
         mock_utils.load_progress.return_value = mock_user
 
-        mock_quests_module = mocker.patch("quackcore.teaching.npc.tools.quest_tools.quests")
-        mock_quests_module.check_quest_completion.return_value = [mock_quests[2]]  # Newly completed quest
+        mock_quests_module = mocker.patch(
+            "quackcore.teaching.npc.tools.quest_tools.quests"
+        )
+        mock_quests_module.check_quest_completion.return_value = [
+            mock_quests[2]
+        ]  # Newly completed quest
         mock_quests_module.complete_quest = MagicMock()
 
-        mock_badges_module = mocker.patch("quackcore.teaching.npc.tools.quest_tools.badges")
+        mock_badges_module = mocker.patch(
+            "quackcore.teaching.npc.tools.quest_tools.badges"
+        )
         badge = MagicMock()
         badge.id = "badge2"
         badge.name = "Badge 2"
         badge.emoji = "🎖️"
         mock_badges_module.get_badge.return_value = badge
 
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.quest_tools.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.quest_tools.DialogueRegistry"
+        )
         mock_registry.get_quest_dialogue.return_value = "Completion message"
 
         # Mock standardize_tool_output
@@ -633,7 +701,9 @@ class TestQuestTools:
         assert result.badge_awarded is True
         assert result.xp_gained == 30
 
-    def test_verify_quest_completion_with_level_up(self, mocker, mock_user, mock_quests, user_memory_basic):
+    def test_verify_quest_completion_with_level_up(
+        self, mocker, mock_user, mock_quests, user_memory_basic
+    ):
         """Test verify_quest_completion with level up."""
         # Set up user_memory with XP close to level up
         user_memory = UserMemory(
@@ -648,11 +718,17 @@ class TestQuestTools:
         mock_utils = mocker.patch("quackcore.teaching.npc.tools.quest_tools.utils")
         mock_utils.load_progress.return_value = mock_user
 
-        mock_quests_module = mocker.patch("quackcore.teaching.npc.tools.quest_tools.quests")
-        mock_quests_module.check_quest_completion.return_value = [mock_quests[2]]  # Newly completed quest (30 XP)
+        mock_quests_module = mocker.patch(
+            "quackcore.teaching.npc.tools.quest_tools.quests"
+        )
+        mock_quests_module.check_quest_completion.return_value = [
+            mock_quests[2]
+        ]  # Newly completed quest (30 XP)
         mock_quests_module.complete_quest = MagicMock()
 
-        mock_registry = mocker.patch("quackcore.teaching.npc.tools.quest_tools.DialogueRegistry")
+        mock_registry = mocker.patch(
+            "quackcore.teaching.npc.tools.quest_tools.DialogueRegistry"
+        )
         mock_registry.get_quest_dialogue.return_value = "Completion message"
 
         # Mock standardize_tool_output

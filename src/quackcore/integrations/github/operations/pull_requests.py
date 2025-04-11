@@ -6,8 +6,12 @@ from typing import Any, Literal
 
 import requests
 
-from ..models import GitHubUser, PullRequest, PullRequestStatus
-from ..utils.api import make_request
+from quackcore.integrations.github.models import (
+    GitHubUser,
+    PullRequest,
+    PullRequestStatus,
+)
+from quackcore.integrations.github.utils.api import make_request
 
 
 def create_pull_request(

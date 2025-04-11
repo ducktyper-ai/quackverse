@@ -369,7 +369,8 @@ class PluginRegistry:
 
         for plugin in self._plugins.values():
             if hasattr(plugin, "get_metadata") and callable(
-                    getattr(plugin, "get_metadata")):
+                getattr(plugin, "get_metadata")
+            ):
                 try:
                     metadata = plugin.get_metadata()
                     if capability in metadata.capabilities:
@@ -431,6 +432,7 @@ class PluginRegistry:
         # Reload the module and load the new plugin
         try:
             import importlib
+
             importlib.reload(importlib.import_module(module_path))
             new_plugin = loader.load_plugin(module_path)
 

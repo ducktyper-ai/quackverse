@@ -4,10 +4,11 @@ Tests for the teaching badges management module.
 
 This module tests the badge management functionality in quackcore.teaching.core.badges.
 """
+
 from unittest.mock import patch
 
-from quackcore.teaching.core.models import Badge, UserProgress
 from quackcore.teaching.core import badges
+from quackcore.teaching.core.models import Badge, UserProgress
 
 
 class TestBadgeManagement:
