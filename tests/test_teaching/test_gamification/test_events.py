@@ -1,10 +1,9 @@
+# tests/test_teaching/test_gamification/test_events.py
 """
-Tests for the teaching gamification service.
+Tests for event handling in the gamification service.
 
-This module tests the gamification service functionality in
-quackcore.teaching.core.gamification_service.
+This module tests event handling functionality in the gamification service.
 """
-from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -14,32 +13,8 @@ from quackcore.teaching.core.gamification_service import GamificationResult, \
     GamificationService
 
 
-class TestGamificationService:
-    """Tests for the gamification service."""
-
-    def test_init(self):
-        """Test initializing the gamification service."""
-        # Setup & Act
-        mock_progress = MagicMock(spec=UserProgress)
-        service = GamificationService(user_progress=mock_progress)
-
-        # Assert
-        assert service.progress == mock_progress
-        assert service._changed is False
-
-    @patch("quackcore.teaching.core.gamification_service.utils.load_progress")
-    def test_init_default(self, mock_load_progress):
-        """Test initializing the service with default progress."""
-        # Setup
-        mock_progress = MagicMock(spec=UserProgress)
-        mock_load_progress.return_value = mock_progress
-
-        # Act
-        service = GamificationService()
-
-        # Assert
-        assert service.progress == mock_progress
-        mock_load_progress.assert_called_once()
+class TestGamificationServiceEvents:
+    """Tests for event handling in the gamification service."""
 
     @patch("quackcore.teaching.core.gamification_service.xp.add_xp")
     @patch("quackcore.teaching.core.gamification_service.quests.apply_completed_quests")
@@ -183,14 +158,3 @@ class TestGamificationService:
             assert result.completed_quests == ["quest1"]
             assert result.earned_badges == ["badge1"]
             assert "25 total XP" in result.message
-
-    @patch("quackcore.teaching.core.gamification_service.quests")
-    @patch("quackcore.teaching.core.gamification_service.xp")
-    @patch("quackcore.teaching.core.gamification_service.badges")
-    @patch("quackcore.teaching.core.gamification_service.utils.save_progress")
-    @patch("quackcore.teaching.core.gamification_service.logger")
-    def test_complete_quest(self, mock_logger, mock_save, mock_badges, mock_xp,
-                            mock_quests):
-        """Test completing a quest."""
-        # Setup
-        user = UserProgress(github

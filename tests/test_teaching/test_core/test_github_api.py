@@ -1,3 +1,4 @@
+# tests/test_teaching/test_core/test_github_api.py
 """
 Tests for the teaching GitHub API integration.
 

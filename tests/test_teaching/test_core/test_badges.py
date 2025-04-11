@@ -1,3 +1,4 @@
+# tests/test_teaching/test_core/test_badges.py
 """
 Tests for the teaching badges management module.
 

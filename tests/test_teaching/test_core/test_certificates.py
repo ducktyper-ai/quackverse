@@ -1,3 +1,4 @@
+# tests/test_teaching/test_core/test_certificates.py
 """
 Tests for the teaching certificates module.
 
