@@ -1,16 +1,18 @@
+# tests/test_prompt/test_enhancer.py
 """
 Tests for the prompt enhancer functionality.
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 from quackcore.prompt.enhancer import (
-    enhance_with_llm,
-    count_prompt_tokens,
-    _load_config,
     _create_system_prompt,
-    _create_user_prompt
+    _create_user_prompt,
+    _load_config,
+    count_prompt_tokens,
+    enhance_with_llm,
 )
 
 
@@ -24,13 +26,9 @@ def mock_llm_integration_class():
     mock_instance = MagicMock()
     mock_instance.initialize.return_value = MagicMock(success=True)
     mock_instance.chat.return_value = MagicMock(
-        success=True,
-        content="Enhanced prompt content"
+        success=True, content="Enhanced prompt content"
     )
-    mock_instance.count_tokens.return_value = MagicMock(
-        success=True,
-        content=150
-    )
+    mock_instance.count_tokens.return_value = MagicMock(success=True, content=150)
 
     # Configure the mock class to return the mock instance
     mock_class.return_value = mock_instance
@@ -41,18 +39,18 @@ def mock_llm_integration_class():
 @pytest.fixture
 def mock_config():
     """Mock the configuration loading."""
-    with patch('quackcore.prompt.enhancer._load_config') as mock_load:
+    with patch("quackcore.prompt.enhancer._load_config") as mock_load:
         mock_load.return_value = {
             "llm": {
                 "temperature": 0.3,
                 "max_tokens": 1200,
                 "top_p": 0.95,
                 "frequency_penalty": 0.0,
-                "presence_penalty": 0.0
+                "presence_penalty": 0.0,
             },
             "system_prompt": {
                 "prompt_engineer": "You are a prompt engineer. Rewrite {strategy}."
-            }
+            },
         }
 
         yield mock_load
@@ -61,22 +59,20 @@ def mock_config():
 def test_load_config():
     """Test loading configuration for the enhancer."""
     # Mock the configuration system
-    with patch('quackcore.config.config.get_custom') as mock_get_custom, \
-         patch('quackcore.fs.service.read_yaml') as mock_read_yaml:
+    config_mock = MagicMock()
+    config_mock.get_custom.return_value = {}
 
-        # Configure mocks
-        mock_get_custom.return_value = {}
+    with (
+        patch("quackcore.config.config", config_mock),
+        patch("quackcore.fs.service.read_yaml") as mock_read_yaml,
+    ):
+        # Configure mock
         mock_read_yaml.return_value = MagicMock(
             success=True,
             data={
-                "llm": {
-                    "temperature": 0.4,
-                    "max_tokens": 2000
-                },
-                "system_prompt": {
-                    "prompt_engineer": "Custom prompt template"
-                }
-            }
+                "llm": {"temperature": 0.4, "max_tokens": 2000},
+                "system_prompt": {"prompt_engineer": "Custom prompt template"},
+            },
         )
 
         # Load configuration
@@ -93,12 +89,18 @@ def test_enhance_with_llm(mock_llm_integration_class, mock_config):
     """Test enhancing a prompt with an LLM."""
     mock_class, mock_instance = mock_llm_integration_class
 
-    # Patch the imports inside the function
-    with patch('quackcore.prompt.enhancer.LLMIntegration', mock_class), \
-         patch('quackcore.prompt.enhancer.ChatMessage'), \
-         patch('quackcore.prompt.enhancer.LLMOptions'), \
-         patch('quackcore.prompt.enhancer.RoleType'):
+    # Create mocks for all imported classes
+    chat_message_mock = MagicMock()
+    llm_options_mock = MagicMock()
+    role_type_mock = MagicMock()
 
+    # Patch the imports inside the function
+    with (
+        patch("quackcore.integrations.llms.service.LLMIntegration", mock_class),
+        patch("quackcore.integrations.llms.models.ChatMessage", chat_message_mock),
+        patch("quackcore.integrations.llms.models.LLMOptions", llm_options_mock),
+        patch("quackcore.integrations.llms.models.RoleType", role_type_mock),
+    ):
         # Call the function
         result = enhance_with_llm(
             task_description="Write a story about AI",
@@ -106,7 +108,7 @@ def test_enhance_with_llm(mock_llm_integration_class, mock_config):
             examples=["Example 1", "Example 2"],
             strategy_name="test-strategy",
             model="gpt-4",
-            provider="openai"
+            provider="openai",
         )
 
         # Check result
@@ -123,17 +125,22 @@ def test_enhance_with_llm_init_failure(mock_llm_integration_class, mock_config):
 
     # Configure the mock to simulate initialization failure
     mock_instance.initialize.return_value = MagicMock(
-        success=False,
-        error="Initialization failed"
+        success=False, error="Initialization failed"
     )
 
-    # Patch the imports inside the function
-    with patch('quackcore.prompt.enhancer.LLMIntegration', mock_class), \
-         patch('quackcore.prompt.enhancer.ChatMessage'), \
-         patch('quackcore.prompt.enhancer.LLMOptions'), \
-         patch('quackcore.prompt.enhancer.RoleType'), \
-         pytest.raises(RuntimeError, match="Failed to initialize LLM service"):
+    # Create mocks for all imported classes
+    chat_message_mock = MagicMock()
+    llm_options_mock = MagicMock()
+    role_type_mock = MagicMock()
 
+    # Patch the imports inside the function
+    with (
+        patch("quackcore.integrations.llms.service.LLMIntegration", mock_class),
+        patch("quackcore.integrations.llms.models.ChatMessage", chat_message_mock),
+        patch("quackcore.integrations.llms.models.LLMOptions", llm_options_mock),
+        patch("quackcore.integrations.llms.models.RoleType", role_type_mock),
+        pytest.raises(RuntimeError, match="Failed to initialize LLM service"),
+    ):
         # Call the function
         enhance_with_llm(task_description="Test prompt")
 
@@ -143,17 +150,20 @@ def test_enhance_with_llm_chat_failure(mock_llm_integration_class, mock_config):
     mock_class, mock_instance = mock_llm_integration_class
 
     # Configure the mock to simulate chat failure
-    mock_instance.chat.return_value = MagicMock(
-        success=False,
-        error="Chat failed"
-    )
+    mock_instance.chat.return_value = MagicMock(success=False, error="Chat failed")
+
+    # Create mocks for all imported classes
+    chat_message_mock = MagicMock()
+    llm_options_mock = MagicMock()
+    role_type_mock = MagicMock()
 
     # Patch the imports inside the function
-    with patch('quackcore.prompt.enhancer.LLMIntegration', mock_class), \
-         patch('quackcore.prompt.enhancer.ChatMessage'), \
-         patch('quackcore.prompt.enhancer.LLMOptions'), \
-         patch('quackcore.prompt.enhancer.RoleType'):
-
+    with (
+        patch("quackcore.integrations.llms.service.LLMIntegration", mock_class),
+        patch("quackcore.integrations.llms.models.ChatMessage", chat_message_mock),
+        patch("quackcore.integrations.llms.models.LLMOptions", llm_options_mock),
+        patch("quackcore.integrations.llms.models.RoleType", role_type_mock),
+    ):
         # Call the function
         result = enhance_with_llm(task_description="Test prompt")
 
@@ -166,17 +176,20 @@ def test_enhance_with_llm_empty_response(mock_llm_integration_class, mock_config
     mock_class, mock_instance = mock_llm_integration_class
 
     # Configure the mock to return an empty response
-    mock_instance.chat.return_value = MagicMock(
-        success=True,
-        content=""
-    )
+    mock_instance.chat.return_value = MagicMock(success=True, content="")
+
+    # Create mocks for all imported classes
+    chat_message_mock = MagicMock()
+    llm_options_mock = MagicMock()
+    role_type_mock = MagicMock()
 
     # Patch the imports inside the function
-    with patch('quackcore.prompt.enhancer.LLMIntegration', mock_class), \
-         patch('quackcore.prompt.enhancer.ChatMessage'), \
-         patch('quackcore.prompt.enhancer.LLMOptions'), \
-         patch('quackcore.prompt.enhancer.RoleType'):
-
+    with (
+        patch("quackcore.integrations.llms.service.LLMIntegration", mock_class),
+        patch("quackcore.integrations.llms.models.ChatMessage", chat_message_mock),
+        patch("quackcore.integrations.llms.models.LLMOptions", llm_options_mock),
+        patch("quackcore.integrations.llms.models.RoleType", role_type_mock),
+    ):
         # Call the function
         result = enhance_with_llm(task_description="Original prompt")
 
@@ -187,9 +200,13 @@ def test_enhance_with_llm_empty_response(mock_llm_integration_class, mock_config
 def test_enhance_with_llm_import_error(mock_config):
     """Test enhancing a prompt when LLM modules can't be imported."""
     # Mock an ImportError when trying to import LLM modules
-    with patch('quackcore.prompt.enhancer.LLMIntegration', side_effect=ImportError("Test error")), \
-         pytest.raises(ImportError):
-
+    with (
+        patch(
+            "quackcore.integrations.llms.service.LLMIntegration",
+            side_effect=ImportError("Test error"),
+        ),
+        pytest.raises(ImportError),
+    ):
         # Call the function
         enhance_with_llm(task_description="Test prompt")
 
@@ -198,18 +215,23 @@ def test_count_prompt_tokens(mock_llm_integration_class):
     """Test counting tokens in a prompt."""
     mock_class, mock_instance = mock_llm_integration_class
 
-    # Patch the imports inside the function
-    with patch('quackcore.prompt.enhancer.LLMIntegration', mock_class), \
-         patch('quackcore.prompt.enhancer.ChatMessage'), \
-         patch('quackcore.prompt.enhancer.RoleType'), \
-         patch('quackcore.prompt.enhancer._load_config') as mock_load_config:
+    # Create mocks for all imported classes
+    chat_message_mock = MagicMock()
+    role_type_mock = MagicMock()
 
+    # Patch the imports inside the function
+    with (
+        patch("quackcore.integrations.llms.service.LLMIntegration", mock_class),
+        patch("quackcore.integrations.llms.models.ChatMessage", chat_message_mock),
+        patch("quackcore.integrations.llms.models.RoleType", role_type_mock),
+        patch("quackcore.prompt.enhancer._load_config") as mock_load_config,
+    ):
         # Configure mocks
         mock_load_config.return_value = {
             "llm": {},
             "system_prompt": {
                 "prompt_engineer": "You are a prompt engineer. Rewrite {strategy}."
-            }
+            },
         }
 
         # Call the function
@@ -217,7 +239,7 @@ def test_count_prompt_tokens(mock_llm_integration_class):
             task_description="Test prompt",
             schema='{"test": "schema"}',
             examples=["Example"],
-            strategy_name="test-strategy"
+            strategy_name="test-strategy",
         )
 
         # Check result
@@ -234,21 +256,22 @@ def test_count_prompt_tokens_failure(mock_llm_integration_class):
 
     # Configure the mock to fail
     mock_instance.count_tokens.return_value = MagicMock(
-        success=False,
-        error="Count failed"
+        success=False, error="Count failed"
     )
 
-    # Patch the imports inside the function
-    with patch('quackcore.prompt.enhancer.LLMIntegration', mock_class), \
-         patch('quackcore.prompt.enhancer.ChatMessage'), \
-         patch('quackcore.prompt.enhancer.RoleType'), \
-         patch('quackcore.prompt.enhancer._load_config') as mock_load_config:
+    # Create mocks for all imported classes
+    chat_message_mock = MagicMock()
+    role_type_mock = MagicMock()
 
+    # Patch the imports inside the function
+    with (
+        patch("quackcore.integrations.llms.service.LLMIntegration", mock_class),
+        patch("quackcore.integrations.llms.models.ChatMessage", chat_message_mock),
+        patch("quackcore.integrations.llms.models.RoleType", role_type_mock),
+        patch("quackcore.prompt.enhancer._load_config") as mock_load_config,
+    ):
         # Configure mocks
-        mock_load_config.return_value = {
-            "llm": {},
-            "system_prompt": {}
-        }
+        mock_load_config.return_value = {"llm": {}, "system_prompt": {}}
 
         # Call the function
         count = count_prompt_tokens(task_description="Test prompt")
@@ -272,7 +295,9 @@ def test_create_system_prompt():
 
     # Create a system prompt with strategy name
     prompt2 = _create_system_prompt("test-strategy", config)
-    assert prompt2 == "You are a prompt engineer. Fix using the 'test-strategy' strategy."
+    assert (
+        prompt2 == "You are a prompt engineer. Fix using the 'test-strategy' strategy."
+    )
 
 
 def test_create_user_prompt():
@@ -295,8 +320,9 @@ def test_create_user_prompt():
 
     # Test with all components
     prompt5 = _create_user_prompt(
-        "Do a task",
-        '{"field": "type"}',
-        ["Example 1", "Example 2"]
+        "Do a task", '{"field": "type"}', ["Example 1", "Example 2"]
     )
-    assert prompt5 == 'TASK:\nDo a task\n\nSCHEMA:\n{"field": "type"}\n\nEXAMPLES:\nExample 1\n\nExample 2'
+    assert (
+        prompt5
+        == 'TASK:\nDo a task\n\nSCHEMA:\n{"field": "type"}\n\nEXAMPLES:\nExample 1\n\nExample 2'
+    )

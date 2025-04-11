@@ -7,7 +7,6 @@ can inherit from, providing common functionality and ensuring
 consistent behavior.
 """
 
-import logging
 import os
 from abc import ABC, abstractmethod
 from typing import Any
@@ -24,6 +23,7 @@ from quackcore.integrations.core.results import (
     ConfigResult,
     IntegrationResult,
 )
+from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
 from quackcore.paths import resolver
 
 
@@ -33,7 +33,7 @@ class BaseAuthProvider(ABC, AuthProviderProtocol):
     def __init__(
         self,
         credentials_file: str | None = None,
-        log_level: int = logging.INFO,
+        log_level: int = LOG_LEVELS[LogLevel.INFO],
     ) -> None:
         """
         Initialize the base authentication provider.
@@ -42,7 +42,7 @@ class BaseAuthProvider(ABC, AuthProviderProtocol):
             credentials_file: Path to credentials file
             log_level: Logging level
         """
-        self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+        self.logger = get_logger(f"{__name__}.{self.__class__.__name__}")
         self.logger.setLevel(log_level)
 
         self.credentials_file = (
@@ -153,14 +153,14 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         "~/.quack/config.yaml",
     ]
 
-    def __init__(self, log_level: int = logging.INFO) -> None:
+    def __init__(self, log_level: int = LOG_LEVELS[LogLevel.INFO]) -> None:
         """
         Initialize the base configuration provider.
 
         Args:
             log_level: Logging level
         """
-        self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+        self.logger = get_logger(f"{__name__}.{self.__class__.__name__}")
         self.logger.setLevel(log_level)
 
     @property
@@ -351,7 +351,7 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
         config_provider: ConfigProviderProtocol | None = None,
         auth_provider: AuthProviderProtocol | None = None,
         config_path: str | None = None,
-        log_level: int = logging.INFO,
+        log_level: int = LOG_LEVELS[LogLevel.INFO],
     ) -> None:
         """
         Initialize the base integration service.
@@ -362,7 +362,7 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
             config_path: Path to configuration file
             log_level: Logging level
         """
-        self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+        self.logger = get_logger(f"{__name__}.{self.__class__.__name__}")
         self.logger.setLevel(log_level)
         self.log_level = log_level
 

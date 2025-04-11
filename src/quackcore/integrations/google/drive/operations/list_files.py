@@ -15,6 +15,7 @@ from quackcore.integrations.google.drive.models import DriveFile, DriveFolder
 from quackcore.integrations.google.drive.protocols import DriveService
 from quackcore.integrations.google.drive.utils.api import execute_api_request
 from quackcore.integrations.google.drive.utils.query import build_query
+from quackcore.logging import get_logger
 
 
 def list_files(
@@ -35,7 +36,7 @@ def list_files(
     Returns:
         IntegrationResult containing a list of file information dictionaries.
     """
-    local_logger = logger or logging.getLogger(__name__)
+    local_logger = get_logger(__name__) or logger(__name__)
 
     try:
         # Build query string

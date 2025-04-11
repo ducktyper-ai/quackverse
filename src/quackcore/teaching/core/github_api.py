@@ -6,10 +6,10 @@ This module provides functions for checking GitHub-related quest conditions,
 such as starring repositories and opening pull requests.
 """
 
+from quackcore.errors import QuackError
 from quackcore.integrations.core import registry
 from quackcore.integrations.github.models import GitHubRepo
 from quackcore.logging import get_logger
-from quackcore.errors import QuackError
 
 logger = get_logger(__name__)
 
@@ -61,7 +61,9 @@ def has_starred_repo(username: str, repo_name: str) -> bool:
         logger.error(f"Error checking if {username} starred {repo_name}: {str(qe)}")
         return False
     except Exception as e:
-        logger.error(f"Unexpected error checking if {username} starred {repo_name}: {str(e)}")
+        logger.error(
+            f"Unexpected error checking if {username} starred {repo_name}: {str(e)}"
+        )
         raise QuackError("Unexpected error in has_starred_repo", original_error=e)
 
 
@@ -92,7 +94,9 @@ def has_forked_repo(username: str, repo_name: str) -> bool:
         logger.error(f"Error checking if {username} forked {repo_name}: {str(qe)}")
         return False
     except Exception as e:
-        logger.error(f"Unexpected error checking if {username} forked {repo_name}: {str(e)}")
+        logger.error(
+            f"Unexpected error checking if {username} forked {repo_name}: {str(e)}"
+        )
         raise QuackError("Unexpected error in has_forked_repo", original_error=e)
 
 
@@ -117,10 +121,14 @@ def has_opened_pr(username: str, org_name: str) -> bool:
         logger.debug(f"User {username} PR list: {pr_list}")
         return len(pr_list) > 0
     except QuackError as qe:
-        logger.error(f"Error checking if {username} opened PRs in {org_name}: {str(qe)}")
+        logger.error(
+            f"Error checking if {username} opened PRs in {org_name}: {str(qe)}"
+        )
         return False
     except Exception as e:
-        logger.error(f"Unexpected error checking if {username} opened PRs in {org_name}: {str(e)}")
+        logger.error(
+            f"Unexpected error checking if {username} opened PRs in {org_name}: {str(e)}"
+        )
         raise QuackError("Unexpected error in has_opened_pr", original_error=e)
 
 
@@ -145,10 +153,14 @@ def has_merged_pr(username: str, org_name: str) -> bool:
         logger.debug(f"User {username} merged PR list: {merged_pr_list}")
         return len(merged_pr_list) > 0
     except QuackError as qe:
-        logger.error(f"Error checking if {username} has merged PRs in {org_name}: {str(qe)}")
+        logger.error(
+            f"Error checking if {username} has merged PRs in {org_name}: {str(qe)}"
+        )
         return False
     except Exception as e:
-        logger.error(f"Unexpected error checking if {username} has merged PRs in {org_name}: {str(e)}")
+        logger.error(
+            f"Unexpected error checking if {username} has merged PRs in {org_name}: {str(e)}"
+        )
         raise QuackError("Unexpected error in has_merged_pr", original_error=e)
 
 
@@ -175,7 +187,9 @@ def get_repo_info(repo_name: str) -> GitHubRepo | None:
         logger.error(f"Error getting repository info for {repo_name}: {str(qe)}")
         return None
     except Exception as e:
-        logger.error(f"Unexpected error getting repository info for {repo_name}: {str(e)}")
+        logger.error(
+            f"Unexpected error getting repository info for {repo_name}: {str(e)}"
+        )
         raise QuackError("Unexpected error in get_repo_info", original_error=e)
 
 
@@ -202,8 +216,12 @@ def get_user_contributions(username: str, org_name: str) -> dict[str, int]:
             return {"commits": 0, "pull_requests": 0, "issues": 0, "reviews": 0}
         return contributions
     except QuackError as qe:
-        logger.error(f"Error getting user contributions for {username} in {org_name}: {str(qe)}")
+        logger.error(
+            f"Error getting user contributions for {username} in {org_name}: {str(qe)}"
+        )
         return {}
     except Exception as e:
-        logger.error(f"Unexpected error getting contributions for {username} in {org_name}: {str(e)}")
+        logger.error(
+            f"Unexpected error getting contributions for {username} in {org_name}: {str(e)}"
+        )
         raise QuackError("Unexpected error in get_user_contributions", original_error=e)

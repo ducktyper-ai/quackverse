@@ -6,8 +6,8 @@ This module provides functions for adding XP to users
 and handling level-up events.
 """
 
-from quackcore.logging import get_logger
 from quackcore.errors import QuackError
+from quackcore.logging import get_logger
 
 from . import badges  # Use relative import from the same package
 from .models import UserProgress, XPEvent

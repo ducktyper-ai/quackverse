@@ -1,3 +1,4 @@
+# tests/test_prompt/test_plugin.py
 """
 Tests for the prompt plugin functionality.
 """

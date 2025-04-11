@@ -1,8 +1,11 @@
+# tests/test_prompt/test_booster.py
 """
 Tests for the PromptBooster class.
 """
 
 import json
+import os
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -188,10 +191,14 @@ def test_booster_render_with_llm():
         patch("quackcore.prompt.enhancer.enhance_with_llm") as mock_enhance,
     ):
         # Configure the mocks
-        mock_select.return_value = MagicMock(
-            id="test-strategy",
-            render_fn=lambda task_description, **kwargs: f"Basic: {task_description}",
+        mock_strategy = MagicMock()
+        mock_strategy.id = "test-strategy"
+        mock_strategy.input_vars = ["task_description"]
+        mock_strategy.render_fn = (
+            lambda task_description, **kwargs: f"Basic: {task_description}"
         )
+
+        mock_select.return_value = mock_strategy
         mock_enhance.return_value = "Enhanced: Generate a story about AI"
 
         # Create a booster

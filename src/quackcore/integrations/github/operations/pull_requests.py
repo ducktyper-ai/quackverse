@@ -2,27 +2,31 @@
 """GitHub pull request operations."""
 
 from datetime import datetime
-from typing import Any, Literal, List
+from typing import Any, List, Literal
 
 import requests
 
-from quackcore.integrations.github.models import GitHubUser, PullRequest, \
-    PullRequestStatus
-from quackcore.integrations.github.utils.api import make_request
 from quackcore.errors import QuackError
+from quackcore.integrations.github.models import (
+    GitHubUser,
+    PullRequest,
+    PullRequestStatus,
+)
+from quackcore.integrations.github.utils.api import make_request
+from quackcore.logging import get_logger
 
-logger = __import__("quackcore.logging").logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def create_pull_request(
-        session: requests.Session,
-        base_repo: str,
-        head: str,
-        title: str,
-        api_url: str,
-        body: str | None = None,
-        base_branch: str = "main",
-        **request_kwargs: Any,
+    session: requests.Session,
+    base_repo: str,
+    head: str,
+    title: str,
+    api_url: str,
+    body: str | None = None,
+    base_branch: str = "main",
+    **request_kwargs: Any,
 ) -> PullRequest:
     """Create a pull request.
 
@@ -67,13 +71,16 @@ def create_pull_request(
 
     # Parse the dates.
     created_at = datetime.fromisoformat(
-        pr_data.get("created_at").replace("Z", "+00:00"))
+        pr_data.get("created_at").replace("Z", "+00:00")
+    )
     updated_at = datetime.fromisoformat(
-        pr_data.get("updated_at").replace("Z", "+00:00"))
+        pr_data.get("updated_at").replace("Z", "+00:00")
+    )
     merged_at = None
     if pr_data.get("merged_at"):
         merged_at = datetime.fromisoformat(
-            pr_data.get("merged_at").replace("Z", "+00:00"))
+            pr_data.get("merged_at").replace("Z", "+00:00")
+        )
 
     # Determine the status.
     if merged_at:
@@ -105,12 +112,12 @@ def create_pull_request(
 
 
 def list_pull_requests(
-        session: requests.Session,
-        repo: str,
-        api_url: str,
-        state: Literal["open", "closed", "all"] = "open",
-        author: str | None = None,
-        **request_kwargs: Any,
+    session: requests.Session,
+    repo: str,
+    api_url: str,
+    state: Literal["open", "closed", "all"] = "open",
+    author: str | None = None,
+    **request_kwargs: Any,
 ) -> List[PullRequest]:
     """List pull requests for a repository.
 
@@ -152,13 +159,16 @@ def list_pull_requests(
             avatar_url=author_data.get("avatar_url"),
         )
         created_at = datetime.fromisoformat(
-            pr_data.get("created_at").replace("Z", "+00:00"))
+            pr_data.get("created_at").replace("Z", "+00:00")
+        )
         updated_at = datetime.fromisoformat(
-            pr_data.get("updated_at").replace("Z", "+00:00"))
+            pr_data.get("updated_at").replace("Z", "+00:00")
+        )
         merged_at = None
         if pr_data.get("merged_at"):
             merged_at = datetime.fromisoformat(
-                pr_data.get("merged_at").replace("Z", "+00:00"))
+                pr_data.get("merged_at").replace("Z", "+00:00")
+            )
 
         if merged_at:
             status = PullRequestStatus.MERGED
@@ -191,11 +201,11 @@ def list_pull_requests(
 
 
 def get_pull_request(
-        session: requests.Session,
-        repo: str,
-        number: int,
-        api_url: str,
-        **request_kwargs: Any,
+    session: requests.Session,
+    repo: str,
+    number: int,
+    api_url: str,
+    **request_kwargs: Any,
 ) -> PullRequest:
     """Get a specific pull request.
 
@@ -225,13 +235,16 @@ def get_pull_request(
         avatar_url=author_data.get("avatar_url"),
     )
     created_at = datetime.fromisoformat(
-        pr_data.get("created_at").replace("Z", "+00:00"))
+        pr_data.get("created_at").replace("Z", "+00:00")
+    )
     updated_at = datetime.fromisoformat(
-        pr_data.get("updated_at").replace("Z", "+00:00"))
+        pr_data.get("updated_at").replace("Z", "+00:00")
+    )
     merged_at = None
     if pr_data.get("merged_at"):
         merged_at = datetime.fromisoformat(
-            pr_data.get("merged_at").replace("Z", "+00:00"))
+            pr_data.get("merged_at").replace("Z", "+00:00")
+        )
 
     if merged_at:
         status = PullRequestStatus.MERGED
@@ -261,14 +274,14 @@ def get_pull_request(
 
 
 def merge_pull_request(
-        session: requests.Session,
-        repo: str,
-        pull_number: int,
-        api_url: str,
-        commit_title: str | None = None,
-        commit_message: str | None = None,
-        merge_method: Literal["merge", "squash", "rebase"] = "merge",
-        **request_kwargs: Any,
+    session: requests.Session,
+    repo: str,
+    pull_number: int,
+    api_url: str,
+    commit_title: str | None = None,
+    commit_message: str | None = None,
+    merge_method: Literal["merge", "squash", "rebase"] = "merge",
+    **request_kwargs: Any,
 ) -> bool:
     """Merge a pull request.
 
@@ -308,11 +321,11 @@ def merge_pull_request(
 
 
 def get_pull_request_files(
-        session: requests.Session,
-        repo: str,
-        pull_number: int,
-        api_url: str,
-        **request_kwargs: Any,
+    session: requests.Session,
+    repo: str,
+    pull_number: int,
+    api_url: str,
+    **request_kwargs: Any,
 ) -> List[dict[str, Any]]:
     """Get the files changed in a pull request.
 
@@ -341,13 +354,13 @@ def get_pull_request_files(
 
 
 def add_pull_request_review(
-        session: requests.Session,
-        repo: str,
-        pull_number: int,
-        body: str,
-        api_url: str,
-        event: Literal["APPROVE", "REQUEST_CHANGES", "COMMENT"] = "COMMENT",
-        **request_kwargs: Any,
+    session: requests.Session,
+    repo: str,
+    pull_number: int,
+    body: str,
+    api_url: str,
+    event: Literal["APPROVE", "REQUEST_CHANGES", "COMMENT"] = "COMMENT",
+    **request_kwargs: Any,
 ) -> dict[str, Any]:
     """Add a review to a pull request.
 
@@ -380,12 +393,12 @@ def add_pull_request_review(
 
 
 def get_pull_requests_by_user(
-        session: requests.Session,
-        username: str,
-        org: str,
-        api_url: str,
-        state: Literal["open", "closed", "all"] = "open",
-        **request_kwargs: Any,
+    session: requests.Session,
+    username: str,
+    org: str,
+    api_url: str,
+    state: Literal["open", "closed", "all"] = "open",
+    **request_kwargs: Any,
 ) -> List[PullRequest]:
     """
     Get pull requests created by a user within an organization.
@@ -446,7 +459,11 @@ def get_pull_requests_by_user(
             html_url = item.get("html_url")
             body = item.get("body")
             state_str = item.get("state")
-            status = PullRequestStatus.OPEN if state_str == "open" else PullRequestStatus.CLOSED
+            status = (
+                PullRequestStatus.OPEN
+                if state_str == "open"
+                else PullRequestStatus.CLOSED
+            )
 
             user_data = item.get("user", {})
             author_obj = GitHubUser(
@@ -456,9 +473,11 @@ def get_pull_requests_by_user(
             )
 
             created_at = datetime.fromisoformat(
-                item.get("created_at").replace("Z", "+00:00"))
+                item.get("created_at").replace("Z", "+00:00")
+            )
             updated_at = datetime.fromisoformat(
-                item.get("updated_at").replace("Z", "+00:00"))
+                item.get("updated_at").replace("Z", "+00:00")
+            )
 
             pr = PullRequest(
                 number=pr_number,

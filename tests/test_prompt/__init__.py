@@ -1,3 +1,4 @@
+# tests/test_prompt/__init__.py
 """
 Tests for the quackcore.prompt module.
 

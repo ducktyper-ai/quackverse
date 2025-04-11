@@ -12,8 +12,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
-from quackcore.logging import get_logger
 from quackcore.errors import QuackError  # Use our custom error types
+from quackcore.logging import get_logger
 
 from . import badges, quests, utils, xp  # xp now exports check_xp_badges publicly
 from .models import UserProgress, XPEvent
@@ -24,6 +24,7 @@ logger = get_logger(__name__)
 @dataclass
 class GamificationResult:
     """Result of a gamification event."""
+
     xp_added: int = 0
     level: int = 1
     level_up: bool = False
@@ -205,7 +206,8 @@ class GamificationService:
             badge_obj = badges.get_badge(earned_badge[0])
             if badge_obj:
                 message_parts.append(
-                    f"Earned badge: {badge_obj.name} {badge_obj.emoji}")
+                    f"Earned badge: {badge_obj.name} {badge_obj.emoji}"
+                )
 
         message = " ".join(message_parts)
 
@@ -256,7 +258,7 @@ class GamificationService:
     # Integration with GitHub events
 
     def handle_github_pr_submission(
-            self, pr_number: int, repo: str
+        self, pr_number: int, repo: str
     ) -> GamificationResult:
         """
         Handle a GitHub pull request submission.
@@ -354,7 +356,7 @@ class GamificationService:
         return result
 
     def handle_module_completion(
-            self, course_id: str, module_id: str, module_name: str
+        self, course_id: str, module_id: str, module_name: str
     ) -> GamificationResult:
         """
         Handle completion of an Academy/LMS module.
@@ -391,7 +393,7 @@ class GamificationService:
         return result
 
     def handle_course_completion(
-            self, course_id: str, course_name: str
+        self, course_id: str, course_name: str
     ) -> GamificationResult:
         """
         Handle completion of an Academy/LMS course.
@@ -421,8 +423,7 @@ class GamificationService:
         return result
 
     def handle_assignment_completion(
-            self, assignment_id: str, assignment_name: str, score: float,
-            max_score: float
+        self, assignment_id: str, assignment_name: str, score: float, max_score: float
     ) -> GamificationResult:
         """
         Handle completion of an Academy/LMS assignment.
@@ -454,7 +455,7 @@ class GamificationService:
         return self.handle_event(event)
 
     def handle_feedback_submission(
-            self, feedback_id: str, context: str
+        self, feedback_id: str, context: str
     ) -> GamificationResult:
         """
         Handle submission of feedback.
@@ -513,7 +514,8 @@ class GamificationService:
 
                     if quest_result.message:
                         result.message = (
-                                                     result.message or "") + " " + quest_result.message
+                            (result.message or "") + " " + quest_result.message
+                        )
 
             day_event = XPEvent(
                 id=f"run-ducktyper-day-{today}",
@@ -528,7 +530,8 @@ class GamificationService:
                 if e.startswith("run-ducktyper-day-")
             ]
             if len(streak_days) >= 3 and not self.progress.has_completed_quest(
-                    "daily-streak"):
+                "daily-streak"
+            ):
                 quest_result = self.complete_quest("daily-streak")
                 result.completed_quests.extend(quest_result.completed_quests)
                 result.earned_badges.extend(quest_result.earned_badges)
