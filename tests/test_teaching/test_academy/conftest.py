@@ -1,3 +1,4 @@
+# tests/test_teaching/test_academy/conftest.py
 """
 Fixtures for testing the QuackCore teaching academy module.
 """
