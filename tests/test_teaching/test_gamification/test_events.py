@@ -6,8 +6,6 @@ This module tests event handling functionality in the gamification service.
 """
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from quackcore.teaching.core.models import UserProgress, XPEvent
 from quackcore.teaching.core.gamification_service import GamificationResult, \
     GamificationService

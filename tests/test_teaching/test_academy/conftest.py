@@ -5,29 +5,26 @@ Fixtures for testing the QuackCore teaching academy module.
 import os
 import uuid
 from datetime import datetime, timedelta
-from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from pydantic import BaseModel
 
 from quackcore.teaching.academy.context import TeachingContext, TeachingConfig, \
     GitHubConfig
 from quackcore.teaching.academy.course import Course, CourseModule, ModuleItem, ItemType
-from quackcore.teaching.academy.assignment import Assignment, AssignmentStatus, \
+from quackcore.teaching.academy.assignment import Assignment, \
     AssignmentType
-from quackcore.teaching.academy.student import Student, StudentSubmission, \
-    SubmissionStatus
+from quackcore.teaching.academy.student import Student, StudentSubmission
 from quackcore.teaching.academy.grading import GradingCriterion, GradingCriteria, \
     GradeResult
 from quackcore.teaching.academy.feedback import (
     Feedback, FeedbackItem, FeedbackItemType, Annotation, AnnotationType
 )
 from quackcore.teaching.academy.results import (
-    TeachingResult, AssignmentResult, SubmissionResult, FeedbackResult
+    TeachingResult
 )
-from quackcore.integrations.github.models import GitHubRepo, PullRequest
+from quackcore.integrations.github.models import GitHubRepo
 
 
 # Mock GitHub integration

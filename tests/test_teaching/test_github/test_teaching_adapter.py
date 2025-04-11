@@ -6,8 +6,6 @@ This module tests the GitHub teaching adapter in quackcore.teaching.github.teach
 """
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from quackcore.errors import QuackApiError
 from quackcore.teaching.github.teaching_adapter import GitHubTeachingAdapter
 

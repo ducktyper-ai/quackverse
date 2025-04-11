@@ -4,10 +4,7 @@ Tests for the teaching XP management module.
 
 This module tests the XP management functionality in quackcore.teaching.core.xp.
 """
-from collections.abc import Callable
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from quackcore.teaching.core.models import UserProgress, XPEvent
 from quackcore.teaching.core import xp

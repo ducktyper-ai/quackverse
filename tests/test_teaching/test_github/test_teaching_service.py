@@ -6,8 +6,6 @@ This module tests the GitHub teaching integration service in quackcore.teaching.
 """
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from quackcore.teaching.github.teaching_service import GitHubTeachingIntegration
 
 

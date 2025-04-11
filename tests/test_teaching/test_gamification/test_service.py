@@ -6,8 +6,6 @@ This module tests GitHub and LMS integration features in the gamification servic
 """
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from quackcore.teaching.core.models import UserProgress, XPEvent
 from quackcore.teaching.core.gamification_service import GamificationService
 

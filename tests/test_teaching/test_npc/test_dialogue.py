@@ -4,11 +4,7 @@ Tests for the Quackster NPC dialogue registry.
 
 This module tests the dialogue registry functionality in quackcore.teaching.npc.dialogue.registry.
 """
-from pathlib import Path
 from unittest.mock import MagicMock, patch
-
-import pytest
-import yaml
 
 from quackcore.teaching.npc.dialogue.registry import DialogueRegistry
 from quackcore.teaching.npc.schema import UserMemory

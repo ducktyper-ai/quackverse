@@ -1,0 +1,1 @@
+"""Test package for quackcore.teaching.npc.tools."""

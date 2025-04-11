@@ -7,8 +7,6 @@ This module tests the utility functions in quackcore.teaching.core.utils.
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from quackcore.teaching.core.models import UserProgress
 from quackcore.teaching.core import utils
 

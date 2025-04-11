@@ -6,8 +6,6 @@ This module tests the GitHub API utility functions in quackcore.teaching.core.gi
 """
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from quackcore.teaching.core import github_api
 
 

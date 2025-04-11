@@ -6,10 +6,7 @@ This module tests the certificate functionality in quackcore.teaching.core.certi
 """
 import base64
 import hashlib
-import hmac
 import json
-import time
-from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest

@@ -4,12 +4,9 @@ Tests for the Quackster NPC memory management.
 
 This module tests the memory management functionality in quackcore.teaching.npc.memory.
 """
-import json
 from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from quackcore.teaching.core.models import UserProgress
 from quackcore.teaching.npc import memory
@@ -341,7 +338,7 @@ class TestNPCMemory:
         assert set(result.completed_quests) == {"quest1", "quest2"}
         assert set(result.badges) == {"badge1"}
         assert result.conversation_count == 0  # New user
-        assert "last_interaction" in result.dict()
+        assert "last_interaction" in result.model_dump()
         assert "badge_names" in result.custom_data
         assert "completed_quest_names" in result.custom_data
         assert "xp_to_next_level" in result.custom_data

@@ -6,8 +6,6 @@ This module tests the GitHub grading functionality in quackcore.teaching.github.
 """
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from quackcore.errors import QuackApiError
 from quackcore.integrations.core import IntegrationResult
 from quackcore.teaching.github.grading import GitHubGrader

@@ -6,11 +6,8 @@ This module tests badge award and management in the gamification service.
 """
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from quackcore.teaching.core.models import UserProgress
-from quackcore.teaching.core.gamification_service import GamificationResult, \
-    GamificationService
+from quackcore.teaching.core.gamification_service import GamificationService
 
 
 class TestGamificationServiceBadges:

@@ -4,9 +4,8 @@ Tests for the Quackster NPC persona functionality.
 
 This module tests the persona management functionality in quackcore.teaching.npc.persona.
 """
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import pytest
 
 from quackcore.teaching.npc import persona
 from quackcore.teaching.npc.schema import QuacksterProfile, UserMemory
