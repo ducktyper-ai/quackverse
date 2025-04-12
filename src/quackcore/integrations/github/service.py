@@ -86,17 +86,26 @@ class GitHubIntegration(BaseIntegrationService, GitHubIntegrationProtocol):
         Returns:
             Result of the initialization
         """
-        # First, call the base initialization
-        init_result = super().initialize()
-        if not init_result.success:
-            return init_result
-
         try:
-            # Get configuration
-            if not self.config:
+            # First, call the base initialization
+            init_result = super().initialize()
+            if not init_result.success:
+                return init_result
+
+            # Get configuration - this can now properly raise exceptions
+            try:
+                # If self.config is None, return a specific error
+                if self.config is None:
+                    return IntegrationResult.error_result(
+                        error="GitHub configuration is not available",
+                        message="GitHub configuration is not available"
+                    )
+            except Exception as e:
+                # If any exception occurs while accessing self.config
+                logger.exception("Exception while accessing configuration")
                 return IntegrationResult.error_result(
-                    error="GitHub configuration is not available",
-                    message="GitHub configuration is not available",
+                    error=f"Failed to initialize GitHub integration: {str(e)}",
+                    message=f"Failed to initialize GitHub integration: {str(e)}"
                 )
 
             # Get authentication token from config
@@ -107,74 +116,94 @@ class GitHubIntegration(BaseIntegrationService, GitHubIntegrationProtocol):
                 logger.debug("Using GitHub token from configuration")
                 # If we have a token from config, use it to authenticate the auth_provider
                 if self.auth_provider:
-                    auth_result = self.auth_provider.authenticate(token=token)
-                    if not auth_result.success:
-                        logger.warning(
-                            f"Failed to authenticate auth provider with token from config: {auth_result.error}"
-                        )
-                        error_msg = getattr(
-                            auth_result, "error", "Authentication failed"
-                        )
-                        return IntegrationResult.error_result(
-                            error=f"Failed to authenticate with GitHub: {error_msg}",
-                            message=f"Failed to authenticate with GitHub: {error_msg}",
-                        )
-            else:
-                # No token in config, try to get it from auth provider
-                if self.auth_provider:
-                    logger.debug("Getting credentials from auth provider")
-                    auth_result = self.auth_provider.get_credentials()
-
-                    if isinstance(auth_result, dict):
-                        token = auth_result.get("token")
-                    else:
-                        token = getattr(auth_result, "token", None)
-
-                    # If still no token, try to authenticate
-                    if not token:
-                        logger.debug(
-                            "No token from get_credentials, trying authenticate()"
-                        )
+                    try:
                         auth_result = self.auth_provider.authenticate()
-                        if auth_result.success and auth_result.token:
-                            token = auth_result.token
-                        else:
-                            error_msg = getattr(
-                                auth_result, "error", "Authentication failed"
-                            )
-                            logger.error(f"Authentication failed: {error_msg}")
+                        if not auth_result.success:
+                            logger.warning(
+                                f"Failed to authenticate auth provider with token from config: {auth_result.error}")
+                            error_msg = getattr(auth_result, "error",
+                                                "Authentication failed")
                             return IntegrationResult.error_result(
                                 error=f"Failed to authenticate with GitHub: {error_msg}",
                                 message=f"Failed to authenticate with GitHub: {error_msg}",
                             )
+                    except Exception as e:
+                        # Handle exceptions from authentication
+                        error_msg = str(e)
+                        return IntegrationResult.error_result(
+                            error=f"Failed to initialize GitHub integration: {error_msg}",
+                            message=f"Failed to initialize GitHub integration: {error_msg}"
+                        )
+            else:
+                # No token in config, try to get it from auth provider
+                if self.auth_provider:
+                    try:
+                        logger.debug("Getting credentials from auth provider")
+                        auth_result = self.auth_provider.get_credentials()
+
+                        if isinstance(auth_result, dict):
+                            token = auth_result.get("token")
+                        else:
+                            token = getattr(auth_result, "token", None)
+
+                        # If still no token, try to authenticate
+                        if not token:
+                            logger.debug(
+                                "No token from get_credentials, trying authenticate()")
+                            auth_result = self.auth_provider.authenticate()
+                            if auth_result.success and auth_result.token:
+                                token = auth_result.token
+                            else:
+                                error_msg = getattr(auth_result, "error",
+                                                    "Authentication failed")
+                                logger.error(f"Authentication failed: {error_msg}")
+                                return IntegrationResult.error_result(
+                                    error=f"Failed to authenticate with GitHub: {error_msg}",
+                                    message=f"Failed to authenticate with GitHub: {error_msg}",
+                                )
+                    except Exception as e:
+                        # Handle exceptions from authentication
+                        error_msg = str(e)
+                        return IntegrationResult.error_result(
+                            error=f"Failed to initialize GitHub integration: {error_msg}",
+                            message=f"Failed to initialize GitHub integration: {error_msg}"
+                        )
 
             if not token:
-                error_msg = (
-                    "GitHub token is not configured and no auth provider is available"
-                )
+                error_msg = "GitHub token is not configured and no auth provider is available"
                 return IntegrationResult.error_result(
-                    error=error_msg, message=error_msg
+                    error=error_msg,
+                    message=error_msg
                 )
 
             # Initialize GitHub client
-            self.client = GitHubClient(
-                token=token,
-                api_url=self.config.get("api_url", "https://api.github.com"),
-                timeout=self.config.get("timeout_seconds", 30),
-                max_retries=self.config.get("max_retries", 3),
-                retry_delay=self.config.get("retry_delay", 1.0),
-            )
+            try:
+                self.client = GitHubClient(
+                    token=token,
+                    api_url=self.config.get("api_url", "https://api.github.com"),
+                    timeout=self.config.get("timeout_seconds", 30),
+                    max_retries=self.config.get("max_retries", 3),
+                    retry_delay=self.config.get("retry_delay", 1.0),
+                )
 
-            self._initialized = True
-            return IntegrationResult.success_result(
-                message="GitHub integration initialized successfully"
-            )
+                self._initialized = True
+                return IntegrationResult.success_result(
+                    message="GitHub integration initialized successfully"
+                )
+            except Exception as e:
+                # Handle exceptions from client initialization
+                error_msg = str(e)
+                return IntegrationResult.error_result(
+                    error=f"Failed to initialize GitHub client: {error_msg}",
+                    message=f"Failed to initialize GitHub client: {error_msg}"
+                )
         except Exception as e:
-            logger.exception("Failed to initialize GitHub integration")
+            # Catch-all for any unexpected exceptions
+            logger.exception("Unexpected error in GitHub integration initialization")
             error_msg = str(e)
             return IntegrationResult.error_result(
                 error=f"Failed to initialize GitHub integration: {error_msg}",
-                message=f"Failed to initialize GitHub integration: {error_msg}",
+                message=f"Failed to initialize GitHub integration: {error_msg}"
             )
 
     def is_available(self) -> bool:

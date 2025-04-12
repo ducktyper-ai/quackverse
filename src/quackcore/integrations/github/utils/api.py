@@ -18,16 +18,16 @@ logger = get_logger(__name__)
 
 
 def make_request(
-    session: requests.Session,
-    method: str,
-    url: str,
-    api_url: str,
-    timeout: int = 30,
-    max_retries: int = 3,
-    retry_delay: float = 1.0,
-    params: dict[str, Any] | None = None,
-    json: dict[str, Any] | None = None,
-    **kwargs: Any,
+        session: requests.Session,
+        method: str,
+        url: str,
+        api_url: str,
+        timeout: int = 30,
+        max_retries: int = 3,
+        retry_delay: float = 1.0,
+        params: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
+        **kwargs: Any,
 ) -> requests.Response:
     """Make an HTTP request to the GitHub API with retries.
 
@@ -74,9 +74,9 @@ def make_request(
                     time.sleep(min(wait_time, 60))  # Wait at most 60 seconds
                     continue
                 else:
-                    # This is the key fix - raise QuackQuotaExceededError directly for rate limits
+                    # We've hit max retries, raise the quota error
                     raise QuackQuotaExceededError(
-                        f"GitHub API rate limit exceeded. Reset at {datetime.fromtimestamp(reset_time)}",
+                        message=f"GitHub API rate limit exceeded. Reset at {datetime.fromtimestamp(reset_time)}",
                         service="GitHub",
                         resource=url,
                     )
@@ -84,6 +84,11 @@ def make_request(
             # Check for successful response
             response.raise_for_status()
             return response
+
+        except QuackQuotaExceededError:
+            # If we already raised a QuackQuotaExceededError, don't catch and re-raise it
+            # This fixes the issue with nested exceptions
+            raise
 
         except requests.exceptions.HTTPError as e:
             status_code = e.response.status_code
@@ -97,11 +102,10 @@ def make_request(
                 )
 
             # Handle rate limiting again - in case it wasn't caught above
-            if status_code == 429 or (
-                hasattr(e.response, "headers")
-                and "X-RateLimit-Remaining" in e.response.headers
-                and int(e.response.headers["X-RateLimit-Remaining"]) == 0
-            ):
+            if status_code == 429 or (hasattr(e.response, 'headers') and
+                                      'X-RateLimit-Remaining' in e.response.headers and
+                                      int(e.response.headers[
+                                              'X-RateLimit-Remaining']) == 0):
                 reset_time = int(e.response.headers.get("X-RateLimit-Reset", "0"))
                 current_time = int(time.time())
                 wait_time = max(1, reset_time - current_time)
@@ -115,7 +119,7 @@ def make_request(
                 else:
                     # Ensure we raise the correct error type for tests
                     raise QuackQuotaExceededError(
-                        f"GitHub API rate limit exceeded. Reset at {datetime.fromtimestamp(reset_time)}",
+                        message=f"GitHub API rate limit exceeded. Reset at {datetime.fromtimestamp(reset_time)}",
                         service="GitHub",
                         resource=url,
                         original_error=e,
@@ -183,6 +187,11 @@ def make_request(
             )
 
         except Exception as e:
+            # For other unexpected errors, don't try to catch our own exceptions
+            if isinstance(e, QuackQuotaExceededError) or isinstance(e,
+                                                                    QuackAuthenticationError):
+                raise
+
             # Unexpected errors
             raise QuackApiError(
                 f"Unexpected error in GitHub API request: {str(e)}",
