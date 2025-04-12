@@ -9,9 +9,10 @@ that can be used across different test modules.
 import logging
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from quackcore.errors import QuackIntegrationError
+from quackcore.fs.results import FileInfoResult, OperationResult
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.converter import DocumentConverter
@@ -25,7 +26,7 @@ from quackcore.integrations.pandoc.protocols import PandocConversionProtocol
 
 
 def create_mock_pandoc_config(
-    output_dir: str | Path = "/path/to/output",
+        output_dir: str | Path = "/path/to/output",
 ) -> PandocConfig:
     """
     Create a mock PandocConfig for testing.
@@ -70,9 +71,9 @@ def create_mock_metrics() -> ConversionMetrics:
 
 
 def create_mock_document_converter(
-    config: PandocConfig | None = None,
-    metrics: ConversionMetrics | None = None,
-    pandoc_version: str = "2.11.4",
+        config: PandocConfig | None = None,
+        metrics: ConversionMetrics | None = None,
+        pandoc_version: str = "2.11.4",
 ) -> DocumentConverter:
     """
     Create a mock DocumentConverter for testing.
@@ -91,84 +92,29 @@ def create_mock_document_converter(
     if metrics is None:
         metrics = create_mock_metrics()
 
-    # Create a mock DocumentConverter
-    mock_converter = MagicMock(spec=DocumentConverter)
-    mock_converter.config = config
-    mock_converter.metrics = metrics
-    mock_converter._pandoc_version = pandoc_version
+    # Create a mock DocumentConverter using patch to avoid real initialization
+    with patch("quackcore.integrations.pandoc.operations.verify_pandoc",
+               return_value=pandoc_version):
+        # Create a real DocumentConverter instance with our mocked dependencies
+        converter = DocumentConverter(config)
+        # Override metrics with our predefined metrics
+        converter.metrics = metrics
+        # Ensure pandoc_version is set
+        converter._pandoc_version = pandoc_version
 
-    # Set up the pandoc_version property
-    mock_converter.pandoc_version = pandoc_version
-
-    # Mock the convert_file method
-    def mock_convert_file(input_path, output_path, output_format):
-        if output_format == "markdown":
-            result_path = Path(f"{output_path}")
-            return IntegrationResult.success_result(
-                result_path,
-                message=f"Successfully converted {input_path} to Markdown",
-            )
-        elif output_format == "docx":
-            result_path = Path(f"{output_path}")
-            return IntegrationResult.success_result(
-                result_path,
-                message=f"Successfully converted {input_path} to DOCX",
-            )
-        else:
-            return IntegrationResult.error_result(
-                f"Unsupported conversion format: {output_format}"
-            )
-
-    mock_converter.convert_file.side_effect = mock_convert_file
-
-    # Mock the convert_batch method
-    def mock_convert_batch(tasks, output_dir=None):
-        if not tasks:
-            return IntegrationResult.error_result("No tasks provided")
-
-        successful_files = []
-
-        for task in tasks:
-            output_path = task.output_path
-            if output_path is None:
-                if output_dir is not None:
-                    dir_path = output_dir
-                else:
-                    dir_path = config.output_dir
-
-                extension = (
-                    ".md"
-                    if task.target_format == "markdown"
-                    else f".{task.target_format}"
-                )
-                filename = task.source.path.stem + extension
-                output_path = dir_path / filename
-
-            successful_files.append(output_path)
-
-        return IntegrationResult.success_result(
-            successful_files,
-            message=f"Successfully converted {len(successful_files)} files",
-        )
-
-    mock_converter.convert_batch.side_effect = mock_convert_batch
-
-    # Mock the validate_conversion method
-    mock_converter.validate_conversion.return_value = True
-
-    return mock_converter
+        return converter
 
 
 class MockPandocConversionService(PandocConversionProtocol):
     """Mock implementation of PandocConversionProtocol for testing."""
 
     def __init__(
-        self,
-        initialized: bool = True,
-        converter: DocumentConverter | None = None,
-        pandoc_version: str = "2.11.4",
-        output_dir: str | Path | None = "/path/to/output",
-        log_level: int = logging.INFO,
+            self,
+            initialized: bool = True,
+            converter: DocumentConverter | None = None,
+            pandoc_version: str = "2.11.4",
+            output_dir: str | Path | None = "/path/to/output",
+            log_level: int = logging.INFO,
     ):
         """
         Initialize the mock Pandoc conversion service.
@@ -189,7 +135,7 @@ class MockPandocConversionService(PandocConversionProtocol):
         self.metrics = create_mock_metrics()
 
     def html_to_markdown(
-        self, html_path: Path, output_path: Path | None = None
+            self, html_path: Path, output_path: Path | None = None
     ) -> IntegrationResult[Path]:
         """
         Mock HTML to Markdown conversion.
@@ -219,7 +165,7 @@ class MockPandocConversionService(PandocConversionProtocol):
         return IntegrationResult.error_result("Converter not initialized")
 
     def markdown_to_docx(
-        self, markdown_path: Path, output_path: Path | None = None
+            self, markdown_path: Path, output_path: Path | None = None
     ) -> IntegrationResult[Path]:
         """
         Mock Markdown to DOCX conversion.
@@ -249,12 +195,12 @@ class MockPandocConversionService(PandocConversionProtocol):
         return IntegrationResult.error_result("Converter not initialized")
 
     def convert_directory(
-        self,
-        input_dir: Path,
-        output_format: str,
-        output_dir: Path | None = None,
-        file_pattern: str | None = None,
-        recursive: bool = False,
+            self,
+            input_dir: Path,
+            output_format: str,
+            output_dir: Path | None = None,
+            file_pattern: str | None = None,
+            recursive: bool = False,
     ) -> IntegrationResult[list[Path]]:
         """
         Mock directory conversion.
@@ -409,11 +355,11 @@ def mock_verify_pandoc_failure() -> None:
 
 
 def create_file_info(
-    path: str | Path,
-    format_name: str = "html",
-    size: int = 1024,
-    modified: float | None = None,
-    extra_args: list[str] | None = None,
+        path: str | Path,
+        format_name: str = "html",
+        size: int = 1024,
+        modified: float | None = None,
+        extra_args: list[str] | None = None,
 ) -> FileInfo:
     """
     Create a FileInfo object for testing.
@@ -438,11 +384,11 @@ def create_file_info(
 
 
 def create_conversion_task(
-    source_path: str | Path,
-    source_format: str = "html",
-    target_format: str = "markdown",
-    output_path: str | Path | None = None,
-    size: int = 1024,
+        source_path: str | Path,
+        source_format: str = "html",
+        target_format: str = "markdown",
+        output_path: str | Path | None = None,
+        size: int = 1024,
 ) -> ConversionTask:
     """
     Create a ConversionTask object for testing.
@@ -468,12 +414,12 @@ def create_conversion_task(
 
 
 def create_conversion_details(
-    source_format: str = "html",
-    target_format: str = "markdown",
-    conversion_time: float = 2.5,
-    output_size: int = 512,
-    input_size: int = 1024,
-    validation_errors: list[str] | None = None,
+        source_format: str = "html",
+        target_format: str = "markdown",
+        conversion_time: float = 2.5,
+        output_size: int = 512,
+        input_size: int = 1024,
+        validation_errors: list[str] | None = None,
 ) -> ConversionDetails:
     """
     Create a ConversionDetails object for testing.
@@ -510,8 +456,6 @@ def setup_mock_file_info_for_tests(mock_fs, size: int = 512) -> None:
         mock_fs: The mocked fs service
         size: The file size to return (default: 512)
     """
-    from quackcore.fs.results import FileInfoResult
-
     # Create a concrete FileInfoResult with the expected size
     file_info = FileInfoResult(
         success=True,
@@ -523,6 +467,7 @@ def setup_mock_file_info_for_tests(mock_fs, size: int = 512) -> None:
 
     # Set up the file_info attribute with a concrete value
     mock_fs.get_file_info.return_value = file_info
+    mock_fs.service.get_file_info.return_value = file_info
 
 
 def setup_mock_file_info_with_size(mock_fs, path: str | Path, size: int) -> None:
@@ -534,8 +479,6 @@ def setup_mock_file_info_with_size(mock_fs, path: str | Path, size: int) -> None
         path: The file path to use
         size: The file size to return
     """
-    from quackcore.fs.results import FileInfoResult
-
     # Create a concrete FileInfoResult with the specified path and size
     file_info = FileInfoResult(
         success=True,
@@ -547,3 +490,45 @@ def setup_mock_file_info_with_size(mock_fs, path: str | Path, size: int) -> None
 
     # Set up the file_info return value with a concrete value
     mock_fs.service.get_file_info.return_value = file_info
+    mock_fs.get_file_info.return_value = file_info
+
+
+def patch_operations_module():
+    """
+    Create patches for the operations module to avoid real Pandoc calls.
+
+    This function returns a context manager that patches key operations
+    to prevent calls to the real Pandoc installation.
+
+    Returns:
+        A context manager for patching operations
+    """
+    # Create patches for all operations that might access Pandoc
+    verify_patch = patch(
+        "quackcore.integrations.pandoc.operations.verify_pandoc",
+        return_value="2.11.4"
+    )
+
+    html_to_md_patch = patch(
+        "quackcore.integrations.pandoc.operations.convert_html_to_markdown",
+        return_value=IntegrationResult.success_result(
+            (Path("/path/to/output/file.md"), None),
+            message="Successfully converted HTML to Markdown"
+        )
+    )
+
+    md_to_docx_patch = patch(
+        "quackcore.integrations.pandoc.operations.convert_markdown_to_docx",
+        return_value=IntegrationResult.success_result(
+            (Path("/path/to/output/file.docx"), None),
+            message="Successfully converted Markdown to DOCX"
+        )
+    )
+
+    # Return a nested context manager
+    return patch.multiple(
+        "quackcore.integrations.pandoc.operations",
+        verify_pandoc=verify_patch.start(),
+        convert_html_to_markdown=html_to_md_patch.start(),
+        convert_markdown_to_docx=md_to_docx_patch.start(),
+    )

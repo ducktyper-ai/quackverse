@@ -149,7 +149,7 @@ class TestStandardizeToolOutput:
         output = common.standardize_tool_output(tool_name, result)
 
         # Assertions - should create a default formatted_text
-        assert "formatted_text" in output.dict()
+        assert "formatted_text" in output.model_dump()
         mock_registry.flavor_text.assert_called_once()
 
     @pytest.mark.parametrize(

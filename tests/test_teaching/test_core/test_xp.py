@@ -143,7 +143,7 @@ class TestXPManagement:
         user = UserProgress(github_username="testuser", xp=100)
 
         # Act
-        new_badges = xp._check_xp_badges(user)
+        new_badges = xp.check_xp_badges(user)
 
         # Assert
         assert new_badges == ["badge1"]

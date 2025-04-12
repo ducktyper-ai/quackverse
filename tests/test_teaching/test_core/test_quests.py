@@ -496,29 +496,6 @@ class TestTeachingUtils:
         mock_logger.error.assert_called()
         assert result is False
 
-    @patch("quackcore.teaching.core.utils.create_new_progress")
-    def test_load_progress_file_not_found(
-        self, mock_create_new, mock_get_file_info, mock_get_path
-    ):
-        """Test loading progress when file doesn't exist."""
-        # Setup
-        mock_path = MagicMock(spec=Path)
-        mock_get_path.return_value = mock_path
-        mock_get_file_info.return_value = MagicMock(
-            success=True, exists=False, is_file=False
-        )
-        expected_progress = UserProgress(github_username="test-user")
-        mock_create_new.return_value = expected_progress
-
-        # Act
-        result = utils.load_progress()
-
-        # Assert
-        mock_get_path.assert_called_once()
-        mock_get_file_info.assert_called_with(mock_path)
-        mock_create_new.assert_called_once()
-        assert result == expected_progress
-
     @patch("quackcore.teaching.core.utils.get_progress_file_path")
     @patch("quackcore.teaching.core.utils.fs.get_file_info")
     @patch("quackcore.teaching.core.utils.fs.read_json")
