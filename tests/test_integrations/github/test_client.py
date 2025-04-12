@@ -1,11 +1,9 @@
 # tests/test_integrations/github/test_client.py
 """Tests for GitHub client."""
 
-from typing import Literal
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
-import requests
 
 from quackcore.integrations.github.client import GitHubClient
 from quackcore.integrations.github.models import GitHubRepo, GitHubUser, PullRequest

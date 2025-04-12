@@ -119,9 +119,9 @@ class TestApiUtils:
         mock_session.request.return_value = mock_response
 
         # Mock time.time to return a stable value
-        with patch('time.time', return_value=int(time.time())):
+        with patch("time.time", return_value=int(time.time())):
             # Avoid actual sleeping in tests
-            with patch('time.sleep'):
+            with patch("time.sleep"):
                 # We expect a QuackQuotaExceededError to be raised
                 with pytest.raises(QuackQuotaExceededError) as excinfo:
                     # Use max_retries=1 so we immediately hit the quota error path
@@ -130,7 +130,7 @@ class TestApiUtils:
                         method="GET",
                         url="/user",
                         api_url="https://api.github.com",
-                        max_retries=1
+                        max_retries=1,
                     )
 
                 # Just verify the basic error information is present
@@ -139,7 +139,8 @@ class TestApiUtils:
                 assert "service='GitHub'" in str(excinfo.value)
                 # The api_method or resource will be included in some form
                 assert "api_method" in str(excinfo.value) or "quota_check" in str(
-                    excinfo.value)
+                    excinfo.value
+                )
 
     def test_make_request_retry_success(self, mock_session):
         """Test API request with retry ending in success."""

@@ -18,16 +18,16 @@ logger = get_logger(__name__)
 
 
 def make_request(
-        session: requests.Session,
-        method: str,
-        url: str,
-        api_url: str,
-        timeout: int = 30,
-        max_retries: int = 3,
-        retry_delay: float = 1.0,
-        params: dict[str, Any] | None = None,
-        json: dict[str, Any] | None = None,
-        **kwargs: Any,
+    session: requests.Session,
+    method: str,
+    url: str,
+    api_url: str,
+    timeout: int = 30,
+    max_retries: int = 3,
+    retry_delay: float = 1.0,
+    params: dict[str, Any] | None = None,
+    json: dict[str, Any] | None = None,
+    **kwargs: Any,
 ) -> requests.Response:
     """Make an HTTP request to the GitHub API with retries.
 
@@ -102,10 +102,11 @@ def make_request(
                 )
 
             # Handle rate limiting again - in case it wasn't caught above
-            if status_code == 429 or (hasattr(e.response, 'headers') and
-                                      'X-RateLimit-Remaining' in e.response.headers and
-                                      int(e.response.headers[
-                                              'X-RateLimit-Remaining']) == 0):
+            if status_code == 429 or (
+                hasattr(e.response, "headers")
+                and "X-RateLimit-Remaining" in e.response.headers
+                and int(e.response.headers["X-RateLimit-Remaining"]) == 0
+            ):
                 reset_time = int(e.response.headers.get("X-RateLimit-Reset", "0"))
                 current_time = int(time.time())
                 wait_time = max(1, reset_time - current_time)
@@ -188,8 +189,9 @@ def make_request(
 
         except Exception as e:
             # For other unexpected errors, don't try to catch our own exceptions
-            if isinstance(e, QuackQuotaExceededError) or isinstance(e,
-                                                                    QuackAuthenticationError):
+            if isinstance(e, QuackQuotaExceededError) or isinstance(
+                e, QuackAuthenticationError
+            ):
                 raise
 
             # Unexpected errors

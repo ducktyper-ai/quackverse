@@ -86,14 +86,20 @@ def test_integration_registered():
     with patch("quackcore.integrations.github.registry", mock_registry):
         # Import and reload to trigger registration
         import importlib
+
         import quackcore.integrations.github
+
         importlib.reload(quackcore.integrations.github)
 
         # Check if integration methods would be accessible
         mock_registry.get_integrations.assert_called()
-        github_integrations = [i for i in mock_registry.get_integrations()
-                               if isinstance(i, GitHubIntegration)]
+        github_integrations = [
+            i
+            for i in mock_registry.get_integrations()
+            if isinstance(i, GitHubIntegration)
+        ]
         assert len(github_integrations) > 0
+
 
 @patch("quackcore.integrations.github.create_integration")
 @patch("quackcore.integrations.core.registry.register")
@@ -106,18 +112,23 @@ def test_module_init_registers_integration():
     mock_integration = MagicMock(spec=GitHubIntegration)
 
     # Patch create_integration to return our mock integration
-    with patch("quackcore.integrations.github.create_integration",
-               return_value=mock_integration):
+    with patch(
+        "quackcore.integrations.github.create_integration",
+        return_value=mock_integration,
+    ):
         # Patch the registry module
         with patch("quackcore.integrations.github.registry", mock_registry):
             # Re-import the module to trigger the registration
             import importlib
+
             import quackcore.integrations.github
+
             importlib.reload(quackcore.integrations.github)
 
             # Verify the mock registration was attempted
-            assert mock_registry.register.called_once_with(mock_integration) or \
-                   mock_registry.add_integration.called_once_with(mock_integration)
+            assert mock_registry.register.called_once_with(
+                mock_integration
+            ) or mock_registry.add_integration.called_once_with(mock_integration)
 
 
 def test_lazy_loading():

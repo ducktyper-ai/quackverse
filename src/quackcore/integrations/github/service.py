@@ -98,14 +98,14 @@ class GitHubIntegration(BaseIntegrationService, GitHubIntegrationProtocol):
                 if self.config is None:
                     return IntegrationResult.error_result(
                         error="GitHub configuration is not available",
-                        message="GitHub configuration is not available"
+                        message="GitHub configuration is not available",
                     )
             except Exception as e:
                 # If any exception occurs while accessing self.config
                 logger.exception("Exception while accessing configuration")
                 return IntegrationResult.error_result(
                     error=f"Failed to initialize GitHub integration: {str(e)}",
-                    message=f"Failed to initialize GitHub integration: {str(e)}"
+                    message=f"Failed to initialize GitHub integration: {str(e)}",
                 )
 
             # Get authentication token from config
@@ -120,9 +120,11 @@ class GitHubIntegration(BaseIntegrationService, GitHubIntegrationProtocol):
                         auth_result = self.auth_provider.authenticate()
                         if not auth_result.success:
                             logger.warning(
-                                f"Failed to authenticate auth provider with token from config: {auth_result.error}")
-                            error_msg = getattr(auth_result, "error",
-                                                "Authentication failed")
+                                f"Failed to authenticate auth provider with token from config: {auth_result.error}"
+                            )
+                            error_msg = getattr(
+                                auth_result, "error", "Authentication failed"
+                            )
                             return IntegrationResult.error_result(
                                 error=f"Failed to authenticate with GitHub: {error_msg}",
                                 message=f"Failed to authenticate with GitHub: {error_msg}",
@@ -132,7 +134,7 @@ class GitHubIntegration(BaseIntegrationService, GitHubIntegrationProtocol):
                         error_msg = str(e)
                         return IntegrationResult.error_result(
                             error=f"Failed to initialize GitHub integration: {error_msg}",
-                            message=f"Failed to initialize GitHub integration: {error_msg}"
+                            message=f"Failed to initialize GitHub integration: {error_msg}",
                         )
             else:
                 # No token in config, try to get it from auth provider
@@ -149,13 +151,15 @@ class GitHubIntegration(BaseIntegrationService, GitHubIntegrationProtocol):
                         # If still no token, try to authenticate
                         if not token:
                             logger.debug(
-                                "No token from get_credentials, trying authenticate()")
+                                "No token from get_credentials, trying authenticate()"
+                            )
                             auth_result = self.auth_provider.authenticate()
                             if auth_result.success and auth_result.token:
                                 token = auth_result.token
                             else:
-                                error_msg = getattr(auth_result, "error",
-                                                    "Authentication failed")
+                                error_msg = getattr(
+                                    auth_result, "error", "Authentication failed"
+                                )
                                 logger.error(f"Authentication failed: {error_msg}")
                                 return IntegrationResult.error_result(
                                     error=f"Failed to authenticate with GitHub: {error_msg}",
@@ -166,14 +170,15 @@ class GitHubIntegration(BaseIntegrationService, GitHubIntegrationProtocol):
                         error_msg = str(e)
                         return IntegrationResult.error_result(
                             error=f"Failed to initialize GitHub integration: {error_msg}",
-                            message=f"Failed to initialize GitHub integration: {error_msg}"
+                            message=f"Failed to initialize GitHub integration: {error_msg}",
                         )
 
             if not token:
-                error_msg = "GitHub token is not configured and no auth provider is available"
+                error_msg = (
+                    "GitHub token is not configured and no auth provider is available"
+                )
                 return IntegrationResult.error_result(
-                    error=error_msg,
-                    message=error_msg
+                    error=error_msg, message=error_msg
                 )
 
             # Initialize GitHub client
@@ -195,7 +200,7 @@ class GitHubIntegration(BaseIntegrationService, GitHubIntegrationProtocol):
                 error_msg = str(e)
                 return IntegrationResult.error_result(
                     error=f"Failed to initialize GitHub client: {error_msg}",
-                    message=f"Failed to initialize GitHub client: {error_msg}"
+                    message=f"Failed to initialize GitHub client: {error_msg}",
                 )
         except Exception as e:
             # Catch-all for any unexpected exceptions
@@ -203,7 +208,7 @@ class GitHubIntegration(BaseIntegrationService, GitHubIntegrationProtocol):
             error_msg = str(e)
             return IntegrationResult.error_result(
                 error=f"Failed to initialize GitHub integration: {error_msg}",
-                message=f"Failed to initialize GitHub integration: {error_msg}"
+                message=f"Failed to initialize GitHub integration: {error_msg}",
             )
 
     def is_available(self) -> bool:

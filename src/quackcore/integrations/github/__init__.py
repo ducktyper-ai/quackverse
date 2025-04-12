@@ -63,13 +63,16 @@ def __getattr__(name: str) -> Any:
     """
     if name == "GitHubGrader":
         from quackcore.teaching.github.grading import GitHubGrader
+
         return GitHubGrader
     elif name == "GitHubTeachingAdapter":
         from quackcore.teaching.github.teaching_adapter import GitHubTeachingAdapter
+
         return GitHubTeachingAdapter
     else:
         raise AttributeError(
-            f"module 'quackcore.integrations.github' has no attribute '{name}'")
+            f"module 'quackcore.integrations.github' has no attribute '{name}'"
+        )
 
 
 # Automatically register the integration
@@ -86,7 +89,9 @@ try:
             # If we can't find any registration method, log a warning
             logger = logging.getLogger(__name__)
             logger.warning(
-                "Unable to register GitHub integration: no suitable registry method found")
+                "Unable to register GitHub integration: no suitable registry method found"
+            )
 except Exception as e:
     logging.getLogger(__name__).error(
-        f"Failed to register GitHub integration: {str(e)}")
+        f"Failed to register GitHub integration: {str(e)}"
+    )
