@@ -6,7 +6,6 @@ This module provides complete test coverage for the service/integration.py file,
 which contains the main LLMIntegration class implementation.
 """
 
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -87,23 +86,28 @@ class TestLLMIntegrationComprehensive:
 
             # Also patch normalize_path
             with patch("quackcore.fs.utils.normalize_path") as mock_normalize_path:
-                mock_normalize_path.return_value = Path("custom_config.yaml")
+                # Create a mock path string directly
+                mock_path = "/Users/rodrivera/custom_config.yaml"
+                mock_normalize_path.return_value = mock_path
 
-                integration = LLMIntegration(
-                    provider="anthropic",
-                    model="claude-3-opus",
-                    api_key="test-key",
-                    config_path="custom_config.yaml",
-                    log_level=10,
-                    enable_fallback=False,
-                )
+                # Mock os.getcwd to prevent FileNotFoundError
+                with patch("os.getcwd", return_value="/Users/rodrivera"):
+                    integration = LLMIntegration(
+                        provider="anthropic",
+                        model="claude-3-opus",
+                        api_key="test-key",
+                        config_path="custom_config.yaml",
+                        log_level=10,
+                        enable_fallback=False,
+                    )
 
-                assert integration.provider == "anthropic"
-                assert integration.model == "claude-3-opus"
-                assert integration.api_key == "test-key"
-                assert integration.config_path == "custom_config.yaml"
-                assert integration.log_level == 10
-                assert integration._enable_fallback is False
+                    assert integration.provider == "anthropic"
+                    assert integration.model == "claude-3-opus"
+                    assert integration.api_key == "test-key"
+                    # Compare with the mocked path directly
+                    assert integration.config_path == mock_path
+                    assert integration.log_level == 10
+                    assert integration._enable_fallback is False
 
     def test_name_property(self, integration: LLMIntegration) -> None:
         """Test the name property."""
