@@ -79,18 +79,26 @@ def __getattr__(name: str) -> Any:
 try:
     integration = create_integration()
 
-    # Try to register the integration - try all known methods
+    # Try to register the integration using the standard method
     try:
-        registry.register(integration)
-    except (AttributeError, TypeError):
-        try:
+        # Check what methods are available in the registry
+        registry_methods = dir(registry)
+
+        # Try to find a registration method
+        if hasattr(registry, "register"):
+            registry.register(integration)
+        elif hasattr(registry, "add_integration"):
             registry.add_integration(integration)
-        except (AttributeError, TypeError):
+        else:
             # If we can't find any registration method, log a warning
             logger = logging.getLogger(__name__)
             logger.warning(
                 "Unable to register GitHub integration: no suitable registry method found"
             )
+    except (AttributeError, TypeError) as e:
+        # If registration fails, log a warning
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Failed to register GitHub integration: {str(e)}")
 except Exception as e:
     logging.getLogger(__name__).error(
         f"Failed to register GitHub integration: {str(e)}"

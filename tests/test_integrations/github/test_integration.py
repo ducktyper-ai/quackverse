@@ -91,13 +91,21 @@ class TestGitHubMockedIntegration:
         """Create a mock requests session."""
         session = MagicMock(spec=requests.Session)
         session.headers = {}
-        # Configure the session to include a 'request' attribute that is a MagicMock.
-        session.configure_mock(request=MagicMock())
+        # Configure the session to include a 'request' attribute that is a MagicMock
+        session.request = MagicMock()
+
+        # Ensure the mock responses have headers attribute
+        mock_response = MagicMock(spec=requests.Response)
+        mock_response.status_code = 200
+        mock_response.headers = {"X-RateLimit-Remaining": "100"}
+        mock_response.raise_for_status.return_value = None
+        session.request.return_value = mock_response
+
         return session
 
     @pytest.fixture
     def mock_integration(
-        self, temp_dir: Path, mock_session: MagicMock
+            self, temp_dir: Path, mock_session: MagicMock
     ) -> tuple[GitHubIntegration, MagicMock]:
         """Create a mock GitHub integration."""
         # Create credentials file.
@@ -155,6 +163,7 @@ class TestGitHubMockedIntegration:
             # Prepare a mock response for user info.
             user_response = MagicMock(spec=requests.Response)
             user_response.status_code = 200
+            user_response.headers = {"X-RateLimit-Remaining": "100"}
             user_response.raise_for_status.return_value = None
             user_response.json.return_value = {
                 "login": "mock_user",
@@ -163,10 +172,10 @@ class TestGitHubMockedIntegration:
                 "email": "mock@example.com",
                 "avatar_url": "https://github.com/mock_user.png",
             }
+
+            # Configure session request to return properly mocked responses
+            mock_session.request.return_value = user_response
             mock_session.get.return_value = user_response
-            # Instead of assigning to mock_session.request.return_value directly,
-            # we configure the 'request' attribute.
-            mock_session.request = MagicMock(return_value=user_response)
 
             # Initialize the integration.
             result = integration.initialize()
@@ -175,13 +184,16 @@ class TestGitHubMockedIntegration:
         return integration, mock_session
 
     def test_integration_mocked_workflow(
-        self, mock_integration: tuple[GitHubIntegration, MagicMock]
+            self, mock_integration: tuple[GitHubIntegration, MagicMock]
     ) -> None:
         """Test a GitHub workflow with mocked responses."""
-        integration, _ = mock_integration
+        integration, mock_session = mock_integration
 
         # Prepare mocked responses.
         user_response = MagicMock(spec=requests.Response)
+        user_response.status_code = 200
+        user_response.headers = {"X-RateLimit-Remaining": "100"}
+        user_response.raise_for_status.return_value = None
         user_response.json.return_value = {
             "login": "mock_user",
             "html_url": "https://github.com/mock_user",
@@ -191,6 +203,9 @@ class TestGitHubMockedIntegration:
         }
 
         repo_response = MagicMock(spec=requests.Response)
+        repo_response.status_code = 200
+        repo_response.headers = {"X-RateLimit-Remaining": "100"}
+        repo_response.raise_for_status.return_value = None
         repo_response.json.return_value = {
             "name": "mock-repo",
             "full_name": "mock_owner/mock-repo",
@@ -208,18 +223,22 @@ class TestGitHubMockedIntegration:
             },
         }
 
-        # Patch the integration's client's session.request method.
+        # Make sure we're patching the right object - integration.client.session
         with patch.object(integration.client.session, "request") as mock_request:
-            # For the first call, return the user response.
-            mock_request.return_value = user_response
+            # Configure mock to handle different requests
+            def mock_request_side_effect(*args, **kwargs):
+                if "user" in args[1]:
+                    return user_response
+                elif "repos" in args[1] and "mock-repo" in args[1]:
+                    return repo_response
+                return MagicMock(spec=requests.Response)
+
+            mock_request.side_effect = mock_request_side_effect
 
             # Test getting authenticated user.
             user_result = integration.get_current_user()
             assert user_result.success is True
             assert user_result.content.username == "mock_user"
-
-            # For the second call, return the repo response.
-            mock_request.return_value = repo_response
 
             # Test getting a repository.
             repo_result = integration.get_repo("mock_owner/mock-repo")

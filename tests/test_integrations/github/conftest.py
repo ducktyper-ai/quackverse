@@ -108,8 +108,8 @@ def patch_integration_registry() -> MagicMock:
     """Patch the integration registry for testing."""
     mock_registry = MagicMock()
     mock_registry.integrations = []
+    # Define both potential registration methods
     mock_registry.register = MagicMock()
-    mock_registry.add_integration = MagicMock()
     mock_registry.get_integration = MagicMock(return_value="mocked_github_integration")
 
     with patch("quackcore.integrations.core.registry", mock_registry):
@@ -119,8 +119,13 @@ def patch_integration_registry() -> MagicMock:
 @pytest.fixture
 def patch_registry_register() -> MagicMock:
     """Patch the registry register method."""
-    with patch("quackcore.integrations.core.registry.add_integration") as mock_register:
-        yield mock_register
+    # Create a mock registry that has the register method
+    mock_registry = MagicMock()
+    mock_registry.register = MagicMock()
+
+    # Patch the entire registry module
+    with patch("quackcore.integrations.core.registry", mock_registry):
+        yield mock_registry.register
 
 
 # ------------------------------

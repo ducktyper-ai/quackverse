@@ -191,6 +191,7 @@ class GitHubIntegration(BaseIntegrationService, GitHubIntegrationProtocol):
                     retry_delay=self.config.get("retry_delay", 1.0),
                 )
 
+                # Set initialized flag only after successful client creation
                 self._initialized = True
                 return IntegrationResult.success_result(
                     message="GitHub integration initialized successfully"
@@ -198,6 +199,8 @@ class GitHubIntegration(BaseIntegrationService, GitHubIntegrationProtocol):
             except Exception as e:
                 # Handle exceptions from client initialization
                 error_msg = str(e)
+                # Ensure _initialized is set to False in case of exception
+                self._initialized = False
                 return IntegrationResult.error_result(
                     error=f"Failed to initialize GitHub client: {error_msg}",
                     message=f"Failed to initialize GitHub client: {error_msg}",
@@ -206,6 +209,8 @@ class GitHubIntegration(BaseIntegrationService, GitHubIntegrationProtocol):
             # Catch-all for any unexpected exceptions
             logger.exception("Unexpected error in GitHub integration initialization")
             error_msg = str(e)
+            # Ensure _initialized is set to False in case of exception
+            self._initialized = False
             return IntegrationResult.error_result(
                 error=f"Failed to initialize GitHub integration: {error_msg}",
                 message=f"Failed to initialize GitHub integration: {error_msg}",
