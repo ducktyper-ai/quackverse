@@ -3,6 +3,7 @@
 
 import json
 import os
+from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -96,6 +97,18 @@ class TestGitHubMockedIntegration:
         # Create credentials file
         credentials_file = temp_dir / "github_creds.json"
 
+        # Write initial credentials to file with the token
+        credentials_data = {
+            "token": "mock_token",
+            "saved_at": int(datetime.now().timestamp()),
+            "user_info": {
+                "login": "mock_user",
+                "name": "Mock User",
+                "email": "mock@example.com",
+            },
+        }
+        credentials_file.write_text(json.dumps(credentials_data))
+
         # Create config file
         config_file = temp_dir / "github_config.json"
         config_data = {
@@ -110,9 +123,26 @@ class TestGitHubMockedIntegration:
         with open(config_file, "w") as f:
             json.dump(config_data, f)
 
+        # Create auth provider with credentials file
+        auth_provider = GitHubAuthProvider(
+            credentials_file=str(credentials_file),
+            http_client=mock_session,  # Use the mock session for HTTP requests
+        )
+
+        # Setup auth provider mock responses
+        auth_provider._user_info = {
+            "login": "mock_user",
+            "html_url": "https://github.com/mock_user",
+            "name": "Mock User",
+            "email": "mock@example.com",
+            "avatar_url": "https://github.com/mock_user.png",
+        }
+        auth_provider.token = "mock_token"
+        auth_provider.authenticated = True
+
         # Create integration
         integration = GitHubIntegration(
-            auth_provider=GitHubAuthProvider(credentials_file=str(credentials_file)),
+            auth_provider=auth_provider,
             config_provider=GitHubConfigProvider(),
             config_path=str(config_file),
         )
@@ -121,6 +151,8 @@ class TestGitHubMockedIntegration:
         with patch("requests.Session", return_value=mock_session):
             # Mock successful user response
             user_response = MagicMock()
+            user_response.status_code = 200
+            user_response.raise_for_status.return_value = None
             user_response.json.return_value = {
                 "login": "mock_user",
                 "html_url": "https://github.com/mock_user",
@@ -128,8 +160,8 @@ class TestGitHubMockedIntegration:
                 "email": "mock@example.com",
                 "avatar_url": "https://github.com/mock_user.png",
             }
-
             mock_session.get.return_value = user_response
+            mock_session.request.return_value = user_response
 
             # Initialize the integration
             result = integration.initialize()

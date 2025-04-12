@@ -42,16 +42,16 @@ class TestGitHubModels:
         )
 
         assert user.username == "test-user"
-        assert user.url == "https://github.com/test-user"
+        assert str(user.url) == "https://github.com/test-user"
         assert user.name == "Test User"
         assert user.email == "test@example.com"
-        assert user.avatar_url == "https://github.com/test-user.png"
+        assert str(user.avatar_url) == "https://github.com/test-user.png"
 
         # Test with minimal required fields
         user = GitHubUser(username="test-user", url="https://github.com/test-user")
 
         assert user.username == "test-user"
-        assert user.url == "https://github.com/test-user"
+        assert str(user.url) == "https://github.com/test-user"
         assert user.name is None
         assert user.email is None
         assert user.avatar_url is None
@@ -81,8 +81,8 @@ class TestGitHubModels:
 
         assert repo.name == "test-repo"
         assert repo.full_name == "test-owner/test-repo"
-        assert repo.url == "https://github.com/test-owner/test-repo"
-        assert repo.clone_url == "https://github.com/test-owner/test-repo.git"
+        assert str(repo.url) == "https://github.com/test-owner/test-repo"
+        assert str(repo.clone_url) == "https://github.com/test-owner/test-repo.git"
         assert repo.default_branch == "main"
         assert repo.description == "Test repository"
         assert repo.fork is False
@@ -101,8 +101,8 @@ class TestGitHubModels:
 
         assert repo.name == "test-repo"
         assert repo.full_name == "test-owner/test-repo"
-        assert repo.url == "https://github.com/test-owner/test-repo"
-        assert repo.clone_url == "https://github.com/test-owner/test-repo.git"
+        assert str(repo.url) == "https://github.com/test-owner/test-repo"
+        assert str(repo.clone_url) == "https://github.com/test-owner/test-repo.git"
         assert repo.default_branch == "main"  # Default value
         assert repo.description is None
         assert repo.fork is False  # Default value
@@ -148,7 +148,7 @@ class TestGitHubModels:
 
         assert pr.number == 123
         assert pr.title == "Test PR"
-        assert pr.url == "https://github.com/test-owner/test-repo/pull/123"
+        assert str(pr.url) == "https://github.com/test-owner/test-repo/pull/123"
         assert pr.author == author
         assert pr.status == PullRequestStatus.OPEN
         assert pr.body == "This is a test PR"
@@ -177,7 +177,7 @@ class TestGitHubModels:
 
         assert pr.number == 123
         assert pr.title == "Test PR"
-        assert pr.url == "https://github.com/test-owner/test-repo/pull/123"
+        assert str(pr.url) == "https://github.com/test-owner/test-repo/pull/123"
         assert pr.author == author
         assert pr.status == PullRequestStatus.OPEN
         assert pr.body is None
@@ -204,3 +204,55 @@ class TestGitHubModels:
                 base_branch="main",
                 head_branch="feature",
             )
+
+    def test_url_string_equality(self):
+        """Test that URL objects and strings can be correctly compared."""
+        from datetime import datetime
+
+        from quackcore.integrations.github.models import (
+            GitHubRepo,
+            GitHubUser,
+            PullRequest,
+            PullRequestStatus,
+        )
+
+        # Test GitHubUser URL equality
+        user = GitHubUser(
+            username="test-user",
+            url="https://github.com/test-user",
+            name="Test User",
+            email="test@example.com",
+            avatar_url="https://github.com/test-user.png",
+        )
+        assert str(user.url) == "https://github.com/test-user"
+
+        # Test GitHubRepo URL equality
+        owner = GitHubUser(username="test-owner", url="https://github.com/test-owner")
+        repo = GitHubRepo(
+            name="test-repo",
+            full_name="test-owner/test-repo",
+            url="https://github.com/test-owner/test-repo",
+            clone_url="https://github.com/test-owner/test-repo.git",
+            default_branch="main",
+            description="Test repository",
+            owner=owner,
+        )
+        assert str(repo.url) == "https://github.com/test-owner/test-repo"
+
+        # Test PullRequest URL equality
+        now = datetime.now()
+        pr = PullRequest(
+            number=123,
+            title="Test PR",
+            url="https://github.com/test-owner/test-repo/pull/123",
+            author=user,
+            status=PullRequestStatus.OPEN,
+            body="Test PR body",
+            created_at=now,
+            updated_at=now,
+            base_repo="test-owner/test-repo",
+            head_repo="test-user/test-repo",
+            base_branch="main",
+            head_branch="feature",
+        )
+        assert str(pr.url) == "https://github.com/test-owner/test-repo/pull/123"

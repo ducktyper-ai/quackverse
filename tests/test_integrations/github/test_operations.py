@@ -77,10 +77,10 @@ class TestUserOperations:
             # Verify result
             assert isinstance(result, GitHubUser)
             assert result.username == "test_user"
-            assert result.url == "https://github.com/test_user"
+            assert str(result.url) == "https://github.com/test_user"
             assert result.name == "Test User"
             assert result.email == "test@example.com"
-            assert result.avatar_url == "https://github.com/test_user.png"
+            assert str(result.avatar_url) == "https://github.com/test_user.png"
 
             # Verify API call
             mock_make_request.assert_called_once_with(
@@ -118,10 +118,10 @@ class TestUserOperations:
             # Verify result
             assert isinstance(result, GitHubUser)
             assert result.username == "other_user"
-            assert result.url == "https://github.com/other_user"
+            assert str(result.url) == "https://github.com/other_user"
             assert result.name == "Other User"
             assert result.email == "other@example.com"
-            assert result.avatar_url == "https://github.com/other_user.png"
+            assert str(result.avatar_url) == "https://github.com/other_user.png"
 
             # Verify API call
             mock_make_request.assert_called_once_with(
@@ -173,8 +173,10 @@ class TestRepositoryOperations:
             assert isinstance(result, GitHubRepo)
             assert result.name == "test-repo"
             assert result.full_name == "test_owner/test-repo"
-            assert result.url == "https://github.com/test_owner/test-repo"
-            assert result.clone_url == "https://github.com/test_owner/test-repo.git"
+            assert str(result.url) == "https://github.com/test_owner/test-repo"
+            assert (
+                str(result.clone_url) == "https://github.com/test_owner/test-repo.git"
+            )
             assert result.default_branch == "main"
             assert result.description == "Test repository"
             assert result.fork is False
@@ -356,8 +358,8 @@ class TestRepositoryOperations:
             assert isinstance(result, GitHubRepo)
             assert result.name == "test-repo"
             assert result.full_name == "test_user/test-repo"
-            assert result.url == "https://github.com/test_user/test-repo"
-            assert result.clone_url == "https://github.com/test_user/test-repo.git"
+            assert str(result.url) == "https://github.com/test_user/test-repo"
+            assert str(result.clone_url) == "https://github.com/test_user/test-repo.git"
             assert result.fork is True
             assert result.owner.username == "test_user"
 
@@ -551,7 +553,7 @@ class TestPullRequestOperations:
             assert isinstance(result, PullRequest)
             assert result.number == 123
             assert result.title == "Test PR"
-            assert result.url == "https://github.com/test_owner/test-repo/pull/123"
+            assert str(result.url) == "https://github.com/test_owner/test-repo/pull/123"
             assert result.author.username == "test_user"
             assert result.status == PullRequestStatus.OPEN
             assert result.body == "Test PR body"
@@ -699,7 +701,7 @@ class TestPullRequestOperations:
             assert isinstance(result, PullRequest)
             assert result.number == 123
             assert result.title == "Test PR"
-            assert result.url == "https://github.com/test_owner/test-repo/pull/123"
+            assert str(result.url) == "https://github.com/test_owner/test-repo/pull/123"
             assert result.author.username == "test_user"
             assert result.status == PullRequestStatus.OPEN
             assert result.body == "Test PR body"

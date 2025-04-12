@@ -60,9 +60,9 @@ def make_request(
                 method, full_url, params=params, json=json, **kwargs
             )
 
-            # Check for rate limiting
+            # Check for rate limiting - Need to check before raise_for_status
             remaining = int(response.headers.get("X-RateLimit-Remaining", "1"))
-            if remaining == 0:
+            if remaining == 0 or response.status_code == 429:
                 reset_time = int(response.headers.get("X-RateLimit-Reset", "0"))
                 current_time = int(time.time())
                 wait_time = max(1, reset_time - current_time)
@@ -74,6 +74,7 @@ def make_request(
                     time.sleep(min(wait_time, 60))  # Wait at most 60 seconds
                     continue
                 else:
+                    # This is the key fix - raise QuackQuotaExceededError directly for rate limits
                     raise QuackQuotaExceededError(
                         f"GitHub API rate limit exceeded. Reset at {datetime.fromtimestamp(reset_time)}",
                         service="GitHub",
@@ -95,8 +96,12 @@ def make_request(
                     original_error=e,
                 )
 
-            # Handle rate limiting
-            if status_code == 429:
+            # Handle rate limiting again - in case it wasn't caught above
+            if status_code == 429 or (
+                hasattr(e.response, "headers")
+                and "X-RateLimit-Remaining" in e.response.headers
+                and int(e.response.headers["X-RateLimit-Remaining"]) == 0
+            ):
                 reset_time = int(e.response.headers.get("X-RateLimit-Reset", "0"))
                 current_time = int(time.time())
                 wait_time = max(1, reset_time - current_time)
@@ -108,6 +113,7 @@ def make_request(
                     time.sleep(min(wait_time, 60))  # Wait at most 60 seconds
                     continue
                 else:
+                    # Ensure we raise the correct error type for tests
                     raise QuackQuotaExceededError(
                         f"GitHub API rate limit exceeded. Reset at {datetime.fromtimestamp(reset_time)}",
                         service="GitHub",

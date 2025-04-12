@@ -3,24 +3,115 @@
 
 import json
 import os
-from collections.abc import Generator
+import time
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
 
+from quackcore.errors import QuackQuotaExceededError
+from quackcore.integrations.core import AuthResult
 from quackcore.integrations.github.auth import GitHubAuthProvider
 from quackcore.integrations.github.client import GitHubClient
 from quackcore.integrations.github.config import GitHubConfigProvider
-from quackcore.integrations.github.models import GitHubRepo, GitHubUser, PullRequest
+from quackcore.integrations.github.models import (
+    GitHubRepo,
+    GitHubUser,
+    PullRequest,
+    PullRequestStatus,
+)
 from quackcore.integrations.github.service import GitHubIntegration
 
 
 @pytest.fixture
-def github_credentials_file(temp_dir) -> Path:
+def mock_environment_token():
+    """Fixture to provide a mock GitHub token in the environment."""
+    original = os.environ.get("GITHUB_TOKEN")
+    os.environ["GITHUB_TOKEN"] = "mock-github-token"
+    yield
+    if original is None:
+        del os.environ["GITHUB_TOKEN"]
+    else:
+        os.environ["GITHUB_TOKEN"] = original
+
+
+@pytest.fixture
+def mock_http_client():
+    """Create a mock HTTP client for testing."""
+    mock_client = MagicMock(spec=requests)
+
+    # Setup default success response
+    mock_response = MagicMock(spec=requests.Response)
+    mock_response.status_code = 200
+    mock_response.headers = {"X-RateLimit-Remaining": "100"}
+    mock_response.raise_for_status.return_value = None
+    mock_response.json.return_value = {
+        "login": "test_user",
+        "html_url": "https://github.com/test_user",
+        "name": "Test User",
+        "email": "test@example.com",
+        "avatar_url": "https://github.com/test_user.png",
+    }
+
+    mock_client.get.return_value = mock_response
+    mock_client.post.return_value = mock_response
+    mock_client.put.return_value = mock_response
+    mock_client.delete.return_value = mock_response
+
+    return mock_client
+
+
+@pytest.fixture
+def mock_rate_limited_client():
+    """Create a mock HTTP client that simulates rate limiting."""
+    mock_client = MagicMock(spec=requests)
+
+    # Create rate-limited response
+    mock_response = MagicMock(spec=requests.Response)
+    mock_response.status_code = 429
+    mock_response.headers = {
+        "X-RateLimit-Remaining": "0",
+        "X-RateLimit-Reset": str(int(time.time()) + 60),
+    }
+
+    # Make raise_for_status throw an HTTPError
+    http_error = requests.exceptions.HTTPError(response=mock_response)
+    http_error.response = mock_response
+    mock_response.raise_for_status.side_effect = http_error
+
+    mock_client.get.return_value = mock_response
+    mock_client.post.return_value = mock_response
+    mock_client.put.return_value = mock_response
+    mock_client.delete.return_value = mock_response
+
+    return mock_client
+
+
+@pytest.fixture
+def patch_integration_registry():
+    """Patch the integration registry for testing."""
+    mock_registry = MagicMock()
+    mock_registry.integrations = []
+    mock_registry.register = MagicMock()
+    mock_registry.add_integration = MagicMock()
+    mock_registry.get_integration = MagicMock(return_value="mocked_github_integration")
+
+    with patch("quackcore.integrations.core.registry", mock_registry):
+        yield mock_registry
+
+
+@pytest.fixture
+def patch_registry_register():
+    """Patch the registry register method."""
+    with patch("quackcore.integrations.core.registry.add_integration") as mock_register:
+        yield mock_register
+
+
+@pytest.fixture
+def github_credentials_file(tmp_path) -> Path:
     """Create a temporary GitHub credentials file."""
-    creds_file = temp_dir / "github_creds.json"
+    creds_file = tmp_path / "github_creds.json"
     creds_data = {
         "token": "test_token",
         "saved_at": 1611111111,
@@ -36,23 +127,65 @@ def github_credentials_file(temp_dir) -> Path:
 
 
 @pytest.fixture
-def mock_github_auth_provider() -> GitHubAuthProvider:
+def github_config_file(tmp_path) -> Path:
+    """Create a temporary GitHub config file."""
+    config_file = tmp_path / "github_config.json"
+    config_data = {
+        "github": {
+            "token": "mock_token",
+            "api_url": "https://api.github.com",
+            "timeout_seconds": 30,
+            "max_retries": 3,
+            "retry_delay": 1.0,
+        }
+    }
+
+    config_file.write_text(json.dumps(config_data))
+    return config_file
+
+
+@pytest.fixture
+def mock_github_auth_provider() -> MagicMock:
     """Create a mock GitHub authentication provider."""
-    auth_provider = MagicMock(spec=GitHubAuthProvider)
+    # Use spec_set to ensure the mock implements AuthProviderProtocol
+    auth_provider = MagicMock(spec_set=GitHubAuthProvider)
     auth_provider.name = "GitHub"
     auth_provider.get_credentials.return_value = {"token": "test_token"}
-    auth_provider.authenticate.return_value = MagicMock(
-        success=True,
-        token="test_token",
-        message="Successfully authenticated with GitHub",
-    )
+
+    # Create a successful auth result
+    auth_result = MagicMock(spec=AuthResult)
+    auth_result.success = True
+    auth_result.token = "test_token"
+    auth_result.message = "Successfully authenticated with GitHub"
+    auth_result.error = None
+
+    auth_provider.authenticate.return_value = auth_result
     return auth_provider
 
 
 @pytest.fixture
-def mock_github_config_provider() -> GitHubConfigProvider:
+def mock_github_auth_provider_failure() -> MagicMock:
+    """Create a mock GitHub authentication provider that fails."""
+    auth_provider = MagicMock(spec=GitHubAuthProvider)
+    auth_provider.name = "GitHub"
+    auth_provider.get_credentials.return_value = {}
+
+    # Create a failed auth result
+    auth_result = MagicMock(spec=AuthResult)
+    auth_result.success = False
+    auth_result.token = None
+    auth_result.message = "Authentication failed"
+    auth_result.error = "No GitHub token provided"
+
+    auth_provider.authenticate.return_value = auth_result
+    return auth_provider
+
+
+@pytest.fixture
+def mock_github_config_provider() -> MagicMock:
     """Create a mock GitHub configuration provider."""
-    config_provider = MagicMock(spec=GitHubConfigProvider)
+    # Use spec_set to ensure the mock implements ConfigProviderProtocol
+    config_provider = MagicMock(spec_set=GitHubConfigProvider)
     config_provider.name = "GitHub"
     config_provider.get_default_config.return_value = {
         "token": "test_token",
@@ -61,23 +194,31 @@ def mock_github_config_provider() -> GitHubConfigProvider:
         "max_retries": 3,
         "retry_delay": 1.0,
     }
-    config_provider.load_config.return_value = MagicMock(
-        success=True,
-        content={
-            "token": "test_token",
-            "api_url": "https://api.github.com",
-            "timeout_seconds": 30,
-            "max_retries": 3,
-            "retry_delay": 1.0,
-        },
-    )
+
+    # Create a successful config result
+    config_result = MagicMock()
+    config_result.success = True
+    config_result.content = {
+        "token": "test_token",
+        "api_url": "https://api.github.com",
+        "timeout_seconds": 30,
+        "max_retries": 3,
+        "retry_delay": 1.0,
+    }
+    config_result.error = None
+
+    config_provider.load_config.return_value = config_result
     return config_provider
 
 
 @pytest.fixture
-def github_auth_provider(github_credentials_file) -> GitHubAuthProvider:
-    """Create a real GitHub authentication provider with a mock file."""
-    return GitHubAuthProvider(credentials_file=str(github_credentials_file))
+def github_auth_provider(
+    github_credentials_file, mock_http_client
+) -> GitHubAuthProvider:
+    """Create a real GitHub authentication provider with a mock HTTP client."""
+    return GitHubAuthProvider(
+        credentials_file=str(github_credentials_file), http_client=mock_http_client
+    )
 
 
 @pytest.fixture
@@ -87,7 +228,7 @@ def github_config_provider() -> GitHubConfigProvider:
 
 
 @pytest.fixture
-def mock_github_client() -> GitHubClient:
+def mock_github_client() -> MagicMock:
     """Create a mock GitHub client."""
     client = MagicMock(spec=GitHubClient)
 
@@ -120,15 +261,17 @@ def mock_github_client() -> GitHubClient:
         owner=owner,
     )
 
+    from datetime import datetime
+
     pr = PullRequest(
         number=123,
         title="Test PR",
         url="https://github.com/test_owner/test-repo/pull/123",
         author=user,
-        status="open",
+        status=PullRequestStatus.OPEN,
         body="Test PR body",
-        created_at="2023-01-01T00:00:00Z",
-        updated_at="2023-01-01T00:00:00Z",
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
         base_repo="test_owner/test-repo",
         head_repo="test_user/test-repo",
         base_branch="main",
@@ -154,14 +297,14 @@ def mock_github_client() -> GitHubClient:
 
 @pytest.fixture
 def github_service(
-    mock_github_auth_provider, mock_github_config_provider
+    mock_github_auth_provider, mock_github_config_provider, mock_github_client
 ) -> GitHubIntegration:
     """Create a GitHub integration service with mocked dependencies."""
     service = GitHubIntegration(
         auth_provider=mock_github_auth_provider,
         config_provider=mock_github_config_provider,
     )
-    service.client = mock_github_client()
+    service.client = mock_github_client
     service._initialized = True
     service.config = {
         "token": "test_token",
@@ -174,7 +317,22 @@ def github_service(
 
 
 @pytest.fixture
-def mock_requests_session() -> requests.Session:
+def github_service_uninitialized(
+    mock_github_auth_provider, mock_github_config_provider
+) -> GitHubIntegration:
+    """Create an uninitialized GitHub integration service."""
+    service = GitHubIntegration(
+        auth_provider=mock_github_auth_provider,
+        config_provider=mock_github_config_provider,
+    )
+    service._initialized = False
+    service.config = None
+    service.client = None
+    return service
+
+
+@pytest.fixture
+def mock_requests_session() -> MagicMock:
     """Create a mock requests session."""
     session = MagicMock(spec=requests.Session)
     session.headers = {}
@@ -182,7 +340,7 @@ def mock_requests_session() -> requests.Session:
 
 
 @pytest.fixture
-def mock_response() -> requests.Response:
+def mock_response() -> MagicMock:
     """Create a mock API response."""
     response = MagicMock(spec=requests.Response)
     response.raise_for_status.return_value = None
@@ -192,10 +350,62 @@ def mock_response() -> requests.Response:
 
 
 @pytest.fixture
-def mock_env_github_token() -> Generator[None, None, None]:
-    """Add GitHub token to environment variables temporarily."""
-    original_env = os.environ.copy()
-    os.environ["GITHUB_TOKEN"] = "env_test_token"
-    yield
-    os.environ.clear()
-    os.environ.update(original_env)
+def mock_rate_limited_response() -> MagicMock:
+    """Create a mock API response with rate limit exceeded."""
+    response = MagicMock(spec=requests.Response)
+    response.status_code = 429
+    response.headers = {
+        "X-RateLimit-Remaining": "0",
+        "X-RateLimit-Reset": str(int(time.time()) + 60),
+    }
+
+    # Make raise_for_status throw an HTTPError
+    http_error = requests.exceptions.HTTPError(response=response)
+    http_error.response = response
+    response.raise_for_status.side_effect = http_error
+
+    return response
+
+
+@pytest.fixture
+def patch_requests_get():
+    """Patch requests.get for testing."""
+    with patch("requests.get") as mock_get:
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "login": "test_user",
+            "html_url": "https://github.com/test_user",
+            "name": "Test User",
+            "email": "test@example.com",
+            "avatar_url": "https://github.com/test_user.png",
+        }
+        mock_get.return_value = mock_response
+        yield mock_get
+
+
+@pytest.fixture
+def patch_make_request():
+    """Patch the make_request function for testing."""
+    with patch(
+        "quackcore.integrations.github.utils.api.make_request"
+    ) as mock_make_request:
+        # Default to a successful response
+        mock_response = MagicMock(spec=requests.Response)
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"success": True}
+        mock_make_request.return_value = mock_response
+        yield mock_make_request
+
+
+@pytest.fixture
+def patch_make_request_rate_limited():
+    """Patch the make_request function to simulate rate limiting."""
+    with patch(
+        "quackcore.integrations.github.utils.api.make_request"
+    ) as mock_make_request:
+        # Set up to raise rate limit error
+        mock_make_request.side_effect = QuackQuotaExceededError(
+            message="GitHub API rate limit exceeded", service="GitHub", resource="/test"
+        )
+        yield mock_make_request

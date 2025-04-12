@@ -20,17 +20,29 @@ class GitHubAuthProvider(BaseAuthProvider):
     def __init__(
         self,
         credentials_file: str | None = None,
-        log_level: int | None = None,
+        log_level: int | str | None = None,
+        http_client=None,  # Allows injection of a client for testing
     ) -> None:
         """Initialize the GitHub authentication provider.
 
         Args:
             credentials_file: Path to credentials file for storing the token
             log_level: Logging level
+            http_client: Optional HTTP client for testing
         """
-        super().__init__(credentials_file=credentials_file, log_level=log_level)
+        # Default to INFO level if None is provided
+        super().__init__(
+            credentials_file=credentials_file, log_level=log_level or "INFO"
+        )
         self.token = None
         self._user_info = None
+        self._http_client = http_client or requests
+
+        # Check token from environment variable immediately
+        env_token = os.environ.get("GITHUB_TOKEN")
+        if env_token:
+            self.token = env_token
+            logger.debug("Loaded GitHub token from environment variable")
 
     @property
     def name(self) -> str:
@@ -49,17 +61,23 @@ class GitHubAuthProvider(BaseAuthProvider):
         # First, try to use the provided token
         if token:
             self.token = token
+            logger.debug("Using provided token for authentication")
         else:
             # If no token provided, try to load from credentials file
             credentials = self._load_credentials()
             if credentials and credentials.get("token"):
                 self.token = credentials.get("token")
+                logger.debug("Loaded token from credentials file")
 
-        # If still no token, try environment variable
+        # If still no token, try environment variable (again, for safety)
         if not self.token:
-            self.token = os.environ.get("GITHUB_TOKEN")
+            env_token = os.environ.get("GITHUB_TOKEN")
+            if env_token:
+                self.token = env_token
+                logger.debug("Using token from environment variable")
 
         if not self.token:
+            logger.error("No GitHub token available for authentication")
             return AuthResult.error_result(
                 error="No GitHub token provided",
                 message="Please provide a valid GitHub token via parameter, credentials file, or the GITHUB_TOKEN environment variable",
@@ -67,7 +85,7 @@ class GitHubAuthProvider(BaseAuthProvider):
 
         # Validate the token by making a test request to the GitHub API
         try:
-            response = requests.get(
+            response = self._http_client.get(
                 "https://api.github.com/user",
                 headers={"Authorization": f"token {self.token}"},
             )
@@ -124,7 +142,7 @@ class GitHubAuthProvider(BaseAuthProvider):
 
         # For PATs, we just validate that the token still works
         try:
-            response = requests.get(
+            response = self._http_client.get(
                 "https://api.github.com/user",
                 headers={"Authorization": f"token {self.token}"},
             )
@@ -172,16 +190,20 @@ class GitHubAuthProvider(BaseAuthProvider):
             Dictionary with credentials or None if loading failed
         """
         if not self.credentials_file:
+            logger.debug("No credentials file specified")
             return None
 
         file_info = fs.get_file_info(self.credentials_file)
         if not file_info.success or not file_info.exists:
+            logger.debug(f"Credentials file does not exist: {self.credentials_file}")
             return None
 
         result = fs.read_json(self.credentials_file)
         if not result.success:
+            logger.warning(f"Failed to read credentials file: {result.error}")
             return None
 
+        logger.debug("Successfully loaded credentials from file")
         return result.data
 
     def _save_token_data(self, token: str | None) -> bool:

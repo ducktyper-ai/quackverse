@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from quackcore.integrations.core import registry
 
@@ -49,16 +49,18 @@ def create_integration() -> GitHubIntegration:
     return GitHubIntegration()
 
 
-# Automatically register the integration
-try:
-    integration = create_integration()
-    registry.register(integration)
-except Exception as e:
-    logging.getLogger(__name__).error(f"Failed to register GitHub integration: {e}")
+def __getattr__(name: str) -> Any:
+    """Lazily load teaching-related classes to avoid circular imports.
 
+    Args:
+        name: Attribute name to load
 
-# Lazy-load teaching-related attributes to avoid circular imports.
-def __getattr__(name: str):
+    Returns:
+        The requested module or class
+
+    Raises:
+        AttributeError: If the requested attribute doesn't exist
+    """
     if name == "GitHubGrader":
         from quackcore.teaching.github.grading import GitHubGrader
 
@@ -67,4 +69,20 @@ def __getattr__(name: str):
         from quackcore.teaching.github.teaching_adapter import GitHubTeachingAdapter
 
         return GitHubTeachingAdapter
-    raise AttributeError(f"module {__name__} has no attribute {name}")
+    else:
+        raise AttributeError(
+            f"module 'quackcore.integrations.github' has no attribute '{name}'"
+        )
+
+
+# Automatically register the integration only if it exists in the registry module
+try:
+    integration = create_integration()
+    if hasattr(registry, "add_integration"):
+        registry.add_integration(integration)
+    else:
+        logging.getLogger(__name__).warning(
+            "Integration registry doesn't have add_integration method"
+        )
+except Exception as e:
+    logging.getLogger(__name__).error(f"Failed to register GitHub integration: {e}")
