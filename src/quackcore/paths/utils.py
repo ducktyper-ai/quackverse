@@ -8,6 +8,8 @@ including functions for finding project roots and navigating directories.
 
 import os
 from pathlib import Path
+from collections.abc import Sequence
+from dataclasses import dataclass
 
 from pydantic import BaseModel, Field
 
@@ -47,12 +49,46 @@ class ProjectConfig(BaseModel):
     )
 
 
+@dataclass
+class PathInfo:
+    """Information about a normalized path."""
+
+    success: bool
+    path: Path
+    error: Exception | None = None
+
+
+def normalize_path_with_info(path: str | Path) -> PathInfo:
+    """
+    Normalize a path and return detailed information about the result.
+
+    Args:
+        path: Path to normalize
+
+    Returns:
+        PathInfo object with normalized path and status information
+    """
+    try:
+        normalized_path = fs.normalize_path(path)
+        return PathInfo(success=True, path=normalized_path, error=None)
+    except Exception as e:
+        # Return a fallback path in case of error
+        fallback_path = Path(path) if isinstance(path, str) else path
+        if not fallback_path.is_absolute():
+            try:
+                fallback_path = Path.cwd() / fallback_path
+            except Exception:
+                fallback_path = Path("/") / str(fallback_path)
+
+        return PathInfo(success=False, path=fallback_path, error=e)
+
+
 @wrap_io_errors
 def find_project_root(
-    start_dir: str | Path | None = None,
-    marker_files: list[str] | None = None,
-    marker_dirs: list[str] | None = None,
-    max_levels: int = 5,
+        start_dir: str | Path | None = None,
+        marker_files: list[str] | None = None,
+        marker_dirs: list[str] | None = None,
+        max_levels: int = 5,
 ) -> Path:
     """
     Find the project root directory by looking for marker files or directories.
@@ -109,9 +145,9 @@ def find_project_root(
 
 @wrap_io_errors
 def find_nearest_directory(
-    name: str,
-    start_dir: str | Path | None = None,
-    max_levels: int = 5,
+        name: str,
+        start_dir: str | Path | None = None,
+        max_levels: int = 5,
 ) -> Path:
     """
     Find the nearest directory with the given name.
@@ -151,8 +187,8 @@ def find_nearest_directory(
 
 @wrap_io_errors
 def resolve_relative_to_project(
-    path: str | Path,
-    project_root: str | Path | None = None,
+        path: str | Path,
+        project_root: str | Path | None = None,
 ) -> Path:
     """
     Resolve a path relative to the project root.
@@ -185,8 +221,8 @@ def normalize_path(path: str | Path) -> Path:
     """
     Normalize a path for cross-platform compatibility.
 
-    This function uses fs.normalize_path to ensure consistent behavior
-    with quackcore.fs module.
+    This function uses normalize_path_with_info to ensure consistent behavior
+    with quackcore.fs module and to provide detailed information about normalization.
 
     Args:
         path: Path to normalize
@@ -194,7 +230,8 @@ def normalize_path(path: str | Path) -> Path:
     Returns:
         Normalized absolute Path object.
     """
-    return fs.normalize_path(path)
+    path_info = normalize_path_with_info(path)
+    return path_info.path
 
 
 @wrap_io_errors
@@ -235,16 +272,23 @@ def get_extension(path: str | Path) -> str:
     """
     Get the file extension from a path.
 
-    This function uses fs.get_extension to ensure consistent behavior
-    with quackcore.fs module.
+    This function gets the file extension, handling special cases like dotfiles.
 
     Args:
         path: File path
 
     Returns:
         File extension without the dot.
-        For dotfiles, the extension is the filename without the leading dot.
+        For dotfiles (files starting with a dot), the extension is the filename without the leading dot.
     """
+    path_str = str(path)
+    filename = os.path.basename(path_str)
+
+    # Special case for dotfiles (files that start with a dot)
+    if filename.startswith('.') and '.' not in filename[1:]:
+        return filename[1:]  # Return everything after the leading dot
+
+    # Otherwise use fs.get_extension for regular files
     return fs.get_extension(path)
 
 
@@ -291,8 +335,8 @@ def _get_relative_parts(path_obj: Path, base: Path) -> list[str] | None:
 
 @wrap_io_errors
 def infer_module_from_path(
-    path: str | Path,
-    project_root: str | Path | None = None,
+        path: str | Path,
+        project_root: str | Path | None = None,
 ) -> str:
     """
     Infer a Python module name from a file path.
