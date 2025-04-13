@@ -6,7 +6,6 @@ This module tests the DocumentConverter class that implements the document
 conversion functionality using Pandoc.
 """
 
-from datetime import datetime
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -74,7 +73,7 @@ class TestDocumentConverter:
         input_path = Path("/path/to/input.html")
         output_path = Path("/path/to/output/output.md")
 
-        # Patch the fs object to mock file operations
+        # Mock fs paths to ensure they exist for the test
         with patch("quackcore.fs.service.path_exists", return_value=True):
             # Mock the converter's fs module
             with patch("quackcore.integrations.pandoc.converter.fs") as mock_fs:
@@ -100,6 +99,10 @@ class TestDocumentConverter:
                 service_mock.get_file_info.return_value = file_info
                 service_mock.path_exists.return_value = True
                 mock_fs.service = service_mock
+
+                # Critical: Mock service.get_file_info to be correctly called with Path object
+                with patch("quackcore.fs.service.get_file_info") as mock_service_get_info:
+                    mock_service_get_info.return_value = file_info
 
                 # Also patch the operations.utils.get_file_info
                 with patch(
@@ -137,7 +140,7 @@ class TestDocumentConverter:
         input_path = Path("/path/to/input.md")
         output_path = Path("/path/to/output/output.docx")
 
-        # Patch the fs object to mock file operations
+        # Mock fs paths to ensure they exist for the test
         with patch("quackcore.fs.service.path_exists", return_value=True):
             # Mock the converter's fs module
             with patch("quackcore.integrations.pandoc.converter.fs") as mock_fs:
@@ -163,6 +166,10 @@ class TestDocumentConverter:
                 service_mock.get_file_info.return_value = file_info
                 service_mock.path_exists.return_value = True
                 mock_fs.service = service_mock
+
+                # Critical: Mock service.get_file_info to be correctly called with Path object
+                with patch("quackcore.fs.service.get_file_info") as mock_service_get_info:
+                    mock_service_get_info.return_value = file_info
 
                 # Mock the operations.utils.get_file_info function
                 with patch(
@@ -198,7 +205,7 @@ class TestDocumentConverter:
         input_path = Path("/path/to/input.md")
         output_path = Path("/path/to/output/output.pdf")
 
-        # Patch the fs object to mock file operations
+        # Mock fs paths to ensure they exist for the test
         with patch("quackcore.fs.service.path_exists", return_value=True):
             # Mock the converter's fs module
             with patch("quackcore.integrations.pandoc.converter.fs") as mock_fs:
@@ -217,6 +224,10 @@ class TestDocumentConverter:
                 service_mock.get_file_info.return_value = file_info
                 service_mock.path_exists.return_value = True
                 mock_fs.service = service_mock
+
+                # Critical: Mock service.get_file_info to be correctly called with Path object
+                with patch("quackcore.fs.service.get_file_info") as mock_service_get_info:
+                    mock_service_get_info.return_value = file_info
 
                 # Mock the operations.utils.get_file_info function
                 with patch(
@@ -242,7 +253,7 @@ class TestDocumentConverter:
         input_path = Path("/path/to/input.html")
         output_path = Path("/path/to/output/output.md")
 
-        # Patch the fs object to mock file operations
+        # Mock fs paths to ensure they exist for the test
         with patch("quackcore.fs.service.path_exists", return_value=True):
             # Mock the converter's fs module
             with patch("quackcore.integrations.pandoc.converter.fs") as mock_fs:
@@ -268,6 +279,10 @@ class TestDocumentConverter:
                 service_mock.get_file_info.return_value = file_info
                 service_mock.path_exists.return_value = True
                 mock_fs.service = service_mock
+
+                # Critical: Mock service.get_file_info to be correctly called with Path object
+                with patch("quackcore.fs.service.get_file_info") as mock_service_get_info:
+                    mock_service_get_info.return_value = file_info
 
                 # Mock the operations.utils.get_file_info function
                 with patch(
@@ -295,7 +310,7 @@ class TestDocumentConverter:
         input_path = Path("/path/to/input.html")
         output_path = Path("/path/to/output/output.md")
 
-        # Patch the fs object to mock file operations
+        # Mock fs paths to ensure they exist for the test
         with patch("quackcore.fs.service.path_exists", return_value=True):
             # Mock the converter's fs module
             with patch("quackcore.integrations.pandoc.converter.fs") as mock_fs:
@@ -314,6 +329,10 @@ class TestDocumentConverter:
                 service_mock.get_file_info.return_value = file_info
                 service_mock.path_exists.return_value = True
                 mock_fs.service = service_mock
+
+                # Critical: Mock service.get_file_info to be correctly called with Path object
+                with patch("quackcore.fs.service.get_file_info") as mock_service_get_info:
+                    mock_service_get_info.return_value = file_info
 
                 # Mock the operations.utils.get_file_info function to raise an error
                 with patch(
@@ -344,7 +363,7 @@ class TestDocumentConverter:
             ),
         ]
 
-        # Patch the fs object to mock file operations
+        # Mock fs paths to ensure they exist for the test
         with patch("quackcore.fs.service.path_exists", return_value=True):
             # Mock the converter's fs module
             with patch("quackcore.integrations.pandoc.converter.fs") as mock_fs:
@@ -398,7 +417,7 @@ class TestDocumentConverter:
         output_path = Path("/path/to/output/file.md")
         input_path = Path("/path/to/input.html")
 
-        # Mock file system operations at the service level
+        # Mock file system operations to ensure paths exist
         with patch("quackcore.fs.service.path_exists", return_value=True):
             with patch("quackcore.fs.service.get_file_info") as mock_service_get_info:
                 # Setup output and input file mocks for service calls
@@ -440,6 +459,8 @@ class TestDocumentConverter:
                         assert result is True
                         # Make sure get_file_info was called twice - once for output, once for input
                         assert mock_service_get_info.call_count == 2
+                        mock_service_get_info.assert_any_call(output_path)
+                        mock_service_get_info.assert_any_call(input_path)
 
     def test_validate_conversion_docx(self):
         """Test validation of a converted DOCX file."""
@@ -453,7 +474,7 @@ class TestDocumentConverter:
         output_path = Path("/path/to/output/file.docx")
         input_path = Path("/path/to/input.md")
 
-        # Mock file system operations at the service level
+        # Mock file system operations to ensure paths exist
         with patch("quackcore.fs.service.path_exists", return_value=True):
             with patch("quackcore.fs.service.get_file_info") as mock_service_get_info:
                 # Setup output and input file mocks for service calls
@@ -490,6 +511,8 @@ class TestDocumentConverter:
                         # Assertions
                         assert result is True
                         assert mock_service_get_info.call_count == 2
+                        mock_service_get_info.assert_any_call(output_path)
+                        mock_service_get_info.assert_any_call(input_path)
                         mock_validate_docx.assert_called_with(
                             output_path, converter.config.validation.check_links
                         )
@@ -569,3 +592,5 @@ class TestDocumentConverter:
                 # Assertions
                 assert result is False
                 assert mock_service_get_info.call_count == 2
+                mock_service_get_info.assert_any_call(output_path)
+                mock_service_get_info.assert_any_call(input_path)
