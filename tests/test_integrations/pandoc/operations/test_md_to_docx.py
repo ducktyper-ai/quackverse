@@ -563,7 +563,6 @@ class TestMarkdownToDocxOperations:
                         assert len(validation_errors) == 1
                         assert "DOCX document has no paragraphs" in validation_errors[0]
 
-
     def test_check_docx_metadata(self, mock_fs):
         """Test checking DOCX metadata for references to the source file."""
         import quackcore.integrations.pandoc.operations.md_to_docx as md_to_docx
@@ -576,7 +575,7 @@ class TestMarkdownToDocxOperations:
         # Instead of patching the imported module which doesn't exist,
         # we can patch the import itself to raise ImportError
         with patch(
-                "importlib.import_module", side_effect=ImportError("No module named 'docx'")
+            "importlib.import_module", side_effect=ImportError("No module named 'docx'")
         ):
             # Should not raise an exception, just log and return
             md_to_docx._check_docx_metadata(output_path, source_path, check_links)

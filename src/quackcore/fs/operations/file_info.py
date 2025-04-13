@@ -23,6 +23,27 @@ class FileInfoOperationsMixin:
         # It's defined here for type checking
         raise NotImplementedError("This method should be overridden")
 
+    def path_exists(self, path: str | Path) -> bool:
+        """
+        Check if a path exists.
+
+        Args:
+            path: Path to check
+
+        Returns:
+            bool: True if the path exists, False otherwise
+        """
+        resolved_path = self.resolve_path(path)
+        logger.debug(f"Checking if path exists: {resolved_path}")
+
+        try:
+            exists = resolved_path.exists()
+            logger.debug(f"Path {resolved_path} exists: {exists}")
+            return exists
+        except Exception as e:
+            logger.error(f"Error checking if path exists for {resolved_path}: {str(e)}")
+            return False
+
     def get_file_info(self, path: str | Path) -> FileInfoResult:
         """
         Get information about a file or directory.
@@ -37,7 +58,7 @@ class FileInfoOperationsMixin:
         logger.debug(f"Getting file info for: {resolved_path}")
 
         try:
-            if not resolved_path.exists():
+            if not self.path_exists(resolved_path):
                 logger.info(f"Path does not exist: {resolved_path}")
                 return FileInfoResult(
                     success=True,

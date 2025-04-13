@@ -86,6 +86,7 @@ def test_registry_integration():
     with patch("quackcore.integrations.github.registry", mock_registry):
         # Import the module to trigger registration
         import importlib
+
         import quackcore.integrations.github
 
         importlib.reload(quackcore.integrations.github)
@@ -105,20 +106,22 @@ def test_module_init():
 
     # Patch create_integration to return our mock integration
     with patch(
-            "quackcore.integrations.github.create_integration",
-            return_value=mock_integration,
+        "quackcore.integrations.github.create_integration",
+        return_value=mock_integration,
     ):
         # Patch the registry module
         with patch("quackcore.integrations.github.registry", mock_registry):
             # Re-import the module to trigger registration
             import importlib
+
             import quackcore.integrations.github
 
             importlib.reload(quackcore.integrations.github)
 
             # Verify registration was attempted - registry should have been accessed
-            assert mock_registry.register.called or hasattr(mock_registry,
-                                                            "add_integration")
+            assert mock_registry.register.called or hasattr(
+                mock_registry, "add_integration"
+            )
 
 
 def test_lazy_loading():
@@ -145,8 +148,8 @@ def test_lazy_loading():
         # Test accessing lazy-loaded attributes
         assert quackcore.integrations.github.GitHubGrader == "MockGitHubGrader"
         assert (
-                quackcore.integrations.github.GitHubTeachingAdapter
-                == "MockGitHubTeachingAdapter"
+            quackcore.integrations.github.GitHubTeachingAdapter
+            == "MockGitHubTeachingAdapter"
         )
     finally:
         # Restore original if it existed

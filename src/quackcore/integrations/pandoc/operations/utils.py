@@ -278,7 +278,9 @@ def get_file_info(path: Path, format_hint: str | None = None) -> FileInfo:
         except (TypeError, ValueError):
             # If it's not convertible to int, use a default size
             file_size = 1024  # Default size to avoid division by zero issues
-            logger.warning(f"Could not convert file size to integer: {file_info.size}, using default")
+            logger.warning(
+                f"Could not convert file size to integer: {file_info.size}, using default"
+            )
 
     # Handle modified timestamp
     modified_time: float | None = file_info.modified

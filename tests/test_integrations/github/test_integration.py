@@ -105,7 +105,7 @@ class TestGitHubMockedIntegration:
 
     @pytest.fixture
     def mock_integration(
-            self, temp_dir: Path, mock_session: MagicMock
+        self, temp_dir: Path, mock_session: MagicMock
     ) -> tuple[GitHubIntegration, MagicMock]:
         """Create a mock GitHub integration."""
         # Create credentials file.
@@ -184,7 +184,7 @@ class TestGitHubMockedIntegration:
         return integration, mock_session
 
     def test_integration_mocked_workflow(
-            self, mock_integration: tuple[GitHubIntegration, MagicMock]
+        self, mock_integration: tuple[GitHubIntegration, MagicMock]
     ) -> None:
         """Test a GitHub workflow with mocked responses."""
         integration, mock_session = mock_integration

@@ -356,6 +356,22 @@ def write_lines(
     return service.write_lines(path, lines, encoding, atomic, line_ending)
 
 
+def path_exists(path: str | Path) -> bool:
+    """
+    Check if a path exists using the FileSystemService.
+
+    This function delegates directly to the underlying service instance,
+    ensuring consistency with all other filesystem operations.
+
+    Args:
+        path: The file or directory path to check.
+
+    Returns:
+        bool: True if the path exists, False otherwise.
+    """
+    return service.path_exists(path)
+
+
 def normalize_path_with_info(path: str | Path) -> PathInfo:
     """
     Normalize a path and return detailed information.

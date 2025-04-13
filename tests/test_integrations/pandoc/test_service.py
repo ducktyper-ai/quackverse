@@ -26,8 +26,10 @@ class TestPandocService:
     def test_init(self, mock_config_provider):
         """Test initializing the service."""
         # Test initialization with default parameters
-        with patch("quackcore.integrations.pandoc.service.PandocConfigProvider",
-                   return_value=mock_config_provider.return_value) as mocked_provider:
+        with patch(
+            "quackcore.integrations.pandoc.service.PandocConfigProvider",
+            return_value=mock_config_provider.return_value,
+        ) as mocked_provider:
             service = PandocIntegration()
             assert service.name == "Pandoc"
             assert service.version == "1.0.0"
@@ -53,15 +55,15 @@ class TestPandocService:
 
         # Setup mock for base class initialize
         with patch(
-                "quackcore.integrations.core.base.BaseIntegrationService.initialize"
+            "quackcore.integrations.core.base.BaseIntegrationService.initialize"
         ) as mock_base_init:
             mock_base_init.return_value = IntegrationResult.success_result()
 
             # Setup mock for verify_pandoc - use autospec to ensure proper patching
             with patch(
-                    "quackcore.integrations.pandoc.operations.verify_pandoc",
-                    autospec=True,
-                    return_value="2.11.4",
+                "quackcore.integrations.pandoc.operations.verify_pandoc",
+                autospec=True,
+                return_value="2.11.4",
             ) as mock_verify:
                 # Test initialization
                 service = PandocIntegration(output_dir="/path/to/output")
@@ -74,7 +76,9 @@ class TestPandocService:
 
                     # Assertions
                     assert result.success is True
-                    assert "Pandoc integration initialized successfully" in result.message
+                    assert (
+                        "Pandoc integration initialized successfully" in result.message
+                    )
                     # We're not actually calling real initialization, so we need to set properties
                     service._initialized = True
                     service.converter = DocumentConverter(PandocConfig())
@@ -86,15 +90,15 @@ class TestPandocService:
         """Test initialization when pandoc verification fails."""
         # Create a mock for base class initialize
         with patch(
-                "quackcore.integrations.core.base.BaseIntegrationService.initialize"
+            "quackcore.integrations.core.base.BaseIntegrationService.initialize"
         ) as mock_base_init:
             mock_base_init.return_value = IntegrationResult.success_result()
 
             # Setup mock for verify_pandoc to raise an error
             with patch(
-                    "quackcore.integrations.pandoc.operations.verify_pandoc",
-                    autospec=True,
-                    side_effect=QuackIntegrationError("Pandoc not found")
+                "quackcore.integrations.pandoc.operations.verify_pandoc",
+                autospec=True,
+                side_effect=QuackIntegrationError("Pandoc not found"),
             ) as mock_verify:
                 # Create the service but use a mock for initialization
                 service = PandocIntegration()
@@ -113,14 +117,14 @@ class TestPandocService:
         """Test initialization when directory creation fails."""
         # Create a mock for base class initialize
         with patch(
-                "quackcore.integrations.core.base.BaseIntegrationService.initialize"
+            "quackcore.integrations.core.base.BaseIntegrationService.initialize"
         ) as mock_base_init:
             mock_base_init.return_value = IntegrationResult.success_result()
 
             # Setup mock for verify_pandoc
             with patch(
-                    "quackcore.integrations.pandoc.operations.verify_pandoc",
-                    return_value="2.11.4",
+                "quackcore.integrations.pandoc.operations.verify_pandoc",
+                return_value="2.11.4",
             ) as mock_verify:
                 # Setup mock for directory creation to fail
                 mock_fs.create_directory.return_value = OperationResult(
@@ -181,8 +185,10 @@ class TestPandocService:
             # Mock find_files to return success
             find_result = MagicMock()
             find_result.success = True
-            find_result.files = [Path("/path/to/file1.html"),
-                                 Path("/path/to/file2.html")]
+            find_result.files = [
+                Path("/path/to/file1.html"),
+                Path("/path/to/file2.html"),
+            ]
             mock_fs.find_files.return_value = find_result
 
             # Mock fs.service.get_file_info to indicate directory exists
@@ -206,8 +212,10 @@ class TestPandocService:
                 # Mock the converter's convert_batch method
                 service.converter.convert_batch = MagicMock(
                     return_value=IntegrationResult.success_result(
-                        [Path("/path/to/output/file1.md"),
-                         Path("/path/to/output/file2.md")],
+                        [
+                            Path("/path/to/output/file1.md"),
+                            Path("/path/to/output/file2.md"),
+                        ],
                         message="Successfully converted files",
                     )
                 )
@@ -243,8 +251,9 @@ class TestPandocService:
         service = self._create_initialized_service()
 
         # Directly mock the _determine_conversion_params method to make the test more focused
-        with patch.object(service, "_determine_conversion_params",
-                          return_value=None) as mock_determine:
+        with patch.object(
+            service, "_determine_conversion_params", return_value=None
+        ) as mock_determine:
             # Test with invalid format
             result = service.convert_directory(Path("input_dir"), "invalid_format")
 
@@ -290,9 +299,9 @@ class TestPandocService:
 
         # Test when pandoc is available - mock at the deepest layer
         with patch(
-                "quackcore.integrations.pandoc.operations.verify_pandoc",
-                autospec=True,
-                return_value="2.11.4",
+            "quackcore.integrations.pandoc.operations.verify_pandoc",
+            autospec=True,
+            return_value="2.11.4",
         ) as mock_verify:
             # Directly patch the method
             with patch.object(service, "is_pandoc_available", return_value=True):
@@ -434,8 +443,9 @@ class TestPandocService:
     @pytest.fixture
     def mock_config_provider(self):
         """Fixture to mock the config provider."""
-        with patch("quackcore.integrations.pandoc.config.PandocConfigProvider",
-                   autospec=True) as mock:
+        with patch(
+            "quackcore.integrations.pandoc.config.PandocConfigProvider", autospec=True
+        ) as mock:
             # Configure the mock to be properly used by the tests
             instance = mock.return_value
             yield mock
@@ -444,8 +454,7 @@ class TestPandocService:
     def mock_fs(self):
         """Fixture to mock the fs module."""
         # First, patch the low-level file operations to avoid real fs access
-        with patch(
-                "quackcore.fs.service.get_file_info") as mock_get_file_info:
+        with patch("quackcore.fs.service.get_file_info") as mock_get_file_info:
             # Set up the mock to prevent real filesystem access
             file_info = FileInfoResult(
                 success=True,
@@ -478,8 +487,10 @@ class TestPandocService:
                 # Setup default behavior for finding files
                 find_result = MagicMock()
                 find_result.success = True
-                find_result.files = [Path("/path/to/file1.html"),
-                                     Path("/path/to/file2.html")]
+                find_result.files = [
+                    Path("/path/to/file1.html"),
+                    Path("/path/to/file2.html"),
+                ]
                 mock_fs.find_files.return_value = find_result
 
                 # Setup default behavior for path utils
@@ -488,7 +499,8 @@ class TestPandocService:
                     mock_normalize.return_value = Path("/absolute/normalized/path")
 
                     with patch(
-                            "quackcore.paths.resolver.resolve_project_path") as mock_resolve:
+                        "quackcore.paths.resolver.resolve_project_path"
+                    ) as mock_resolve:
                         # Make resolved paths absolute but predictable
                         mock_resolve.side_effect = lambda p: Path(f"/resolved{p}")
 

@@ -7,9 +7,8 @@ including functions for finding project roots and navigating directories.
 """
 
 import os
-from pathlib import Path
-from collections.abc import Sequence
 from dataclasses import dataclass
+from pathlib import Path
 
 from pydantic import BaseModel, Field
 
@@ -85,10 +84,10 @@ def normalize_path_with_info(path: str | Path) -> PathInfo:
 
 @wrap_io_errors
 def find_project_root(
-        start_dir: str | Path | None = None,
-        marker_files: list[str] | None = None,
-        marker_dirs: list[str] | None = None,
-        max_levels: int = 5,
+    start_dir: str | Path | None = None,
+    marker_files: list[str] | None = None,
+    marker_dirs: list[str] | None = None,
+    max_levels: int = 5,
 ) -> Path:
     """
     Find the project root directory by looking for marker files or directories.
@@ -145,9 +144,9 @@ def find_project_root(
 
 @wrap_io_errors
 def find_nearest_directory(
-        name: str,
-        start_dir: str | Path | None = None,
-        max_levels: int = 5,
+    name: str,
+    start_dir: str | Path | None = None,
+    max_levels: int = 5,
 ) -> Path:
     """
     Find the nearest directory with the given name.
@@ -187,8 +186,8 @@ def find_nearest_directory(
 
 @wrap_io_errors
 def resolve_relative_to_project(
-        path: str | Path,
-        project_root: str | Path | None = None,
+    path: str | Path,
+    project_root: str | Path | None = None,
 ) -> Path:
     """
     Resolve a path relative to the project root.
@@ -285,7 +284,7 @@ def get_extension(path: str | Path) -> str:
     filename = os.path.basename(path_str)
 
     # Special case for dotfiles (files that start with a dot)
-    if filename.startswith('.') and '.' not in filename[1:]:
+    if filename.startswith(".") and "." not in filename[1:]:
         return filename[1:]  # Return everything after the leading dot
 
     # Otherwise use fs.get_extension for regular files
@@ -335,8 +334,8 @@ def _get_relative_parts(path_obj: Path, base: Path) -> list[str] | None:
 
 @wrap_io_errors
 def infer_module_from_path(
-        path: str | Path,
-        project_root: str | Path | None = None,
+    path: str | Path,
+    project_root: str | Path | None = None,
 ) -> str:
     """
     Infer a Python module name from a file path.

@@ -13,6 +13,9 @@ from pydantic import BaseModel
 
 from quackcore.errors import wrap_io_errors
 from quackcore.fs.operations import FileSystemOperations
+from quackcore.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class PathInfo(BaseModel):
@@ -28,10 +31,40 @@ class PathInfo(BaseModel):
 
 
 class PathValidationMixin:
-    """Mixin class for path validation operations in the FileSystemService."""
+    """
+    Mixin class for path validation operations in the FileSystemService.
 
-    # This ensures the mixin will only be used with classes that have operations
+    This mixin "dogfoods" our existing implementation from FileInfoOperationsMixin
+    (or any compatible implementation exposed via `self.operations`) to check if a path exists.
+    """
+
+    # This ensures the mixin will only be used with classes that have an 'operations' attribute.
     operations: FileSystemOperations
+
+    def path_exists(self, path: str | Path) -> bool:
+        """
+        Check if a path exists in the filesystem by leveraging the existing
+        FileInfoOperationsMixin implementation via self.operations.
+
+        Args:
+            path: Path to check for existence
+
+        Returns:
+            bool: True if the path exists, False otherwise
+        """
+        try:
+            # Delegate to the file_info's path_exists implementation
+            return self.operations.path_exists(path)
+        except Exception as exc:
+            logger.error(f"Error checking if path exists using operations: {exc}")
+            # Fallback: use the standard pathlib.Path.exists() check
+            try:
+                result = Path(path).exists()
+                logger.debug(f"Fallback check for {path} returned: {result}")
+                return result
+            except Exception as fallback_exc:
+                logger.error(f"Fallback direct check failed for {path}: {fallback_exc}")
+                return False
 
     def get_path_info(self, path: str | Path) -> PathInfo:
         """
@@ -50,12 +83,11 @@ class PathValidationMixin:
             path_obj = Path(path)
             is_absolute = path_obj.is_absolute()
 
-            # Check if the path format is valid
-            # This doesn't check if the path exists, just if it's valid syntax
+            # Check if the path syntax is valid without requiring existence
             is_valid = self._is_path_syntax_valid(str(path))
 
-            # Check if the path exists (optional info)
-            exists = path_obj.exists()
+            # Check for existence (optional info)
+            exists = self.path_exists(path_obj)
 
             return PathInfo(
                 success=True,
@@ -99,18 +131,15 @@ class PathValidationMixin:
             True if the path has valid syntax
         """
         try:
-            # Try to create a Path object
+            # Attempt to create a Path object from the string
             path_obj = Path(path_str)
 
-            # Check for invalid characters in the path
-            # This varies by platform, but here are some common checks
-            if os.name == "nt":  # Windows
-                # Check for reserved characters in Windows
+            # Windows-specific checks for reserved characters and names
+            if os.name == "nt":
                 reserved_chars = '<>:"|?*'
-                if any(c in str(path_obj.name) for c in reserved_chars):
+                if any(char in path_obj.name for char in reserved_chars):
                     return False
 
-                # Check for reserved names in Windows
                 reserved_names = [
                     "CON",
                     "PRN",
@@ -138,7 +167,6 @@ class PathValidationMixin:
                 if any(part.upper() in reserved_names for part in path_obj.parts):
                     return False
 
-            # If we're still here, the path syntax is valid
             return True
         except Exception:
             return False
@@ -158,22 +186,23 @@ class PathValidationMixin:
             PathInfo with the normalized path and status information
         """
         try:
-            # Implement path normalization directly here instead of calling self.normalize_path
             path_obj = Path(path)
             if not path_obj.is_absolute():
                 try:
                     path_obj = path_obj.resolve()
                 except FileNotFoundError:
-                    # If resolution fails, just use the original path
-                    # This prevents test failures when resolving non-existent paths
+                    # When resolution fails (for non-existent paths),
+                    # fall back to the original path.
                     pass
+
+            exists = self.path_exists(path_obj)
 
             return PathInfo(
                 success=True,
                 path=str(path_obj),
                 is_absolute=path_obj.is_absolute(),
                 is_valid=True,
-                exists=path_obj.exists(),
+                exists=exists,
                 message="Path normalized successfully",
             )
         except Exception as e:
@@ -181,5 +210,5 @@ class PathValidationMixin:
                 success=False,
                 path=str(path) if isinstance(path, (str, Path)) else None,
                 is_valid=False,
-                error=f"Path normalization failed: {str(e)}",
+                error=f"Path normalization failed: {e}",
             )

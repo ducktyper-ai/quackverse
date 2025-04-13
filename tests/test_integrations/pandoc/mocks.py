@@ -26,7 +26,7 @@ from quackcore.integrations.pandoc.protocols import PandocConversionProtocol
 
 
 def create_mock_pandoc_config(
-        output_dir: str | Path = "/path/to/output",
+    output_dir: str | Path = "/path/to/output",
 ) -> PandocConfig:
     """
     Create a mock PandocConfig for testing.
@@ -71,9 +71,9 @@ def create_mock_metrics() -> ConversionMetrics:
 
 
 def create_mock_document_converter(
-        config: PandocConfig | None = None,
-        metrics: ConversionMetrics | None = None,
-        pandoc_version: str = "2.11.4",
+    config: PandocConfig | None = None,
+    metrics: ConversionMetrics | None = None,
+    pandoc_version: str = "2.11.4",
 ) -> DocumentConverter:
     """
     Create a mock DocumentConverter for testing.
@@ -93,8 +93,10 @@ def create_mock_document_converter(
         metrics = create_mock_metrics()
 
     # Create a mock DocumentConverter using patch to avoid real initialization
-    with patch("quackcore.integrations.pandoc.operations.verify_pandoc",
-               return_value=pandoc_version):
+    with patch(
+        "quackcore.integrations.pandoc.operations.verify_pandoc",
+        return_value=pandoc_version,
+    ):
         # Create a real DocumentConverter instance with our mocked dependencies
         converter = DocumentConverter(config)
         # Override metrics with our predefined metrics
@@ -109,12 +111,12 @@ class MockPandocConversionService(PandocConversionProtocol):
     """Mock implementation of PandocConversionProtocol for testing."""
 
     def __init__(
-            self,
-            initialized: bool = True,
-            converter: DocumentConverter | None = None,
-            pandoc_version: str = "2.11.4",
-            output_dir: str | Path | None = "/path/to/output",
-            log_level: int = logging.INFO,
+        self,
+        initialized: bool = True,
+        converter: DocumentConverter | None = None,
+        pandoc_version: str = "2.11.4",
+        output_dir: str | Path | None = "/path/to/output",
+        log_level: int = logging.INFO,
     ):
         """
         Initialize the mock Pandoc conversion service.
@@ -135,7 +137,7 @@ class MockPandocConversionService(PandocConversionProtocol):
         self.metrics = create_mock_metrics()
 
     def html_to_markdown(
-            self, html_path: Path, output_path: Path | None = None
+        self, html_path: Path, output_path: Path | None = None
     ) -> IntegrationResult[Path]:
         """
         Mock HTML to Markdown conversion.
@@ -165,7 +167,7 @@ class MockPandocConversionService(PandocConversionProtocol):
         return IntegrationResult.error_result("Converter not initialized")
 
     def markdown_to_docx(
-            self, markdown_path: Path, output_path: Path | None = None
+        self, markdown_path: Path, output_path: Path | None = None
     ) -> IntegrationResult[Path]:
         """
         Mock Markdown to DOCX conversion.
@@ -195,12 +197,12 @@ class MockPandocConversionService(PandocConversionProtocol):
         return IntegrationResult.error_result("Converter not initialized")
 
     def convert_directory(
-            self,
-            input_dir: Path,
-            output_format: str,
-            output_dir: Path | None = None,
-            file_pattern: str | None = None,
-            recursive: bool = False,
+        self,
+        input_dir: Path,
+        output_format: str,
+        output_dir: Path | None = None,
+        file_pattern: str | None = None,
+        recursive: bool = False,
     ) -> IntegrationResult[list[Path]]:
         """
         Mock directory conversion.
@@ -355,11 +357,11 @@ def mock_verify_pandoc_failure() -> None:
 
 
 def create_file_info(
-        path: str | Path,
-        format_name: str = "html",
-        size: int = 1024,
-        modified: float | None = None,
-        extra_args: list[str] | None = None,
+    path: str | Path,
+    format_name: str = "html",
+    size: int = 1024,
+    modified: float | None = None,
+    extra_args: list[str] | None = None,
 ) -> FileInfo:
     """
     Create a FileInfo object for testing.
@@ -384,11 +386,11 @@ def create_file_info(
 
 
 def create_conversion_task(
-        source_path: str | Path,
-        source_format: str = "html",
-        target_format: str = "markdown",
-        output_path: str | Path | None = None,
-        size: int = 1024,
+    source_path: str | Path,
+    source_format: str = "html",
+    target_format: str = "markdown",
+    output_path: str | Path | None = None,
+    size: int = 1024,
 ) -> ConversionTask:
     """
     Create a ConversionTask object for testing.
@@ -414,12 +416,12 @@ def create_conversion_task(
 
 
 def create_conversion_details(
-        source_format: str = "html",
-        target_format: str = "markdown",
-        conversion_time: float = 2.5,
-        output_size: int = 512,
-        input_size: int = 1024,
-        validation_errors: list[str] | None = None,
+    source_format: str = "html",
+    target_format: str = "markdown",
+    conversion_time: float = 2.5,
+    output_size: int = 512,
+    input_size: int = 1024,
+    validation_errors: list[str] | None = None,
 ) -> ConversionDetails:
     """
     Create a ConversionDetails object for testing.
@@ -505,24 +507,23 @@ def patch_operations_module():
     """
     # Create patches for all operations that might access Pandoc
     verify_patch = patch(
-        "quackcore.integrations.pandoc.operations.verify_pandoc",
-        return_value="2.11.4"
+        "quackcore.integrations.pandoc.operations.verify_pandoc", return_value="2.11.4"
     )
 
     html_to_md_patch = patch(
         "quackcore.integrations.pandoc.operations.convert_html_to_markdown",
         return_value=IntegrationResult.success_result(
             (Path("/path/to/output/file.md"), None),
-            message="Successfully converted HTML to Markdown"
-        )
+            message="Successfully converted HTML to Markdown",
+        ),
     )
 
     md_to_docx_patch = patch(
         "quackcore.integrations.pandoc.operations.convert_markdown_to_docx",
         return_value=IntegrationResult.success_result(
             (Path("/path/to/output/file.docx"), None),
-            message="Successfully converted Markdown to DOCX"
-        )
+            message="Successfully converted Markdown to DOCX",
+        ),
     )
 
     # Return a nested context manager
