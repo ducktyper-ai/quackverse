@@ -265,19 +265,20 @@ def get_file_info(path: Path, format_hint: str | None = None) -> FileInfo:
     Raises:
         QuackIntegrationError: If the file does not exist
     """
+    # Use fs.get_file_info instead of direct operations
     file_info = fs.get_file_info(path)
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(f"File not found: {path}")
 
-    # Handle size explicitly to ensure we have an integer, not a MagicMock
-    file_size: int = file_info.size if file_info.size is not None else 0
-
-    # Ensure it's an integer value if it's not None
-    if isinstance(file_size, (int, float)):
-        file_size = int(file_size)
-    else:
-        # If it's a mock or something unexpected, use a safe default
-        file_size = 0
+    # Handle size explicitly to ensure we have an integer
+    file_size: int = 0
+    if file_info.size is not None:
+        try:
+            file_size = int(file_info.size)
+        except (TypeError, ValueError):
+            # If it's not convertible to int, use a default size
+            file_size = 1024  # Default size to avoid division by zero issues
+            logger.warning(f"Could not convert file size to integer: {file_info.size}, using default")
 
     # Handle modified timestamp
     modified_time: float | None = file_info.modified

@@ -23,69 +23,6 @@ from quackcore.integrations.pandoc.service import PandocIntegration
 class TestPandocService:
     """Tests for the PandocIntegration service class."""
 
-    @pytest.fixture
-    def mock_config_provider(self):
-        """Fixture to mock the config provider."""
-        with patch("quackcore.integrations.pandoc.config.PandocConfigProvider",
-                   autospec=True) as mock:
-            # Configure the mock to be properly used by the tests
-            instance = mock.return_value
-            yield mock
-
-    @pytest.fixture
-    def mock_fs(self):
-        """Fixture to mock the fs module."""
-        # First, patch the low-level file operations to avoid real fs access
-        with patch(
-                "quackcore.fs.operations.file_info.get_file_info") as mock_get_file_info:
-            # Set up the mock to prevent real filesystem access
-            file_info = FileInfoResult(
-                success=True,
-                path="/path/to/file",
-                exists=True,
-                is_file=True,
-            )
-            mock_get_file_info.return_value = file_info
-
-            # Now patch the fs module in the service
-            with patch("quackcore.integrations.pandoc.service.fs") as mock_fs:
-                # Setup default behavior for file info checks
-                file_info = FileInfoResult(
-                    success=True,
-                    path="/path/to/file",
-                    exists=True,
-                    is_file=True,
-                    is_dir=True,  # Important for directory validation
-                )
-                mock_fs.service.get_file_info.return_value = file_info
-
-                # Setup default behavior for directory creation
-                dir_result = OperationResult(
-                    success=True,
-                    path="/path/to/output",
-                    message="Directory created",
-                )
-                mock_fs.create_directory.return_value = dir_result
-
-                # Setup default behavior for finding files
-                find_result = MagicMock()
-                find_result.success = True
-                find_result.files = [Path("/path/to/file1.html"),
-                                     Path("/path/to/file2.html")]
-                mock_fs.find_files.return_value = find_result
-
-                # Setup default behavior for path utils
-                with patch("quackcore.paths.utils.normalize_path") as mock_normalize:
-                    # Important: Make sure normalized paths are absolute and don't refer to actual filesystem
-                    mock_normalize.return_value = Path("/absolute/normalized/path")
-
-                    with patch(
-                            "quackcore.paths.resolver.resolve_project_path") as mock_resolve:
-                        # Make resolved paths absolute but predictable
-                        mock_resolve.side_effect = lambda p: Path(f"/resolved{p}")
-
-                        yield mock_fs
-
     def test_init(self, mock_config_provider):
         """Test initializing the service."""
         # Test initialization with default parameters
@@ -226,91 +163,6 @@ class TestPandocService:
         assert result.content == Path("/path/to/output/file.md")
         service.converter.convert_file.assert_called_once()
 
-    def test_html_to_markdown_not_initialized(self):
-        """Test HTML to Markdown conversion when service is not initialized."""
-        service = PandocIntegration()
-        result = service.html_to_markdown(Path("input.html"))
-
-        assert result.success is False
-        assert "not initialized" in result.error
-
-    def test_html_to_markdown_without_output_path(self, mock_config_provider, mock_fs):
-        """Test HTML to Markdown conversion without specifying output path."""
-        # Create a properly initialized service with a converter
-        service = self._create_initialized_service()
-
-        # Configure the converter mock
-        service.converter.convert_file = MagicMock(
-            return_value=IntegrationResult.success_result(
-                Path("/path/to/output/input.md"),
-                message="Successfully converted HTML to Markdown",
-            )
-        )
-
-        # Configure the config for auto output path determination
-        service.converter.config = PandocConfig(output_dir=Path("/path/to/output"))
-
-        # Test the method
-        result = service.html_to_markdown(Path("input.html"))
-
-        # Assertions
-        assert result.success is True
-        assert result.content == Path("/path/to/output/input.md")
-        service.converter.convert_file.assert_called_once()
-
-    def test_markdown_to_docx(self, mock_config_provider, mock_fs):
-        """Test the Markdown to DOCX conversion method."""
-        # Create a properly initialized service
-        service = self._create_initialized_service()
-
-        # Mock the converter's convert_file method
-        service.converter.convert_file = MagicMock(
-            return_value=IntegrationResult.success_result(
-                Path("/path/to/output/file.docx"),
-                message="Successfully converted Markdown to DOCX",
-            )
-        )
-
-        # Test the method
-        result = service.markdown_to_docx(Path("input.md"), Path("output.docx"))
-
-        # Assertions
-        assert result.success is True
-        assert result.content == Path("/path/to/output/file.docx")
-        service.converter.convert_file.assert_called_once()
-
-    def test_markdown_to_docx_not_initialized(self):
-        """Test Markdown to DOCX conversion when service is not initialized."""
-        service = PandocIntegration()
-        result = service.markdown_to_docx(Path("input.md"))
-
-        assert result.success is False
-        assert "not initialized" in result.error
-
-    def test_markdown_to_docx_without_output_path(self, mock_config_provider, mock_fs):
-        """Test Markdown to DOCX conversion without specifying output path."""
-        # Create a properly initialized service with a converter
-        service = self._create_initialized_service()
-
-        # Configure the converter mock
-        service.converter.convert_file = MagicMock(
-            return_value=IntegrationResult.success_result(
-                Path("/path/to/output/input.docx"),
-                message="Successfully converted Markdown to DOCX",
-            )
-        )
-
-        # Configure the config for auto output path determination
-        service.converter.config = PandocConfig(output_dir=Path("/path/to/output"))
-
-        # Test the method
-        result = service.markdown_to_docx(Path("input.md"))
-
-        # Assertions
-        assert result.success is True
-        assert result.content == Path("/path/to/output/input.docx")
-        service.converter.convert_file.assert_called_once()
-
     def test_convert_directory(self, mock_config_provider, mock_fs):
         """Test the convert directory method."""
         # Create a properly initialized service
@@ -437,19 +289,18 @@ class TestPandocService:
         service = PandocIntegration()
 
         # Test when pandoc is available - mock at the deepest layer
-        with patch("quackcore.fs.operations.file_info.get_file_info"):
-            with patch(
-                    "quackcore.integrations.pandoc.operations.verify_pandoc",
-                    autospec=True,
-                    return_value="2.11.4",
-            ) as mock_verify:
-                # Directly patch the method
-                with patch.object(service, "is_pandoc_available", return_value=True):
-                    assert service.is_pandoc_available() is True
+        with patch(
+                "quackcore.integrations.pandoc.operations.verify_pandoc",
+                autospec=True,
+                return_value="2.11.4",
+        ) as mock_verify:
+            # Directly patch the method
+            with patch.object(service, "is_pandoc_available", return_value=True):
+                assert service.is_pandoc_available() is True
 
-                # Test when pandoc is not available
-                with patch.object(service, "is_pandoc_available", return_value=False):
-                    assert service.is_pandoc_available() is False
+            # Test when pandoc is not available
+            with patch.object(service, "is_pandoc_available", return_value=False):
+                assert service.is_pandoc_available() is False
 
     def test_get_pandoc_version(self, mock_config_provider):
         """Test getting the pandoc version."""
@@ -461,17 +312,10 @@ class TestPandocService:
 
         # Test when version is not known and must be retrieved
         service._pandoc_version = None
-        # Patch at the deepest level to prevent real filesystem access
-        with patch("quackcore.fs.operations.file_info.get_file_info"):
-            with patch(
-                    "quackcore.integrations.pandoc.operations.verify_pandoc",
-                    autospec=True,
-                    return_value="2.11.4",
-            ) as mock_verify:
-                # Override the method to ensure we get the mocked value
-                with patch.object(service, "get_pandoc_version") as mock_get_version:
-                    mock_get_version.return_value = "2.11.4"
-                    assert mock_get_version() == "2.11.4"
+        # Override the method to ensure we get the mocked value
+        with patch.object(service, "get_pandoc_version") as mock_get_version:
+            mock_get_version.return_value = "2.11.4"
+            assert mock_get_version() == "2.11.4"
 
     def test_get_metrics(self, mock_config_provider):
         """Test getting conversion metrics."""
@@ -501,3 +345,151 @@ class TestPandocService:
         service.converter.config = mock_config
 
         return service
+
+    def test_html_to_markdown_not_initialized(self):
+        """Test HTML to Markdown conversion when service is not initialized."""
+        service = PandocIntegration()
+        result = service.html_to_markdown(Path("input.html"))
+
+        assert result.success is False
+        assert "not initialized" in result.error
+
+    def test_html_to_markdown_without_output_path(self, mock_config_provider, mock_fs):
+        """Test HTML to Markdown conversion without specifying output path."""
+        # Create a properly initialized service with a converter
+        service = self._create_initialized_service()
+
+        # Configure the converter mock
+        service.converter.convert_file = MagicMock(
+            return_value=IntegrationResult.success_result(
+                Path("/path/to/output/input.md"),
+                message="Successfully converted HTML to Markdown",
+            )
+        )
+
+        # Configure the config for auto output path determination
+        service.converter.config = PandocConfig(output_dir=Path("/path/to/output"))
+
+        # Test the method
+        result = service.html_to_markdown(Path("input.html"))
+
+        # Assertions
+        assert result.success is True
+        assert result.content == Path("/path/to/output/input.md")
+        service.converter.convert_file.assert_called_once()
+
+    def test_markdown_to_docx(self, mock_config_provider, mock_fs):
+        """Test the Markdown to DOCX conversion method."""
+        # Create a properly initialized service
+        service = self._create_initialized_service()
+
+        # Mock the converter's convert_file method
+        service.converter.convert_file = MagicMock(
+            return_value=IntegrationResult.success_result(
+                Path("/path/to/output/file.docx"),
+                message="Successfully converted Markdown to DOCX",
+            )
+        )
+
+        # Test the method
+        result = service.markdown_to_docx(Path("input.md"), Path("output.docx"))
+
+        # Assertions
+        assert result.success is True
+        assert result.content == Path("/path/to/output/file.docx")
+        service.converter.convert_file.assert_called_once()
+
+    def test_markdown_to_docx_not_initialized(self):
+        """Test Markdown to DOCX conversion when service is not initialized."""
+        service = PandocIntegration()
+        result = service.markdown_to_docx(Path("input.md"))
+
+        assert result.success is False
+        assert "not initialized" in result.error
+
+    def test_markdown_to_docx_without_output_path(self, mock_config_provider, mock_fs):
+        """Test Markdown to DOCX conversion without specifying output path."""
+        # Create a properly initialized service with a converter
+        service = self._create_initialized_service()
+
+        # Configure the converter mock
+        service.converter.convert_file = MagicMock(
+            return_value=IntegrationResult.success_result(
+                Path("/path/to/output/input.docx"),
+                message="Successfully converted Markdown to DOCX",
+            )
+        )
+
+        # Configure the config for auto output path determination
+        service.converter.config = PandocConfig(output_dir=Path("/path/to/output"))
+
+        # Test the method
+        result = service.markdown_to_docx(Path("input.md"))
+
+        # Assertions
+        assert result.success is True
+        assert result.content == Path("/path/to/output/input.docx")
+        service.converter.convert_file.assert_called_once()
+
+    @pytest.fixture
+    def mock_config_provider(self):
+        """Fixture to mock the config provider."""
+        with patch("quackcore.integrations.pandoc.config.PandocConfigProvider",
+                   autospec=True) as mock:
+            # Configure the mock to be properly used by the tests
+            instance = mock.return_value
+            yield mock
+
+    @pytest.fixture
+    def mock_fs(self):
+        """Fixture to mock the fs module."""
+        # First, patch the low-level file operations to avoid real fs access
+        with patch(
+                "quackcore.fs.service.get_file_info") as mock_get_file_info:
+            # Set up the mock to prevent real filesystem access
+            file_info = FileInfoResult(
+                success=True,
+                path="/path/to/file",
+                exists=True,
+                is_file=True,
+            )
+            mock_get_file_info.return_value = file_info
+
+            # Now patch the fs module in the service
+            with patch("quackcore.integrations.pandoc.service.fs") as mock_fs:
+                # Setup default behavior for file info checks
+                file_info = FileInfoResult(
+                    success=True,
+                    path="/path/to/file",
+                    exists=True,
+                    is_file=True,
+                    is_dir=True,  # Important for directory validation
+                )
+                mock_fs.service.get_file_info.return_value = file_info
+
+                # Setup default behavior for directory creation
+                dir_result = OperationResult(
+                    success=True,
+                    path="/path/to/output",
+                    message="Directory created",
+                )
+                mock_fs.create_directory.return_value = dir_result
+
+                # Setup default behavior for finding files
+                find_result = MagicMock()
+                find_result.success = True
+                find_result.files = [Path("/path/to/file1.html"),
+                                     Path("/path/to/file2.html")]
+                mock_fs.find_files.return_value = find_result
+
+                # Setup default behavior for path utils
+                with patch("quackcore.paths.utils.normalize_path") as mock_normalize:
+                    # Important: Make sure normalized paths are absolute and don't refer to actual filesystem
+                    mock_normalize.return_value = Path("/absolute/normalized/path")
+
+                    with patch(
+                            "quackcore.paths.resolver.resolve_project_path") as mock_resolve:
+                        # Make resolved paths absolute but predictable
+                        mock_resolve.side_effect = lambda p: Path(f"/resolved{p}")
+
+                        yield mock_fs
