@@ -112,12 +112,17 @@ def validate_html_structure(
             errors.append("HTML document missing body tag")
             return False, errors
 
-        if not (soup.find(["h1", "h2", "h3", "h4", "h5", "h6"]) or soup.find(["header", "section", "article"])):
+        if not (
+            soup.find(["h1", "h2", "h3", "h4", "h5", "h6"])
+            or soup.find(["header", "section", "article"])
+        ):
             logger.warning("HTML document has no header tags or structural elements")
 
         if check_links:
             links = soup.find_all("a")
-            empty_links = [str(link) for link in links if not (link.get("href") or "").strip()]
+            empty_links = [
+                str(link) for link in links if not (link.get("href") or "").strip()
+            ]
             if empty_links:
                 errors.append(f"Found {len(empty_links)} empty links in document")
 
@@ -149,7 +154,10 @@ def validate_docx_structure(
             errors.append("DOCX document has no paragraphs")
             return False, errors
 
-        has_heading = any(para.style and para.style.name.startswith("Heading") for para in doc.paragraphs)
+        has_heading = any(
+            para.style and para.style.name.startswith("Heading")
+            for para in doc.paragraphs
+        )
         if not has_heading:
             logger.warning("DOCX document has no heading styles")
 
@@ -196,10 +204,16 @@ def track_metrics(
         original_size_int = int(original_size) if original_size is not None else 0
         converted_size_int = int(converted_size) if converted_size is not None else 0
         ratio = converted_size_int / original_size_int if original_size_int > 0 else 0
-        metrics.file_sizes[filename] = {"original": original_size_int, "converted": converted_size_int, "ratio": ratio}
+        metrics.file_sizes[filename] = {
+            "original": original_size_int,
+            "converted": converted_size_int,
+            "ratio": ratio,
+        }
         original_size_str = fs.get_file_size_str(original_size_int)
         converted_size_str = fs.get_file_size_str(converted_size_int)
-        logger.info(f"File size change for {filename}: {original_size_str} -> {converted_size_str}")
+        logger.info(
+            f"File size change for {filename}: {original_size_str} -> {converted_size_str}"
+        )
 
 
 def get_file_info(path: Path, format_hint: str | None = None) -> FileInfo:
@@ -223,7 +237,9 @@ def get_file_info(path: Path, format_hint: str | None = None) -> FileInfo:
         file_size: int = int(file_info.size) if file_info.size is not None else 0
     except (TypeError, ValueError):
         file_size = 1024
-        logger.warning(f"Could not convert file size to integer: {file_info.size}, using default")
+        logger.warning(
+            f"Could not convert file size to integer: {file_info.size}, using default"
+        )
     modified_time: float | None = file_info.modified
     if format_hint:
         format_name = format_hint
@@ -249,7 +265,9 @@ def get_file_info(path: Path, format_hint: str | None = None) -> FileInfo:
     )
 
 
-def check_file_size(converted_size: int, validation_min_size: int) -> tuple[bool, list[str]]:
+def check_file_size(
+    converted_size: int, validation_min_size: int
+) -> tuple[bool, list[str]]:
     """
     Check if the converted file meets the minimum file size.
 
@@ -262,16 +280,22 @@ def check_file_size(converted_size: int, validation_min_size: int) -> tuple[bool
     """
     errors: list[str] = []
     converted_size_int = int(converted_size) if converted_size is not None else 0
-    validation_min_size_int = int(validation_min_size) if validation_min_size is not None else 0
+    validation_min_size_int = (
+        int(validation_min_size) if validation_min_size is not None else 0
+    )
     if validation_min_size_int > 0 and converted_size_int < validation_min_size_int:
         converted_size_str = fs.get_file_size_str(converted_size_int)
         min_size_str = fs.get_file_size_str(validation_min_size_int)
-        errors.append(f"Converted file size ({converted_size_str}) is below the minimum threshold ({min_size_str})")
+        errors.append(
+            f"Converted file size ({converted_size_str}) is below the minimum threshold ({min_size_str})"
+        )
         return False, errors
     return True, errors
 
 
-def check_conversion_ratio(converted_size: int, original_size: int, threshold: float) -> tuple[bool, list[str]]:
+def check_conversion_ratio(
+    converted_size: int, original_size: int, threshold: float
+) -> tuple[bool, list[str]]:
     """
     Check if the converted file size is not drastically smaller than the original.
 

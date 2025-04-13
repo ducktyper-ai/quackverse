@@ -101,7 +101,9 @@ class TestDocumentConverter:
                 mock_fs.service = service_mock
 
                 # Critical: Mock service.get_file_info to be correctly called with Path object
-                with patch("quackcore.fs.service.get_file_info") as mock_service_get_info:
+                with patch(
+                    "quackcore.fs.service.get_file_info"
+                ) as mock_service_get_info:
                     mock_service_get_info.return_value = file_info
 
                 # Also patch the operations.utils.get_file_info
@@ -168,7 +170,9 @@ class TestDocumentConverter:
                 mock_fs.service = service_mock
 
                 # Critical: Mock service.get_file_info to be correctly called with Path object
-                with patch("quackcore.fs.service.get_file_info") as mock_service_get_info:
+                with patch(
+                    "quackcore.fs.service.get_file_info"
+                ) as mock_service_get_info:
                     mock_service_get_info.return_value = file_info
 
                 # Mock the operations.utils.get_file_info function
@@ -226,7 +230,9 @@ class TestDocumentConverter:
                 mock_fs.service = service_mock
 
                 # Critical: Mock service.get_file_info to be correctly called with Path object
-                with patch("quackcore.fs.service.get_file_info") as mock_service_get_info:
+                with patch(
+                    "quackcore.fs.service.get_file_info"
+                ) as mock_service_get_info:
                     mock_service_get_info.return_value = file_info
 
                 # Mock the operations.utils.get_file_info function
@@ -281,7 +287,9 @@ class TestDocumentConverter:
                 mock_fs.service = service_mock
 
                 # Critical: Mock service.get_file_info to be correctly called with Path object
-                with patch("quackcore.fs.service.get_file_info") as mock_service_get_info:
+                with patch(
+                    "quackcore.fs.service.get_file_info"
+                ) as mock_service_get_info:
                     mock_service_get_info.return_value = file_info
 
                 # Mock the operations.utils.get_file_info function
@@ -331,7 +339,9 @@ class TestDocumentConverter:
                 mock_fs.service = service_mock
 
                 # Critical: Mock service.get_file_info to be correctly called with Path object
-                with patch("quackcore.fs.service.get_file_info") as mock_service_get_info:
+                with patch(
+                    "quackcore.fs.service.get_file_info"
+                ) as mock_service_get_info:
                     mock_service_get_info.return_value = file_info
 
                 # Mock the operations.utils.get_file_info function to raise an error
