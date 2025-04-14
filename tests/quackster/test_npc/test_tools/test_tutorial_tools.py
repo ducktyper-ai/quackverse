@@ -1,6 +1,6 @@
 # tests/quackster/test_npc/test_tools/test_tutorial_tools.py
 """
-Tests for the tutorial tools in quackcore.quackster.npc.tools.tutorial_tools.
+Tests for the tutorial tools in quackster.npc.tools.tutorial_tools.
 
 This module tests the functions for retrieving and displaying tutorial content
 on various topics related to the QuackVerse ecosystem.
@@ -15,7 +15,7 @@ class TestTutorialTools:
     def test_get_tutorial_basic(self, mocker):
         """Test the get_tutorial function with a basic topic."""
         # Mock dependencies
-        mock_rag = mocker.patch("quackcore.quackster.npc.tools.tutorial_tools.rag")
+        mock_rag = mocker.patch("quackster.npc.tools.tutorial_tools.rag")
         mock_rag.get_tutorial_topic.return_value = {
             "title": "Python Tutorial",
             "description": "Learn Python basics",
@@ -23,13 +23,13 @@ class TestTutorialTools:
         }
 
         mock_registry = mocker.patch(
-            "quackcore.quackster.npc.tools.tutorial_tools.DialogueRegistry"
+            "quackster.npc.tools.tutorial_tools.DialogueRegistry"
         )
         mock_registry.render_template.return_value = "Rendered Python tutorial"
 
         # Mock standardize_tool_output
         mock_standardize = mocker.patch(
-            "quackcore.quackster.npc.tools.tutorial_tools.standardize_tool_output"
+            "quackster.npc.tools.tutorial_tools.standardize_tool_output"
         )
         mock_standardize.return_value = TutorialOutput(
             name="get_tutorial",
@@ -60,14 +60,14 @@ class TestTutorialTools:
     def test_get_tutorial_missing_content(self, mocker):
         """Test get_tutorial with missing content."""
         # Mock dependencies
-        mock_rag = mocker.patch("quackcore.quackster.npc.tools.tutorial_tools.rag")
+        mock_rag = mocker.patch("quackster.npc.tools.tutorial_tools.rag")
         mock_rag.get_tutorial_topic.return_value = {
             "title": "Unknown Topic",
             # No description or content
         }
 
         mock_registry = mocker.patch(
-            "quackcore.quackster.npc.tools.tutorial_tools.DialogueRegistry"
+            "quackster.npc.tools.tutorial_tools.DialogueRegistry"
         )
         mock_registry.render_template.return_value = (
             "Rendered tutorial with default content"
@@ -75,7 +75,7 @@ class TestTutorialTools:
 
         # Mock standardize_tool_output
         mock_standardize = mocker.patch(
-            "quackcore.quackster.npc.tools.tutorial_tools.standardize_tool_output"
+            "quackster.npc.tools.tutorial_tools.standardize_tool_output"
         )
         mock_standardize.return_value = TutorialOutput(
             name="get_tutorial",
@@ -106,7 +106,7 @@ class TestTutorialTools:
     def test_get_tutorial_render_failure(self, mocker):
         """Test get_tutorial when template rendering fails."""
         # Mock dependencies
-        mock_rag = mocker.patch("quackcore.quackster.npc.tools.tutorial_tools.rag")
+        mock_rag = mocker.patch("quackster.npc.tools.tutorial_tools.rag")
         mock_rag.get_tutorial_topic.return_value = {
             "title": "Python Tutorial",
             "description": "Learn Python basics",
@@ -114,19 +114,17 @@ class TestTutorialTools:
         }
 
         mock_registry = mocker.patch(
-            "quackcore.quackster.npc.tools.tutorial_tools.DialogueRegistry"
+            "quackster.npc.tools.tutorial_tools.DialogueRegistry"
         )
         # Simulate a rendering error
         mock_registry.render_template.side_effect = Exception("Rendering error")
 
         # Mock logger
-        mock_logger = mocker.patch(
-            "quackcore.quackster.npc.tools.tutorial_tools.logger"
-        )
+        mock_logger = mocker.patch("quackster.npc.tools.tutorial_tools.logger")
 
         # Mock standardize_tool_output
         mock_standardize = mocker.patch(
-            "quackcore.quackster.npc.tools.tutorial_tools.standardize_tool_output"
+            "quackster.npc.tools.tutorial_tools.standardize_tool_output"
         )
         mock_standardize.return_value = TutorialOutput(
             name="get_tutorial",
@@ -158,17 +156,17 @@ class TestTutorialTools:
     def test_get_tutorial_empty_response(self, mocker):
         """Test get_tutorial with an empty response from RAG."""
         # Mock dependencies
-        mock_rag = mocker.patch("quackcore.quackster.npc.tools.tutorial_tools.rag")
+        mock_rag = mocker.patch("quackster.npc.tools.tutorial_tools.rag")
         mock_rag.get_tutorial_topic.return_value = {}  # Empty response
 
         mock_registry = mocker.patch(
-            "quackcore.quackster.npc.tools.tutorial_tools.DialogueRegistry"
+            "quackster.npc.tools.tutorial_tools.DialogueRegistry"
         )
         mock_registry.render_template.return_value = "Rendered empty tutorial"
 
         # Mock standardize_tool_output
         mock_standardize = mocker.patch(
-            "quackcore.quackster.npc.tools.tutorial_tools.standardize_tool_output"
+            "quackster.npc.tools.tutorial_tools.standardize_tool_output"
         )
         mock_standardize.return_value = TutorialOutput(
             name="get_tutorial",

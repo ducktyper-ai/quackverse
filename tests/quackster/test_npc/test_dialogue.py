@@ -2,7 +2,7 @@
 """
 Tests for the Quackster NPC dialogue registry.
 
-This module tests the dialogue registry functionality in quackcore.quackster.npc.dialogue.registry.
+This module tests the dialogue registry functionality in quackster.npc.dialogue.registry.
 """
 
 from unittest.mock import MagicMock, patch
@@ -14,7 +14,7 @@ from quackster.npc.schema import UserMemory
 class TestDialogueRegistry:
     """Tests for NPC dialogue registry functionality."""
 
-    @patch("quackcore.quackster.npc.dialogue.registry.load_yaml")
+    @patch("quackster.npc.dialogue.registry.load_yaml")
     def test_get_greeting_first_time(self, mock_load_yaml):
         """Test getting a greeting for a first-time user."""
         # Setup
@@ -37,7 +37,7 @@ class TestDialogueRegistry:
         assert result == "Hello, new user!"
         mock_load_yaml.assert_called_once_with("greetings")
 
-    @patch("quackcore.quackster.npc.dialogue.registry.load_yaml")
+    @patch("quackster.npc.dialogue.registry.load_yaml")
     def test_get_greeting_returning_general(self, mock_load_yaml):
         """Test getting a general greeting for a returning user."""
         # Setup
@@ -60,8 +60,8 @@ class TestDialogueRegistry:
         assert result == "Welcome back!"
         mock_load_yaml.assert_called_once_with("greetings")
 
-    @patch("quackcore.quackster.npc.dialogue.registry.load_yaml")
-    @patch("quackcore.quackster.npc.dialogue.registry.random.choice")
+    @patch("quackster.npc.dialogue.registry.load_yaml")
+    @patch("quackster.npc.dialogue.registry.random.choice")
     def test_get_greeting_with_level(self, mock_choice, mock_load_yaml):
         """Test getting a level-specific greeting."""
         # Setup
@@ -88,8 +88,8 @@ class TestDialogueRegistry:
         assert "level 3" in result
         mock_load_yaml.assert_called_once_with("greetings")
 
-    @patch("quackcore.quackster.npc.dialogue.registry.load_yaml")
-    @patch("quackcore.quackster.npc.dialogue.registry.random.choice")
+    @patch("quackster.npc.dialogue.registry.load_yaml")
+    @patch("quackster.npc.dialogue.registry.random.choice")
     def test_get_greeting_with_badges(self, mock_choice, mock_load_yaml):
         """Test getting a badge-specific greeting."""
         # Setup
@@ -118,7 +118,7 @@ class TestDialogueRegistry:
         assert "2 badges" in result
         mock_load_yaml.assert_called_once_with("greetings")
 
-    @patch("quackcore.quackster.npc.dialogue.registry.load_yaml")
+    @patch("quackster.npc.dialogue.registry.load_yaml")
     def test_get_farewell_general(self, mock_load_yaml):
         """Test getting a general farewell."""
         # Setup
@@ -141,8 +141,8 @@ class TestDialogueRegistry:
         assert result in ["Goodbye!", "Goodbye, beginner!"]
         mock_load_yaml.assert_called_once_with("farewells")
 
-    @patch("quackcore.quackster.npc.dialogue.registry.load_yaml")
-    @patch("quackcore.quackster.npc.dialogue.registry.random.choice")
+    @patch("quackster.npc.dialogue.registry.load_yaml")
+    @patch("quackster.npc.dialogue.registry.random.choice")
     def test_get_farewell_intermediate(self, mock_choice, mock_load_yaml):
         """Test getting an intermediate farewell."""
         # Setup
@@ -169,7 +169,7 @@ class TestDialogueRegistry:
         assert "level 3" in result
         mock_load_yaml.assert_called_once_with("farewells")
 
-    @patch("quackcore.quackster.npc.dialogue.registry.load_yaml")
+    @patch("quackster.npc.dialogue.registry.load_yaml")
     def test_get_catchphrase(self, mock_load_yaml):
         """Test getting a catchphrase."""
         # Setup
@@ -184,7 +184,7 @@ class TestDialogueRegistry:
         assert result == "Quacktastic!"
         mock_load_yaml.assert_called_once_with("catchphrases")
 
-    @patch("quackcore.quackster.npc.dialogue.registry.load_yaml")
+    @patch("quackster.npc.dialogue.registry.load_yaml")
     def test_get_badge_dialogue(self, mock_load_yaml):
         """Test getting badge dialogue."""
         # Setup
@@ -209,7 +209,7 @@ class TestDialogueRegistry:
         assert nonexistent is None
         mock_load_yaml.assert_called_once_with("badges")
 
-    @patch("quackcore.quackster.npc.dialogue.registry.load_yaml")
+    @patch("quackster.npc.dialogue.registry.load_yaml")
     def test_get_quest_dialogue(self, mock_load_yaml):
         """Test getting quest dialogue."""
         # Setup
@@ -234,7 +234,7 @@ class TestDialogueRegistry:
         assert nonexistent is None
         mock_load_yaml.assert_called_once_with("quests")
 
-    @patch("quackcore.quackster.npc.dialogue.registry.env")
+    @patch("quackster.npc.dialogue.registry.env")
     def test_render_template(self, mock_env):
         """Test rendering a template."""
         # Setup
@@ -253,8 +253,8 @@ class TestDialogueRegistry:
         mock_env.get_template.assert_called_once_with("template.md.j2")
         mock_template.render.assert_called_once_with(**context)
 
-    @patch("quackcore.quackster.npc.dialogue.registry.load_yaml")
-    @patch("quackcore.quackster.npc.dialogue.registry.random")
+    @patch("quackster.npc.dialogue.registry.load_yaml")
+    @patch("quackster.npc.dialogue.registry.random")
     def test_flavor_text_generic(self, mock_random, mock_load_yaml):
         """Test adding flavor text."""
         # Setup
@@ -276,8 +276,8 @@ class TestDialogueRegistry:
         assert result == "Learning time! Learn Python basics 📚 🦆"
         mock_load_yaml.assert_called_once_with("catchphrases")
 
-    @patch("quackcore.quackster.npc.dialogue.registry.load_yaml")
-    @patch("quackcore.quackster.npc.dialogue.registry.random")
+    @patch("quackster.npc.dialogue.registry.load_yaml")
+    @patch("quackster.npc.dialogue.registry.random")
     def test_flavor_text_with_catchphrase(self, mock_random, mock_load_yaml):
         """Test adding flavor text with a catchphrase."""
         # Setup
@@ -297,7 +297,7 @@ class TestDialogueRegistry:
         assert result == "Quacktastic! You earned a badge 🏆 🦆"
         mock_load_yaml.assert_called_once_with("catchphrases")
 
-    @patch("quackcore.quackster.npc.dialogue.registry.random")
+    @patch("quackster.npc.dialogue.registry.random")
     def test_flavor_text_no_duck_emoji(self, mock_random):
         """Test adding flavor text when duck emoji is already present."""
         # Setup

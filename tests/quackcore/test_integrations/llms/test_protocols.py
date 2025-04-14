@@ -11,7 +11,7 @@ from unittest.mock import MagicMock
 from quackcore.integrations.core import IntegrationResult
 from quackcore.integrations.llms.models import ChatMessage, LLMOptions
 from quackcore.integrations.llms.protocols import LLMProviderProtocol
-from tests.test_integrations.llms.mocks.clients import MockClient
+from tests.quackcore.test_integrations.llms.mocks.clients import MockClient
 
 
 class TestLLMProtocols:

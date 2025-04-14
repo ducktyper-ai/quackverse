@@ -110,7 +110,7 @@ class TestConfigModels:
         """Test the PathsConfig model."""
         # Test default values
         config = PathsConfig()
-        assert config.base_dir == Path("/")
+        assert config.base_dir == Path("./")
         assert config.output_dir == Path("./output")
         assert config.assets_dir == Path("./assets")
         assert config.data_dir == Path("./data")

@@ -7,10 +7,12 @@ The actual tests are organized into submodules within the test_operations/ direc
 """
 
 # Import test classes so they get discovered by pytest
-from tests.test_integrations.pandoc.operations.test_html_to_md import (
+from tests.quackcore.test_integrations.pandoc.operations.test_html_to_md import (
     TestHtmlToMarkdownOperations,
 )
-from tests.test_integrations.pandoc.operations.test_md_to_docx import (
+from tests.quackcore.test_integrations.pandoc.operations.test_md_to_docx import (
     TestMarkdownToDocxOperations,
 )
-from tests.test_integrations.pandoc.operations.test_utils import TestPandocUtilities
+from tests.quackcore.test_integrations.pandoc.operations.test_utils import (
+    TestPandocUtilities,
+)

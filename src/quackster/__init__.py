@@ -15,8 +15,8 @@ Core Components:
 
 Example:
     ```python
-    from quackcore.quackster import xp, utils
-    from quackcore.quackster.models import XPEvent
+    from quackster import xp, utils
+    from quackster.core.models import XPEvent
 
     # Load user progress
     user = utils.load_progress()
@@ -29,8 +29,8 @@ Example:
     utils.save_progress(user)
 
     # Talk to Quackster NPC
-    from quackcore.quackster.npc import agent
-    from quackcore.quackster.npc.schema import TeachingNPCInput
+    from quackster.npc import agent
+    from quackster.npc.schema import TeachingNPCInput
 
     response = agent.run_npc_session(
         TeachingNPCInput(user_input="What's my current XP?")

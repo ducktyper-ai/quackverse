@@ -2,7 +2,7 @@
 """
 Tests for the Quackster NPC memory management.
 
-This module tests the memory management functionality in quackcore.quackster.npc.memory.
+This module tests the memory management functionality in quackster.npc.memory.
 """
 
 from datetime import datetime, timedelta
@@ -23,7 +23,7 @@ class TestNPCMemory:
         mock_data_dir = Path("/test/data/dir")
 
         with patch(
-            "quackcore.quackster.npc.memory.get_user_data_dir",
+            "quackster.npc.memory.get_user_data_dir",
             return_value=mock_data_dir,
         ):
             # Act
@@ -32,9 +32,9 @@ class TestNPCMemory:
             # Assert
             assert result == mock_data_dir / "quackster_memory.json"
 
-    @patch("quackcore.quackster.npc.memory.fs.get_file_info")
-    @patch("quackcore.quackster.npc.memory._get_memory_file_path")
-    @patch("quackcore.quackster.npc.memory.logger")
+    @patch("quackster.npc.memory.fs.get_file_info")
+    @patch("quackster.npc.memory._get_memory_file_path")
+    @patch("quackster.npc.memory.logger")
     def test_load_persistent_memory_not_found(
         self, mock_logger, mock_get_path, mock_get_file_info
     ):
@@ -54,10 +54,10 @@ class TestNPCMemory:
         mock_get_file_info.assert_called_once_with(mock_path)
         mock_logger.debug.assert_called_once()
 
-    @patch("quackcore.quackster.npc.memory.fs.get_file_info")
-    @patch("quackcore.quackster.npc.memory.fs.read_json")
-    @patch("quackcore.quackster.npc.memory._get_memory_file_path")
-    @patch("quackcore.quackster.npc.memory.logger")
+    @patch("quackster.npc.memory.fs.get_file_info")
+    @patch("quackster.npc.memory.fs.read_json")
+    @patch("quackster.npc.memory._get_memory_file_path")
+    @patch("quackster.npc.memory.logger")
     def test_load_persistent_memory_read_error(
         self, mock_logger, mock_get_path, mock_read_json, mock_get_file_info
     ):
@@ -78,9 +78,9 @@ class TestNPCMemory:
         mock_read_json.assert_called_once_with(mock_path)
         mock_logger.warning.assert_called_once()
 
-    @patch("quackcore.quackster.npc.memory.fs.get_file_info")
-    @patch("quackcore.quackster.npc.memory.fs.read_json")
-    @patch("quackcore.quackster.npc.memory._get_memory_file_path")
+    @patch("quackster.npc.memory.fs.get_file_info")
+    @patch("quackster.npc.memory.fs.read_json")
+    @patch("quackster.npc.memory._get_memory_file_path")
     def test_load_persistent_memory_wrong_user(
         self, mock_get_path, mock_read_json, mock_get_file_info
     ):
@@ -105,10 +105,10 @@ class TestNPCMemory:
         # Assert
         assert result is None
 
-    @patch("quackcore.quackster.npc.memory.fs.get_file_info")
-    @patch("quackcore.quackster.npc.memory.fs.read_json")
-    @patch("quackcore.quackster.npc.memory._get_memory_file_path")
-    @patch("quackcore.quackster.npc.memory.logger")
+    @patch("quackster.npc.memory.fs.get_file_info")
+    @patch("quackster.npc.memory.fs.read_json")
+    @patch("quackster.npc.memory._get_memory_file_path")
+    @patch("quackster.npc.memory.logger")
     def test_load_persistent_memory_expired(
         self, mock_logger, mock_get_path, mock_read_json, mock_get_file_info
     ):
@@ -140,9 +140,9 @@ class TestNPCMemory:
             "Memory has expired, creating fresh memory"
         )
 
-    @patch("quackcore.quackster.npc.memory.fs.get_file_info")
-    @patch("quackcore.quackster.npc.memory.fs.read_json")
-    @patch("quackcore.quackster.npc.memory._get_memory_file_path")
+    @patch("quackster.npc.memory.fs.get_file_info")
+    @patch("quackster.npc.memory.fs.read_json")
+    @patch("quackster.npc.memory._get_memory_file_path")
     def test_load_persistent_memory_success(
         self, mock_get_path, mock_read_json, mock_get_file_info
     ):
@@ -176,9 +176,9 @@ class TestNPCMemory:
         assert result == memory_data
         mock_read_json.assert_called_once_with(mock_path)
 
-    @patch("quackcore.quackster.npc.memory._get_memory_file_path")
-    @patch("quackcore.quackster.npc.memory.fs.write_json")
-    @patch("quackcore.quackster.npc.memory.logger")
+    @patch("quackster.npc.memory._get_memory_file_path")
+    @patch("quackster.npc.memory.fs.write_json")
+    @patch("quackster.npc.memory.logger")
     def test_save_persistent_memory_success(
         self, mock_logger, mock_write_json, mock_get_path
     ):
@@ -206,9 +206,9 @@ class TestNPCMemory:
         mock_write_json.assert_called_once_with(mock_path, user_memory.model_dump())
         mock_logger.debug.assert_called_once()
 
-    @patch("quackcore.quackster.npc.memory._get_memory_file_path")
-    @patch("quackcore.quackster.npc.memory.fs.write_json")
-    @patch("quackcore.quackster.npc.memory.logger")
+    @patch("quackster.npc.memory._get_memory_file_path")
+    @patch("quackster.npc.memory.fs.write_json")
+    @patch("quackster.npc.memory.logger")
     def test_save_persistent_memory_error(
         self, mock_logger, mock_write_json, mock_get_path
     ):
@@ -236,7 +236,7 @@ class TestNPCMemory:
         mock_write_json.assert_called_once_with(mock_path, user_memory.model_dump())
         mock_logger.warning.assert_called_once()
 
-    @patch("quackcore.quackster.npc.memory._save_persistent_memory")
+    @patch("quackster.npc.memory._save_persistent_memory")
     def test_update_user_memory(self, mock_save):
         """Test updating user memory with new information."""
         # Setup
@@ -274,7 +274,7 @@ class TestNPCMemory:
         # Verify memory was saved
         mock_save.assert_called_once()
 
-    @patch("quackcore.quackster.npc.memory._save_persistent_memory")
+    @patch("quackster.npc.memory._save_persistent_memory")
     def test_update_user_memory_with_stuck_points(self, mock_save):
         """Test updating user memory with stuck points."""
         # Setup
@@ -301,10 +301,10 @@ class TestNPCMemory:
         assert "GitHub integration" in updated_memory.custom_data["stuck_points"]
         assert "pull requests" in updated_memory.custom_data["stuck_points"]
 
-    @patch("quackcore.quackster.npc.memory._load_persistent_memory")
-    @patch("quackcore.quackster.npc.memory.utils.load_progress")
-    @patch("quackcore.quackster.npc.memory.quests")
-    @patch("quackcore.quackster.npc.memory.badges")
+    @patch("quackster.npc.memory._load_persistent_memory")
+    @patch("quackster.npc.memory.utils.load_progress")
+    @patch("quackster.npc.memory.quests")
+    @patch("quackster.npc.memory.badges")
     def test_get_user_memory_new(
         self, mock_badges, mock_quests, mock_load_progress, mock_load_persistent
     ):

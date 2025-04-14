@@ -29,18 +29,18 @@ class VerbosityLevel(str, Enum):
     DEBUG = "DEBUG"
 
 
-# Since quackcore.quackster doesn't exist yet, we stub the required functions
+# Since quackster doesn't exist yet, we stub the required functions
 def teaching_is_enabled() -> bool:
     """
     Stub function to check if Teaching Mode is enabled.
 
-    This will be replaced with an actual implementation when quackcore.quackster
+    This will be replaced with an actual implementation when quackster
     module is created.
 
     Returns:
         Always False until quackster module is implemented
     """
-    # TODO: Replace with actual implementation once quackcore.quackster exists
+    # TODO: Replace with actual implementation once quackster exists
     return False
 
 
@@ -48,13 +48,13 @@ def teaching_get_level() -> VerbosityLevel:
     """
     Stub function to get the current Teaching Mode verbosity level.
 
-    This will be replaced with an actual implementation when quackcore.quackster
+    This will be replaced with an actual implementation when quackster
     module is created.
 
     Returns:
         Always VerbosityLevel.BASIC until quackster module is implemented
     """
-    # TODO: Replace with actual implementation once quackcore.quackster exists
+    # TODO: Replace with actual implementation once quackster exists
     return VerbosityLevel.BASIC
 
 

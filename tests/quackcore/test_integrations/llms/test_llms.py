@@ -7,18 +7,22 @@ by pytest when running the test suite.
 """
 
 # Import client tests
-from tests.test_integrations.llms.clients.test_anthropic import TestAnthropicClient
-from tests.test_integrations.llms.clients.test_base import TestLLMClient
-from tests.test_integrations.llms.clients.test_mock import TestMockLLMClient
-from tests.test_integrations.llms.clients.test_openai import TestOpenAIClient
+from tests.quackcore.test_integrations.llms.clients.test_anthropic import (
+    TestAnthropicClient,
+)
+from tests.quackcore.test_integrations.llms.clients.test_base import TestLLMClient
+from tests.quackcore.test_integrations.llms.clients.test_mock import TestMockLLMClient
+from tests.quackcore.test_integrations.llms.clients.test_openai import TestOpenAIClient
 
 # Import model and protocol tests
-from tests.test_integrations.llms.test_config import TestLLMConfig
-from tests.test_integrations.llms.test_config_provider import TestLLMConfigProvider
-from tests.test_integrations.llms.test_models import TestLLMModels
-from tests.test_integrations.llms.test_protocols import TestLLMProtocols
-from tests.test_integrations.llms.test_registry import TestLLMRegistry
-from tests.test_integrations.llms.test_service import TestLLMService
+from tests.quackcore.test_integrations.llms.test_config import TestLLMConfig
+from tests.quackcore.test_integrations.llms.test_config_provider import (
+    TestLLMConfigProvider,
+)
+from tests.quackcore.test_integrations.llms.test_models import TestLLMModels
+from tests.quackcore.test_integrations.llms.test_protocols import TestLLMProtocols
+from tests.quackcore.test_integrations.llms.test_registry import TestLLMRegistry
+from tests.quackcore.test_integrations.llms.test_service import TestLLMService
 
 # Export the test classes for direct import
 __all__ = [

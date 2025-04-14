@@ -16,7 +16,7 @@ from quackcore.fs import DataResult, FileInfoResult
 from quackcore.integrations.core.results import ConfigResult, IntegrationResult
 from quackcore.integrations.llms.models import ChatMessage, LLMOptions, RoleType
 from quackcore.integrations.llms.service import LLMIntegration
-from tests.test_integrations.llms.mocks.clients import MockClient
+from tests.quackcore.test_integrations.llms.mocks.clients import MockClient
 
 
 class TestLLMService:

@@ -10,7 +10,9 @@ from unittest.mock import MagicMock, patch
 
 from quackcore.fs.results import FileInfoResult, OperationResult, WriteResult
 from quackcore.integrations.google.mail.operations import attachments
-from tests.test_integrations.google.mail.mocks import create_mock_gmail_service
+from tests.quackcore.test_integrations.google.mail.mocks import (
+    create_mock_gmail_service,
+)
 
 
 class TestGmailAttachmentOperations:
