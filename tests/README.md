@@ -200,7 +200,7 @@ and more, for an overview, here is the full structure:
     │   └── test_registry.py
     ├── test_prompt
     │   └── __init__.py
-    └── test_teaching
+    └── quackster
         ├── __init__.py
         ├── test_academy
         │   ├── __init__.py

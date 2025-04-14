@@ -39,7 +39,7 @@ class GitHubConfigProvider(BaseConfigProvider):
             "timeout_seconds": 30,
             "max_retries": 3,
             "retry_delay": 1.0,
-            "teaching": {
+            "quackster": {
                 "assignment_branch_prefix": "assignment-",
                 "default_base_branch": "main",
                 "pr_title_template": "[SUBMISSION] {title}",

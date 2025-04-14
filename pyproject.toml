@@ -138,7 +138,7 @@ addopts = "-v --cov=quackcore --cov-report=term-missing"
 
 [tool.coverage.run]
 source = ["quackcore"]
-omit = ["tests/*"]
+omit = ["tests/quackcore/*"]
 
 [tool.coverage.report]
 exclude_lines = [

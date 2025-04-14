@@ -15,7 +15,7 @@ from .models import GitHubRepo, GitHubUser, PullRequest, PullRequestStatus
 from .protocols import GitHubIntegrationProtocol
 from .service import GitHubIntegration
 
-# For type checkers only, import the teaching-related classes so they appear defined.
+# For type checkers only, import the quackster-related classes so they appear defined.
 if TYPE_CHECKING:
     from quackcore.teaching.github.grading import GitHubGrader
     from quackcore.teaching.github.teaching_adapter import GitHubTeachingAdapter
@@ -50,7 +50,7 @@ def create_integration() -> GitHubIntegration:
 
 
 def __getattr__(name: str) -> Any:
-    """Lazily load teaching-related classes to avoid circular imports.
+    """Lazily load quackster-related classes to avoid circular imports.
 
     Args:
         name: Attribute name to load

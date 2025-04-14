@@ -745,7 +745,7 @@ os.environ["QUACK_NPC_TONE"] = "enthusiastic"
 # quackster_profile.yaml
 name: "Professor Quack"
 tone: "academic"
-backstory: "A distinguished professor of Computer Science who enjoys teaching through practical examples"
+backstory: "A distinguished professor of Computer Science who enjoys quackster through practical examples"
 expertise: 
   - "Python"
   - "Algorithms"
@@ -900,7 +900,7 @@ The academy module provides traditional Learning Management System (LMS) feature
 from quackcore.teaching.academy import service
 from quackcore.teaching.academy import Course, CourseModule, ModuleItem, ItemType
 
-# Initialize the teaching service
+# Initialize the quackster service
 service.initialize()
 
 # Create a new course context

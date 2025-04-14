@@ -70,7 +70,7 @@ def configure_logger(
         name: The name for the logger, typically __name__
         level: The logging level (if None, use environment or default)
         log_file: Optional path to a log file
-        teaching_to_stdout: If True, teaching logs go to stdout, otherwise stderr
+        teaching_to_stdout: If True, quackster logs go to stdout, otherwise stderr
 
     Returns:
         A configured logger instance
@@ -107,13 +107,13 @@ def configure_logger(
 
 def log_teaching(logger: Any, message: str, level: str = "INFO") -> None:
     """
-    Log a teaching message with appropriate formatting.
+    Log a quackster message with appropriate formatting.
 
-    This is a convenience function to consistently format teaching messages.
+    This is a convenience function to consistently format quackster messages.
 
     Args:
         logger: The logger instance to use
-        message: The teaching message to log
+        message: The quackster message to log
         level: The log level to use (default: INFO)
     """
     log_method = getattr(logger, level.lower())
