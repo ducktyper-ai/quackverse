@@ -7,10 +7,10 @@ as a central hub for configuration, logging, and other runtime information.
 """
 
 import logging
-from pathlib import Path
+import os
 from typing import Any
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
 from quackcore.config.models import QuackConfig
 
@@ -20,7 +20,8 @@ class QuackContext(BaseModel):
     Runtime context for QuackCore CLI applications.
 
     This class encapsulates all the runtime information needed by CLI commands,
-    including configuration, logging, paths, and environment metadata.
+    including configuration, logging, file system directories as strings, and
+    environment metadata. All paths (e.g. base directory, working directory) are stored as strings.
     """
 
     config: QuackConfig = Field(description="Loaded and normalized configuration.")
@@ -29,7 +30,9 @@ class QuackContext(BaseModel):
         description="Configured logger for the CLI application."
     )
 
-    base_dir: Path = Field(description="Base directory for the application.")
+    base_dir: str = Field(
+        description="Base directory for the application (as a string)."
+    )
 
     environment: str = Field(
         description="Current environment (development, test, production)."
@@ -41,14 +44,14 @@ class QuackContext(BaseModel):
         default=False, description="Whether verbose output is enabled."
     )
 
-    working_dir: Path = Field(
-        default_factory=Path.cwd, description="Current working directory."
+    working_dir: str = Field(
+        default_factory=os.getcwd,
+        description="Current working directory as a string.",
     )
 
     extra: dict[str, Any] = Field(
         default_factory=dict,
-        description="Additional context data that "
-        "might be needed by specific commands.",
+        description="Additional context data that might be needed by specific commands.",
     )
 
     model_config = {
@@ -64,10 +67,10 @@ class QuackContext(BaseModel):
         returning a new context instance with the updated values.
 
         Args:
-            **kwargs: Key-value pairs to add to the extra dictionary
+            **kwargs: Key-value pairs to add to the extra dictionary.
 
         Returns:
-            A new QuackContext with the updated extra dictionary
+            A new QuackContext with the updated extra dictionary.
         """
         new_extra = self.extra.copy()
         new_extra.update(kwargs)

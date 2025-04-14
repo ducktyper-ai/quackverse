@@ -8,7 +8,6 @@ using pandoc with optimized settings and error handling.
 
 import importlib
 import time
-from pathlib import Path
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs import service as fs
@@ -27,12 +26,12 @@ from quackcore.logging import get_logger
 logger = get_logger(__name__)
 
 
-def _validate_markdown_input(markdown_path: Path) -> int:
+def _validate_markdown_input(markdown_path: str) -> int:
     """
     Validate the input Markdown file and return its size.
 
     Args:
-        markdown_path: Path to the Markdown file.
+        markdown_path: Path to the Markdown file as a string.
 
     Returns:
         int: Size of the input Markdown file.
@@ -40,14 +39,13 @@ def _validate_markdown_input(markdown_path: Path) -> int:
     Raises:
         QuackIntegrationError: If the input file is missing or empty.
     """
-    file_info = fs.service.get_file_info(markdown_path)
+    file_info = fs.get_file_info(markdown_path)
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(
             f"Input file not found: {markdown_path}",
-            {"path": str(markdown_path), "format": "markdown"},
+            {"path": markdown_path, "format": "markdown"},
         )
 
-    # Ensure size is an integer
     try:
         original_size = int(file_info.size) if file_info.size is not None else 0
     except (TypeError, ValueError):
@@ -56,41 +54,39 @@ def _validate_markdown_input(markdown_path: Path) -> int:
         )
         original_size = 0
 
-    # Validate content to ensure it's not empty
     try:
-        read_result = fs.service.read_text(markdown_path, encoding="utf-8")
+        read_result = fs.read_text(markdown_path, encoding="utf-8")
         if not read_result.success:
             raise QuackIntegrationError(
                 f"Could not read Markdown file: {read_result.error}",
-                {"path": str(markdown_path)},
+                {"path": markdown_path},
             )
-
         markdown_content = read_result.content
         if not markdown_content.strip():
             raise QuackIntegrationError(
                 f"Markdown file is empty: {markdown_path}",
-                {"path": str(markdown_path)},
+                {"path": markdown_path},
             )
     except Exception as e:
         if isinstance(e, QuackIntegrationError):
             raise
         raise QuackIntegrationError(
             f"Could not read Markdown file: {str(e)}",
-            {"path": str(markdown_path)},
+            {"path": markdown_path},
         ) from e
 
     return original_size
 
 
 def _convert_markdown_to_docx_once(
-    markdown_path: Path, output_path: Path, config: PandocConfig
+    markdown_path: str, output_path: str, config: PandocConfig
 ) -> None:
     """
     Perform a single conversion attempt from Markdown to DOCX using pandoc.
 
     Args:
-        markdown_path: Path to the Markdown file.
-        output_path: Path to save the DOCX file.
+        markdown_path: Path to the Markdown file as a string.
+        output_path: Path to save the DOCX file as a string.
         config: Conversion configuration.
 
     Raises:
@@ -100,12 +96,13 @@ def _convert_markdown_to_docx_once(
         config, "markdown", "docx", config.md_to_docx_extra_args
     )
 
-    # Create output directory if it doesn't exist
-    dir_result = fs.create_directory(output_path.parent, exist_ok=True)
+    # Get the parent directory of the output file by splitting and joining parts
+    parent_dir = fs.join_path(*fs.split_path(output_path)[:-1])
+    dir_result = fs.create_directory(parent_dir, exist_ok=True)
     if not dir_result.success:
         raise QuackIntegrationError(
             f"Failed to create output directory: {dir_result.error}",
-            {"path": str(output_path.parent), "operation": "create_directory"},
+            {"path": parent_dir, "operation": "create_directory"},
         )
 
     logger.debug(f"Converting {markdown_path} to DOCX with args: {extra_args}")
@@ -113,25 +110,25 @@ def _convert_markdown_to_docx_once(
         import pypandoc
 
         pypandoc.convert_file(
-            str(markdown_path),
+            markdown_path,
             "docx",
             format="markdown",
-            outputfile=str(output_path),
+            outputfile=output_path,
             extra_args=extra_args,
         )
     except Exception as e:
         raise QuackIntegrationError(
             f"Pandoc conversion failed: {str(e)}",
-            {"path": str(markdown_path), "format": "markdown"},
+            {"path": markdown_path, "format": "markdown"},
         ) from e
 
 
-def _get_conversion_output(output_path: Path, start_time: float) -> tuple[float, int]:
+def _get_conversion_output(output_path: str, start_time: float) -> tuple[float, int]:
     """
     Retrieve conversion timing and output file size.
 
     Args:
-        output_path: Path to the output DOCX file.
+        output_path: Path to the output DOCX file as a string.
         start_time: Timestamp when conversion attempt started.
 
     Returns:
@@ -141,14 +138,13 @@ def _get_conversion_output(output_path: Path, start_time: float) -> tuple[float,
         QuackIntegrationError: If output file info cannot be retrieved.
     """
     conversion_time: float = time.time() - start_time
-    output_info = fs.service.get_file_info(output_path)
+    output_info = fs.get_file_info(output_path)
     if not output_info.success:
         raise QuackIntegrationError(
             f"Failed to get info for converted file: {output_path}",
-            {"path": str(output_path), "format": "docx"},
+            {"path": output_path, "format": "docx"},
         )
 
-    # Ensure output_size is an integer
     try:
         output_size = int(output_info.size) if output_info.size is not None else 0
     except (TypeError, ValueError):
@@ -161,24 +157,25 @@ def _get_conversion_output(output_path: Path, start_time: float) -> tuple[float,
 
 
 def convert_markdown_to_docx(
-    markdown_path: Path,
-    output_path: Path,
+    markdown_path: str,
+    output_path: str,
     config: PandocConfig,
     metrics: ConversionMetrics | None = None,
-) -> IntegrationResult[tuple[Path, ConversionDetails]]:
+) -> IntegrationResult[tuple[str, ConversionDetails]]:
     """
     Convert a Markdown file to DOCX.
 
     Args:
-        markdown_path: Path to the Markdown file.
-        output_path: Path to save the DOCX file.
+        markdown_path: Path to the Markdown file as a string.
+        output_path: Path to save the DOCX file as a string.
         config: Conversion configuration.
         metrics: Optional metrics tracker.
 
     Returns:
-        IntegrationResult[tuple[Path, ConversionDetails]]: Result of the conversion.
+        IntegrationResult[tuple[str, ConversionDetails]]: Result of the conversion.
     """
-    filename: str = markdown_path.name
+    # Get file name from the input path using fs.split_path
+    filename: str = fs.split_path(markdown_path)[-1]
 
     if metrics is None:
         metrics = ConversionMetrics()
@@ -202,12 +199,10 @@ def convert_markdown_to_docx(
                 if validation_errors:
                     error_str: str = "; ".join(validation_errors)
                     logger.error(f"Conversion validation failed: {error_str}")
-
                     retry_count += 1
                     if retry_count >= max_retries:
-                        # Only increment failed_conversions once when we've exceeded max retries
                         metrics.failed_conversions += 1
-                        metrics.errors[str(markdown_path)] = error_str
+                        metrics.errors[markdown_path] = error_str
                         return IntegrationResult.error_result(
                             f"Conversion failed after maximum retries: {error_str}"
                         )
@@ -223,7 +218,6 @@ def convert_markdown_to_docx(
                 )
                 metrics.successful_conversions += 1
 
-                # Create conversion details
                 details = ConversionDetails(
                     source_format="markdown",
                     target_format="docx",
@@ -243,15 +237,13 @@ def convert_markdown_to_docx(
                     f"Markdown to DOCX conversion attempt {retry_count} failed: {str(e)}"
                 )
                 if retry_count >= max_retries:
-                    # Only increment failed_conversions once when we've exceeded max retries
                     metrics.failed_conversions += 1
-                    metrics.errors[str(markdown_path)] = str(e)
-
-                    if isinstance(e, QuackIntegrationError):
-                        error_msg = f"Integration error: {str(e)}"
-                    else:
-                        error_msg = f"Failed to convert Markdown to DOCX: {str(e)}"
-
+                    metrics.errors[markdown_path] = str(e)
+                    error_msg = (
+                        f"Integration error: {str(e)}"
+                        if isinstance(e, QuackIntegrationError)
+                        else f"Failed to convert Markdown to DOCX: {str(e)}"
+                    )
                     return IntegrationResult.error_result(error_msg)
                 time.sleep(config.retry_mechanism.conversion_retry_delay)
 
@@ -259,21 +251,21 @@ def convert_markdown_to_docx(
 
     except Exception as e:
         metrics.failed_conversions += 1
-        metrics.errors[str(markdown_path)] = str(e)
+        metrics.errors[markdown_path] = str(e)
         return IntegrationResult.error_result(
             f"Failed to convert Markdown to DOCX: {str(e)}"
         )
 
 
 def validate_conversion(
-    output_path: Path, input_path: Path, original_size: int, config: PandocConfig
+    output_path: str, input_path: str, original_size: int, config: PandocConfig
 ) -> list[str]:
     """
     Validate the converted DOCX document.
 
     Args:
-        output_path: Path to the output DOCX file.
-        input_path: Path to the input Markdown file.
+        output_path: Path to the output DOCX file as a string.
+        input_path: Path to the input Markdown file as a string.
         original_size: Size of the original file.
         config: Conversion configuration.
 
@@ -283,13 +275,11 @@ def validate_conversion(
     validation_errors: list[str] = []
     validation = config.validation
 
-    # Get info about output file
-    output_info = fs.service.get_file_info(output_path)
+    output_info = fs.get_file_info(output_path)
     if not output_info.success or not output_info.exists:
         validation_errors.append(f"Output file does not exist: {output_path}")
         return validation_errors
 
-    # Ensure output_size is an integer
     try:
         output_size = int(output_info.size) if output_info.size is not None else 0
     except (TypeError, ValueError):
@@ -298,44 +288,38 @@ def validate_conversion(
         )
         output_size = 0
 
-    # Check file size
     valid_size, size_errors = check_file_size(output_size, validation.min_file_size)
     if not valid_size:
         validation_errors.extend(size_errors)
 
-    # Check conversion ratio
     valid_ratio, ratio_errors = check_conversion_ratio(
         output_size, original_size, validation.conversion_ratio_threshold
     )
     if not valid_ratio:
         validation_errors.extend(ratio_errors)
 
-    # Check document structure - always proceed with this even if there are other validation errors
-    if validation.verify_structure and output_path.exists():
+    if validation.verify_structure and fs.get_file_info(output_path).exists:
         is_valid, structure_errors = validate_docx_structure(
             output_path, validation.check_links
         )
         if not is_valid:
             validation_errors.extend(structure_errors)
-
-        # Always check metadata
         _check_docx_metadata(output_path, input_path, validation.check_links)
 
     return validation_errors
 
 
-def _check_docx_metadata(docx_path: Path, source_path: Path, check_links: bool) -> None:
+def _check_docx_metadata(docx_path: str, source_path: str, check_links: bool) -> None:
     """
     Check DOCX metadata for references to the source file.
     This function is separated to handle import errors cleanly.
 
     Args:
-        docx_path: Path to the DOCX file.
-        source_path: Path to the source file.
+        docx_path: Path to the DOCX file as a string.
+        source_path: Path to the source file as a string.
         check_links: Whether to check for links/references.
     """
     try:
-        # Try to import docx at runtime
         try:
             docx = importlib.import_module("docx")
             Document = docx.Document
@@ -343,31 +327,25 @@ def _check_docx_metadata(docx_path: Path, source_path: Path, check_links: bool) 
             logger.debug("python-docx not available for detailed metadata check")
             return
 
-        doc = Document(str(docx_path))
-        source_filename = source_path.name
+        doc = Document(docx_path)
+        source_filename = fs.split_path(source_path)[-1]
         source_found = False
 
-        # Check if core_properties exists
         if hasattr(doc, "core_properties"):
             core_props = doc.core_properties
 
-            # Check title
             if (
                 hasattr(core_props, "title")
                 and core_props.title
                 and source_filename in str(core_props.title)
             ):
                 source_found = True
-
-            # Check comments
             elif (
                 hasattr(core_props, "comments")
                 and core_props.comments
                 and source_filename in str(core_props.comments)
             ):
                 source_found = True
-
-            # Check subject
             elif (
                 hasattr(core_props, "subject")
                 and core_props.subject
@@ -375,9 +353,7 @@ def _check_docx_metadata(docx_path: Path, source_path: Path, check_links: bool) 
             ):
                 source_found = True
 
-        # Log if source reference is missing - note that we're not checking check_links here
         if not source_found and check_links:
-            # This is the critical line that needs to be reached during testing
             logger.debug(
                 f"Source file reference missing in document metadata: {source_filename}"
             )

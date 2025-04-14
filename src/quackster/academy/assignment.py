@@ -10,7 +10,6 @@ import uuid
 from collections.abc import Sequence
 from datetime import datetime
 from enum import Enum, auto
-from pathlib import Path
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -111,16 +110,16 @@ class Assignment(BaseModel):
         Create a new assignment.
 
         Args:
-            name: Name of the assignment
-            description: Optional description
-            assignment_type: Type of assignment
-            due_date: Optional due date (datetime or ISO format string)
-            points: Total points possible
+            name: Name of the assignment.
+            description: Optional description.
+            assignment_type: Type of assignment.
+            due_date: Optional due date (datetime or ISO format string).
+            points: Total points possible.
 
         Returns:
-            New assignment instance
+            New assignment instance.
         """
-        # Convert string due date to datetime if provided
+        # Convert string due date to datetime if provided.
         parsed_due_date = None
         if due_date is not None:
             if isinstance(due_date, str):
@@ -142,7 +141,7 @@ class Assignment(BaseModel):
         Mark the assignment as published.
 
         Returns:
-            Self for method chaining
+            Self for method chaining.
         """
         self.status = AssignmentStatus.PUBLISHED
         self.published_at = datetime.now()
@@ -153,7 +152,7 @@ class Assignment(BaseModel):
         Mark the assignment as closed.
 
         Returns:
-            Self for method chaining
+            Self for method chaining.
         """
         self.status = AssignmentStatus.CLOSED
         return self
@@ -163,7 +162,7 @@ class Assignment(BaseModel):
         Check if the assignment is past due.
 
         Returns:
-            True if the assignment is past due, False otherwise
+            True if the assignment is past due, False otherwise.
         """
         if self.due_date is None:
             return False
@@ -174,13 +173,13 @@ class Assignment(BaseModel):
         Update the assignment status based on current date.
 
         Returns:
-            Self for method chaining
+            Self for method chaining.
         """
-        # Don't change draft or closed status
+        # Don't change draft or closed status.
         if self.status in (AssignmentStatus.DRAFT, AssignmentStatus.CLOSED):
             return self
 
-        # Check if past due
+        # Check if past due.
         if self.is_past_due():
             self.status = AssignmentStatus.PAST_DUE
         elif self.published_at is not None:
@@ -193,7 +192,7 @@ class Assignment(BaseModel):
         Add a GitHub repository to the assignment.
 
         Args:
-            repo_name: Full name of the repository (org/name)
+            repo_name: Full name of the repository (org/name).
         """
         if repo_name not in self.repositories:
             self.repositories.append(repo_name)
@@ -203,10 +202,10 @@ class Assignment(BaseModel):
         Get the expected repository name for a student.
 
         Args:
-            student_github: GitHub username of the student
+            student_github: GitHub username of the student.
 
         Returns:
-            Expected repository name (without organization)
+            Expected repository name (without organization).
         """
         normalized_name = self.name.lower().replace(" ", "-")
         return f"{normalized_name}-{student_github}"
@@ -230,7 +229,7 @@ class AssignmentManager:
         Add an assignment to the manager.
 
         Args:
-            assignment: Assignment to add
+            assignment: Assignment to add.
         """
         self.assignments[assignment.id] = assignment
         self.by_name[assignment.name.lower()] = assignment
@@ -240,10 +239,10 @@ class AssignmentManager:
         Get an assignment by ID.
 
         Args:
-            assignment_id: ID of the assignment to get
+            assignment_id: ID of the assignment to get.
 
         Returns:
-            Assignment if found, None otherwise
+            Assignment if found, None otherwise.
         """
         return self.assignments.get(assignment_id)
 
@@ -252,10 +251,10 @@ class AssignmentManager:
         Get an assignment by name.
 
         Args:
-            name: Name of the assignment
+            name: Name of the assignment.
 
         Returns:
-            Assignment if found, None otherwise
+            Assignment if found, None otherwise.
         """
         return self.by_name.get(name.lower())
 
@@ -264,7 +263,7 @@ class AssignmentManager:
         Add multiple assignments to the manager.
 
         Args:
-            assignments: Sequence of assignments to add
+            assignments: Sequence of assignments to add.
         """
         for assignment in assignments:
             self.add_assignment(assignment)
@@ -274,10 +273,10 @@ class AssignmentManager:
         Remove an assignment from the manager.
 
         Args:
-            assignment_id: ID of the assignment to remove
+            assignment_id: ID of the assignment to remove.
 
         Returns:
-            True if the assignment was removed, False if not found
+            True if the assignment was removed, False if not found.
         """
         assignment = self.assignments.get(assignment_id)
         if assignment is None:
@@ -297,7 +296,7 @@ class AssignmentManager:
         Get all active assignments.
 
         Returns:
-            List of active assignments
+            List of active assignments.
         """
         self.update_statuses()
         return [
@@ -311,7 +310,7 @@ class AssignmentManager:
         Get all past due assignments.
 
         Returns:
-            List of past due assignments
+            List of past due assignments.
         """
         self.update_statuses()
         return [
@@ -321,19 +320,19 @@ class AssignmentManager:
         ]
 
     @classmethod
-    def load_from_file(cls, file_path: str | Path) -> "AssignmentManager":
+    def load_from_file(cls, file_path: str) -> "AssignmentManager":
         """
         Load assignments from a file.
 
         Args:
-            file_path: Path to the file to load from
+            file_path: Path to the file to load from.
 
         Returns:
-            Loaded assignment manager
+            Loaded assignment manager.
 
         Raises:
-            FileNotFoundError: If the file doesn't exist
-            ValueError: If the file format is invalid
+            FileNotFoundError: If the file doesn't exist.
+            ValueError: If the file format is invalid.
         """
         result = fs.read_yaml(file_path)
         if not result.success:
@@ -356,15 +355,15 @@ class AssignmentManager:
         logger.info(f"Loaded {len(manager.assignments)} assignments from {file_path}")
         return manager
 
-    def save_to_file(self, file_path: str | Path) -> bool:
+    def save_to_file(self, file_path: str) -> bool:
         """
         Save assignments to a file.
 
         Args:
-            file_path: Path to save to
+            file_path: Path to save to.
 
         Returns:
-            True if saved successfully, False otherwise
+            True if saved successfully, False otherwise.
         """
         data = {
             "assignments": [

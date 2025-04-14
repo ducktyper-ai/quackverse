@@ -6,7 +6,6 @@ This module defines the plugin interface for the configuration module,
 allowing QuackCore to expose configuration functionality to other modules.
 """
 
-from pathlib import Path
 from typing import Any, Protocol, TypeVar
 
 from quackcore.config.loader import load_config, merge_configs
@@ -26,7 +25,7 @@ class ConfigPlugin(Protocol):
 
     def load_config(
         self,
-        config_path: str | Path | None = None,
+        config_path: str | None = None,
         merge_env: bool = True,
         merge_defaults: bool = True,
     ) -> QuackConfig:
@@ -71,21 +70,21 @@ class ConfigPlugin(Protocol):
         """
         ...
 
-    def get_base_dir(self) -> Path:
+    def get_base_dir(self) -> str:
         """
         Get the base directory from the configuration.
 
         Returns:
-            Path: Base directory
+            str: The base directory as a normalized string.
         """
         ...
 
-    def get_output_dir(self) -> Path:
+    def get_output_dir(self) -> str:
         """
         Get the output directory from the configuration.
 
         Returns:
-            Path: Output directory
+            str: The output directory as a normalized string.
         """
         ...
 
@@ -95,6 +94,7 @@ class QuackConfigPlugin:
 
     def __init__(self) -> None:
         """Initialize the plugin."""
+        # load_config and normalize_paths work entirely in the string space.
         self._config = load_config()
         self._config = normalize_paths(self._config)
 
@@ -105,7 +105,7 @@ class QuackConfigPlugin:
 
     def load_config(
         self,
-        config_path: str | Path | None = None,
+        config_path: str | None = None,
         merge_env: bool = True,
         merge_defaults: bool = True,
     ) -> QuackConfig:
@@ -120,6 +120,7 @@ class QuackConfigPlugin:
         Returns:
             QuackConfig: Loaded configuration
         """
+        # When a config_path is provided, ensure it is a string
         self._config = load_config(
             config_path=str(config_path) if config_path else None,
             merge_env=merge_env,
@@ -145,34 +146,33 @@ class QuackConfigPlugin:
         """
         Get a configuration value by path.
 
-        The path is a dot-separated string of keys, e.g. 'logging.level'
-
         Args:
-            path: Path to the configuration value
-            default: Default value if the path is not found
+            path: Dot-separated path to the configuration value (e.g. 'logging.level')
+            default: Default value if the key is not found
 
         Returns:
-            Configuration value
+            The configuration value.
         """
         return get_config_value(self._config, path, default)
 
-    def get_base_dir(self) -> Path:
+    def get_base_dir(self) -> str:
         """
         Get the base directory from the configuration.
 
         Returns:
-            Path: Base directory
+            str: The base directory as a normalized string.
         """
-        return Path(self._config.paths.base_dir)
+        # Here, the _config.paths.base_dir is stored as a string.
+        return self._config.paths.base_dir
 
-    def get_output_dir(self) -> Path:
+    def get_output_dir(self) -> str:
         """
         Get the output directory from the configuration.
 
         Returns:
-            Path: Output directory
+            str: The output directory as a normalized string.
         """
-        return Path(self._config.paths.output_dir)
+        return self._config.paths.output_dir
 
 
 def create_plugin() -> ConfigPlugin:
@@ -180,6 +180,6 @@ def create_plugin() -> ConfigPlugin:
     Create a new instance of the configuration plugin.
 
     Returns:
-        A new ConfigPlugin instance
+        A new ConfigPlugin instance.
     """
     return QuackConfigPlugin()

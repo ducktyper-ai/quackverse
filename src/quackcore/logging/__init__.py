@@ -2,41 +2,17 @@
 """
 Centralized logging module for quackcore.
 
-This module provides a standardized approach to logging across all quackcore modules,
-with support for Teaching Mode integration.
-
-Example:
-    Basic usage:
-        from quackcore.logging import logger
-
-        logger.info("Standard log message")
-
-    Module-specific logger:
-        from quackcore.logging import get_logger
-
-        logger = get_logger(__name__)
-        logger.debug("Module-specific debug info")
-
-    Teaching mode log (will be formatted specially when Teaching Mode is enabled):
-        logger.info("[Teaching Mode] This explains how the algorithm works")
+This package provides a standardized approach to logging throughout quackcore.
+It exposes the default logger, a module‐specific logger creator, and other
+configuration constants.
 """
 
-from .config import LOG_LEVELS, LogLevel, configure_logger, logging
+from .config import LOG_LEVELS, LogLevel, configure_logger
 
-__all__ = ["logger", "get_logger", "LOG_LEVELS", "LogLevel"]
+# Re-export get_logger from our dedicated logger module.
+from .logger import get_logger
 
-# Default logger for general quackcore usage
-logger = configure_logger("quackcore")
+__all__ = ["get_logger", "configure_logger", "LOG_LEVELS", "LogLevel"]
 
-
-def get_logger(name: str) -> logging.Logger:
-    """
-    Get a configured logger for a specific module.
-
-    Args:
-        name: The name for the logger, typically __name__
-
-    Returns:
-        A configured logger instance
-    """
-    return configure_logger(name)
+# Optionally, you can still create a module-level default logger if desired:
+default_logger = configure_logger("quackcore")

@@ -4,13 +4,14 @@ Utility functions for pandoc operations.
 
 This module provides helper functions for pandoc conversion operations,
 such as validation, metrics tracking, and pandoc installation verification.
+All file path values are handled as strings. Filesystem operations are delegated
+to the quackcore.fs service.
 """
 
 import time
-from pathlib import Path
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.fs import service as fs
+from quackcore.fs import service as fs  # fs functions work with string paths
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.models import ConversionMetrics, FileInfo
 from quackcore.logging import get_logger
@@ -23,7 +24,7 @@ def verify_pandoc() -> str:
     Verify pandoc installation and version.
 
     Returns:
-        str: Pandoc version string
+        str: Pandoc version string.
 
     Raises:
         QuackIntegrationError: If pandoc is not installed.
@@ -67,7 +68,6 @@ def prepare_pandoc_args(
         list[str]: List of pandoc arguments.
     """
     pandoc_opts = config.pandoc_options
-
     raw_args = [
         f"--wrap={pandoc_opts.wrap}",
         "--standalone" if pandoc_opts.standalone else None,
@@ -76,14 +76,14 @@ def prepare_pandoc_args(
     ]
     args: list[str] = [arg for arg in raw_args if arg is not None]
 
-    for path in pandoc_opts.resource_path:
-        args.append(f"--resource-path={path}")
+    # Convert resource paths to strings.
+    for res_path in pandoc_opts.resource_path:
+        args.append(f"--resource-path={str(res_path)}")
 
     if source_format == "html" and target_format == "markdown":
         args.extend(config.html_to_md_extra_args)
     elif source_format == "markdown" and target_format == "docx":
         args.extend(config.md_to_docx_extra_args)
-
     if extra_args:
         args.extend(extra_args)
 
@@ -125,7 +125,6 @@ def validate_html_structure(
             ]
             if empty_links:
                 errors.append(f"Found {len(empty_links)} empty links in document")
-
         return len(errors) == 0, errors
     except Exception as e:
         errors.append(f"HTML validation error: {str(e)}")
@@ -133,13 +132,13 @@ def validate_html_structure(
 
 
 def validate_docx_structure(
-    docx_path: Path, check_links: bool = False
+    docx_path: str, check_links: bool = False
 ) -> tuple[bool, list[str]]:
     """
     Validate DOCX document structure.
 
     Args:
-        docx_path: Path to DOCX file.
+        docx_path: Path to DOCX file (as a string).
         check_links: Whether to check links.
 
     Returns:
@@ -149,7 +148,7 @@ def validate_docx_structure(
     try:
         from docx import Document
 
-        doc = Document(str(docx_path))
+        doc = Document(docx_path)
         if len(doc.paragraphs) == 0:
             errors.append("DOCX document has no paragraphs")
             return False, errors
@@ -187,7 +186,7 @@ def track_metrics(
     Track conversion metrics.
 
     Args:
-        filename: Name of the file.
+        filename: Name of the file (as a string).
         start_time: Start time of conversion.
         original_size: Size of the original file.
         converted_size: Size of the converted file.
@@ -216,12 +215,12 @@ def track_metrics(
         )
 
 
-def get_file_info(path: Path, format_hint: str | None = None) -> FileInfo:
+def get_file_info(path: str, format_hint: str | None = None) -> FileInfo:
     """
     Get file information for conversion.
 
     Args:
-        path: Path to the file.
+        path: Path to the file (as a string).
         format_hint: Hint about the file format.
 
     Returns:

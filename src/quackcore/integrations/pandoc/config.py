@@ -2,13 +2,16 @@
 """
 Configuration models for Pandoc integration.
 
-This module provides Pydantic models and configuration provider for the Pandoc
+This module provides Pydantic models and a configuration provider for the Pandoc
 integration, handling settings for document conversion between various formats.
+
+In this refactored version, all file paths are handled exclusively as strings.
+Any interaction with file paths (normalization, validation, etc.) is delegated
+to the quackcore.fs layer.
 """
 
 import json
 import os
-from pathlib import Path
 from typing import Any, ClassVar
 
 from pydantic import BaseModel, Field, field_validator
@@ -34,7 +37,8 @@ class PandocOptions(BaseModel):
     reference_links: bool = Field(
         default=False, description="Whether to use reference-style links"
     )
-    resource_path: list[Path] = Field(
+    # Change resource_path to a list of strings
+    resource_path: list[str] = Field(
         default_factory=list, description="Additional resource paths for pandoc"
     )
 
@@ -99,8 +103,9 @@ class PandocConfig(BaseModel):
         default_factory=list,
         description="Extra arguments for Markdown to DOCX conversion",
     )
-    output_dir: Path = Field(
-        default=Path("./output"), description="Output directory for converted files"
+    # Change output_dir to be a string instead of a Path
+    output_dir: str = Field(
+        default="./output", description="Output directory for converted files"
     )
     logging: LoggingConfig = Field(
         default_factory=LoggingConfig, description="Logging configuration"
@@ -108,23 +113,23 @@ class PandocConfig(BaseModel):
 
     @field_validator("output_dir")
     @classmethod
-    def validate_output_dir(cls, v: Path) -> Path:
-        """Validate that the output directory exists or can be created."""
-        # Use fs_service to validate the path format
-        # We only validate path format, creation happens at runtime
-        path_str = str(v)
-        # Check if the path format is valid using fs_service
-        path_info = fs.get_path_info(path_str)
-        if not path_info.success:
-            raise ValueError(f"Invalid path format: {path_str}")
+    def validate_output_dir(cls, v: str) -> str:
+        """
+        Validate that the output directory has a valid format.
 
+        Delegates to quackcore.fs to validate the path format.
+        """
+        # fs.get_path_info expects a string and returns an object with a 'success' flag.
+        path_info = fs.get_path_info(v)
+        if not path_info.success:
+            raise ValueError(f"Invalid path format: {v}")
         return v
 
 
 class PandocConfigProvider(BaseConfigProvider):
     """Configuration provider for Pandoc integration."""
 
-    # Class variables with proper typing
+    # Class variables defining default configuration file locations (as strings)
     DEFAULT_CONFIG_LOCATIONS: ClassVar[list[str]] = [
         "./config/pandoc_config.yaml",
         "./config/quack_config.yaml",
@@ -140,7 +145,7 @@ class PandocConfigProvider(BaseConfigProvider):
         Initialize the Pandoc configuration provider.
 
         Args:
-            log_level: Logging level
+            log_level: Logging level.
         """
         super().__init__(log_level)
 
@@ -151,23 +156,18 @@ class PandocConfigProvider(BaseConfigProvider):
 
     def _extract_config(self, config_data: dict[str, Any]) -> dict[str, Any]:
         """
-        Extract pandoc-specific configuration from the full config data.
+        Extract pandoc-specific configuration from the full configuration data.
 
         Args:
-            config_data: Full configuration data
+            config_data: Full configuration data.
 
         Returns:
-            dict[str, Any]: Pandoc-specific configuration
+            dict[str, Any]: Pandoc-specific configuration.
         """
-        # Look for pandoc section first
         if "pandoc" in config_data:
             return config_data["pandoc"]
-
-        # If not found, check for conversion section
         if "conversion" in config_data:
             return config_data["conversion"]
-
-        # Otherwise, return the original data for further processing
         return config_data
 
     def validate_config(self, config: dict[str, Any]) -> bool:
@@ -175,31 +175,20 @@ class PandocConfigProvider(BaseConfigProvider):
         Validate configuration data against the Pandoc configuration schema.
 
         Args:
-            config: Configuration data to validate
+            config: Configuration data to validate.
 
         Returns:
-            bool: True if configuration is valid
+            True if the configuration is valid, False otherwise.
         """
         try:
-            # Create a config instance to validate
+            # Attempt to create a PandocConfig instance to validate data.
             PandocConfig(**config)
-
-            # If output_dir is specified, also validate it can exist
             if "output_dir" in config:
-                # Convert to Path if it's a string
                 path = config["output_dir"]
-                if isinstance(path, str):
-                    path = Path(path)
-
-                # Check if the path is valid using fs_service
-                # This just checks the format, not existence
-                path_str = str(path)
-                if not fs.is_valid_path(path_str):
-                    self.logger.warning(
-                        f"Output directory path is not valid: {path_str}"
-                    )
+                # Since output_dir is expected to be a string, we directly check validity.
+                if not fs.is_valid_path(path):
+                    self.logger.warning(f"Output directory path is not valid: {path}")
                     return False
-
             return True
         except Exception as e:
             self.logger.error(f"Configuration validation failed: {e}")
@@ -210,18 +199,14 @@ class PandocConfigProvider(BaseConfigProvider):
         Get default configuration values for Pandoc.
 
         Returns:
-            dict[str, Any]: Default configuration values
+            dict[str, Any]: Default configuration values.
         """
         default_config = PandocConfig().model_dump()
-
-        # Convert default output directory to a normalized path
         output_dir = default_config.get("output_dir")
         if output_dir:
-            # Use fs_service to normalize the path
-            normalized_path = fs.normalize_path_with_info(str(output_dir))
+            normalized_path = fs.normalize_path_with_info(output_dir)
             if normalized_path.success:
                 default_config["output_dir"] = normalized_path.path
-
         return default_config
 
     def load_from_environment(self) -> dict[str, Any]:
@@ -229,22 +214,19 @@ class PandocConfigProvider(BaseConfigProvider):
         Load configuration from environment variables.
 
         Returns:
-            dict[str, Any]: Configuration from environment variables
+            dict[str, Any]: Configuration from environment variables.
         """
         config: dict[str, Any] = {}
-
         for key, value in os.environ.items():
             if key.startswith(self.ENV_PREFIX):
                 config_key = key[len(self.ENV_PREFIX) :].lower()
-
-                # Try to parse as JSON if it looks like a complex value
                 if value.startswith(("[", "{")) or value.lower() in ("true", "false"):
                     try:
                         config[config_key] = json.loads(value)
                     except json.JSONDecodeError:
                         config[config_key] = value
                 else:
-                    # If it looks like a path and isn't JSON, normalize it
+                    # For keys that represent paths, ensure we use string paths.
                     if config_key == "output_dir" or config_key.endswith("_path"):
                         normalized = fs.normalize_path(value)
                         if normalized.success:
@@ -253,5 +235,4 @@ class PandocConfigProvider(BaseConfigProvider):
                             config[config_key] = value
                     else:
                         config[config_key] = value
-
         return config

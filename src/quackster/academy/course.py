@@ -6,11 +6,11 @@ This module provides classes for managing course structure, modules,
 and content items.
 """
 
+import os
 import uuid
 from collections.abc import Sequence
 from datetime import datetime
 from enum import Enum, auto
-from pathlib import Path
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -86,20 +86,19 @@ class ModuleItem(BaseModel):
         Create a new module item.
 
         Args:
-            title: Title of the item
-            type: Type of item
-            description: Optional description
-            url: Optional URL for external items
-            file_path: Optional file path for local items
-            assignment_id: Optional ID of the associated assignment
-            due_date: Optional due date (datetime or ISO format string)
-            points: Optional points possible
-            published: Whether the item is published
+            title: Title of the item.
+            type: Type of item.
+            description: Optional description.
+            url: Optional URL for external items.
+            file_path: Optional file path for local items.
+            assignment_id: Optional ID of the associated assignment.
+            due_date: Optional due date (datetime or ISO format string).
+            points: Optional points possible.
+            published: Whether the item is published.
 
         Returns:
-            New module item instance
+            New module item instance.
         """
-        # Convert string due date to datetime if provided
         parsed_due_date = None
         if due_date is not None:
             parsed_due_date = (
@@ -168,17 +167,17 @@ class CourseModule(BaseModel):
         Create a new course module.
 
         Args:
-            title: Title of the module
-            description: Optional description
-            position: Position of the module in the course
-            published: Whether the module is published
-            items: Optional list of module items
-            prerequisites: Optional list of prerequisite module IDs
-            start_date: Optional start date (datetime or ISO format string)
-            end_date: Optional end date (datetime or ISO format string)
+            title: Title of the module.
+            description: Optional description.
+            position: Position of the module in the course.
+            published: Whether the module is published.
+            items: Optional list of module items.
+            prerequisites: Optional list of prerequisite module IDs.
+            start_date: Optional start date (datetime or ISO format string).
+            end_date: Optional end date (datetime or ISO format string).
 
         Returns:
-            New course module instance
+            New course module instance.
         """
         parsed_start_date = (
             datetime.fromisoformat(start_date)
@@ -206,7 +205,7 @@ class CourseModule(BaseModel):
         Add an item to the module.
 
         Args:
-            item: Item to add
+            item: Item to add.
         """
         self.items.append(item)
 
@@ -215,10 +214,10 @@ class CourseModule(BaseModel):
         Remove an item from the module.
 
         Args:
-            item_id: ID of the item to remove
+            item_id: ID of the item to remove.
 
         Returns:
-            True if the item was removed, False if not found
+            True if the item was removed, False if not found.
         """
         for i, item in enumerate(self.items):
             if item.id == item_id:
@@ -231,10 +230,10 @@ class CourseModule(BaseModel):
         Get an item by ID.
 
         Args:
-            item_id: ID of the item to get
+            item_id: ID of the item to get.
 
         Returns:
-            Item if found, None otherwise
+            Item if found, None otherwise.
         """
         for item in self.items:
             if item.id == item_id:
@@ -324,14 +323,14 @@ class Course(BaseModel):
         Create a new course.
 
         Args:
-            name: Name of the course
-            code: Optional course code
-            description: Optional description
-            start_date: Optional start date (datetime or ISO format string)
-            end_date: Optional end date (datetime or ISO format string)
-            instructors: Optional list of instructor IDs or names
-            syllabus_url: Optional URL to the course syllabus
-            homepage_content: Optional content for the course homepage
+            name: Name of the course.
+            code: Optional course code.
+            description: Optional description.
+            start_date: Optional start date (datetime or ISO format string).
+            end_date: Optional end date (datetime or ISO format string).
+            instructors: Optional list of instructor IDs or names.
+            syllabus_url: Optional URL to the course syllabus.
+            homepage_content: Optional content for the course homepage.
 
         Returns:
             New course instance.
@@ -485,7 +484,7 @@ class CourseManager:
         """
         Get all active courses.
 
-        A course is considered active if its current date is between its start and end dates.
+        A course is considered active if the current date is between its start and end dates.
 
         Returns:
             List of active courses.
@@ -500,7 +499,7 @@ class CourseManager:
         return active_courses
 
     @staticmethod
-    def _resolve_file_path(file_path: str | Path) -> Path:
+    def _resolve_file_path(file_path: str) -> str:
         """
         Resolve a file path to an absolute path.
 
@@ -511,22 +510,21 @@ class CourseManager:
             file_path: The path to resolve.
 
         Returns:
-            An absolute Path.
+            An absolute path as a string.
         """
-        path_obj = file_path if isinstance(file_path, Path) else Path(file_path)
-        if not path_obj.is_absolute():
-            try:
-                project_root = resolver.get_project_root()
-                path_obj = project_root / path_obj
-            except FileNotFoundError as err:
-                logger.warning(
-                    f"Project root not found: {err}. Falling back to current working directory."
-                )
-                path_obj = path_obj.resolve()
-        return path_obj
+        if os.path.isabs(file_path):
+            return file_path
+        try:
+            project_root = resolver.get_project_root()
+            return fs.join_path(project_root, file_path)
+        except FileNotFoundError as err:
+            logger.warning(
+                f"Project root not found: {err}. Falling back to current working directory."
+            )
+            return os.path.abspath(file_path)
 
     @classmethod
-    def load_from_file(cls, file_path: str | Path) -> "CourseManager":
+    def load_from_file(cls, file_path: str) -> "CourseManager":
         """
         Load courses from a file.
 
@@ -541,7 +539,7 @@ class CourseManager:
             ValueError: If the file format is invalid.
         """
         resolved_path = cls._resolve_file_path(file_path)
-        result = fs.read_yaml(str(resolved_path))
+        result = fs.read_yaml(resolved_path)
         if not result.success:
             raise FileNotFoundError(
                 f"Could not read courses from {resolved_path}: {result.error}"
@@ -554,20 +552,16 @@ class CourseManager:
         manager = cls()
         for course_data in data["courses"]:
             try:
-                # Process modules if any are present.
                 modules = []
                 for module_data in course_data.pop("modules", []):
-                    # Process module items.
                     items = []
                     for item_data in module_data.pop("items", []):
                         item = ModuleItem.model_validate(item_data)
                         items.append(item)
-                    # Create module including items.
                     module = CourseModule.model_validate(
                         {**module_data, "items": items}
                     )
                     modules.append(module)
-                # Create the course and add modules.
                 course = Course.model_validate({**course_data, "modules": modules})
                 manager.add_course(course)
             except Exception as e:
@@ -576,7 +570,7 @@ class CourseManager:
         logger.info(f"Loaded {len(manager.courses)} courses from {resolved_path}")
         return manager
 
-    def save_to_file(self, file_path: str | Path) -> bool:
+    def save_to_file(self, file_path: str) -> bool:
         """
         Save courses to a file.
 
@@ -588,7 +582,7 @@ class CourseManager:
         """
         resolved_path = self._resolve_file_path(file_path)
         data = {"courses": [course.model_dump() for course in self.courses.values()]}
-        result = fs.write_yaml(str(resolved_path), data)
+        result = fs.write_yaml(resolved_path, data)
         if not result.success:
             logger.error(f"Error saving courses to {resolved_path}: {result.error}")
             return False

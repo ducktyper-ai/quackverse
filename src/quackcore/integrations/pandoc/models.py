@@ -1,15 +1,19 @@
 # src/quackcore/integrations/pandoc/models.py
 """
-Data models for pandoc integration.
+Data models for Pandoc integration.
 
 This module provides Pydantic models for representing conversion operations,
 metrics, and results for document format conversions using Pandoc.
+In this refactored version, file paths are represented as strings rather than
+Path objects. All path resolution and normalization is delegated to quackcore.fs.
 """
 
 from datetime import datetime
-from pathlib import Path
+from typing import TypeVar
 
 from pydantic import BaseModel, Field
+
+T = TypeVar("T")  # Generic type for flexible typing
 
 
 class ConversionMetrics(BaseModel):
@@ -17,16 +21,19 @@ class ConversionMetrics(BaseModel):
 
     conversion_times: dict[str, dict[str, float]] = Field(
         default_factory=dict,
-        description="Dictionary of filename to conversion time details",
+        description="Dictionary mapping filenames to conversion time details",
     )
     file_sizes: dict[str, dict[str, int | float]] = Field(
-        default_factory=dict, description="Dictionary of filename to file size details"
+        default_factory=dict,
+        description="Dictionary mapping filenames to file size details",
     )
     errors: dict[str, str] = Field(
-        default_factory=dict, description="Dictionary of filename to error messages"
+        default_factory=dict,
+        description="Dictionary mapping filenames to error messages",
     )
     start_time: datetime = Field(
-        default_factory=datetime.now, description="Time when metrics collection started"
+        default_factory=datetime.now,
+        description="Time when metrics collection started",
     )
     total_attempts: int = Field(
         default=0, description="Total number of conversion attempts"
@@ -40,9 +47,12 @@ class ConversionMetrics(BaseModel):
 
 
 class FileInfo(BaseModel):
-    """Information about a file for conversion."""
+    """Information about a file for conversion.
 
-    path: Path = Field(..., description="Path to the file")
+    The 'path' field is now a string representing the file path.
+    """
+
+    path: str = Field(..., description="Path to the file, as a string")
     format: str = Field(..., description="File format")
     size: int = Field(default=0, description="File size in bytes")
     modified: float | None = Field(default=None, description="Last modified timestamp")
@@ -52,18 +62,24 @@ class FileInfo(BaseModel):
 
 
 class ConversionTask(BaseModel):
-    """Represents a document conversion task."""
+    """Represents a document conversion task.
 
-    source: FileInfo = Field(..., description="Source file info")
-    target_format: str = Field(..., description="Target format")
-    output_path: Path | None = Field(default=None, description="Output path")
+    The source file information uses a string for its path, and if provided,
+    the output_path is also a string.
+    """
+
+    source: FileInfo = Field(..., description="Source file information")
+    target_format: str = Field(..., description="Target conversion format")
+    output_path: str | None = Field(
+        default=None, description="Output file path (if provided), as a string"
+    )
 
 
 class ConversionDetails(BaseModel):
     """Detailed information about a conversion operation."""
 
-    source_format: str | None = Field(default=None, description="Source format")
-    target_format: str | None = Field(default=None, description="Target format")
+    source_format: str | None = Field(default=None, description="Source file format")
+    target_format: str | None = Field(default=None, description="Target file format")
     conversion_time: float | None = Field(
         default=None, description="Conversion time in seconds"
     )

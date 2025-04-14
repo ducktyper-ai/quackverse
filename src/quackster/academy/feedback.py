@@ -6,11 +6,11 @@ This module provides classes for creating, managing, and tracking
 feedback for student submissions.
 """
 
+import os
 import uuid
 from collections.abc import Sequence
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -84,15 +84,15 @@ class Annotation(BaseModel):
         Create a new annotation.
 
         Args:
-            file_path: Path to the file being annotated
-            line_start: Starting line number (1-indexed)
-            text: Annotation text
-            type: Type of annotation
-            line_end: Optional ending line number (for range)
-            suggestion: Optional suggested replacement (for suggestion type)
+            file_path: Path to the file being annotated.
+            line_start: Starting line number (1-indexed).
+            text: Annotation text.
+            type: Type of annotation.
+            line_end: Optional ending line number (for range).
+            suggestion: Optional suggested replacement (for suggestion type).
 
         Returns:
-            New annotation instance
+            New annotation instance.
         """
         return cls(
             id=str(uuid.uuid4()),
@@ -109,7 +109,7 @@ class Annotation(BaseModel):
         Format the annotation for a GitHub PR review comment.
 
         Returns:
-            Formatted text for GitHub PR review
+            Formatted text for GitHub PR review.
         """
         header = f"**{self.type.value.upper()}**"
         if self.type == AnnotationType.SUGGESTION and self.suggestion:
@@ -170,13 +170,13 @@ class FeedbackItem(BaseModel):
         Create a new feedback item.
 
         Args:
-            text: Feedback text
-            type: Type of feedback item
-            score: Optional score associated with this item
-            annotations: Optional list of code annotations
+            text: Feedback text.
+            type: Type of feedback item.
+            score: Optional score associated with this item.
+            annotations: Optional list of code annotations.
 
         Returns:
-            New feedback item instance
+            New feedback item instance.
         """
         return cls(
             id=str(uuid.uuid4()),
@@ -191,7 +191,7 @@ class FeedbackItem(BaseModel):
         Add an annotation to the feedback item.
 
         Args:
-            annotation: Annotation to add
+            annotation: Annotation to add.
         """
         self.annotations.append(annotation)
 
@@ -245,15 +245,15 @@ class Feedback(BaseModel):
         Create new feedback.
 
         Args:
-            submission_id: ID of the submission
-            student_id: ID of the student
-            assignment_id: ID of the assignment
-            score: Optional overall score
-            summary: Optional summary
-            reviewer: Optional reviewer name or ID
+            submission_id: ID of the submission.
+            student_id: ID of the student.
+            assignment_id: ID of the assignment.
+            score: Optional overall score.
+            summary: Optional summary.
+            reviewer: Optional reviewer name or ID.
 
         Returns:
-            New feedback instance
+            New feedback instance.
         """
         return cls(
             id=str(uuid.uuid4()),
@@ -270,7 +270,7 @@ class Feedback(BaseModel):
         Add a feedback item.
 
         Args:
-            item: Feedback item to add
+            item: Feedback item to add.
         """
         self.items.append(item)
         self.updated_at = datetime.now()
@@ -280,7 +280,7 @@ class Feedback(BaseModel):
         Set the feedback status.
 
         Args:
-            status: New status (draft, reviewed, delivered)
+            status: New status (draft, reviewed, delivered).
         """
         self.status = status
         self.updated_at = datetime.now()
@@ -323,8 +323,8 @@ class Feedback(BaseModel):
     def update_gamification(self) -> None:
         """Update gamification based on this feedback."""
         try:
-            # Import here to avoid circular imports
-            from quackcore.teaching.core.gamification_service import GamificationService
+            # Import here to avoid circular imports.
+            from quackster.core.gamification_service import GamificationService
 
             context = f"Feedback for submission {self.submission_id}"
             gamifier = GamificationService()
@@ -335,7 +335,7 @@ class Feedback(BaseModel):
             logger.debug(f"Error integrating feedback with gamification: {str(e)}")
 
 
-class FeedbackManager:
+class FeedbackManager(BaseModel):
     """
     Manage a collection of feedback.
 
@@ -343,10 +343,9 @@ class FeedbackManager:
     feedback for student submissions.
     """
 
-    def __init__(self) -> None:
-        """Initialize an empty feedback manager."""
-        self.feedback: dict[str, Feedback] = {}
-        self.by_submission: dict[str, Feedback] = {}
+    # Using a simple dict internally to store feedback items.
+    feedback: dict[str, Feedback] = Field(default_factory=dict)
+    by_submission: dict[str, Feedback] = Field(default_factory=dict)
 
     def add_feedback(self, feedback: Feedback) -> None:
         """
@@ -412,34 +411,32 @@ class FeedbackManager:
         return True
 
     @staticmethod
-    def _resolve_file_path(file_path: str | Path) -> Path:
+    def _resolve_file_path(file_path: str) -> str:
         """
         Resolve a file path to an absolute path.
 
-        If the given file_path is relative, it will be resolved relative to the project root
-        using the QuackCore Paths resolver. If that fails, the path is resolved relative to
-        the current working directory.
+        If the given file_path is relative, attempt to resolve it relative to the project root
+        using the QuackCore Paths resolver; if that fails, resolve it relative to the current working directory.
 
         Args:
-            file_path: The path to resolve.
+            file_path: The path to resolve as a string.
 
         Returns:
-            An absolute Path.
+            An absolute path as a string.
         """
-        path_obj = file_path if isinstance(file_path, Path) else Path(file_path)
-        if not path_obj.is_absolute():
-            try:
-                project_root = resolver.get_project_root()
-                path_obj = project_root / path_obj
-            except FileNotFoundError as err:
-                logger.warning(
-                    f"Project root not found: {err}. Falling back to current working directory."
-                )
-                path_obj = path_obj.resolve()
-        return path_obj
+        if os.path.isabs(file_path):
+            return file_path
+        try:
+            project_root = resolver.get_project_root()
+            return fs.join_path(project_root, file_path)
+        except FileNotFoundError as err:
+            logger.warning(
+                f"Project root not found: {err}. Falling back to current working directory."
+            )
+            return os.path.abspath(file_path)
 
     @classmethod
-    def load_from_file(cls, file_path: str | Path) -> "FeedbackManager":
+    def load_from_file(cls, file_path: str) -> "FeedbackManager":
         """
         Load feedback from a file.
 
@@ -454,7 +451,7 @@ class FeedbackManager:
             ValueError: If the file format is invalid.
         """
         resolved_path = cls._resolve_file_path(file_path)
-        result = fs.read_yaml(str(resolved_path))
+        result = fs.read_yaml(resolved_path)
         if not result.success:
             raise FileNotFoundError(
                 f"Could not read feedback from {resolved_path}: {result.error}"
@@ -474,7 +471,7 @@ class FeedbackManager:
         )
         return manager
 
-    def save_to_file(self, file_path: str | Path) -> bool:
+    def save_to_file(self, file_path: str) -> bool:
         """
         Save feedback to a file.
 
@@ -488,7 +485,7 @@ class FeedbackManager:
         data = {
             "feedback": [feedback.model_dump() for feedback in self.feedback.values()]
         }
-        result = fs.write_yaml(str(resolved_path), data)
+        result = fs.write_yaml(resolved_path, data)
         if not result.success:
             logger.error(f"Error saving feedback to {resolved_path}: {result.error}")
             return False

@@ -6,11 +6,11 @@ This module provides classes for managing students, their information,
 and their submissions in educational contexts.
 """
 
+import os
 import uuid
 from collections.abc import Sequence
 from datetime import datetime
 from enum import Enum, auto
-from pathlib import Path
 
 from pydantic import BaseModel, EmailStr, Field, model_validator
 
@@ -371,33 +371,32 @@ class StudentRoster:
         return [student for student in self.students.values() if student.group == group]
 
     @staticmethod
-    def _resolve_file_path(file_path: str | Path) -> Path:
+    def _resolve_file_path(file_path: str) -> str:
         """
         Resolve a file path to an absolute path.
 
-        If file_path is relative, resolve it relative to the project root
-        using the QuackCore Paths resolver; if that fails, fall back to the current working directory.
+        If the given file_path is relative, attempt to resolve it relative to the project root
+        using the QuackCore Paths resolver; if that fails, resolve it relative to the current working directory.
 
         Args:
-            file_path: The path to resolve.
+            file_path: The path to resolve as a string.
 
         Returns:
-            An absolute Path.
+            An absolute path as a string.
         """
-        path_obj = file_path if isinstance(file_path, Path) else Path(file_path)
-        if not path_obj.is_absolute():
-            try:
-                project_root = resolver.get_project_root()
-                path_obj = project_root / path_obj
-            except QuackFileNotFoundError as err:
-                logger.warning(
-                    f"Project root not found: {err}. Falling back to current working directory."
-                )
-                path_obj = path_obj.resolve()
-        return path_obj
+        if os.path.isabs(file_path):
+            return file_path
+        try:
+            project_root = resolver.get_project_root()
+            return fs.join_path(project_root, file_path)
+        except FileNotFoundError as err:
+            logger.warning(
+                f"Project root not found: {err}. Falling back to os.path.abspath(file_path)."
+            )
+            return os.path.abspath(file_path)
 
     @classmethod
-    def load_from_file(cls, file_path: str | Path) -> "StudentRoster":
+    def load_from_file(cls, file_path: str) -> "StudentRoster":
         """
         Load a student roster from a file.
 
@@ -412,7 +411,7 @@ class StudentRoster:
             QuackValidationError: If the file format is invalid.
         """
         resolved_path = cls._resolve_file_path(file_path)
-        result = fs.read_yaml(str(resolved_path))
+        result = fs.read_yaml(resolved_path)
         if not result.success:
             raise QuackFileNotFoundError(
                 resolved_path,
@@ -421,7 +420,7 @@ class StudentRoster:
         data = result.data
         if not isinstance(data, dict) or "students" not in data:
             raise QuackValidationError(
-                str(resolved_path), f"Invalid student roster format in {resolved_path}"
+                resolved_path, f"Invalid student roster format in {resolved_path}"
             )
         roster = cls()
         for student_data in data["students"]:
@@ -433,7 +432,7 @@ class StudentRoster:
         logger.info(f"Loaded {len(roster.students)} students from {resolved_path}")
         return roster
 
-    def save_to_file(self, file_path: str | Path) -> bool:
+    def save_to_file(self, file_path: str) -> bool:
         """
         Save the student roster to a file.
 
@@ -447,7 +446,7 @@ class StudentRoster:
         data = {
             "students": [student.model_dump() for student in self.students.values()]
         }
-        result = fs.write_yaml(str(resolved_path), data)
+        result = fs.write_yaml(resolved_path, data)
         if not result.success:
             logger.error(
                 f"Error saving student roster to {resolved_path}: {result.error}"

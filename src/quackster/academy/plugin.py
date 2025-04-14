@@ -6,7 +6,7 @@ This module provides a plugin interface for the quackster module, allowing
 integration with the QuackCore plugin system.
 """
 
-from pathlib import Path
+import os
 from typing import Any
 
 from quackcore.errors import QuackFileNotFoundError  # Dogfood our errors
@@ -79,16 +79,15 @@ class TeachingPlugin(QuackPlugin):
 
         base_dir = options.get("base_dir")
         if base_dir:
-            base_dir_path = Path(base_dir)
-            if not base_dir_path.is_absolute():
+            if not os.path.isabs(base_dir):
                 try:
                     # Use the project root if available.
-                    base_dir = str(resolver.get_project_root() / base_dir)
+                    base_dir = fs.join_path(resolver.get_project_root(), base_dir)
                 except QuackFileNotFoundError as err:
                     logger.warning(
-                        f"Project root not found: {err}. Falling back to resolved path."
+                        f"Project root not found: {err}. Falling back to os.path.abspath(base_dir)."
                     )
-                    base_dir = str(base_dir_path.resolve())
+                    base_dir = os.path.abspath(base_dir)
         # Pass resolved options to the quackster service.
         result = self._service.initialize(config_path, base_dir)
         if result.success:
@@ -97,7 +96,7 @@ class TeachingPlugin(QuackPlugin):
         return result
 
     def create_context(
-        self, course_name: str, github_org: str, base_dir: str | Path | None = None
+        self, course_name: str, github_org: str, base_dir: str | None = None
     ) -> TeachingResult:
         """
         Create a new quackster context.
@@ -111,14 +110,14 @@ class TeachingPlugin(QuackPlugin):
             TeachingResult indicating success or failure.
         """
         # Optionally, resolve the base_dir if provided.
-        if base_dir and not Path(base_dir).is_absolute():
+        if base_dir and not os.path.isabs(base_dir):
             try:
-                base_dir = str(resolver.get_project_root() / base_dir)
+                base_dir = fs.join_path(resolver.get_project_root(), base_dir)
             except QuackFileNotFoundError as err:
                 logger.warning(
-                    f"Project root not found: {err}. Falling back to resolved base_dir."
+                    f"Project root not found: {err}. Falling back to os.path.abspath(base_dir)."
                 )
-                base_dir = str(Path(base_dir).resolve())
+                base_dir = os.path.abspath(base_dir)
         return self._service.create_context(course_name, github_org, base_dir)
 
     def create_assignment(

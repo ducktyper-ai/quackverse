@@ -4,15 +4,16 @@ Logger configuration for quackcore.
 
 This module handles the setup and configuration of loggers,
 including environment-based configuration and file output options.
+Note: Filesystem-related operations are imported lazily to avoid circular dependencies.
 """
 
 import logging
 import os
 import sys
 from enum import Enum
-from pathlib import Path
 from typing import Any
 
+# Import our custom formatter
 from .formatter import TeachingAwareFormatter
 
 
@@ -37,19 +38,17 @@ LOG_LEVELS = {
 
 def get_log_level() -> int:
     """
-    Get the log level from environment variable or default to INFO.
+    Get the log level from the environment variable or default to INFO.
 
     Returns:
-        The log level as a logging module constant
+        The log level as a logging module constant.
     """
     env_level = os.environ.get("QUACKCORE_LOG_LEVEL", "INFO").upper()
-    # Type checking complaint: env_level is a string, not a LogLevel enum
-    # We'll convert it or use the default
     log_level = logging.INFO
     try:
         log_level = LOG_LEVELS[LogLevel(env_level)]
     except (ValueError, KeyError):
-        # If env_level is not a valid LogLevel, use default
+        # If env_level is invalid, default to INFO
         pass
     return log_level
 
@@ -57,49 +56,50 @@ def get_log_level() -> int:
 def configure_logger(
     name: str | None = None,
     level: int | None = None,
-    log_file: str | Path | None = None,
+    log_file: str | None = None,
     teaching_to_stdout: bool = True,
 ) -> logging.Logger:
     """
     Configure and return a logger with the specified name.
 
-    This function ensures handlers are only added once per logger instance,
-    and supports multiple output destinations.
+    This function sets up handlers only once per logger instance and supports
+    multiple output destinations (console and file). Filesystem operations are
+    performed via quackcore.fs.service, imported only inside this function.
 
     Args:
-        name: The name for the logger, typically __name__
-        level: The logging level (if None, use environment or default)
-        log_file: Optional path to a log file
-        teaching_to_stdout: If True, quackster logs go to stdout, otherwise stderr
+        name: The name for the logger, typically __name__.
+        level: The logging level (if None, determined by environment).
+        log_file: Optional log file path.
+        teaching_to_stdout: If True, teaching messages go to stdout; otherwise stderr.
 
     Returns:
-        A configured logger instance
+        A configured logger.
     """
     logger = logging.getLogger(name)
-
-    # Only configure if no handlers exist yet
     if not logger.handlers:
-        # Set log level from param, env var, or default
         logger_level = level if level is not None else get_log_level()
         logger.setLevel(logger_level)
 
-        # Console handler (stderr by default)
+        # Console handler with TeachingAwareFormatter
         console_handler = logging.StreamHandler(
             sys.stdout if teaching_to_stdout else sys.stderr
         )
         console_handler.setFormatter(TeachingAwareFormatter())
         logger.addHandler(console_handler)
 
-        # File handler (optional)
+        # File handler (if log_file provided)
         if log_file:
-            file_path = Path(log_file)
-            # Create parent directories if they don't exist
-            file_path.parent.mkdir(parents=True, exist_ok=True)
-            file_handler = logging.FileHandler(file_path)
+            # Lazy import of filesystem service to avoid circular dependency.
+            from quackcore.fs import service as fs
+
+            # Resolve parent directory for the log file.
+            parent_dir = fs.join_path(*fs.split_path(log_file)[:-1])
+            fs.create_directory(parent_dir, exist_ok=True)
+            file_handler = logging.FileHandler(log_file)
             file_handler.setFormatter(TeachingAwareFormatter(color_enabled=False))
             logger.addHandler(file_handler)
 
-        # Prevent propagation to root logger to avoid duplicate logs
+        # Prevent propagation to avoid duplicate logging.
         logger.propagate = False
 
     return logger
@@ -107,14 +107,12 @@ def configure_logger(
 
 def log_teaching(logger: Any, message: str, level: str = "INFO") -> None:
     """
-    Log a quackster message with appropriate formatting.
-
-    This is a convenience function to consistently format quackster messages.
+    Log a Teaching Mode message with appropriate formatting.
 
     Args:
-        logger: The logger instance to use
-        message: The quackster message to log
-        level: The log level to use (default: INFO)
+        logger: The logger instance.
+        message: The message to log.
+        level: The log level to use.
     """
     log_method = getattr(logger, level.lower())
     log_method(f"[Teaching Mode] {message}")

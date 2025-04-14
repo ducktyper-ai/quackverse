@@ -11,7 +11,6 @@ import os
 import sys
 from collections.abc import Callable
 from datetime import datetime
-from pathlib import Path
 from typing import Any, TypeVar
 
 from quackcore.errors import QuackError
@@ -50,7 +49,8 @@ def format_cli_error(error: Exception) -> str:
         return str(error)
 
 
-# Move the import out of the function to avoid closure issues
+# Import the print_error function from our CLI formatting module.
+# (This import is left as-is because it is not related to file paths.)
 from quackcore.cli.formatting import print_error as _print_error
 
 
@@ -79,7 +79,6 @@ def handle_errors(
                 return func(*args, **kwargs)
             except error_types as e:
                 func_title = title or f"Error in {func.__name__}"
-                # Use the global imported print_error, which can be mocked
                 _print_error(f"{func_title}: {format_cli_error(e)}")
 
                 if show_traceback:
@@ -89,7 +88,6 @@ def handle_errors(
 
                 if exit_code is not None:
                     sys.exit(exit_code)
-
                 return None
 
         return wrapper
@@ -115,18 +113,21 @@ def ensure_single_instance(app_name: str) -> bool:
     from tempfile import gettempdir
 
     temp_dir = gettempdir()
-    lock_path = Path(temp_dir) / f"{app_name}.lock"
+    # Construct the lock file as a string path using os.path.join
+    lock_path = os.path.join(temp_dir, f"{app_name}.lock")
+    # Derive a port number based on the app name
     port = sum(ord(c) for c in app_name) % 10000 + 10000
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     try:
         sock.bind(("127.0.0.1", port))
-        lock_path.write_text(str(os.getpid()))
+        with open(lock_path, "w") as f:
+            f.write(str(os.getpid()))
 
         def cleanup() -> None:
             sock.close()
             try:
-                lock_path.unlink()
+                os.remove(lock_path)
             except (FileNotFoundError, PermissionError, OSError):
                 pass
 
@@ -137,16 +138,12 @@ def ensure_single_instance(app_name: str) -> bool:
         return False
 
 
-# Create a separate function to get the current datetime
-# This makes it easier to mock in tests
 def _get_current_datetime() -> datetime:
     """
     Get the current datetime.
 
-    This function exists to make the code more testable.
-
     Returns:
-        Current datetime
+        Current datetime.
     """
     return datetime.now()
 
@@ -155,11 +152,8 @@ def get_cli_info() -> dict[str, Any]:
     """
     Get information about the CLI environment.
 
-    This function returns a dictionary with various pieces of information
-    about the current CLI environment, useful for diagnostics and troubleshooting.
-
     Returns:
-        Dictionary with CLI environment information
+        Dictionary with CLI environment information.
     """
     import platform
 
@@ -169,9 +163,9 @@ def get_cli_info() -> dict[str, Any]:
     info = {
         "platform": platform.platform(),
         "python_version": platform.python_version(),
-        "time": _get_current_datetime().isoformat(),  # Use helper function
+        "time": _get_current_datetime().isoformat(),
         "pid": os.getpid(),
-        "cwd": str(Path.cwd()),
+        "cwd": os.getcwd(),  # Current working directory as a string
         "environment": get_env(),
     }
 

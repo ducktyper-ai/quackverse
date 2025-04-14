@@ -6,7 +6,7 @@ This module provides the primary service for quackster operations,
 serving as the main entry point for quackster operations.
 """
 
-from pathlib import Path
+import os
 
 from quackcore.errors import QuackError, QuackFileNotFoundError
 from quackcore.fs import service as fs
@@ -30,11 +30,11 @@ class TeachingService:
 
     def __init__(self) -> None:
         """Initialize the quackster service."""
-        self._context = None
+        self._context: TeachingContext | None = None
         self._github = None
 
     def initialize(
-        self, config_path: str | Path | None = None, base_dir: str | Path | None = None
+        self, config_path: str | None = None, base_dir: str | None = None
     ) -> TeachingResult:
         """
         Initialize the quackster service.
@@ -48,18 +48,17 @@ class TeachingService:
         """
         try:
             if config_path is not None:
-                config_path = fs.expand_user_vars(str(config_path))
+                config_path = fs.expand_user_vars(config_path)
             if base_dir is not None:
-                base_dir_path = Path(base_dir)
-                if not base_dir_path.is_absolute():
+                if not os.path.isabs(base_dir):
                     try:
                         project_root = resolver.get_project_root()
-                        base_dir = str(project_root / base_dir_path)
+                        base_dir = fs.join_path(project_root, base_dir)
                     except QuackFileNotFoundError as err:
                         logger.warning(
-                            f"Project root not found: {err}. Falling back to resolved base_dir."
+                            f"Project root not found: {err}. Falling back to os.path.abspath(base_dir)."
                         )
-                        base_dir = str(base_dir_path.resolve())
+                        base_dir = os.path.abspath(base_dir)
             self._context = TeachingContext.from_config(config_path, base_dir)
             logger.info(
                 f"Teaching service initialized for course: {self._context.config.course_name}"
@@ -77,7 +76,7 @@ class TeachingService:
             )
 
     def create_context(
-        self, course_name: str, github_org: str, base_dir: str | Path | None = None
+        self, course_name: str, github_org: str, base_dir: str | None = None
     ) -> TeachingResult:
         """
         Create a new quackster context with default settings.
@@ -91,15 +90,14 @@ class TeachingService:
             TeachingResult indicating success or failure.
         """
         if base_dir is not None:
-            base_dir_path = Path(base_dir)
-            if not base_dir_path.is_absolute():
+            if not os.path.isabs(base_dir):
                 try:
-                    base_dir = str(resolver.get_project_root() / base_dir_path)
+                    base_dir = fs.join_path(resolver.get_project_root(), base_dir)
                 except QuackFileNotFoundError as err:
                     logger.warning(
-                        f"Project root not found: {err}. Falling back to resolved base_dir."
+                        f"Project root not found: {err}. Falling back to os.path.abspath(base_dir)."
                     )
-                    base_dir = str(base_dir_path.resolve())
+                    base_dir = os.path.abspath(base_dir)
         try:
             self._context = TeachingContext.create_default(
                 course_name, github_org, base_dir
@@ -147,7 +145,7 @@ class TeachingService:
         Integrate an academy action with the gamification system.
 
         Args:
-            action: The type of action (e.g. module_completion, course_completion, etc.)
+            action: The type of action (e.g., module_completion, course_completion, etc.)
             **kwargs: Additional parameters for the action.
         """
         try:
@@ -227,7 +225,6 @@ class TeachingService:
                     error=f"Repository {full_repo_name} does not exist and auto-creation is disabled",
                     message="Enable auto_create_repos in config to create repositories automatically",
                 )
-            # Create the repository using the available method.
             repo_creation_result = github.create_repo(
                 org=org,
                 repo_name=repo_name,
@@ -275,7 +272,6 @@ class TeachingService:
             description: Optional assignment description.
             due_date: Optional due date (ISO format).
             students: List of student GitHub usernames.
-                      Must be provided.
 
         Returns:
             AssignmentResult with the created repositories on success.
@@ -294,7 +290,6 @@ class TeachingService:
                 message="GitHub integration is required but not available",
             )
         org = self._context.config.github.organization
-        # Ensure the template repository is qualified
         if not template_repo.startswith(f"{org}/"):
             template_repo = f"{org}/{template_repo}"
         template_result = github.get_repo(template_repo)
@@ -313,8 +308,6 @@ class TeachingService:
         repo_name_base = assignment_name.lower().replace(" ", "-")
         created_repos = []
         failed_students = []
-        # For each student, check if their assignment repository exists;
-        # if not, create it using ensure_repo_exists.
         for student in students:
             student_repo_name = f"{repo_name_base}-{student}"
             full_repo_name = f"{org}/{student_repo_name}"
@@ -324,7 +317,6 @@ class TeachingService:
                     logger.info(f"Repository {full_repo_name} already exists")
                     created_repos.append(repo_result.content)
                 else:
-                    # Append due date (if provided) to description.
                     new_description = description if description else ""
                     if due_date:
                         new_description += f" | Due: {due_date}"
@@ -360,7 +352,6 @@ class TeachingService:
                 error="No repositories created",
                 message="Failed to create any assignment repositories",
             )
-        # Integrate assignment creation with gamification.
         self._integrate_with_gamification(
             "assignment_completion",
             assignment_id=assignment_name,
@@ -380,7 +371,7 @@ class TeachingService:
 
         Args:
             assignment_name: Name of the assignment.
-            student: Specific student GitHub username (required).
+            student: Specific student GitHub username.
 
         Returns:
             TeachingResult with the found submission.
@@ -508,17 +499,15 @@ class TeachingService:
         assignment_name = f"Assignment {assignment_id}"
         max_score = 100.0
 
-        # Pass feedback along with the other metadata to the gamification integration.
         self._integrate_with_gamification(
             "assignment_completion",
             assignment_id=assignment_id,
             assignment_name=assignment_name,
             score=score,
             max_score=max_score,
-            feedback=feedback,  # Using our custom error system and metadata
+            feedback=feedback,
         )
 
-        # Build a success message that includes feedback if provided.
         message = f"Successfully graded assignment '{assignment_name}' for student {student_github}."
         if feedback is not None:
             message += f" Feedback provided: {feedback}"
@@ -529,38 +518,37 @@ class TeachingService:
         )
 
     @staticmethod
-    def _resolve_file_path(file_path: str | Path) -> Path:
+    def _resolve_file_path(file_path: str) -> str:
         """
         Resolve a file path to an absolute path.
 
-        If file_path is relative, it is resolved relative to the project root
-        via the QuackCore Paths resolver; if that fails, it falls back to the current working directory.
+        If the given file_path is relative, attempt to resolve it relative to the project root
+        using the QuackCore Paths resolver; if that fails, resolve it relative to the current working directory.
 
         Args:
-            file_path: The path to resolve.
+            file_path: The path to resolve as a string.
 
         Returns:
-            An absolute Path.
+            An absolute path as a string.
         """
-        path_obj = file_path if isinstance(file_path, Path) else Path(file_path)
-        if not path_obj.is_absolute():
-            try:
-                project_root = resolver.get_project_root()
-                path_obj = project_root / path_obj
-            except QuackFileNotFoundError as err:
-                logger.warning(
-                    f"Project root not found: {err}. Falling back to current working directory."
-                )
-                path_obj = path_obj.resolve()
-        return path_obj
+        if os.path.isabs(file_path):
+            return file_path
+        try:
+            project_root = resolver.get_project_root()
+            return fs.join_path(project_root, file_path)
+        except FileNotFoundError as err:
+            logger.warning(
+                f"Project root not found: {err}. Falling back to os.path.abspath(file_path)."
+            )
+            return os.path.abspath(file_path)
 
-    def save_config(self, config_path: str | Path | None = None) -> TeachingResult:
+    def save_config(self, config_path: str | None = None) -> TeachingResult:
         """
         Save the current configuration to a file.
 
         Args:
             config_path: Path where to save the configuration.
-                        If None, uses the default location.
+                        If None, uses the default location within the current context base directory.
 
         Returns:
             TeachingResult indicating success or failure.
@@ -572,12 +560,12 @@ class TeachingService:
                 message="Call initialize() before saving configuration",
             )
         if config_path is None:
-            config_path = self._context.base_dir / "teaching_config.yaml"
+            config_path = fs.join_path(self._context.base_dir, "teaching_config.yaml")
         else:
             config_path = self._resolve_file_path(config_path)
         config_dict = self._context.config.model_dump()
         try:
-            result = fs.write_yaml(str(config_path), config_dict)
+            result = fs.write_yaml(config_path, config_dict)
             if result.success:
                 logger.info(f"Configuration saved to {config_path}")
                 return TeachingResult(

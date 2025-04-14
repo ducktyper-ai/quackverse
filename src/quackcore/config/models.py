@@ -6,10 +6,11 @@ This module provides Pydantic models for configuration management,
 with support for validation, defaults, and merging of configurations.
 """
 
-from pathlib import Path
 from typing import Any, ClassVar, TypeVar
 
 from pydantic import BaseModel, Field, field_validator
+
+from quackcore.paths import normalize_path
 
 T = TypeVar("T")  # Generic type for flexible typing
 
@@ -26,10 +27,10 @@ class LoggingConfig(BaseModel):
     ]
 
     level: str = Field(default="INFO", description="Logging level")
-    file: Path | None = Field(default=None, description="Log file path")
+    file: str | None = Field(default=None, description="Log file path")
     console: bool = Field(default=True, description="Log to console")
 
-    @field_validator("level")
+    @field_validator("level", mode="before")
     @classmethod
     def validate_level(cls, v: str) -> str:
         """Validate and normalize logging level."""
@@ -38,50 +39,38 @@ class LoggingConfig(BaseModel):
             return "INFO"
         return level_name
 
-    def setup_logging(self) -> None:
-        """
-        Set up logging based on configuration using the centralized logging module.
-
-        This method delegates to quackcore.logging.configure_logger to create
-        a properly configured logger. If console logging is disabled, the console
-        handler is removed after configuration.
-        """
-        import logging
-
-        from quackcore.logging import LOG_LEVELS, configure_logger
-
-        # Convert the level string to an integer logging level using our mapping.
-        level_int = LOG_LEVELS.get(self.level, logging.INFO)
-
-        # Configure the central logger for "quackcore" using the logging module.
-        logger = configure_logger("quackcore", level=level_int, log_file=self.file)
-
-        # Remove any console (StreamHandler) if console logging is disabled.
-        if not self.console:
-            logger.handlers = [
-                handler
-                for handler in logger.handlers
-                if not isinstance(handler, logging.StreamHandler)
-            ]
+    @field_validator("file", mode="before")
+    @classmethod
+    def normalize_file(cls, v: str | None) -> str | None:
+        """Normalize the log file path (if provided)."""
+        if v is None:
+            return None
+        return normalize_path(v)
 
 
 class PathsConfig(BaseModel):
     """Configuration for file paths."""
 
-    base_dir: Path = Field(default=Path("./"), description="Base directory")
-    output_dir: Path = Field(default=Path("./output"), description="Output directory")
-    assets_dir: Path = Field(default=Path("./assets"), description="Assets directory")
-    data_dir: Path = Field(default=Path("./data"), description="Data directory")
-    temp_dir: Path = Field(default=Path("./temp"), description="Temporary directory")
+    base_dir: str = Field(default="./", description="Base directory")
+    output_dir: str = Field(default="./output", description="Output directory")
+    assets_dir: str = Field(default="./assets", description="Assets directory")
+    data_dir: str = Field(default="./data", description="Data directory")
+    temp_dir: str = Field(default="./temp", description="Temporary directory")
+
+    # Normalize all path fields using a field validator.
+    @field_validator("*", mode="before")
+    @classmethod
+    def normalize_paths(cls, v: str) -> str:
+        return normalize_path(v)
 
 
 class GoogleConfig(BaseModel):
     """Configuration for Google integrations."""
 
-    client_secrets_file: Path | None = Field(
+    client_secrets_file: str | None = Field(
         default=None, description="Path to client secrets file for OAuth"
     )
-    credentials_file: Path | None = Field(
+    credentials_file: str | None = Field(
         default=None, description="Path to credentials file for OAuth"
     )
     shared_folder_id: str | None = Field(
@@ -93,6 +82,13 @@ class GoogleConfig(BaseModel):
     gmail_days_back: int = Field(
         default=1, description="Number of days back for Gmail queries"
     )
+
+    @field_validator("client_secrets_file", "credentials_file", mode="before")
+    @classmethod
+    def normalize_google_paths(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        return normalize_path(v)
 
 
 class NotionConfig(BaseModel):
@@ -136,9 +132,17 @@ class PluginsConfig(BaseModel):
     disabled: list[str] = Field(
         default_factory=list, description="List of disabled plugins"
     )
-    paths: list[Path] = Field(
+    paths: list[str] = Field(
         default_factory=list, description="Additional plugin search paths"
     )
+
+    @field_validator("paths", mode="before")
+    @classmethod
+    def normalize_plugin_paths(cls, v: list[str] | str) -> list[str]:
+        # If a single string is provided, wrap it in a list
+        if isinstance(v, str):
+            v = [v]
+        return [normalize_path(path_str) for path_str in v]
 
 
 class QuackConfig(BaseModel):

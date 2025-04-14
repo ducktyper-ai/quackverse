@@ -3,17 +3,16 @@
 Protocol definitions for Pandoc integration.
 
 This module defines protocol classes for document conversion services,
-ensuring proper typing throughout the codebase.
+ensuring proper typing throughout the codebase. In this refactored version,
+all file paths are represented as strings rather than pathlib.Path objects.
+File resolution and normalization are delegated to quackcore.fs.
 """
 
 from collections.abc import Sequence
-from pathlib import Path
 from typing import Protocol, TypeVar, runtime_checkable
 
 from quackcore.integrations.core.results import IntegrationResult
-from quackcore.integrations.pandoc.models import (
-    ConversionTask,
-)
+from quackcore.integrations.pandoc.models import ConversionTask
 
 # Generic type variables for flexible return types
 T = TypeVar("T")
@@ -22,111 +21,121 @@ R = TypeVar("R")
 
 @runtime_checkable
 class DocumentConverterProtocol(Protocol):
-    """Protocol for document converter implementations."""
+    """
+    Protocol for document converter implementations.
+    All file path parameters and return types are strings.
+    """
 
     def convert_file(
-        self, input_path: Path, output_path: Path, output_format: str
-    ) -> IntegrationResult[Path]:
+        self, input_path: str, output_path: str, output_format: str
+    ) -> IntegrationResult[str]:
         """
         Convert a file from one format to another.
 
         Args:
-            input_path: Path to the input file
-            output_path: Path to the output file
-            output_format: Target format
+            input_path: The absolute path to the input file (as a string).
+            output_path: The absolute path to the output file (as a string).
+            output_format: The target output format.
 
         Returns:
-            IntegrationResult[Path]: Result of the conversion
+            IntegrationResult[str]: Result of the conversion, with the output file path.
         """
         ...
 
-    def validate_conversion(self, output_path: Path, input_path: Path) -> bool:
+    def validate_conversion(self, output_path: str, input_path: str) -> bool:
         """
         Validate the converted document.
 
         Args:
-            output_path: Path to the output file
-            input_path: Path to the input file
+            output_path: The absolute path to the output file (as a string).
+            input_path: The absolute path to the input file (as a string).
 
         Returns:
-            bool: True if validation passed, False otherwise
+            bool: True if validation passed, False otherwise.
         """
         ...
 
 
 @runtime_checkable
 class BatchConverterProtocol(Protocol):
-    """Protocol for batch document conversion."""
+    """
+    Protocol for batch document conversion.
+    File path parameters and results are represented as strings.
+    """
 
     def convert_batch(
-        self, tasks: Sequence[ConversionTask], output_dir: Path | None = None
-    ) -> IntegrationResult[list[Path]]:
+        self, tasks: Sequence[ConversionTask], output_dir: str | None = None
+    ) -> IntegrationResult[list[str]]:
         """
         Convert a batch of files.
 
         Args:
-            tasks: List of conversion tasks
-            output_dir: Directory to save converted files
+            tasks: A list of conversion tasks.
+            output_dir: A directory (absolute path as a string) where to save converted files
+                        or None to use each task's output configuration.
 
         Returns:
-            IntegrationResult[list[Path]]: Result of the batch conversion
+            IntegrationResult[list[str]]: Result of the batch conversion, with a list of output file paths.
         """
         ...
 
 
 @runtime_checkable
 class PandocConversionProtocol(Protocol):
-    """Protocol for the main pandoc conversion operations."""
+    """
+    Protocol for the main pandoc conversion operations.
+    File path parameters and return types are represented as strings.
+    """
 
     def html_to_markdown(
-        self, html_path: Path, output_path: Path | None = None
-    ) -> IntegrationResult[Path]:
+        self, html_path: str, output_path: str | None = None
+    ) -> IntegrationResult[str]:
         """
         Convert HTML to Markdown.
 
         Args:
-            html_path: Path to the HTML file
-            output_path: Optional path to save the Markdown file
+            html_path: The absolute path to the HTML file (as a string).
+            output_path: Optional absolute path to save the Markdown file (as a string).
 
         Returns:
-            IntegrationResult[Path]: Result of the conversion
+            IntegrationResult[str]: Result of the conversion with the output file path.
         """
         ...
 
     def markdown_to_docx(
-        self, markdown_path: Path, output_path: Path | None = None
-    ) -> IntegrationResult[Path]:
+        self, markdown_path: str, output_path: str | None = None
+    ) -> IntegrationResult[str]:
         """
         Convert Markdown to DOCX.
 
         Args:
-            markdown_path: Path to the Markdown file
-            output_path: Optional path to save the DOCX file
+            markdown_path: The absolute path to the Markdown file (as a string).
+            output_path: Optional absolute path to save the DOCX file (as a string).
 
         Returns:
-            IntegrationResult[Path]: Result of the conversion
+            IntegrationResult[str]: Result of the conversion with the output file path.
         """
         ...
 
     def convert_directory(
         self,
-        input_dir: Path,
+        input_dir: str,
         output_format: str,
-        output_dir: Path | None = None,
+        output_dir: str | None = None,
         file_pattern: str | None = None,
         recursive: bool = False,
-    ) -> IntegrationResult[list[Path]]:
+    ) -> IntegrationResult[list[str]]:
         """
         Convert all files in a directory.
 
         Args:
-            input_dir: Directory containing files to convert
-            output_format: Target format
-            output_dir: Optional directory to save converted files
-            file_pattern: Optional pattern to match files
-            recursive: Whether to search subdirectories
+            input_dir: The absolute path to the directory containing files to convert (as a string).
+            output_format: The target output format (e.g., "markdown" or "docx").
+            output_dir: Optional absolute path to the directory in which to save converted files (as a string).
+            file_pattern: Optional glob pattern to match specific files.
+            recursive: Whether to search subdirectories.
 
         Returns:
-            IntegrationResult[list[Path]]: Result of the conversion
+            IntegrationResult[list[str]]: Result of the conversion with a list of output file paths.
         """
         ...

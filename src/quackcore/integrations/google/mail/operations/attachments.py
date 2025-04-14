@@ -1,7 +1,17 @@
 # src/quackcore/integrations/google/mail/operations/attachments.py
+"""
+Upload operations for Google Mail attachments.
+
+This module provides functions for processing email message parts to extract
+HTML content and download attachments, saving them to a given storage path.
+All file path values are handled as strings. Filesystem operations
+(like joining paths, checking file existence, creating directories, writing files, etc.)
+are delegated to the QuackCore FS layer or Python’s os.path utilities.
+"""
+
 import base64
 import logging
-from pathlib import Path
+import os
 
 from quackcore.fs import service as fs
 from quackcore.integrations.google.mail.operations.email import clean_filename
@@ -25,14 +35,14 @@ def process_message_parts(
         user_id: Gmail user ID.
         parts: List of message part dictionaries.
         msg_id: The Gmail message ID.
-        storage_path: Path to save attachments.
+        storage_path: Path (as a string) where attachments should be saved.
         logger: Logger instance.
 
     Returns:
-        tuple: HTML content (or None) and list of attachment paths.
+        A tuple of HTML content (or None) and a list of attachment file paths (as strings).
     """
     html_content = None
-    attachments = []
+    attachments: list[str] = []
     parts_stack = parts.copy()
 
     while parts_stack:
@@ -45,7 +55,7 @@ def process_message_parts(
 
         mime_type = part.get("mimeType", "")
 
-        # Extract HTML content
+        # Extract HTML content if not already found
         if mime_type == "text/html" and html_content is None:
             data = part.get("body", {}).get("data")
             if data is not None:
@@ -55,7 +65,7 @@ def process_message_parts(
                     data_str.encode("UTF-8")
                 ).decode("UTF-8")
 
-        # Process attachments
+        # Process attachments if a filename is present
         elif part.get("filename"):
             attachment_path = handle_attachment(
                 gmail_service, user_id, part, msg_id, storage_path, logger
@@ -82,22 +92,20 @@ def handle_attachment(
         user_id: Gmail user ID.
         part: Message part dictionary containing attachment data.
         msg_id: The Gmail message ID.
-        storage_path: Path to save the attachment.
+        storage_path: Directory path (as a string) to save the attachment.
         logger: Logger instance.
 
     Returns:
-        str | None: Path to the saved attachment or None if failed.
+        The file path (as a string) to the saved attachment, or None if failed.
     """
     try:
         filename = part.get("filename")
         if not filename:
             return None
 
-        # Get attachment data
+        # Get attachment data from body or via a separate API call if needed
         body = part.get("body", {})
         data = body.get("data")
-
-        # Check if we need to fetch the attachment separately
         if data is None and "attachmentId" in body:
             attachment_id = body["attachmentId"]
             attachment = execute_api_request(
@@ -113,53 +121,49 @@ def handle_attachment(
         if data is None:
             return None
 
-        # Ensure data is a string before decoding
+        # Ensure that data is a string prior to decoding
         data_str = str(data)
-
-        # Decode content
         try:
             content = base64.urlsafe_b64decode(data_str)
         except Exception as e:
             logger.error(f"Failed to decode attachment data: {e}")
             return None
 
-        # Process filename and path
+        # Process the filename using a helper function
         clean_name = clean_filename(filename)
 
-        # Use fs service to join paths
-        file_path = fs.join_path(storage_path, clean_name)
+        # Use the FS service's join_path to create a file path string
+        file_path = fs.join_path(storage_path, clean_name)  # file_path is now a string
 
-        # Handle filename collisions using our fs service
+        # Handle filename collisions: if the file already exists, append a counter
         counter = 1
         file_info = fs.get_file_info(file_path)
-
-        while file_info.exists:
-            # Use fs service to split the path and create a new filename
+        while file_info.success and file_info.exists:
+            # Split file_path into directory and filename components using fs.split_path
             path_parts = fs.split_path(file_path)
+            # Get last part (the filename) and separate base and extension
             filename_parts = path_parts[-1].rsplit(".", 1)
             base_name = filename_parts[0]
             ext = f".{filename_parts[1]}" if len(filename_parts) > 1 else ""
-
             new_filename = f"{base_name}-{counter}{ext}"
             file_path = fs.join_path(storage_path, new_filename)
             file_info = fs.get_file_info(file_path)
             counter += 1
 
-        # First, ensure the directory exists
-        dir_path = Path(file_path).parent
+        # Ensure the directory where the file should be saved exists.
+        dir_path = os.path.dirname(file_path)
         dir_result = fs.create_directory(dir_path, exist_ok=True)
-        if not dir_result.success:
+        if not (dir_result.success if hasattr(dir_result, "success") else False):
             logger.error(f"Failed to create directory: {dir_result.error}")
             return None
 
-        # Use the FileSystemService instance to write binary content
-        # Note: The service has a 'write_binary' method, not the module directly
+        # Write binary content to file using the FS service’s write_binary method.
         write_result = fs.service.write_binary(file_path, content)
-        if not write_result.success:
+        if not (write_result.success if hasattr(write_result, "success") else False):
             logger.error(f"Failed to write attachment: {write_result.error}")
             return None
 
-        return str(file_path)
+        return file_path
 
     except Exception as e:
         logger.error(f"Error handling attachment: {e}")

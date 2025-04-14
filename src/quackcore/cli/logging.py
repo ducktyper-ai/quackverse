@@ -8,7 +8,7 @@ with flexible configuration options and consistent output formatting.
 
 import atexit
 import logging
-from pathlib import Path
+import os
 from typing import Protocol, TypeVar
 
 from quackcore.cli.options import LogLevel
@@ -83,30 +83,30 @@ def _add_file_handler(
         level_value: The numeric logging level
         console_formatter: Optional formatter to use for consistency with console output
     """
-    # Import here to avoid import at module level, making it easier to mock in tests
+    # Import create_directory from the filesystem service to handle directory creation.
     from quackcore.fs.service import create_directory
 
     try:
+        # Expect the logging file setting to be provided as a string.
         log_file = cfg.logging.file
         if not log_file:
             return
 
-        # Ensure log_file is a Path object
-        log_file = Path(log_file) if not isinstance(log_file, Path) else log_file
-        log_dir = log_file.parent
+        # Obtain the directory of the log file using os.path (all as strings)
+        log_dir = os.path.dirname(log_file)
 
-        # Create the log directory
+        # Create the log directory using the filesystem service
         result = create_directory(log_dir, exist_ok=True)
 
-        # Return early if directory creation failed
+        # If directory creation failed, warn and return
         if not result.success:
             root_logger.warning(f"Failed to create log directory: {result.error}")
             return
 
-        # Add this debug line to help with troubleshooting
         root_logger.debug(f"Log directory created: {log_dir}")
 
-        file_handler = logging.FileHandler(str(log_file))
+        # Create the file handler using the log file string
+        file_handler = logging.FileHandler(log_file)
         file_handler.setLevel(level_value)
 
         if console_formatter:
@@ -120,13 +120,12 @@ def _add_file_handler(
         root_logger.addHandler(file_handler)
         root_logger.debug(f"Log file configured: {log_file}")
 
-        # Add to our global list for cleanup on exit
+        # Keep track of file handlers for cleanup
         _file_handlers.append(file_handler)
     except Exception as e:
         root_logger.warning(f"Failed to set up log file: {e}")
 
 
-# Register a cleanup function to close all file handlers on exit
 @atexit.register
 def _cleanup_file_handlers() -> None:
     """Close all file handlers on exit to prevent resource warnings."""
@@ -134,7 +133,7 @@ def _cleanup_file_handlers() -> None:
         try:
             handler.close()
         except Exception:
-            pass  # Ignore errors during cleanup
+            pass
     _file_handlers.clear()
 
 
@@ -163,33 +162,23 @@ def setup_logging(
         - The root logger instance
         - A logger factory function to create named loggers
     """
-    # Determine the effective log level
     effective_level: LogLevel = _determine_effective_level(
         log_level, debug, quiet, config
     )
-
-    # Convert string level to numeric value
     try:
         level_value = getattr(logging, effective_level)
     except (AttributeError, TypeError):
         level_value = logging.INFO
 
-    # Configure the root logger
     root_logger = logging.getLogger(logger_name)
-
-    # Important: Set propagate to False for the root logger to avoid duplicate logs
     root_logger.propagate = False
-
-    # Set the level and clear existing handlers
     root_logger.setLevel(level_value)
     for handler in root_logger.handlers[:]:
         root_logger.removeHandler(handler)
 
-    # Add console handler
     console_handler = logging.StreamHandler()
     console_handler.setLevel(level_value)
 
-    # Configure formatter based on debug mode
     if effective_level == "DEBUG":
         formatter = logging.Formatter(
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -200,16 +189,13 @@ def setup_logging(
     console_handler.setFormatter(formatter)
     root_logger.addHandler(console_handler)
 
-    # Add file handler if configured
     if config and config.logging.file:
         _add_file_handler(root_logger, config, level_value, formatter)
 
-    # Factory function that creates loggers with the correct name and level
     def get_logger(name: str) -> logging.Logger:
         """Create or get a named logger with the configured settings."""
-        logger = logging.getLogger(f"{logger_name}.{name}")
-        # Explicitly set the level to match the root logger
-        logger.setLevel(root_logger.level)
-        return logger
+        logger_obj = logging.getLogger(f"{logger_name}.{name}")
+        logger_obj.setLevel(root_logger.level)
+        return logger_obj
 
     return root_logger, get_logger

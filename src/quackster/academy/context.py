@@ -7,7 +7,6 @@ managing the quackster environment, configuration, and dependencies.
 """
 
 import os
-from pathlib import Path
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -63,22 +62,22 @@ class TeachingConfig(BaseModel):
     github: GitHubConfig = Field(
         default_factory=GitHubConfig, description="GitHub configuration"
     )
-    assignments_dir: str | Path = Field(
+    assignments_dir: str = Field(
         default="assignments", description="Directory for storing assignment data"
     )
-    feedback_dir: str | Path = Field(
+    feedback_dir: str = Field(
         default="feedback", description="Directory for storing feedback data"
     )
-    grading_dir: str | Path = Field(
+    grading_dir: str = Field(
         default="grading", description="Directory for storing grading data"
     )
-    submissions_dir: str | Path = Field(
+    submissions_dir: str = Field(
         default="submissions", description="Directory for storing submission data"
     )
-    students_file: str | Path = Field(
+    students_file: str = Field(
         default="students.yaml", description="Path to students roster file"
     )
-    course_config_file: str | Path = Field(
+    course_config_file: str = Field(
         default="course.yaml", description="Path to course configuration file"
     )
 
@@ -98,9 +97,7 @@ class TeachingContext:
     It serves as the central hub for accessing quackster resources and services.
     """
 
-    def __init__(
-        self, config: TeachingConfig, base_dir: str | Path | None = None
-    ) -> None:
+    def __init__(self, config: TeachingConfig, base_dir: str | None = None) -> None:
         """
         Initialize a quackster context.
 
@@ -120,9 +117,9 @@ class TeachingContext:
                 logger.warning(
                     f"Could not determine project root: {err}. Falling back to current working directory."
                 )
-                self.base_dir = Path.cwd()
+                self.base_dir = os.getcwd()
         else:
-            self.base_dir = Path(base_dir)
+            self.base_dir = str(base_dir)
 
         # Resolve all relative paths using _resolve_path which utilizes fs.join_path.
         self.assignments_dir = self._resolve_path(config.assignments_dir)
@@ -137,24 +134,23 @@ class TeachingContext:
 
         logger.info(f"Initialized quackster context for course: {config.course_name}")
 
-    def _resolve_path(self, path: str | Path) -> Path:
+    def _resolve_path(self, path_value: str) -> str:
         """
         Resolve a path relative to the base directory.
 
         Uses QuackCore FS's join_path to merge paths in a cross-platform way.
 
         Args:
-            path: Path to resolve.
+            path_value: Path to resolve, either absolute or relative.
 
         Returns:
-            A resolved absolute Path.
+            A resolved absolute path as a string.
         """
-        # If the path is a string and already absolute, return it as a Path.
-        if isinstance(path, str) and os.path.isabs(path):
-            return Path(path)
-        # Otherwise, join with the base_dir using fs.join_path then cast to Path.
-        joined = fs.join_path(str(self.base_dir), str(path))
-        return Path(joined)
+        # If the provided path is already absolute, return it.
+        if os.path.isabs(path_value):
+            return path_value
+        # Otherwise, join with self.base_dir using fs.join_path.
+        return fs.join_path(self.base_dir, path_value)
 
     def ensure_directories(self) -> None:
         """Ensure all required directories exist."""
@@ -164,7 +160,7 @@ class TeachingContext:
             self.grading_dir,
             self.submissions_dir,
         ]:
-            fs.create_directory(str(directory), exist_ok=True)
+            fs.create_directory(directory, exist_ok=True)
         logger.debug(f"Ensured quackster directories exist in {self.base_dir}")
 
     @property
@@ -195,7 +191,7 @@ class TeachingContext:
 
     @classmethod
     def from_config(
-        cls, config_path: str | Path | None = None, base_dir: str | Path | None = None
+        cls, config_path: str | None = None, base_dir: str | None = None
     ) -> "TeachingContext":
         """
         Create a quackster context from a configuration file.
@@ -217,13 +213,15 @@ class TeachingContext:
             config_path = os.environ.get("QUACK_TEACHING_CONFIG")
             if not config_path:
                 potential_paths = [
-                    Path.cwd() / "teaching_config.yaml",
-                    Path.cwd() / "config" / "quackster.yaml",
-                    Path.home() / ".config" / "quack" / "quackster.yaml",
+                    os.path.join(os.getcwd(), "teaching_config.yaml"),
+                    os.path.join(os.getcwd(), "config", "quackster.yaml"),
+                    os.path.join(
+                        os.path.expanduser("~"), ".config", "quack", "quackster.yaml"
+                    ),
                 ]
-                for path in potential_paths:
-                    if path.exists():
-                        config_path = path
+                for p in potential_paths:
+                    if os.path.exists(p):
+                        config_path = p
                         break
         if config_path is None:
             raise QuackConfigurationError(
@@ -231,20 +229,20 @@ class TeachingContext:
                 "Specify the path or set the QUACK_TEACHING_CONFIG environment variable."
             )
 
-        config_path = Path(config_path)
-
         # Infer base_dir if not provided.
         if base_dir is None:
-            base_dir = config_path.parent
+            base_dir = os.path.dirname(config_path)
+        else:
+            base_dir = str(base_dir)
 
         # Load configuration via YAML loader.
         try:
-            config_dict = load_yaml_config(str(config_path))
+            config_dict = load_yaml_config(config_path)
             config = TeachingConfig.model_validate(config_dict)
         except Exception as e:
             raise QuackConfigurationError(
                 f"Failed to load quackster configuration from {config_path}: {str(e)}",
-                config_path=str(config_path),
+                config_path=config_path,
                 original_error=e,
             )
 
@@ -254,7 +252,7 @@ class TeachingContext:
 
     @classmethod
     def create_default(
-        cls, course_name: str, github_org: str, base_dir: str | Path | None = None
+        cls, course_name: str, github_org: str, base_dir: str | None = None
     ) -> "TeachingContext":
         """
         Create a quackster context with default configuration.

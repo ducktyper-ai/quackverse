@@ -7,7 +7,6 @@ Quackster quackster NPC.
 """
 
 import os
-from pathlib import Path
 from typing import Any
 
 from quackcore.config import (  # Global config instance that merges env vars and file-based defaults
@@ -61,7 +60,7 @@ MODEL_MAX_TOKENS = 2000  # Default max tokens for response
 # =============================================================================
 
 
-def get_tutorial_path() -> Path:
+def get_tutorial_path() -> str:
     """
     Get the path to tutorial documents.
 
@@ -70,25 +69,24 @@ def get_tutorial_path() -> Path:
     directory status are checked using QuackCore FS.
 
     Returns:
-        A Path object pointing to the tutorial documents directory.
+        A string representing the absolute path to the tutorial documents directory.
     """
     # Check for an override via the environment variable.
     custom_path = os.environ.get(ENV_TUTORIAL_PATH)
     if custom_path:
         expanded = fs.expand_user_vars(custom_path)
-        return Path(expanded)
+        return expanded
 
     # Try each of the default paths.
     for path_str in DEFAULT_TUTORIAL_PATHS:
         expanded_path = fs.expand_user_vars(path_str)
-        path = Path(expanded_path)
-        info_result = fs.get_file_info(str(path))
+        info_result = fs.get_file_info(expanded_path)
         if info_result.success and info_result.exists and info_result.is_dir:
-            return path
+            return expanded_path
 
     # Fallback to the first default path (expanded).
     fallback = fs.expand_user_vars(DEFAULT_TUTORIAL_PATHS[0])
-    return Path(fallback)
+    return fallback
 
 
 def get_npc_profile() -> QuacksterProfile:
@@ -113,8 +111,7 @@ def get_npc_profile() -> QuacksterProfile:
             expanded_path = fs.expand_user_vars(custom_profile_path)
             result = fs.read_yaml(expanded_path)
             if result.success:
-                # Instead of manually looping over fields, use pydantic's
-                # built-in copy/update to merge the custom data.
+                # Merge custom profile data into the default profile.
                 profile = profile.model_copy(update=result.data)
         except Exception as e:
             print(f"Error loading custom NPC profile: {str(e)}")
@@ -138,7 +135,6 @@ def get_model_settings() -> dict[str, Any]:
     Returns:
         A dictionary containing the model name, temperature, and maximum tokens.
     """
-    # Use the configuration utility to retrieve values (keys are namespaced under 'npc').
     model = get_config_value(config, "npc.model", DEFAULT_MODEL)
     temperature = get_config_value(config, "npc.temperature", MODEL_TEMPERATURE)
     max_tokens = get_config_value(config, "npc.max_tokens", MODEL_MAX_TOKENS)

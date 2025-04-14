@@ -9,14 +9,10 @@ Markdown (and MDX) documents to ground the NPC's knowledge in factual informatio
 import os
 import re
 from functools import lru_cache
-from pathlib import Path
 from typing import Any
 
-# Dogfood QuackCore FS for file operations and logging.
 from quackcore.fs import service as fs
 from quackcore.logging import get_logger
-
-# Dogfood QuackCore Paths for content context detection.
 from quackcore.paths import resolver
 
 logger = get_logger(__name__)
@@ -28,69 +24,63 @@ DEFAULT_DOC_PATHS = [
     "./docs/tutorials",
 ]
 
-# Cache for chunked documents
+# Global caches for chunked documents and their modification times
 _doc_cache: dict[str, str] = {}
 _last_modified_times: dict[str, float] = {}
 
 
-def get_doc_directories() -> list[Path]:
+def get_doc_directories() -> list[str]:
     """
     Get the directories containing tutorial documents.
 
-    This function first checks for a custom override via the
-    QUACK_TUTORIAL_PATH environment variable. If not found, it attempts to
-    detect a content context (with content_type "tutorial") using the
-    QuackCore Paths resolver. Finally, it falls back to the default paths,
-    expanding user variables via fs.expand_user_vars and verifying existence
-    with fs.get_file_info.
+    This function first checks for a custom override via the QUACK_TUTORIAL_PATH environment variable.
+    If not found, it attempts to detect a content context (with content_type "tutorial") using the QuackCore Paths resolver.
+    Finally, it falls back to the default paths, expanding user variables via fs.expand_user_vars and verifying existence with fs.get_file_info.
 
     Returns:
-        A list of directory paths (as Path objects) containing tutorial documents.
+        A list of directory paths (as strings) containing tutorial documents.
     """
-    # Check for a custom override.
+    # Check for an override via the environment variable.
     custom_path = os.environ.get("QUACK_TUTORIAL_PATH")
     if custom_path:
-        custom_expanded = Path(fs.expand_user_vars(custom_path))
-        return [custom_expanded]
+        expanded = fs.expand_user_vars(custom_path)
+        return [expanded]
 
     # Attempt to detect a content context for tutorials.
     content_context = resolver.detect_content_context(content_type="tutorial")
-    if (
-        content_context
-        and content_context.content_dir
-        and content_context.content_dir.exists()
-    ):
-        return [content_context.content_dir]
+    if content_context and content_context.content_dir:
+        info = fs.get_file_info(content_context.content_dir)
+        if info.success and info.exists and info.is_dir:
+            return [content_context.content_dir]
 
-    # Fall back to the default paths.
-    paths: list[Path] = []
+    # Fall back to default paths.
+    paths: list[str] = []
     for path_str in DEFAULT_DOC_PATHS:
-        expanded = Path(fs.expand_user_vars(path_str))
-        info = fs.get_file_info(str(expanded))
+        expanded = fs.expand_user_vars(path_str)
+        info = fs.get_file_info(expanded)
         if info.success and info.exists and info.is_dir:
             paths.append(expanded)
     return paths
 
 
-def should_reload_docs(doc_dirs: list[Path]) -> bool:
+def should_reload_docs(doc_dirs: list[str]) -> bool:
     """
     Check if documents should be reloaded based on modification times.
 
     Args:
-        doc_dirs: List of document directories to check
+        doc_dirs: List of document directories (as strings) to check.
 
     Returns:
-        True if documents should be reloaded, False otherwise.
+        True if any document in these directories has been modified or is new; False otherwise.
     """
     global _last_modified_times
 
     for doc_dir in doc_dirs:
         files: list[str] = []
-        # Search for Markdown and MDX files recursively.
-        result_md = fs.find_files(str(doc_dir), "*.md", recursive=True)
+        result_md = fs.find_files(doc_dir, "*.md", recursive=True)
         if result_md.success:
             files.extend(result_md.files)
-        result_mdx = fs.find_files(str(doc_dir), "*.mdx", recursive=True)
+        result_mdx = fs.find_files(doc_dir, "*.mdx", recursive=True)
         if result_mdx.success:
             files.extend(result_mdx.files)
 
@@ -114,10 +104,9 @@ def load_docs_for_rag() -> str:
     """
     Load all tutorial documents for Retrieval-Augmented Generation (RAG).
 
-    This function gathers all Markdown (and MDX) files found in the tutorial
-    directories, reads their contents using the FS service, and concatenates
-    them into one string. Each file's content is preceded by a header bearing
-    the file name.
+    This function gathers all Markdown (and MDX) files found in the tutorial directories,
+    reads their contents using the FS service, and concatenates them into one string.
+    Each file's content is preceded by a header bearing the file name.
 
     Returns:
         A concatenated string of all document contents, or an empty string if none are found.
@@ -125,7 +114,7 @@ def load_docs_for_rag() -> str:
     global _doc_cache, _last_modified_times
     doc_dirs = get_doc_directories()
 
-    # If we've cached the docs and no files have changed, use the cache.
+    # If we have cached docs and no files have changed, use the cache.
     if _doc_cache and not should_reload_docs(doc_dirs):
         logger.debug("Using cached documents for RAG")
         return "\n\n".join(_doc_cache.values())
@@ -140,28 +129,24 @@ def load_docs_for_rag() -> str:
 
     for doc_dir in doc_dirs:
         files: list[str] = []
-        # Search for Markdown and MDX files recursively.
-        result_md = fs.find_files(str(doc_dir), "*.md", recursive=True)
+        result_md = fs.find_files(doc_dir, "*.md", recursive=True)
         if result_md.success:
             files.extend(result_md.files)
-        result_mdx = fs.find_files(str(doc_dir), "*.mdx", recursive=True)
+        result_mdx = fs.find_files(doc_dir, "*.mdx", recursive=True)
         if result_mdx.success:
             files.extend(result_mdx.files)
 
         for file_path in files:
             try:
-                # Get file modification time.
-                info = fs.get_file_info(str(file_path))
+                info = fs.get_file_info(file_path)
                 if info.success:
-                    new_modified_times[str(file_path)] = info.modified_time
+                    new_modified_times[file_path] = info.modified_time
 
-                # Read the file content.
-                read_result = fs.read_text(str(file_path))
+                read_result = fs.read_text(file_path)
                 if read_result.success:
-                    filename = Path(file_path).name
-                    # Prepend a header with the filename.
+                    filename = os.path.basename(file_path)
                     content = f"# {filename}\n\n{read_result.content}\n\n"
-                    docs[str(file_path)] = content
+                    docs[file_path] = content
                 else:
                     logger.warning(f"Failed to read {file_path}: {read_result.error}")
             except Exception as e:
@@ -171,7 +156,6 @@ def load_docs_for_rag() -> str:
         logger.warning("No tutorial documents found.")
         return ""
 
-    # Update cache and modification times.
     _doc_cache = docs
     _last_modified_times = new_modified_times
 
@@ -182,10 +166,9 @@ def retrieve_relevant_content(query: str, all_content: str, max_chunks: int = 3)
     """
     Retrieve content relevant to a query from the full document content.
 
-    The function splits the complete document content into chunks based on
-    Markdown headings (using only H2/H3 for chunking), scores each chunk by counting
-    keyword occurrences (keywords extracted from the query), and returns the top-scoring chunks
-    (up to max_chunks). Each chunk's heading is integrated into the scoring and output.
+    The function splits the complete document content into chunks based on Markdown headings,
+    scores each chunk by counting keyword occurrences (keywords extracted from the query),
+    and returns the top-scoring chunks (up to max_chunks). Each chunk's heading is integrated into the output.
 
     Args:
         query: The query string to search for.
@@ -200,7 +183,6 @@ def retrieve_relevant_content(query: str, all_content: str, max_chunks: int = 3)
     keywords = _extract_keywords(query)
 
     for chunk in chunks:
-        # Combine the heading (if it exists) and the content for scoring.
         combined_text = (chunk["heading"] + " " if chunk["heading"] else "") + chunk[
             "content"
         ]
@@ -213,7 +195,6 @@ def retrieve_relevant_content(query: str, all_content: str, max_chunks: int = 3)
     scored_chunks.sort(key=lambda x: x[1], reverse=True)
     top_chunks = [chunk for chunk, _ in scored_chunks[:max_chunks]]
 
-    # Format the output to include the heading as a Markdown header if present.
     result_chunks = []
     for chunk in top_chunks:
         if chunk["heading"]:
@@ -227,43 +208,36 @@ def retrieve_relevant_content(query: str, all_content: str, max_chunks: int = 3)
 @lru_cache(maxsize=10)
 def _get_content_chunks(content: str) -> list[dict[str, str]]:
     """
-    Split content into chunks by Markdown headings, using headings of level 2 or 3
-    (i.e. lines starting with '##' or '###') to avoid including file titles.
+    Split content into chunks by Markdown headings using headings of level 2 or 3.
 
-    Each chunk is returned as a dictionary with metadata:
-      - "heading": the text of the heading (None if the chunk has no heading)
+    Each chunk is a dictionary with keys:
+      - "heading": the text of the heading (or None if absent)
       - "content": the body text following the heading
 
     Args:
-        content: The Markdown content to split.
+        content: The Markdown content as a string.
 
     Returns:
-        A list of dictionaries each containing the keys "heading" and "content".
+        A list of dictionaries, each with "heading" and "content" keys.
     """
-    # Regex now only matches headings starting with '##' or '###'
     heading_pattern = re.compile(r"^(#{2,3})\s+(.+)", re.MULTILINE)
     matches = list(heading_pattern.finditer(content))
-
     chunks: list[dict[str, str]] = []
-    # If no headings found, return the whole content as one chunk.
+
     if not matches:
         return [{"heading": None, "content": content.strip()}]
 
-    # If there is content before the first heading, add it as a preliminary chunk.
     if matches[0].start() > 0:
         pre_content = content[: matches[0].start()].strip()
         if pre_content:
             chunks.append({"heading": None, "content": pre_content})
 
-    # Process each heading match.
     for i, match in enumerate(matches):
         heading_text = match.group(2).strip()
         start_index = match.start()
         end_index = matches[i + 1].start() if i < len(matches) - 1 else len(content)
-        # Extract the entire chunk and then remove the heading line from the content.
         chunk_text = content[start_index:end_index].strip()
         lines = chunk_text.splitlines()
-        # Assume the first line is the heading; skip it.
         chunk_body = "\n".join(lines[1:]).strip() if len(lines) > 1 else ""
         chunks.append({"heading": heading_text, "content": chunk_body})
     return chunks
@@ -272,10 +246,10 @@ def _get_content_chunks(content: str) -> list[dict[str, str]]:
 @lru_cache(maxsize=100)
 def _extract_keywords(query: str) -> list[str]:
     """
-    Extract keywords from the query to aid in content matching.
+    Extract keywords from the query for improved content matching.
 
     This function tokenizes the query, removes common stop words, and filters out tokens shorter than three characters.
-    Caches results to improve performance for repeated queries.
+    Caches results for repeated queries.
 
     Args:
         query: The query string.
@@ -363,8 +337,7 @@ def get_quest_info(quest_id: str) -> dict[str, Any]:
         quest_id: The quest ID.
 
     Returns:
-        A dictionary with quest details such as name, description, reward XP,
-        badge information, and guidance.
+        A dictionary with quest details.
     """
     from quackster import quests
 
@@ -392,10 +365,8 @@ def get_quest_info(quest_id: str) -> dict[str, Any]:
         ),
         "run-ducktyper": (
             "To complete this quest, you'll need to run the DuckTyper CLI.\n\n"
-            "1. Install DuckTyper if you haven't already:\n"
-            "   pip install ducktyper\n"
-            "2. Run a simple DuckTyper command:\n"
-            "   ducktyper hello\n"
+            "1. Install DuckTyper:\n   pip install ducktyper\n"
+            "2. Run:\n   ducktyper hello\n"
             "3. The quest will be marked as completed automatically."
         ),
     }
@@ -421,8 +392,7 @@ def get_badge_info(badge_id: str) -> dict[str, Any]:
         badge_id: The badge's ID.
 
     Returns:
-        A dictionary containing badge details including name, description,
-        required XP, emoji, and additional guidance.
+        A dictionary containing badge details.
     """
     from quackster import badges
 
@@ -442,15 +412,15 @@ def get_badge_info(badge_id: str) -> dict[str, Any]:
         },
         "duck-contributor": {
             "guidance": "This badge is earned by opening a Pull Request to a QuackVerse repository.",
-            "fun_fact": "The concept of 'pull requests' was popularized by GitHub to make code collaboration easier.",
+            "fun_fact": "The concept of 'pull requests' was popularized by GitHub to facilitate code reviews.",
         },
         "duck-team-player": {
             "guidance": "This badge is earned by having a PR merged into a QuackVerse project.",
-            "fun_fact": "The average time for PR review and merging in open source projects is about 4-5 days.",
+            "fun_fact": "The average PR review and merge time in open source projects is about 4-5 days.",
         },
         "duck-initiate": {
             "guidance": "This badge is earned by gaining your first 10 XP in DuckTyper.",
-            "fun_fact": "The concept of 'XP' was first popularized in role-playing games in the 1970s.",
+            "fun_fact": "XP was first popularized in role-playing games in the 1970s.",
         },
     }
 
@@ -458,7 +428,7 @@ def get_badge_info(badge_id: str) -> dict[str, Any]:
         badge_id,
         {
             "guidance": f"This badge is earned by reaching {badge.required_xp} XP.",
-            "fun_fact": "Badges were originally physical emblems worn to show achievement or affiliation.",
+            "fun_fact": "Badges were originally physical emblems worn to show achievement.",
         },
     )
 
@@ -482,79 +452,43 @@ def get_tutorial_topic(topic: str) -> dict[str, Any]:
         topic: The topic to search for.
 
     Returns:
-        A dictionary with tutorial information including title, description,
-        and the main content.
+        A dictionary with tutorial information including title, description, and content.
     """
     topics = {
         "ducktyper": {
             "title": "Introduction to DuckTyper",
             "description": "DuckTyper is a CLI tool for the QuackVerse ecosystem.",
             "content": (
-                "# DuckTyper Tutorial\n\n"
-                "DuckTyper is a command-line interface (CLI) tool for the QuackVerse ecosystem. It provides a unified way to interact with QuackVerse components.\n\n"
-                "## Installation\n\n"
-                "You can install DuckTyper using pip:\n\n"
-                "```bash\npip install ducktyper\n```\n\n"
-                "## Basic Usage\n\n"
-                "Once installed, you can run various commands:\n\n"
-                "```bash\nducktyper --help\n```\n"
-                "```bash\nducktyper xp\n```\n"
-                "```bash\nducktyper quest list\n```\n"
-                "```bash\nducktyper badge list\n```\n"
+                "# DuckTyper Tutorial\n\nDuckTyper is a CLI tool for interacting with QuackVerse components.\n\n"
+                "## Installation\n\nInstall DuckTyper using pip:\n\n```\npip install ducktyper\n```\n\n"
+                "## Usage\n\nRun:\n```\nducktyper --help\n```\n"
             ),
         },
         "quests": {
             "title": "Completing Quests with DuckTyper",
             "description": "Learn how to view and complete quests.",
             "content": (
-                "# Quests in DuckTyper\n\n"
-                "Quests are challenges that you can complete to earn XP and badges.\n\n"
-                "## Viewing Quests\n\n"
-                "To see available quests:\n\n"
-                "```bash\nducktyper quest list\n```\n\n"
-                "## Completing Quests\n\n"
-                "Most quests involve GitHub actions or using DuckTyper features. For example:\n\n"
-                "1. Star the QuackCore repository on GitHub\n"
-                "2. Open a PR to a QuackVerse repository\n"
-                "3. Run DuckTyper daily for a streak\n\n"
-                "## Checking Progress\n\n"
-                "Check your progress with:\n\n"
-                "```bash\nducktyper progress\n```\n"
+                "# Quests in DuckTyper\n\nQuests are challenges that earn XP and badges.\n\n"
+                "## Viewing Quests\n\nUse:\n```\nducktyper quest list\n```\n\n"
+                "## Completing Quests\n\nActions may include starring repositories, opening PRs, etc."
             ),
         },
         "badges": {
             "title": "Understanding Badges",
             "description": "Learn about the badge system in QuackVerse.",
             "content": (
-                "# Badges in QuackVerse\n\n"
-                "Badges are achievements you can earn to showcase your progress and skills.\n\n"
-                "## Types of Badges\n\n"
-                "There are several types of badges in the QuackVerse ecosystem:\n\n"
-                "1. **XP-based badges** - Earned by reaching certain XP thresholds\n"
-                "2. **Quest-based badges** - Earned by completing specific quests\n"
-                "3. **Special badges** - Earned through unique achievements\n\n"
-                "## Viewing Your Badges\n\n"
-                "To see your earned badges:\n\n"
-                "```bash\nducktyper badge list\n```\n\n"
-                "## Badge Benefits\n\n"
-                "Badges aren't just for show - they unlock special features and demonstrate your expertise to the community.\n"
+                "# Badges in QuackVerse\n\nBadges showcase achievements.\n\n"
+                "## Types of Badges\n\n1. XP-based badges\n2. Quest-based badges\n3. Special badges\n\n"
+                "## Viewing Your Badges\n\nUse:\n```\nducktyper badge list\n```\n"
             ),
         },
         "github": {
             "title": "GitHub Integration with QuackVerse",
             "description": "How QuackVerse connects with GitHub.",
             "content": (
-                "# GitHub Integration\n\n"
-                "QuackVerse deeply integrates with GitHub to provide a seamless development experience.\n\n"
-                "## GitHub Actions\n\n"
-                "Many quests involve GitHub actions such as:\n\n"
-                "- Starring repositories\n"
-                "- Opening Pull Requests\n"
-                "- Getting PRs merged\n\n"
-                "## Setting Up GitHub\n\n"
-                "To connect your GitHub account:\n\n"
-                "```bash\nducktyper github connect\n```\n\n"
-                "This will help QuackVerse track your GitHub activities for quest completion.\n"
+                "# GitHub Integration\n\nQuackVerse integrates with GitHub for seamless collaboration.\n\n"
+                "## Key Features\n\n- Starring repositories\n- Opening Pull Requests\n\n"
+                "## Setup\n\nConnect your GitHub account with:\n```\nducktyper github connect\n```\n"
             ),
         },
     }
@@ -564,27 +498,22 @@ def get_tutorial_topic(topic: str) -> dict[str, Any]:
         if key.lower() in lower_topic or lower_topic in key.lower():
             return content
 
-    # If we don't have an exact match, try to find the most relevant topic.
     best_match = None
     best_score = 0
     keywords = _extract_keywords(topic)
 
     for key, content in topics.items():
-        # Calculate relevance score based on keyword matches.
         topic_text = f"{key} {content['title']} {content['description']}"
         score = sum(topic_text.lower().count(keyword.lower()) for keyword in keywords)
         if score > best_score:
             best_score = score
             best_match = content
 
-    # If we found something somewhat relevant, return it.
     if best_match and best_score > 0:
         return best_match
 
     return {
         "title": "Topic Not Found",
         "description": f"No tutorial found for '{topic}'",
-        "content": (
-            f"I don't have a specific tutorial on '{topic}' yet. Try asking about DuckTyper, quests, badges, or GitHub integration."
-        ),
+        "content": f"I don't have a tutorial on '{topic}' yet. Try asking about DuckTyper, quests, badges, or GitHub integration.",
     }

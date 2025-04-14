@@ -6,9 +6,26 @@ This module provides data models for representing project structure context,
 which is used for resolving paths in a project.
 """
 
-from pathlib import Path
-
 from pydantic import BaseModel, Field
+
+
+# Helper function to compute the relative path (if applicable)
+def _compute_relative_path(path: str, root: str) -> str | None:
+    """
+    Compute the relative path of `path` relative to `root`, if possible.
+
+    Args:
+        path: The absolute path as a string.
+        root: The project root directory as a string.
+
+    Returns:
+        The relative path as a string if `path` starts with `root`, otherwise None.
+    """
+    # Assumes paths are already normalized using quackcore.fs utilities.
+    if path.startswith(root):
+        rel = path[len(root) :]
+        return rel.lstrip("/\\")
+    return None
 
 
 class ProjectDirectory(BaseModel):
@@ -20,9 +37,9 @@ class ProjectDirectory(BaseModel):
     """
 
     name: str = Field(description="Name of the directory")
-    path: Path = Field(description="Absolute path to the directory")
-    rel_path: Path | None = Field(
-        default=None, description="Relative path from project root"
+    path: str = Field(description="Absolute path to the directory")
+    rel_path: str | None = Field(
+        default=None, description="Relative path from the project root"
     )
     is_source: bool = Field(
         default=False, description="Whether this is a source code directory"
@@ -44,7 +61,7 @@ class ProjectDirectory(BaseModel):
 
     def __str__(self) -> str:
         """String representation of the directory."""
-        return str(self.path)
+        return self.path
 
 
 class ProjectContext(BaseModel):
@@ -55,7 +72,7 @@ class ProjectContext(BaseModel):
     such as the root directory, source code directories, and output directories.
     """
 
-    root_dir: Path = Field(
+    root_dir: str = Field(
         description="Root directory of the project",
     )
 
@@ -64,7 +81,7 @@ class ProjectContext(BaseModel):
         description="Dictionary of project directories by name",
     )
 
-    config_file: Path | None = Field(
+    config_file: str | None = Field(
         default=None,
         description="Path to the project configuration file",
     )
@@ -78,63 +95,63 @@ class ProjectContext(BaseModel):
         """String representation of the project context."""
         return f"ProjectContext(root={self.root_dir}, dirs={len(self.directories)})"
 
-    def get_source_dir(self) -> Path | None:
+    def get_source_dir(self) -> str | None:
         """
         Get the primary source directory.
 
         Returns:
-            Path to the source directory or None if not found
+            The path to the source directory as a string, or None if not found.
         """
         for dir_info in self.directories.values():
             if dir_info.is_source:
                 return dir_info.path
         return None
 
-    def get_output_dir(self) -> Path | None:
+    def get_output_dir(self) -> str | None:
         """
         Get the primary output directory.
 
         Returns:
-            Path to the output directory or None if not found
+            The path to the output directory as a string, or None if not found.
         """
         for dir_info in self.directories.values():
             if dir_info.is_output:
                 return dir_info.path
         return None
 
-    def get_data_dir(self) -> Path | None:
+    def get_data_dir(self) -> str | None:
         """
         Get the primary data directory.
 
         Returns:
-            Path to the data directory or None if not found
+            The path to the data directory as a string, or None if not found.
         """
         for dir_info in self.directories.values():
             if dir_info.is_data:
                 return dir_info.path
         return None
 
-    def get_config_dir(self) -> Path | None:
+    def get_config_dir(self) -> str | None:
         """
         Get the primary configuration directory.
 
         Returns:
-            Path to the configuration directory or None if not found
+            The path to the configuration directory as a string, or None if not found.
         """
         for dir_info in self.directories.values():
             if dir_info.is_config:
                 return dir_info.path
         return None
 
-    def get_directory(self, name: str) -> Path | None:
+    def get_directory(self, name: str) -> str | None:
         """
         Get a directory by name.
 
         Args:
-            name: Name of the directory
+            name: Name of the directory.
 
         Returns:
-            Path to the directory or None if not found
+            The directory path as a string, or None if not found.
         """
         dir_info = self.directories.get(name)
         return dir_info.path if dir_info else None
@@ -142,7 +159,7 @@ class ProjectContext(BaseModel):
     def add_directory(
         self,
         name: str,
-        path: Path,
+        path: str,
         is_source: bool = False,
         is_output: bool = False,
         is_data: bool = False,
@@ -155,22 +172,17 @@ class ProjectContext(BaseModel):
         Add a directory to the project context.
 
         Args:
-            name: Name of the directory
-            path: Path to the directory
-            is_source: Whether this is a source code directory
-            is_output: Whether this is an output directory
-            is_data: Whether this is a data directory
-            is_config: Whether this is a configuration directory
-            is_test: Whether this is a test directory
-            is_asset: Whether this is an asset directory
-            is_temp: Whether this is a temporary directory
+            name: Name of the directory.
+            path: Absolute path to the directory as a string.
+            is_source: Whether this is a source code directory.
+            is_output: Whether this is an output directory.
+            is_data: Whether this is a data directory.
+            is_config: Whether this is a configuration directory.
+            is_test: Whether this is a test directory.
+            is_asset: Whether this is an asset directory.
+            is_temp: Whether this is a temporary directory.
         """
-        rel_path = (
-            path.relative_to(self.root_dir)
-            if path.is_relative_to(self.root_dir)
-            else None
-        )
-
+        rel_path = _compute_relative_path(path, self.root_dir)
         self.directories[name] = ProjectDirectory(
             name=name,
             path=path,
@@ -189,7 +201,7 @@ class ContentContext(ProjectContext):
     """
     Represents the context of a content creation project.
 
-    Extends ProjectContext with content creation specific information.
+    Extends ProjectContext with content creation–specific information.
     """
 
     content_type: str | None = Field(
@@ -202,29 +214,29 @@ class ContentContext(ProjectContext):
         description="Name of the content item",
     )
 
-    content_dir: Path | None = Field(
+    content_dir: str | None = Field(
         default=None,
         description="Path to the content directory",
     )
 
-    def get_assets_dir(self) -> Path | None:
+    def get_assets_dir(self) -> str | None:
         """
         Get the assets directory.
 
         Returns:
-            Path to the assets directory or None if not found
+            The path to the assets directory as a string, or None if not found.
         """
         for dir_info in self.directories.values():
             if dir_info.is_asset:
                 return dir_info.path
         return None
 
-    def get_temp_dir(self) -> Path | None:
+    def get_temp_dir(self) -> str | None:
         """
         Get the temporary directory.
 
         Returns:
-            Path to the temporary directory or None if not found
+            The path to the temporary directory as a string, or None if not found.
         """
         for dir_info in self.directories.values():
             if dir_info.is_temp:

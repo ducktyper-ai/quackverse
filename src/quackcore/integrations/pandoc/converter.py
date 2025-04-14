@@ -3,18 +3,21 @@
 Core converter implementation for Pandoc integration.
 
 This module provides the main DocumentConverter class that implements
-the document conversion functionality using Pandoc.
+the document conversion functionality using Pandoc. In this refactored
+version, all file paths are represented as strings. Filesystem operations
+such as reading file info, creating directories, writing output files, etc.,
+are delegated to the quackcore.fs service functions.
 """
 
+import os
 from collections.abc import Sequence
 from datetime import datetime
-from pathlib import Path
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs import service as fs
 from quackcore.fs.results import OperationResult
 from quackcore.integrations.core.results import IntegrationResult
-from quackcore.integrations.pandoc.config import PandocConfig
+from quackcore.integrations.pandoc import PandocConfig
 from quackcore.integrations.pandoc.models import ConversionMetrics, ConversionTask
 from quackcore.integrations.pandoc.operations import (
     convert_html_to_markdown,
@@ -33,7 +36,9 @@ logger = get_logger(__name__)
 
 class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
     """
-    Handles document conversion using pandoc with retry and validation.
+    Handles document conversion using Pandoc with retry and validation.
+
+    All file paths throughout this class are handled as strings.
     """
 
     def __init__(self, config: PandocConfig) -> None:
@@ -41,10 +46,10 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
         Initialize the document converter.
 
         Args:
-            config: Conversion configuration.
+            config: The Pandoc conversion configuration.
 
         Raises:
-            QuackIntegrationError: If pandoc is not available.
+            QuackIntegrationError: If Pandoc is not available.
         """
         self.config: PandocConfig = config
         self.metrics: ConversionMetrics = ConversionMetrics(start_time=datetime.now())
@@ -52,28 +57,28 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
 
     @property
     def pandoc_version(self) -> str:
-        """Get the pandoc version."""
+        """Get the Pandoc version."""
         return self._pandoc_version
 
     def convert_file(
-        self, input_path: Path, output_path: Path, output_format: str
-    ) -> IntegrationResult[Path]:
+        self, input_path: str, output_path: str, output_format: str
+    ) -> IntegrationResult[str]:
         """
         Convert a file from one format to another.
 
         Args:
-            input_path: Path to the input file.
-            output_path: Path to the output file.
-            output_format: Target format (e.g., "markdown" or "docx").
+            input_path: Input file path (as a string).
+            output_path: Output file path (as a string).
+            output_format: Target format (e.g. "markdown" or "docx").
 
         Returns:
-            IntegrationResult[Path]: Result of the conversion containing the output path.
+            IntegrationResult containing the output file path (string).
         """
         try:
             input_info = get_file_info(input_path)
-            dir_result: OperationResult = fs.create_directory(
-                output_path.parent, exist_ok=True
-            )
+            # Create output directory from the output_path (using os.path.dirname)
+            output_dir = os.path.dirname(output_path)
+            dir_result: OperationResult = fs.create_directory(output_dir, exist_ok=True)
             if not dir_result.success:
                 return IntegrationResult.error_result(
                     f"Failed to create output directory: {dir_result.error}"
@@ -84,6 +89,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
                     input_path, output_path, self.config, self.metrics
                 )
                 if result.success and result.content:
+                    # Assume result.content is a list of output file paths (as strings)
                     return IntegrationResult.success_result(
                         result.content[0],
                         message=f"Successfully converted {input_path} to Markdown",
@@ -115,19 +121,21 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             return IntegrationResult.error_result(f"Conversion error: {str(e)}")
 
     def convert_batch(
-        self, tasks: Sequence[ConversionTask], output_dir: Path | None = None
-    ) -> IntegrationResult[list[Path]]:
+        self, tasks: Sequence[ConversionTask], output_dir: str | None = None
+    ) -> IntegrationResult[list[str]]:
         """
         Convert a batch of files.
 
         Args:
-            tasks: List of conversion tasks.
-            output_dir: Directory to save converted files (overrides task output paths).
+            tasks: Sequence of conversion tasks.
+            output_dir: Directory to save converted files (as a string).
+                        If not provided, the value from the configuration is used.
 
         Returns:
-            IntegrationResult[list[Path]]: Result of the batch conversion.
+            IntegrationResult containing a list of successfully converted file paths (as strings).
         """
-        output_directory: Path = (
+        # Use the provided output_dir, or fallback to the config value (already a string)
+        output_directory: str = (
             output_dir if output_dir is not None else self.config.output_dir
         )
         dir_result: OperationResult = fs.create_directory(
@@ -138,29 +146,28 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
                 f"Failed to create output directory: {dir_result.error}"
             )
 
-        successful_files: list[Path] = []
-        failed_files: list[Path] = []
+        successful_files: list[str] = []
+        failed_files: list[str] = []
         self.metrics = ConversionMetrics(
             start_time=datetime.now(), total_attempts=len(tasks)
         )
 
         for task in tasks:
             try:
-                output_path: Path = (
-                    task.output_path
-                    if task.output_path is not None
-                    else (
-                        output_directory
-                        / (
-                            task.source.path.stem
-                            + (
-                                ".md"
-                                if task.target_format == "markdown"
-                                else f".{task.target_format}"
-                            )
-                        )
+                # Determine the output path: if task.output_path is provided (as a string), use it.
+                # Otherwise, construct the output filename from the source path and target format.
+                if task.output_path is not None:
+                    output_path = task.output_path
+                else:
+                    # Assume task.source.path is a string representing the file path.
+                    base_name, _ = os.path.splitext(task.source.path)
+                    ext = (
+                        ".md"
+                        if task.target_format == "markdown"
+                        else f".{task.target_format}"
                     )
-                )
+                    output_path = os.path.join(output_directory, base_name + ext)
+
                 result = self.convert_file(
                     task.source.path, output_path, task.target_format
                 )
@@ -174,7 +181,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             except Exception as e:
                 failed_files.append(task.source.path)
                 logger.error(f"Error processing task for {task.source.path}: {str(e)}")
-                self.metrics.errors[str(task.source.path)] = str(e)
+                self.metrics.errors[task.source.path] = str(e)
                 self.metrics.failed_conversions += 1
 
         self.metrics.successful_conversions = len(successful_files)
@@ -192,7 +199,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
                 message=f"Partially successful: converted {len(successful_files)} files, failed to convert {len(failed_files)} files",
             )
         else:
-            failed_files_str: str = ", ".join(str(f) for f in failed_files[:5])
+            failed_files_str: str = ", ".join(failed_files[:5])
             if len(failed_files) > 5:
                 failed_files_str += f" and {len(failed_files) - 5} more"
             error_msg: str = (
@@ -203,16 +210,16 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
                 message=f"All {len(failed_files)} conversion tasks failed. See logs for details.",
             )
 
-    def validate_conversion(self, output_path: Path, input_path: Path) -> bool:
+    def validate_conversion(self, output_path: str, input_path: str) -> bool:
         """
         Validate the converted document.
 
         Args:
-            output_path: Path to the output file.
-            input_path: Path to the input file.
+            output_path: Output file path (as a string).
+            input_path: Input file path (as a string).
 
         Returns:
-            bool: True if validation passed, False otherwise.
+            True if validation passes, otherwise False.
         """
         try:
             output_info = fs.get_file_info(output_path)
@@ -233,8 +240,8 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
                 f"Conversion size change: {input_size} → {output_size} bytes ({size_change_percentage:.1f}%)"
             )
 
-            extension = fs.get_extension(output_path)
-            if extension in ("md", "markdown"):
+            ext = fs.get_extension(output_path)
+            if ext in ("md", "markdown"):
                 try:
                     read_result = fs.read_text(output_path, encoding="utf-8")
                     if not read_result.success:
@@ -246,7 +253,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
                 except Exception as e:
                     logger.error(f"Failed to read markdown file: {e}")
                     return False
-            elif extension == "docx":
+            elif ext == "docx":
                 from quackcore.integrations.pandoc.operations.utils import (
                     validate_docx_structure,
                 )
@@ -267,9 +274,9 @@ def create_converter(config: PandocConfig) -> DocumentConverter:
     Create a document converter instance.
 
     Args:
-        config: Conversion configuration.
+        config: The Pandoc conversion configuration.
 
     Returns:
-        DocumentConverter: Initialized document converter.
+        A new DocumentConverter instance.
     """
     return DocumentConverter(config)

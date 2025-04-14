@@ -6,8 +6,8 @@ This module provides access to template-based dialogue for the Quackster NPC,
 allowing for consistent and easily customizable character responses.
 """
 
+import os
 import random
-from pathlib import Path
 from typing import Any
 
 import yaml
@@ -19,9 +19,10 @@ from quackster.npc.schema import QuacksterProfile, UserMemory
 
 logger = get_logger(__name__)
 
-# Initialize Jinja2 environment for templates
-TEMPLATE_DIR = Path(__file__).parent
-env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)))
+# Initialize Jinja2 environment for templates.
+# Instead of using Path(__file__).parent, we use os.path.dirname(__file__)
+TEMPLATE_DIR = os.path.dirname(__file__)
+env = Environment(loader=FileSystemLoader(TEMPLATE_DIR))
 
 
 class DialogueCategory(BaseModel):
@@ -39,17 +40,18 @@ def load_yaml(name: str) -> dict[str, Any]:
         name: Name of the YAML file (without extension)
 
     Returns:
-        Parsed YAML content as a dictionary
+        Parsed YAML content as a dictionary.
     """
-    path = Path(__file__).parent / f"{name}.yaml"
+    # Construct file path by joining the directory of this file with the filename.
+    file_path = os.path.join(os.path.dirname(__file__), f"{name}.yaml")
     try:
-        with path.open("r", encoding="utf-8") as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             return yaml.safe_load(f)
     except FileNotFoundError:
-        logger.warning(f"Dialogue file not found: {path}")
+        logger.warning(f"Dialogue file not found: {file_path}")
         return {}
     except yaml.YAMLError as e:
-        logger.error(f"Error parsing YAML file {path}: {e}")
+        logger.error(f"Error parsing YAML file {file_path}: {e}")
         return {}
 
 
@@ -58,11 +60,11 @@ def _render_template(template_name: str, context: dict[str, Any]) -> str:
     Render a Jinja2 template with the provided context.
 
     Args:
-        template_name: Name of the template file
-        context: Variables to use in the template
+        template_name: Name of the template file.
+        context: Variables to use in the template.
 
     Returns:
-        Rendered template as a string
+        Rendered template as a string.
     """
     try:
         template = env.get_template(template_name)
@@ -72,7 +74,7 @@ def _render_template(template_name: str, context: dict[str, Any]) -> str:
         return f"[Template Error: {template_name}]"
 
 
-class DialogueRegistry:
+class DialogueRegistry(BaseModel):
     """
     Registry for NPC dialogue templates and snippets.
 
@@ -80,7 +82,7 @@ class DialogueRegistry:
     farewells, catchphrases, and templated content for various interactions.
     """
 
-    # Load dialogue data once on module import
+    # Load dialogue data once on module import.
     _greetings = load_yaml("greetings")
     _farewells = load_yaml("farewells")
     _catchphrases = load_yaml("catchphrases")
@@ -93,10 +95,10 @@ class DialogueRegistry:
         Get an appropriate greeting based on user memory.
 
         Args:
-            memory: User memory data
+            memory: User memory data.
 
         Returns:
-            A greeting string
+            A greeting string.
         """
         greetings = cls._greetings
 
@@ -104,22 +106,21 @@ class DialogueRegistry:
         if memory.conversation_count == 0 and "first_time" in greetings:
             return random.choice(greetings["first_time"])
 
-        # Returning user greetings
         options = []
 
-        # Add general returning greetings
+        # General returning greetings
         if "returning" in greetings and "general" in greetings["returning"]:
             options.extend(greetings["returning"]["general"])
 
-        # Add level-specific greetings
+        # Level-specific greetings
         if "returning" in greetings and "level" in greetings["returning"]:
             level_greetings = greetings["returning"]["level"]
             for greeting in level_greetings:
                 options.append(greeting.replace("{{ level }}", str(memory.level)))
 
-        # Add badge-specific greetings
+        # Badge-specific greetings
         if (
-            len(memory.badges) > 0
+            memory.badges
             and "returning" in greetings
             and "badges" in greetings["returning"]
         ):
@@ -129,9 +130,9 @@ class DialogueRegistry:
                     greeting.replace("{{ badge_count }}", str(len(memory.badges)))
                 )
 
-        # Add quest-specific greetings
+        # Quest-specific greetings
         if (
-            len(memory.completed_quests) > 0
+            memory.completed_quests
             and "returning" in greetings
             and "quests" in greetings["returning"]
         ):
@@ -143,11 +144,9 @@ class DialogueRegistry:
                     )
                 )
 
-        # If we have options, choose one randomly
         if options:
             return random.choice(options)
 
-        # Fallback to default greeting
         return "Quack! How can I help you today? 🦆"
 
     @classmethod
@@ -156,34 +155,27 @@ class DialogueRegistry:
         Get an appropriate farewell based on user memory.
 
         Args:
-            memory: User memory data
+            memory: User memory data.
 
         Returns:
-            A farewell string
+            A farewell string.
         """
         farewells = cls._farewells
-
         options = []
 
-        # Add general farewells
         if "general" in farewells:
             options.extend(farewells["general"])
 
-        # Add beginner farewells
         if memory.xp < 100 and "beginner" in farewells:
             options.extend(farewells["beginner"])
-        # Add intermediate farewells
         elif memory.xp < 500 and "intermediate" in farewells:
             options.extend(farewells["intermediate"])
-        # Add advanced farewells
         elif "advanced" in farewells:
             options.extend(farewells["advanced"])
 
-        # If we have options, choose one randomly
         if options:
             return random.choice(options)
 
-        # Fallback to default farewell
         return "Quack for now! Come back soon! 🦆"
 
     @classmethod
@@ -192,7 +184,7 @@ class DialogueRegistry:
         Get a random catchphrase.
 
         Returns:
-            A catchphrase string
+            A catchphrase string.
         """
         if "catchphrases" in cls._catchphrases:
             return random.choice(cls._catchphrases["catchphrases"])
@@ -204,11 +196,11 @@ class DialogueRegistry:
         Get dialogue for a specific badge.
 
         Args:
-            badge_id: ID of the badge
-            key: Type of dialogue to retrieve (description, guidance, fun_fact)
+            badge_id: ID of the badge.
+            key: Type of dialogue to retrieve (e.g., description, guidance, fun_fact).
 
         Returns:
-            Badge dialogue string or None if not found
+            A badge dialogue string or None if not found.
         """
         if badge_id in cls._badge_dialogue and key in cls._badge_dialogue[badge_id]:
             return cls._badge_dialogue[badge_id][key]
@@ -220,11 +212,11 @@ class DialogueRegistry:
         Get dialogue for a specific quest.
 
         Args:
-            quest_id: ID of the quest
-            key: Type of dialogue to retrieve (guidance, hint, completion)
+            quest_id: ID of the quest.
+            key: Type of dialogue to retrieve (e.g., guidance, hint, completion).
 
         Returns:
-            Quest dialogue string or None if not found
+            A quest dialogue string or None if not found.
         """
         if quest_id in cls._quest_dialogue and key in cls._quest_dialogue[quest_id]:
             return cls._quest_dialogue[quest_id][key]
@@ -236,11 +228,11 @@ class DialogueRegistry:
         Render the system prompt template using profile and memory.
 
         Args:
-            profile: NPC personality profile
-            memory: User memory data
+            profile: NPC personality profile.
+            memory: User memory data.
 
         Returns:
-            Rendered system prompt
+            Rendered system prompt as a string.
         """
         context = {
             "profile": profile.model_dump(),
@@ -254,10 +246,10 @@ class DialogueRegistry:
         Render a badge status template.
 
         Args:
-            badge_data: Badge information
+            badge_data: Dictionary with badge information.
 
         Returns:
-            Rendered badge status
+            Rendered badge status as a string.
         """
         return cls.render_template("badge_status.md.j2", badge_data)
 
@@ -267,10 +259,10 @@ class DialogueRegistry:
         Render a quest introduction template.
 
         Args:
-            quest_data: Quest information
+            quest_data: Dictionary with quest information.
 
         Returns:
-            Rendered quest introduction
+            Rendered quest introduction as a string.
         """
         return cls.render_template("quest_intro.md.j2", quest_data)
 
@@ -280,11 +272,11 @@ class DialogueRegistry:
         Render a Jinja2 template with the provided context.
 
         Args:
-            template_name: Name of the template file
-            context: Variables to use in the template
+            template_name: Name of the template file.
+            context: Variables to use in the template.
 
         Returns:
-            Rendered template as a string
+            Rendered template as a string.
         """
         return _render_template(template_name, context)
 
@@ -294,13 +286,12 @@ class DialogueRegistry:
         Add Quackster flavor to plain text.
 
         Args:
-            category: Category of text (badge, quest, tutorial, etc.)
-            text: Plain text to add flavor to
+            category: Category of text (e.g., badge, quest, tutorial, etc.).
+            text: Plain text to add flavor to.
 
         Returns:
-            Text with added Quackster flavor
+            Text with added Quackster flavor.
         """
-        # Define category-specific flavor additions
         category_flavors = {
             "badge": [
                 "What a shiny achievement! ",
@@ -334,17 +325,12 @@ class DialogueRegistry:
             ],
         }
 
-        # Get category-specific flavors or use generic ones
         if category.lower() in category_flavors:
-            if random.random() < 0.5:  # 50% chance to add category flavor
+            if random.random() < 0.5:
                 category_flavor = random.choice(category_flavors[category.lower()])
                 text = f"{category_flavor}{text}"
-
-        # Add a quack catchphrase occasionally (20% chance)
         if random.random() < 0.2:
             text = f"{cls.get_catchphrase()} {text}"
-
-        # Add appropriate emoji based on category if no duck emoji
         category_emojis = {
             "badge": "🏆 🦆",
             "quest": "🗺️ 🦆",
@@ -354,10 +340,7 @@ class DialogueRegistry:
             "completion": "🎉 🦆",
             "error": "❓ 🦆",
         }
-
-        # Add duck emoji if missing, using category-specific styling if available
         if "🦆" not in text:
             emoji_suffix = category_emojis.get(category.lower(), "🦆")
             text = f"{text} {emoji_suffix}"
-
         return text
