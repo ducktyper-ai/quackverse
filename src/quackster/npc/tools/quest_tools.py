@@ -11,13 +11,13 @@ from quackster import badges, quests, utils
 from quackster.npc import rag
 from quackster.npc.dialogue import DialogueRegistry
 from quackster.npc.schema import UserMemory
-from quackster.npc.tools import (
+from quackster.npc.tools.common import standardize_tool_output
+from quackster.npc.tools.schema import (
     QuestCompletionDetail,
     QuestCompletionOutput,
     QuestDetailOutput,
     QuestInfo,
     QuestListOutput,
-    standardize_tool_output,
 )
 
 logger = get_logger(__name__)

@@ -10,7 +10,9 @@ import pytest
 
 from quackcore.errors import QuackConfigurationError
 from quackcore.integrations.core.base import BaseConfigProvider
-from tests.quackcore.test_integrations.core.base.config_provider_impl import MockConfigProvider
+from tests.quackcore.test_integrations.core.base.config_provider_impl import (
+    MockConfigProvider,
+)
 
 
 class TestBaseConfigProvider:

@@ -8,11 +8,8 @@ and checking certificate eligibility.
 
 from quackster import certificates, utils
 from quackster.npc.schema import UserMemory
-from quackster.npc.tools import (
-    CertificateInfo,
-    CertificateListOutput,
-    standardize_tool_output,
-)
+from quackster.npc.tools.common import standardize_tool_output
+from quackster.npc.tools.schema import CertificateInfo, CertificateListOutput
 
 
 def get_certificate_info(user_memory: UserMemory) -> CertificateListOutput:

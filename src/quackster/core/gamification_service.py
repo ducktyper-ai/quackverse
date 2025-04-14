@@ -14,9 +14,13 @@ from datetime import datetime
 
 from quackcore.errors import QuackError  # Use our custom error types
 from quackcore.logging import get_logger
-
-from . import badges, quests, utils, xp  # xp now exports check_xp_badges publicly
-from .models import UserProgress, XPEvent
+from quackster.core import (  # xp now exports check_xp_badges publicly
+    badges,
+    quests,
+    utils,
+    xp,
+)
+from quackster.core.models import UserProgress, XPEvent
 
 logger = get_logger(__name__)
 

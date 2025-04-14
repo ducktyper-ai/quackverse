@@ -39,8 +39,8 @@ Example:
     ```
 """
 
-from . import badges, certificates, quests, utils, xp
-from .models import Badge, Quest, UserProgress, XPEvent
+from quackster.core import badges, certificates, quests, utils, xp
+from quackster.core.models import Badge, Quest, UserProgress, XPEvent
 
 __all__ = [
     # Core models

@@ -7,7 +7,7 @@ Quackster quackster NPC.
 """
 
 from quackcore.logging import get_logger
-from quackster.npc.dialogue import DialogueRegistry
+from quackster.npc.dialogue.registry import DialogueRegistry
 from quackster.npc.schema import QuacksterProfile, UserMemory
 
 logger = get_logger(__name__)

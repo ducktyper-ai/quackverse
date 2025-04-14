@@ -7,10 +7,9 @@ from quackcore.integrations.core import IntegrationResult
 from quackcore.integrations.github import GitHubIntegration
 from quackcore.integrations.github.models import PullRequest
 from quackcore.logging import get_logger
-
-from .grading import GitHubGrader
-from .protocols import GitHubTeachingIntegrationProtocol
-from .teaching_adapter import GitHubTeachingAdapter
+from quackster.github.grading import GitHubGrader
+from quackster.github.protocols import GitHubTeachingIntegrationProtocol
+from quackster.github.teaching_adapter import GitHubTeachingAdapter
 
 logger = get_logger(__name__)
 

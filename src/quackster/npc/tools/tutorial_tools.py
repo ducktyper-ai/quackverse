@@ -9,7 +9,8 @@ on various topics related to the QuackVerse ecosystem.
 from quackcore.logging import get_logger
 from quackster.npc import rag
 from quackster.npc.dialogue import DialogueRegistry
-from quackster.npc.tools import TutorialOutput, standardize_tool_output
+from quackster.npc.tools.common import standardize_tool_output
+from quackster.npc.tools.schema import TutorialOutput
 
 logger = get_logger(__name__)
 

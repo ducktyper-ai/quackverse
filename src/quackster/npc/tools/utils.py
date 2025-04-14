@@ -12,7 +12,8 @@ from typing import Any, TypeVar
 
 from quackcore.logging import get_logger
 from quackster.npc.schema import UserMemory
-from quackster.npc.tools import TOOL_REGISTRY, ToolOutput
+from quackster.npc.tools import TOOL_REGISTRY
+from quackster.npc.tools.schema import ToolOutput
 
 logger = get_logger(__name__)
 

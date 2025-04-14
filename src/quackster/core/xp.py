@@ -8,9 +8,8 @@ and handling level-up events.
 
 from quackcore.errors import QuackError
 from quackcore.logging import get_logger
-
-from . import badges  # Use relative import from the same package
-from .models import UserProgress, XPEvent
+from quackster.core import badges  # Use relative import from the same package
+from quackster.core.models import UserProgress, XPEvent
 
 logger = get_logger(__name__)
 

@@ -6,7 +6,8 @@ This module provides functions for retrieving and displaying user progress metri
 """
 
 from quackster.npc.schema import UserMemory
-from quackster.npc.tools import ProgressOutput, standardize_tool_output
+from quackster.npc.tools.common import standardize_tool_output
+from quackster.npc.tools.schema import ProgressOutput
 
 
 def list_xp_and_level(user_memory: UserMemory) -> ProgressOutput:

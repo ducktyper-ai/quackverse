@@ -10,7 +10,7 @@ from typing import Any, overload
 
 from quackcore.logging import get_logger
 from quackster.npc.dialogue import DialogueRegistry
-from quackster.npc.tools import (
+from quackster.npc.tools.schema import (
     BadgeDetailOutput,
     BadgeInfo,
     BadgeListOutput,

@@ -24,7 +24,9 @@ from tests.quackcore.test_integrations.google.drive.operations.test_operations_u
 )
 
 # Import test modules to ensure they are discovered by pytest
-from tests.quackcore.test_integrations.google.drive.test_drive_models import TestDriveModels
+from tests.quackcore.test_integrations.google.drive.test_drive_models import (
+    TestDriveModels,
+)
 from tests.quackcore.test_integrations.google.drive.test_drive_service_delete import (
     TestGoogleDriveServiceDelete,
 )

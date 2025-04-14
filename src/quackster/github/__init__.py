@@ -2,8 +2,7 @@
 """Teaching-specific GitHub integration for QuackCore."""
 
 from quackcore.integrations.core import registry
-
-from .teaching_service import GitHubTeachingIntegration
+from quackster.github.teaching_service import GitHubTeachingIntegration
 
 __all__ = [
     "GitHubTeachingIntegration",

@@ -10,8 +10,7 @@ from quackcore.integrations.github.models import PullRequest
 from quackcore.logging import get_logger
 from quackster.core.gamification_service import GamificationService
 from quackster.core.models import XPEvent
-
-from .models import GradeResult
+from quackster.github.models import GradeResult
 
 logger = get_logger(__name__)
 

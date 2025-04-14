@@ -13,18 +13,29 @@ Tool Categories:
 - Tutorial Tools: Functions for accessing educational content
 """
 
-from quackster.npc.tools import (
-    get_badge_details,
-    get_certificate_info,
+from quackster.npc.tools.badge_tools import get_badge_details, list_badges
+from quackster.npc.tools.certificate_tools import get_certificate_info
+from quackster.npc.tools.common import standardize_tool_output
+from quackster.npc.tools.progress_tools import list_xp_and_level
+from quackster.npc.tools.quest_tools import (
     get_quest_details,
-    get_tutorial,
-    list_badges,
     list_quests,
-    list_xp_and_level,
-    standardize_tool_output,
     suggest_next_quest,
     verify_quest_completion,
 )
+from quackster.npc.tools.schema import (
+    BadgeDetailOutput,
+    BadgeListOutput,
+    CertificateListOutput,
+    ProgressOutput,
+    QuestCompletionOutput,
+    QuestDetailOutput,
+    QuestListOutput,
+    ToolOutput,
+    ToolType,
+    TutorialOutput,
+)
+from quackster.npc.tools.tutorial_tools import get_tutorial
 
 # Tool registry - maps tool names to their function implementations
 TOOL_REGISTRY = {

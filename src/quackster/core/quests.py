@@ -7,9 +7,8 @@ for managing user quest progress.
 """
 
 from quackcore.logging import get_logger
-
-from . import badges, github_api, xp
-from .models import Quest, UserProgress
+from quackster.core import badges, github_api, xp
+from quackster.core.models import Quest, UserProgress
 
 logger = get_logger(__name__)
 

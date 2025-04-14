@@ -7,8 +7,7 @@ for managing user badges.
 """
 
 from quackcore.logging import get_logger
-
-from .models import Badge, UserProgress
+from quackster.core.models import Badge, UserProgress
 
 logger = get_logger(__name__)
 

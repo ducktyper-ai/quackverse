@@ -17,8 +17,7 @@ from typing import Any
 
 from quackcore.errors import QuackError  # Dogfood our errors
 from quackcore.logging import get_logger
-
-from .models import UserProgress
+from quackster.core.models import UserProgress
 
 logger = get_logger(__name__)
 

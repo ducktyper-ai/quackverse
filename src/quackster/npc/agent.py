@@ -15,7 +15,7 @@ from typing import Any
 from quackcore.integrations.core import registry
 from quackcore.logging import get_logger
 from quackster.npc import config, memory, persona, rag, tools
-from quackster.npc.dialogue import DialogueRegistry
+from quackster.npc.dialogue.registry import DialogueRegistry
 from quackster.npc.schema import (
     QuacksterProfile,
     TeachingNPCInput,

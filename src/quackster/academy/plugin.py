@@ -14,10 +14,9 @@ from quackcore.fs import service as fs
 from quackcore.logging import get_logger
 from quackcore.paths import resolver
 from quackcore.plugins.discovery import PluginInfo
-
-from .context import TeachingContext
-from .results import TeachingResult
-from .service import TeachingService
+from quackster.academy.context import TeachingContext
+from quackster.academy.results import TeachingResult
+from quackster.academy.service import TeachingService
 
 logger = get_logger(__name__)
 

@@ -12,8 +12,7 @@ from pathlib import Path
 
 from quackcore.fs import service as fs
 from quackcore.logging import get_logger
-
-from .models import UserProgress
+from quackster.core.models import UserProgress
 
 logger = get_logger(__name__)
 
