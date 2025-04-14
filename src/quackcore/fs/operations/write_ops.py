@@ -22,9 +22,10 @@ class WriteOperationsMixin:
     """File writing operations mixin class."""
 
     def resolve_path(self, path: str | Path) -> Path:
-        """Resolve a path relative to the base directory."""
-        # This method is implemented in the main class
-        # It's defined here for type checking
+        """Resolve a path relative to the base directory.
+
+        This must be overridden in the concrete implementation.
+        """
         raise NotImplementedError("This method should be overridden")
 
     def write_text(
@@ -48,8 +49,7 @@ class WriteOperationsMixin:
         Returns:
             WriteResult with operation status
         """
-        # Import the utility functions to ensure we're using the patched version
-        # This is critical for testing
+        # Import necessary utility functions
         from quackcore.fs.operations import (
             atomic_write,
             compute_checksum,
@@ -66,51 +66,52 @@ class WriteOperationsMixin:
             ensure_directory(resolved_path.parent)
             logger.debug(f"Ensured parent directory exists: {resolved_path.parent}")
 
-            # For UTF-16, we need to ensure a BOM is written
+            # Handle special encoding (UTF-16 variants)
             if encoding.lower().startswith("utf-16"):
-                # Convert to bytes first with proper BOM
                 if encoding.lower() == "utf-16":
-                    # Default to UTF-16-LE with BOM on most platforms
                     bytes_content = content.encode("utf-16")
                 elif encoding.lower() == "utf-16-le":
-                    # Explicitly use little-endian with BOM
                     bytes_content = content.encode("utf-16-le")
                 elif encoding.lower() == "utf-16-be":
-                    # Explicitly use big-endian with BOM
                     bytes_content = content.encode("utf-16-be")
                 else:
                     bytes_content = content.encode(encoding)
-
                 logger.debug(f"Encoded text to UTF-16 variant: {encoding}")
 
                 if atomic:
-                    logger.debug("Using atomic write for binary content")
-                    atomic_write(resolved_path, bytes_content)
+                    logger.debug("Using atomic write for binary content (UTF-16)")
+                    # Capture the return value from atomic_write
+                    written_path = atomic_write(resolved_path, bytes_content)
+                    actual_path = written_path
                 else:
-                    logger.debug("Using direct write for binary content")
+                    logger.debug("Using direct write for binary content (UTF-16)")
                     with open(resolved_path, "wb") as f:
                         f.write(bytes_content)
+                    actual_path = resolved_path
             else:
                 # For other encodings, use text mode
                 if atomic:
                     logger.debug("Using atomic write for text content")
-                    atomic_write(resolved_path, content)
+                    # Capture the return value from atomic_write (a Path object)
+                    written_path = atomic_write(resolved_path, content)
+                    actual_path = written_path
                 else:
                     logger.debug("Using direct write for text content")
                     with open(resolved_path, "w", encoding=encoding) as f:
                         f.write(content)
+                    actual_path = resolved_path
 
             bytes_written = len(content.encode(encoding))
-            logger.info(f"Successfully wrote {bytes_written} bytes to {resolved_path}")
+            logger.info(f"Successfully wrote {bytes_written} bytes to {actual_path}")
 
             checksum = None
             if calculate_checksum:
-                logger.debug(f"Calculating checksum for {resolved_path}")
-                checksum = compute_checksum(resolved_path)
+                logger.debug(f"Calculating checksum for {actual_path}")
+                checksum = compute_checksum(actual_path)
 
             return WriteResult(
                 success=True,
-                path=resolved_path,
+                path=actual_path,
                 bytes_written=bytes_written,
                 checksum=checksum,
                 message=f"Successfully wrote {bytes_written} bytes",
@@ -141,7 +142,6 @@ class WriteOperationsMixin:
         Returns:
             WriteResult with operation status
         """
-        # Import the utility functions to ensure we're using the patched version
         from quackcore.fs.operations import (
             atomic_write,
             compute_checksum,
@@ -159,23 +159,25 @@ class WriteOperationsMixin:
             logger.debug(f"Ensured parent directory exists: {resolved_path.parent}")
 
             if atomic:
-                logger.debug("Using atomic write")
-                atomic_write(resolved_path, content)
+                logger.debug("Using atomic write for binary data")
+                written_path = atomic_write(resolved_path, content)
+                actual_path = written_path
             else:
-                logger.debug("Using direct write")
+                logger.debug("Using direct write for binary data")
                 with open(resolved_path, "wb") as f:
                     f.write(content)
+                actual_path = resolved_path
 
-            logger.info(f"Successfully wrote {len(content)} bytes to {resolved_path}")
+            logger.info(f"Successfully wrote {len(content)} bytes to {actual_path}")
 
             checksum = None
             if calculate_checksum:
-                logger.debug(f"Calculating checksum for {resolved_path}")
-                checksum = compute_checksum(resolved_path)
+                logger.debug(f"Calculating checksum for {actual_path}")
+                checksum = compute_checksum(actual_path)
 
             return WriteResult(
                 success=True,
-                path=resolved_path,
+                path=actual_path,
                 bytes_written=len(content),
                 checksum=checksum,
                 message=f"Successfully wrote {len(content)} bytes",
@@ -206,7 +208,6 @@ class WriteOperationsMixin:
         Returns:
             WriteResult with operation status
         """
-        # Import the utility functions to ensure we're using the patched version
         from quackcore.fs.operations import safe_copy
 
         src_path = self.resolve_path(src)
@@ -264,7 +265,6 @@ class WriteOperationsMixin:
         Returns:
             WriteResult with operation status
         """
-        # Import the utility functions to ensure we're using the patched version
         from quackcore.fs.operations import safe_move
 
         src_path = self.resolve_path(src)
@@ -316,7 +316,6 @@ class WriteOperationsMixin:
         Returns:
             OperationResult with operation status
         """
-        # Import the utility functions to ensure we're using the patched version
         from quackcore.fs.operations import safe_delete
 
         resolved_path = self.resolve_path(path)
@@ -367,7 +366,6 @@ class WriteOperationsMixin:
         Returns:
             OperationResult with operation status
         """
-        # Import the utility functions to ensure we're using the patched version
         from quackcore.fs.operations import ensure_directory
 
         resolved_path = self.resolve_path(path)

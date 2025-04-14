@@ -7,7 +7,6 @@ arguments and options in a consistent way across QuackCore CLI tools.
 """
 
 from collections.abc import Sequence
-from pathlib import Path
 from typing import Literal, TypeVar
 
 from pydantic import BaseModel, Field
@@ -26,7 +25,8 @@ class CliOptions(BaseModel):
     and control runtime behavior like logging and debugging.
     """
 
-    config_path: Path | None = Field(
+    # Instead of using pathlib.Path, we use str here.
+    config_path: str | None = Field(
         default=None, description="Path to configuration file"
     )
     log_level: LogLevel | None = Field(default=None, description="Logging level")
@@ -36,7 +36,7 @@ class CliOptions(BaseModel):
     environment: str | None = Field(
         default=None, description="Override the environment"
     )
-    base_dir: Path | None = Field(
+    base_dir: str | None = Field(
         default=None, description="Override the base directory"
     )
     no_color: bool = Field(default=False, description="Disable colored output")

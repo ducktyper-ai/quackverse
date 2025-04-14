@@ -1,4 +1,4 @@
-# src/quackcore/cli/boostrap.py
+# src/quackcore/cli/bootstrap.py
 """
 CLI bootstrapper for QuackCore.
 
@@ -10,7 +10,6 @@ all QuackVerse CLI tools, ensuring a unified developer experience.
 import logging
 import os
 from collections.abc import Mapping
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 # Import these directly from their modules to ensure mocks work
@@ -22,13 +21,13 @@ from quackcore.errors import QuackError
 
 def init_cli_env(
     *,
-    config_path: str | Path | None = None,
+    config_path: str | None = None,
     log_level: str | None = None,
     debug: bool = False,
     verbose: bool = False,
     quiet: bool = False,
     environment: str | None = None,
-    base_dir: str | Path | None = None,
+    base_dir: str | None = None,
     cli_args: Mapping[str, Any] | None = None,
     app_name: str = "quack",
 ) -> QuackContext:
@@ -40,13 +39,13 @@ def init_cli_env(
     appropriate precedence of settings.
 
     Args:
-        config_path: Path to configuration file
+        config_path: Path (as a string) to configuration file
         log_level: Logging level
         debug: Enable debug mode
         verbose: Enable verbose output
         quiet: Suppress non-error output
         environment: Override environment
-        base_dir: Override base directory
+        base_dir: Override the base directory (as a string)
         cli_args: Additional CLI arguments to apply as config overrides
         app_name: Application name (used for the logger namespace)
 
@@ -57,38 +56,40 @@ def init_cli_env(
         QuackError: If initialization fails
     """
     try:
-        # Determine the base directory - explicitly call find_project_root
+        # Determine the base directory - explicitly call find_project_root.
+        # Both base_dir (if provided) and the value from find_project_root are converted to strings.
         if base_dir:
-            base_directory = Path(base_dir)
+            base_directory = str(base_dir)
         else:
-            base_directory = find_project_root()
+            base_directory = str(find_project_root())
 
-        # Load configuration with explicit call to load_config
+        # Load configuration with explicit call to load_config.
         cfg = load_config(config_path, cli_args, environment)
 
-        # Set debug/verbose flags in the config
-        # Directly modify the attributes to ensure mock objects are updated
+        # Set debug/verbose flags in the config.
+        # Directly modify the attributes to ensure mock objects are updated.
         if debug:
             cfg.general.debug = True
         if verbose:
             cfg.general.verbose = True
 
-        # Setup logging with the configured parameters
-        # Important: Use the imported function directly to ensure mocks work
+        # Setup logging with the configured parameters.
+        # Important: Use the imported function directly to ensure mocks work.
         logger, get_logger = setup_logging(log_level, debug, quiet, cfg, app_name)
 
-        # Get environment from env var or use 'development' as default
+        # Get environment from env var or use 'development' as default.
         env = os.environ.get("QUACK_ENV", "development").lower()
         if environment:
             env = environment.lower()
 
-        # Log debug information
+        # Log debug information.
         logger.debug(f"QuackCore CLI initialized in {env} environment")
         logger.debug(f"Base directory: {base_directory}")
         if config_path:
             logger.debug(f"Config loaded from: {config_path}")
 
-        # Create and return a QuackContext with all the initialized components
+        # Create and return a QuackContext with all the initialized components.
+        # Note: The working_dir is obtained using os.getcwd(), which returns a string.
         return QuackContext(
             config=cfg,
             logger=logger,
@@ -96,15 +97,15 @@ def init_cli_env(
             environment=env,
             debug=debug,
             verbose=verbose,
-            working_dir=Path.cwd(),
+            working_dir=os.getcwd(),
         )
 
     except QuackError as e:
-        # Log and re-raise QuackError
+        # Log and re-raise QuackError.
         logging.error(f"Failed to initialize CLI environment: {e}")
         raise
     except Exception as e:
-        # Wrap other exceptions in QuackError
+        # Wrap other exceptions in QuackError.
         error = QuackError(f"Unexpected error initializing CLI environment: {e}")
         logging.error(str(error))
         raise error from e

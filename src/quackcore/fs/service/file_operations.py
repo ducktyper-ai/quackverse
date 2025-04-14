@@ -7,19 +7,22 @@ These utilities extend the FileSystemService with methods for file manipulation.
 
 import json
 from pathlib import Path
-from typing import Any
 
 import yaml
 
 from quackcore.errors import wrap_io_errors
 from quackcore.fs.operations import FileSystemOperations
 from quackcore.fs.results import DataResult, OperationResult, ReadResult, WriteResult
+from quackcore.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class FileOperationsMixin:
     """Mixin class for file operations in the FileSystemService."""
 
-    # This ensures the mixin will only be used with classes that have operations
+    # This mixin expects the implementing class to have an attribute 'operations'
+    # that is an instance of FileSystemOperations.
     operations: FileSystemOperations
 
     @wrap_io_errors
@@ -28,11 +31,11 @@ class FileOperationsMixin:
         Read text content from a file.
 
         Args:
-            path: Path to the file
-            encoding: Text encoding to use (default: utf-8)
+            path: Path to the file.
+            encoding: Text encoding to use (default: utf-8).
 
         Returns:
-            ReadResult with the file content
+            ReadResult with the file content as text.
         """
         return self.operations.read_text(path, encoding)
 
@@ -43,20 +46,24 @@ class FileOperationsMixin:
         content: str,
         encoding: str = "utf-8",
         atomic: bool = False,
+        calculate_checksum: bool = False,
     ) -> WriteResult:
         """
         Write text content to a file.
 
         Args:
-            path: Path to the file
-            content: Text content to write
-            encoding: Text encoding to use (default: utf-8)
-            atomic: Whether to use atomic write (default: False)
+            path: Path to the file.
+            content: Text content to write.
+            encoding: Text encoding to use (default: utf-8).
+            atomic: Whether to use atomic write (default: False).
+            calculate_checksum: Whether to calculate a checksum (default: False).
 
         Returns:
-            WriteResult with operation status
+            WriteResult with operation status.
         """
-        return self.operations.write_text(path, content, encoding, atomic)
+        return self.operations.write_text(
+            path, content, encoding, atomic, calculate_checksum
+        )
 
     @wrap_io_errors
     def read_binary(self, path: str | Path) -> ReadResult[bytes]:
@@ -64,29 +71,34 @@ class FileOperationsMixin:
         Read binary content from a file.
 
         Args:
-            path: Path to the file
+            path: Path to the file.
 
         Returns:
-            ReadResult with the file content
+            ReadResult with the file content as bytes.
         """
         return self.operations.read_binary(path)
 
     @wrap_io_errors
     def write_binary(
-        self, path: str | Path, content: bytes, atomic: bool = False
+        self,
+        path: str | Path,
+        content: bytes,
+        atomic: bool = False,
+        calculate_checksum: bool = False,
     ) -> WriteResult:
         """
         Write binary content to a file.
 
         Args:
-            path: Path to the file
-            content: Binary content to write
-            atomic: Whether to use atomic write (default: False)
+            path: Path to the file.
+            content: Binary content to write.
+            atomic: Whether to use atomic write (default: False).
+            calculate_checksum: Whether to calculate a checksum (default: False).
 
         Returns:
-            WriteResult with operation status
+            WriteResult with operation status.
         """
-        return self.operations.write_binary(path, content, atomic)
+        return self.operations.write_binary(path, content, atomic, calculate_checksum)
 
     @wrap_io_errors
     def read_lines(self, path: str | Path, encoding: str = "utf-8") -> ReadResult:
@@ -94,11 +106,11 @@ class FileOperationsMixin:
         Read lines from a text file.
 
         Args:
-            path: Path to the file
-            encoding: Text encoding
+            path: Path to the file.
+            encoding: Text encoding.
 
         Returns:
-            ReadResult with the file content as a list of lines
+            ReadResult with the file content as a list of lines.
         """
         result = self.operations.read_text(path, encoding)
         if result.success:
@@ -145,8 +157,7 @@ class FileOperationsMixin:
             WriteResult indicating the outcome of the write operation.
         """
         content = line_ending.join(lines)
-
-        # For non-default line endings, encode and write in binary mode
+        # For non-default line endings, encode and write in binary mode.
         if line_ending != "\n":
             bytes_content = content.encode(encoding)
             return self.operations.write_binary(path, bytes_content, atomic)
@@ -159,10 +170,10 @@ class FileOperationsMixin:
         Read and parse YAML content from a file.
 
         Args:
-            path: Path to the YAML file
+            path: Path to the YAML file.
 
         Returns:
-            DataResult with parsed YAML data
+            DataResult with parsed YAML data.
         """
         try:
             result = self.read_text(path)
@@ -174,21 +185,17 @@ class FileOperationsMixin:
                     format="yaml",
                     error=result.error,
                 )
-
             try:
                 parsed_data = yaml.safe_load(result.content)
                 if parsed_data is None:
                     parsed_data = {}
-
-                # Also set data attribute on the original result for compatibility
-                result.data = parsed_data
-
+                result.data = parsed_data  # For backward compatibility.
                 return DataResult(
                     success=True,
                     path=result.path,
                     data=parsed_data,
                     format="yaml",
-                    message=f"Successfully parsed YAML data",
+                    message="Successfully parsed YAML data",
                 )
             except yaml.YAMLError as e:
                 error_msg = f"Invalid YAML format: {str(e)}"
@@ -219,19 +226,21 @@ class FileOperationsMixin:
         Write data to a YAML file.
 
         Args:
-            path: Path to YAML file
-            data: Data to write
-            atomic: Whether to use atomic writing
+            path: Path to the YAML file.
+            data: Data to write.
+            atomic: Whether to use atomic writing.
 
         Returns:
-            WriteResult with operation status
+            WriteResult with operation status.
         """
         try:
             content = yaml.dump(data, default_flow_style=False, sort_keys=False)
             return self.write_text(path, content, atomic=atomic)
         except Exception as e:
             return WriteResult(
-                success=False, path=Path(path), error=f"Failed to write YAML: {str(e)}"
+                success=False,
+                path=Path(path),
+                error=f"Failed to write YAML: {str(e)}",
             )
 
     @wrap_io_errors
@@ -240,10 +249,10 @@ class FileOperationsMixin:
         Read a JSON file and parse its contents.
 
         Args:
-            path: Path to JSON file
+            path: Path to the JSON file.
 
         Returns:
-            DataResult with parsed JSON data
+            DataResult with parsed JSON data.
         """
         try:
             result = self.read_text(path)
@@ -255,19 +264,15 @@ class FileOperationsMixin:
                     format="json",
                     error=result.error,
                 )
-
             try:
                 parsed_data = json.loads(result.content)
-
-                # Also set data attribute on the original result for compatibility
-                result.data = parsed_data
-
+                result.data = parsed_data  # For backward compatibility.
                 return DataResult(
                     success=True,
                     path=result.path,
                     data=parsed_data,
                     format="json",
-                    message=f"Successfully parsed JSON data",
+                    message="Successfully parsed JSON data",
                 )
             except json.JSONDecodeError as e:
                 error_msg = f"Invalid JSON format: {str(e)}"
@@ -299,20 +304,22 @@ class FileOperationsMixin:
         Write data to a JSON file.
 
         Args:
-            path: Path to JSON file
-            data: Data to write
-            atomic: Whether to use atomic writing
-            indent: Number of spaces to indent
+            path: Path to the JSON file.
+            data: Data to write.
+            atomic: Whether to use atomic writing.
+            indent: Number of spaces to indent.
 
         Returns:
-            WriteResult with operation status
+            WriteResult with operation status.
         """
         try:
             content = json.dumps(data, indent=indent, ensure_ascii=False)
             return self.write_text(path, content, atomic=atomic)
         except Exception as e:
             return WriteResult(
-                success=False, path=Path(path), error=f"Failed to write JSON: {str(e)}"
+                success=False,
+                path=Path(path),
+                error=f"Failed to write JSON: {str(e)}",
             )
 
     # File management operations
