@@ -12,23 +12,27 @@ from tests.quackcore.test_integrations.google.drive.mocks.base import (
 )
 
 # Import from credentials module
-from tests.test_integrations.google.drive.mocks.credentials import (
+from tests.quackcore.test_integrations.google.drive.mocks.credentials import (
     MockGoogleCredentials,
     create_credentials,
 )
+from tests.quackcore.test_integrations.google.drive.mocks.download import \
+    MockDownloadOperations, mock_download_file
 
 # Import from media module
-from tests.test_integrations.google.drive.mocks.media import (
+from tests.quackcore.test_integrations.google.drive.mocks.media import (
     MockDownloadStatus,
     MockMediaDownloader,
     create_mock_media_io_base_download,
 )
 
 # Import from requests module
-from tests.test_integrations.google.drive.mocks.requests import MockDriveRequest
+from tests.quackcore.test_integrations.google.drive.mocks.requests import MockDriveRequest
+from tests.quackcore.test_integrations.google.drive.mocks.resources import \
+    MockDrivePermissionsResource, MockDriveFilesResource
 
 # Import from services module
-from tests.test_integrations.google.drive.mocks.services import (
+from tests.quackcore.test_integrations.google.drive.mocks.services import (
     MockDriveService,
     create_error_drive_service,
     create_mock_drive_service,

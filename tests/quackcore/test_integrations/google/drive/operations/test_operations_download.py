@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 from quackcore.errors import QuackApiError
 from quackcore.fs.results import FileInfoResult, OperationResult, WriteResult
 from quackcore.integrations.google.drive.operations import download
-from tests.test_integrations.google.drive.mocks import (
+from tests.quackcore.test_integrations.google.drive.mocks import (
     create_error_drive_service,
     create_mock_drive_service,
 )

@@ -10,7 +10,7 @@ from quackcore.integrations.google.drive.protocols import (
     DrivePermissionsResource,
     DriveRequest,
 )
-from tests.test_integrations.google.drive.mocks.requests import MockDriveRequest
+from tests.quackcore.test_integrations.google.drive.mocks.requests import MockDriveRequest
 
 T = TypeVar("T")  # Generic type for content
 R = TypeVar("R")  # Generic type for return values

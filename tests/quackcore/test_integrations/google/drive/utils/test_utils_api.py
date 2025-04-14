@@ -10,7 +10,7 @@ from googleapiclient.errors import HttpError
 
 from quackcore.errors import QuackApiError
 from quackcore.integrations.google.drive.utils import api
-from tests.test_integrations.google.drive.mocks import (
+from tests.quackcore.test_integrations.google.drive.mocks import (
     MockDriveRequest,
     create_mock_drive_service,
 )

@@ -13,7 +13,7 @@ from quackcore.cli.boostrap import from_cli_options, init_cli_env
 from quackcore.cli.context import QuackContext
 from quackcore.cli.options import CliOptions
 from quackcore.errors import QuackError
-from tests.test_cli.mocks import (
+from tests.quackcore.test_cli.mocks import (
     MockConfig,
     create_mock_logger,
     patch_common_dependencies,
