@@ -1,8 +1,8 @@
-# src/quackcore/fs/operations/write_ops.py
+# src/quackcore/fs/_operations/write_ops.py
 """
-File writing, copying, moving and deleting operations.
+File writing, copying, moving and deleting _operations.
 
-This module provides internal operations for modifying the filesystem,
+This module provides internal _operations for modifying the filesystem,
 including writing files, copying, moving, deleting files and directories,
 and directory creation with proper error handling.
 """
@@ -24,7 +24,7 @@ logger = get_logger(__name__)
 
 class WriteOperationsMixin:
     """
-    File writing operations mixin class.
+    File writing _operations mixin class.
 
     Provides internal methods for writing, copying, moving, and deleting
     files and directories with consistent error handling and return types.
@@ -58,7 +58,7 @@ class WriteOperationsMixin:
         Write text content to a file.
 
         This method handles various text encodings and can perform atomic writes
-        for safer file operations. It can also calculate checksums for data integrity.
+        for safer file _operations. It can also calculate checksums for data integrity.
 
         Args:
             path: Path to the file
@@ -80,7 +80,7 @@ class WriteOperationsMixin:
             Used by public-facing methods in the service layer.
         """
         # Import necessary utility functions
-        from quackcore.fs.operations import (
+        from quackcore.fs._operations import (
             _atomic_write,
             _compute_checksum,
             _ensure_directory,
@@ -184,7 +184,7 @@ class WriteOperationsMixin:
             Internal helper method not meant for external consumption.
             Used by public-facing methods in the service layer.
         """
-        from quackcore.fs.operations import (
+        from quackcore.fs._operations import (
             _atomic_write,
             _compute_checksum,
             _ensure_directory,
@@ -262,7 +262,7 @@ class WriteOperationsMixin:
             Internal helper method not meant for external consumption.
             Used by public-facing methods in the service layer.
         """
-        from quackcore.fs.operations import _safe_copy
+        from quackcore.fs._operations import _safe_copy
 
         src_path = self._resolve_path(src)
         dst_path = self._resolve_path(dst)
@@ -331,7 +331,7 @@ class WriteOperationsMixin:
             Internal helper method not meant for external consumption.
             Used by public-facing methods in the service layer.
         """
-        from quackcore.fs.operations import _safe_move
+        from quackcore.fs._operations import _safe_move
 
         src_path = self._resolve_path(src)
         dst_path = self._resolve_path(dst)
@@ -398,7 +398,7 @@ class WriteOperationsMixin:
             Internal helper method not meant for external consumption.
             Used by public-facing methods in the service layer.
         """
-        from quackcore.fs.operations import _safe_delete
+        from quackcore.fs._operations import _safe_delete
 
         resolved_path = self._resolve_path(path)
         logger.debug(f"Deleting {resolved_path}, missing_ok={missing_ok}")
@@ -458,7 +458,7 @@ class WriteOperationsMixin:
             Internal helper method not meant for external consumption.
             Used by public-facing methods in the service layer.
         """
-        from quackcore.fs.operations import _ensure_directory
+        from quackcore.fs._operations import _ensure_directory
 
         resolved_path = self._resolve_path(path)
         logger.debug(f"Creating directory {resolved_path}, exist_ok={exist_ok}")

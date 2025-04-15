@@ -1,6 +1,6 @@
-# src/quackcore/integrations/google/drive/operations/download.py
+# src/quackcore/integrations/google/drive/_operations/download.py
 """
-Download operations for Google Drive integration.
+Download _operations for Google Drive integration.
 
 This module provides robust file download functionality with improved error handling.
 """
@@ -39,7 +39,7 @@ def resolve_download_path(
         return str(fs.join_path(temp_dir, file_name))
 
     # Resolve the local path
-    local_path_obj = resolver.resolve_project_path(local_path)
+    local_path_obj = resolver._resolve_project_path(local_path)
     file_info = fs.get_file_info(local_path_obj)
 
     if file_info.success and file_info.exists:

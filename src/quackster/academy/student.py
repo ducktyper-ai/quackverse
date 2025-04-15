@@ -387,8 +387,8 @@ class StudentRoster:
         if os.path.isabs(file_path):
             return file_path
         try:
-            project_root = resolver.get_project_root()
-            return fs.join_path(project_root, file_path)
+            project_root = resolver._get_project_root()
+            return fs._join_path(project_root, file_path)
         except FileNotFoundError as err:
             logger.warning(
                 f"Project root not found: {err}. Falling back to os.path.abspath(file_path)."

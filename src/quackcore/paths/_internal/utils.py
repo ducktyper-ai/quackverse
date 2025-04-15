@@ -4,7 +4,7 @@ Utility functions for path resolution.
 
 This module provides utility functions for path resolution,
 including functions for finding project roots and navigating directories.
-All path values are handled as strings and filesystem operations are delegated
+All path values are handled as strings and filesystem _operations are delegated
 to quackcore.fs or built–in os.path utilities.
 """
 
@@ -30,7 +30,7 @@ class PathInfo:
 
 
 @wrap_io_errors
-def normalize_path_with_info(path: str) -> PathInfo:
+def _normalize_path_with_info(path: str) -> PathInfo:
     """
     Normalize a path and return detailed information about the result.
 
@@ -56,7 +56,7 @@ def normalize_path_with_info(path: str) -> PathInfo:
 
 
 @wrap_io_errors
-def find_project_root(
+def _find_project_root(
     start_dir: str | None = None,
     marker_files: list[str] | None = None,
     marker_dirs: list[str] | None = None,
@@ -117,7 +117,7 @@ def find_project_root(
 
 
 @wrap_io_errors
-def find_nearest_directory(
+def _find_nearest_directory(
     name: str,
     start_dir: str | None = None,
     max_levels: int = 5,
@@ -160,7 +160,7 @@ def find_nearest_directory(
 
 
 @wrap_io_errors
-def resolve_relative_to_project(
+def _resolve_relative_to_project(
     path: str,
     project_root: str | None = None,
 ) -> str:
@@ -182,7 +182,7 @@ def resolve_relative_to_project(
 
     if project_root is None:
         try:
-            project_root = find_project_root()
+            project_root = _find_project_root()
         except QuackFileNotFoundError:
             project_root = os.getcwd()
 
@@ -190,7 +190,7 @@ def resolve_relative_to_project(
 
 
 @wrap_io_errors
-def normalize_path(path: str) -> str:
+def _normalize_path(path: str) -> str:
     """
     Normalize a path for cross-platform compatibility.
 
@@ -202,12 +202,12 @@ def normalize_path(path: str) -> str:
     Returns:
         The normalized absolute path as a string.
     """
-    info = normalize_path_with_info(path)
+    info = _normalize_path_with_info(path)
     return info.path
 
 
 @wrap_io_errors
-def join_path(*parts: str | bytes) -> str:
+def _join_path(*parts: str | bytes) -> str:
     """
     Join path components.
 
@@ -235,7 +235,7 @@ def join_path(*parts: str | bytes) -> str:
 
 
 @wrap_io_errors
-def split_path(path: str) -> list[str]:
+def _split_path(path: str) -> list[str]:
     """
     Split a path into its components.
 
@@ -249,7 +249,7 @@ def split_path(path: str) -> list[str]:
     return norm.split(os.sep)
 
 
-def get_extension(path: str) -> str:
+def _get_extension(path: str) -> str:
     """
     Get the file extension from a path.
 
@@ -282,7 +282,7 @@ def _resolve_project_root(path_str: str, project_root: str | None) -> str:
     if project_root is not None:
         return project_root
     try:
-        return find_project_root()
+        return _find_project_root()
     except QuackFileNotFoundError as e:
         logger.error(f"Project root not found: {e}")
         try:
@@ -311,7 +311,7 @@ def _get_relative_parts(path_str: str, base: str) -> list[str] | None:
 
 
 @wrap_io_errors
-def infer_module_from_path(
+def _infer_module_from_path(
     path: str,
     project_root: str | None = None,
 ) -> str:
@@ -328,7 +328,7 @@ def infer_module_from_path(
     resolved_root = _resolve_project_root(path, project_root)
     abs_path = path if os.path.isabs(path) else os.path.join(resolved_root, path)
     try:
-        src_dir = find_nearest_directory("src", resolved_root)
+        src_dir = _find_nearest_directory("src", resolved_root)
         logger.debug(f"Found source directory: {src_dir}")
     except Exception:
         src_dir = resolved_root

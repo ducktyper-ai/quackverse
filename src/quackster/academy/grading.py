@@ -11,7 +11,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, model_validator
 
-# Use QuackCore FS for file operations and path expansion.
+# Use QuackCore FS for file _operations and path expansion.
 from quackcore.fs import service as fs
 from quackcore.logging import get_logger
 

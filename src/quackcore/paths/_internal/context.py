@@ -95,7 +95,7 @@ class ProjectContext(BaseModel):
         """String representation of the project context."""
         return f"ProjectContext(root={self.root_dir}, dirs={len(self.directories)})"
 
-    def get_source_dir(self) -> str | None:
+    def _get_source_dir(self) -> str | None:
         """
         Get the primary source directory.
 
@@ -107,7 +107,7 @@ class ProjectContext(BaseModel):
                 return dir_info.path
         return None
 
-    def get_output_dir(self) -> str | None:
+    def _get_output_dir(self) -> str | None:
         """
         Get the primary output directory.
 
@@ -119,7 +119,7 @@ class ProjectContext(BaseModel):
                 return dir_info.path
         return None
 
-    def get_data_dir(self) -> str | None:
+    def _get_data_dir(self) -> str | None:
         """
         Get the primary data directory.
 
@@ -131,7 +131,7 @@ class ProjectContext(BaseModel):
                 return dir_info.path
         return None
 
-    def get_config_dir(self) -> str | None:
+    def _get_config_dir(self) -> str | None:
         """
         Get the primary configuration directory.
 
@@ -143,7 +143,7 @@ class ProjectContext(BaseModel):
                 return dir_info.path
         return None
 
-    def get_directory(self, name: str) -> str | None:
+    def _get_directory(self, name: str) -> str | None:
         """
         Get a directory by name.
 
@@ -156,7 +156,7 @@ class ProjectContext(BaseModel):
         dir_info = self.directories.get(name)
         return dir_info.path if dir_info else None
 
-    def add_directory(
+    def _add_directory(
         self,
         name: str,
         path: str,
@@ -219,7 +219,7 @@ class ContentContext(ProjectContext):
         description="Path to the content directory",
     )
 
-    def get_assets_dir(self) -> str | None:
+    def _get_assets_dir(self) -> str | None:
         """
         Get the assets directory.
 
@@ -231,7 +231,7 @@ class ContentContext(ProjectContext):
                 return dir_info.path
         return None
 
-    def get_temp_dir(self) -> str | None:
+    def _get_temp_dir(self) -> str | None:
         """
         Get the temporary directory.
 

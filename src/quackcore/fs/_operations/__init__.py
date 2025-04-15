@@ -1,13 +1,13 @@
-# src/quackcore/fs/operations/__init__.py
+# src/quackcore/fs/_operations/__init__.py
 """
-Core filesystem operations implementation.
+Core filesystem _operations implementation.
 
-This module provides the implementation of filesystem operations
+This module provides the implementation of filesystem _operations
 with proper error handling and consistent return values. It assembles
 all the operation mixins into the FileSystemOperations class,
 which is the primary internal implementation used by the public API.
 
-The operations package follows this contract:
+The _operations package follows this contract:
 - Internal methods (with '_' prefix) can return basic types like Path
 - All public methods return Result objects (WriteResult, ReadResult, etc.)
 - Input types are flexible (str | Path) and resolved early
@@ -19,7 +19,7 @@ from typing import TypeVar
 
 # Import utility functions directly into this namespace for backward compatibility
 # This will make patching work correctly in tests
-from quackcore.fs.helpers import (
+from quackcore.fs._helpers import (
     _atomic_write,
     _compute_checksum,
     _ensure_directory,
@@ -52,10 +52,10 @@ class FileSystemOperations(
     SerializationOperationsMixin,
 ):
     """
-    Core implementation of filesystem operations.
+    Core implementation of filesystem _operations.
 
     This class combines all operation mixins to provide a complete
-    filesystem operations implementation with consistent error handling,
+    filesystem _operations implementation with consistent error handling,
     logging, and return types. It serves as the internal implementation
     layer used by the public API in quackcore.fs.service.
 
@@ -67,7 +67,7 @@ class FileSystemOperations(
 
     def __init__(self, base_dir: str | Path | None = None) -> None:
         """
-        Initialize filesystem operations.
+        Initialize filesystem _operations.
 
         Args:
             base_dir: Optional base directory for relative paths.
@@ -83,7 +83,7 @@ class FileSystemOperations(
         """
         Resolve a path relative to the base directory.
 
-        This method is used internally by all operations to normalize
+        This method is used internally by all _operations to normalize
         paths relative to the base directory set during initialization.
 
         Args:

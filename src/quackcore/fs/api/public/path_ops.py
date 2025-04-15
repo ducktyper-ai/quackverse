@@ -1,15 +1,15 @@
 # src/quackcore/fs/api/public/path_ops.py
 """
-Public API for path operations.
+Public API for path _operations.
 
-This module provides safe, result-oriented wrappers around low-level path operations.
+This module provides safe, result-oriented wrappers around low-level path _operations.
 """
 
 from pathlib import Path
 
-from quackcore.fs.helpers.common import _normalize_path
-from quackcore.fs.helpers.comparison import _is_same_file, _is_subdirectory
-from quackcore.fs.helpers.path_ops import _expand_user_vars, _split_path
+from quackcore.fs._helpers.common import _normalize_path
+from quackcore.fs._helpers.comparison import _is_same_file, _is_subdirectory
+from quackcore.fs._helpers.path_ops import _expand_user_vars, _split_path
 from quackcore.fs.results import DataResult
 from quackcore.logging import get_logger
 

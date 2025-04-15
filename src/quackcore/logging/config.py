@@ -4,7 +4,7 @@ Logger configuration for quackcore.
 
 This module handles the setup and configuration of loggers,
 including environment-based configuration and file output options.
-Note: Filesystem-related operations are imported lazily to avoid circular dependencies.
+Note: Filesystem-related _operations are imported lazily to avoid circular dependencies.
 """
 
 import logging
@@ -63,7 +63,7 @@ def configure_logger(
     Configure and return a logger with the specified name.
 
     This function sets up handlers only once per logger instance and supports
-    multiple output destinations (console and file). Filesystem operations are
+    multiple output destinations (console and file). Filesystem _operations are
     performed via quackcore.fs.service, imported only inside this function.
 
     Args:
@@ -93,7 +93,7 @@ def configure_logger(
             from quackcore.fs import service as fs
 
             # Resolve parent directory for the log file.
-            parent_dir = fs.join_path(*fs._split_path(log_file)[:-1])
+            parent_dir = fs._join_path(*fs._split_path(log_file)[:-1])
             fs.create_directory(parent_dir, exist_ok=True)
             file_handler = logging.FileHandler(log_file)
             file_handler.setFormatter(TeachingAwareFormatter(color_enabled=False))

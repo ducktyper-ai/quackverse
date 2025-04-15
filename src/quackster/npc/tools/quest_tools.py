@@ -34,7 +34,7 @@ def list_quests(user_memory: UserMemory) -> QuestListOutput:
         QuestListOutput with quest information
     """
     # Load full quest data
-    user = utils.load_progress()  # Still needed for some operations
+    user = utils.load_progress()  # Still needed for some _operations
     quest_data = quests.get_user_quests(user)
 
     # Use completed_quests from user_memory to identify completed quests

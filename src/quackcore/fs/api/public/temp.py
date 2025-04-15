@@ -1,14 +1,14 @@
 # src/quackcore/fs/api/public/temp.py
 """
-Public API for temporary file and directory operations.
+Public API for temporary file and directory _operations.
 
 This module provides safe, result-oriented wrappers around low-level temporary
-file and directory operations.
+file and directory _operations.
 """
 
 from pathlib import Path
 
-from quackcore.fs.helpers.temp import _create_temp_directory, _create_temp_file
+from quackcore.fs._helpers.temp import _create_temp_directory, _create_temp_file
 from quackcore.fs.results import DataResult
 from quackcore.logging import get_logger
 

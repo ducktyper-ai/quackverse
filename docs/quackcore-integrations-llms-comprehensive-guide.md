@@ -176,7 +176,7 @@ The integration service can automatically fall back to alternative providers if 
 llm_service = LLMIntegration(enable_fallback=True)
 llm_service.initialize()
 
-# Check status of providers after some operations
+# Check status of providers after some _operations
 provider_status = llm_service.get_provider_status()
 if provider_status:
     for status in provider_status:

@@ -1,10 +1,10 @@
-# src/quackcore/integrations/google/drive/operations/upload.py
+# src/quackcore/integrations/google/drive/_operations/upload.py
 """
-Upload operations for Google Drive integration.
+Upload _operations for Google Drive integration.
 
 This module provides functions for uploading files to Google Drive,
 including file metadata handling and media upload.
-All file paths are handled as strings. Filesystem operations such as
+All file paths are handled as strings. Filesystem _operations such as
 reading a file or obtaining file metadata are delegated to the QuackCore FS API.
 """
 
@@ -67,7 +67,7 @@ def resolve_file_details(
         QuackIntegrationError: If the file does not exist.
     """
     # Delegate to the resolver to convert the provided file path into a project path.
-    resolved_path = resolver.resolve_project_path(file_path)  # returns a string
+    resolved_path = resolver._resolve_project_path(file_path)  # returns a string
     file_info = fs.get_file_info(resolved_path)
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(f"File not found: {file_path}")

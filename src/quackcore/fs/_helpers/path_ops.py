@@ -1,6 +1,6 @@
-# src/quackcore/fs/helpers/path_ops.py
+# src/quackcore/fs/_helpers/path_ops.py
 """
-Utility functions for path operations.
+Utility functions for path _operations.
 """
 
 import os

@@ -1,11 +1,11 @@
-# src/quackcore/integrations/google/mail/operations/email.py
+# src/quackcore/integrations/google/mail/_operations/email.py
 """
-Email operations for Google Mail integration.
+Email _operations for Google Mail integration.
 
 This module provides functions for listing and downloading emails from Gmail,
 including handling message formats and content extraction.
 
-All file paths are handled as strings. Filesystem operations (joining paths,
+All file paths are handled as strings. Filesystem _operations (joining paths,
 reading file info, writing files, etc.) are delegated to the QuackCore FS layer
 or built-in os.path utilities.
 """

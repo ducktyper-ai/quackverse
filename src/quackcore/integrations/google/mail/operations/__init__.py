@@ -1,8 +1,8 @@
-# src/quackcore/integrations/google/mail/operations/__init__.py
+# src/quackcore/integrations/google/mail/_operations/__init__.py
 """
 Operations package for Google Mail integration.
 
-This package contains specialized modules for different Gmail operations,
+This package contains specialized modules for different Gmail _operations,
 such as listing emails, downloading messages, and handling attachments.
 """
 

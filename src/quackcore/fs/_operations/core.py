@@ -1,6 +1,6 @@
-# src/quackcore/fs/operations/core.py
+# src/quackcore/fs/_operations/core.py
 """
-Core path resolution and utility functionality for filesystem operations.
+Core path resolution and utility functionality for filesystem _operations.
 
 This module provides internal helper functions for path resolution and
 initialization tasks. These functions are used by the FileSystemOperations

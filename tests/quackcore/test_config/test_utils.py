@@ -66,7 +66,7 @@ class TestConfigUtils:
 
         # Test loading development config
         with patch("quackcore.config.api.get_env", return_value="development"):
-            # Mock fs functions for file operations
+            # Mock fs functions for file _operations
             with patch(
                 "quackcore.fs.service.join_path",
                 side_effect=lambda a, b: os.path.join(a, b),
@@ -90,7 +90,7 @@ class TestConfigUtils:
 
         # Test loading production config
         with patch("quackcore.config.api.get_env", return_value="production"):
-            # Mock fs functions for file operations
+            # Mock fs functions for file _operations
             with patch(
                 "quackcore.fs.service.join_path",
                 side_effect=lambda a, b: os.path.join(a, b),
@@ -114,7 +114,7 @@ class TestConfigUtils:
 
         # Test loading with .yml extension
         with patch("quackcore.config.api.get_env", return_value="test"):
-            # Mock fs functions for file operations
+            # Mock fs functions for file _operations
             with patch(
                 "quackcore.fs.service.join_path",
                 side_effect=lambda a, b: os.path.join(a, b),

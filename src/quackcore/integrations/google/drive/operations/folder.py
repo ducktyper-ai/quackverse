@@ -1,6 +1,6 @@
-# src/quackcore/integrations/google/drive/operations/folder.py
+# src/quackcore/integrations/google/drive/_operations/folder.py
 """
-Folder operations for Google Drive integration.
+Folder _operations for Google Drive integration.
 
 This module provides functions for managing folders in Google Drive,
 including creating folders and deleting files or folders.

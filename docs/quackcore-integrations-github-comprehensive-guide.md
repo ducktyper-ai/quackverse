@@ -745,7 +745,7 @@ finally:
 Be mindful of GitHub API rate limits, especially in batch operations:
 
 ```python
-# For bulk operations, add delay between requests
+# For bulk _operations, add delay between requests
 import time
 
 repos = ["user/repo1", "user/repo2", "user/repo3", "user/repo4"]
@@ -805,9 +805,9 @@ except Exception as e:
 3. Confirm the resource exists
 
 ```python
-# Check if repository exists before operations
+# Check if repository exists before _operations
 if github.client.check_repository_exists("username/repo"):
-    # Proceed with operations
+    # Proceed with _operations
     pass
 else:
     print("Repository does not exist or is not accessible")

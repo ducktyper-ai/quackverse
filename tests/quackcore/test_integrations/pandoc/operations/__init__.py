@@ -1,6 +1,6 @@
-# tests/quackcore/test_integrations/pandoc/operations/__init__.py
+# tests/quackcore/test_integrations/pandoc/_operations/__init__.py
 """
-Tests for Pandoc conversion operations.
+Tests for Pandoc conversion _operations.
 
 This package contains test modules for the various operation functions
 for the Pandoc integration, including HTML to Markdown and Markdown to DOCX conversion.

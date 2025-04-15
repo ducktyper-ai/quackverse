@@ -1,12 +1,12 @@
 # src/quackcore/fs/service/directory_operations.py
 """
-Directory management operations for the FileSystemService.
+Directory management _operations for the FileSystemService.
 """
 
 from pathlib import Path
 from typing import Protocol
 
-from quackcore.fs.operations import FileSystemOperations
+from quackcore.fs._operations import FileSystemOperations
 from quackcore.fs.results import (
     DirectoryInfoResult,
     FileInfoResult,
@@ -16,15 +16,15 @@ from quackcore.fs.results import (
 
 
 class HasOperations(Protocol):
-    """Protocol for classes that have operations."""
+    """Protocol for classes that have _operations."""
 
     operations: FileSystemOperations
 
 
 class DirectoryOperationsMixin:
-    """Mixin class for directory operations in the FileSystemService."""
+    """Mixin class for directory _operations in the FileSystemService."""
 
-    # This ensures the mixin will only be used with classes that have operations
+    # This ensures the mixin will only be used with classes that have _operations
     operations: FileSystemOperations
 
     def create_directory(

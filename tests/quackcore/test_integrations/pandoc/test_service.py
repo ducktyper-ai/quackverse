@@ -3,7 +3,7 @@
 Tests for Pandoc integration service.
 
 This module tests the PandocIntegration service class, including initialization,
-configuration handling, and document conversion operations.
+configuration handling, and document conversion _operations.
 """
 
 from pathlib import Path
@@ -61,7 +61,7 @@ class TestPandocService:
 
             # Setup mock for verify_pandoc - use autospec to ensure proper patching
             with patch(
-                "quackcore.integrations.pandoc.operations.verify_pandoc",
+                "quackcore.integrations.pandoc._operations.verify_pandoc",
                 autospec=True,
                 return_value="2.11.4",
             ) as mock_verify:
@@ -96,7 +96,7 @@ class TestPandocService:
 
             # Setup mock for verify_pandoc to raise an error
             with patch(
-                "quackcore.integrations.pandoc.operations.verify_pandoc",
+                "quackcore.integrations.pandoc._operations.verify_pandoc",
                 autospec=True,
                 side_effect=QuackIntegrationError("Pandoc not found"),
             ) as mock_verify:
@@ -123,7 +123,7 @@ class TestPandocService:
 
             # Setup mock for verify_pandoc
             with patch(
-                "quackcore.integrations.pandoc.operations.verify_pandoc",
+                "quackcore.integrations.pandoc._operations.verify_pandoc",
                 return_value="2.11.4",
             ) as mock_verify:
                 # Setup mock for directory creation to fail
@@ -299,7 +299,7 @@ class TestPandocService:
 
         # Test when pandoc is available - mock at the deepest layer
         with patch(
-            "quackcore.integrations.pandoc.operations.verify_pandoc",
+            "quackcore.integrations.pandoc._operations.verify_pandoc",
             autospec=True,
             return_value="2.11.4",
         ) as mock_verify:
@@ -453,7 +453,7 @@ class TestPandocService:
     @pytest.fixture
     def mock_fs(self):
         """Fixture to mock the fs module."""
-        # First, patch the low-level file operations to avoid real fs access
+        # First, patch the low-level file _operations to avoid real fs access
         with patch("quackcore.fs.service.get_file_info") as mock_get_file_info:
             # Set up the mock to prevent real filesystem access
             file_info = FileInfoResult(

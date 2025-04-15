@@ -14,7 +14,7 @@ from enum import Enum, auto
 
 from pydantic import BaseModel, Field, model_validator
 
-# Use QuackCore FS for file operations.
+# Use QuackCore FS for file _operations.
 from quackcore.fs import service as fs
 from quackcore.logging import get_logger
 
@@ -515,8 +515,8 @@ class CourseManager:
         if os.path.isabs(file_path):
             return file_path
         try:
-            project_root = resolver.get_project_root()
-            return fs.join_path(project_root, file_path)
+            project_root = resolver._get_project_root()
+            return fs._join_path(project_root, file_path)
         except FileNotFoundError as err:
             logger.warning(
                 f"Project root not found: {err}. Falling back to current working directory."

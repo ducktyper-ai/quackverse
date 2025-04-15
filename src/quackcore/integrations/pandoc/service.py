@@ -5,7 +5,7 @@ Pandoc integration service for QuackCore.
 This module provides the main service class for Pandoc integration,
 handling document conversion between various formats.
 All file path parameters and return types are represented as strings.
-Filesystem operations such as resolution and joining are delegated to quackcore.fs.
+Filesystem _operations such as resolution and joining are delegated to quackcore.fs.
 """
 
 import os
@@ -156,7 +156,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
         try:
-            html_path = resolver.resolve_project_path(html_path)
+            html_path = resolver._resolve_project_path(html_path)
 
             if output_path is None and self.converter:
                 config = getattr(self.converter, "config", None)
@@ -216,7 +216,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
         try:
-            markdown_path = resolver.resolve_project_path(markdown_path)
+            markdown_path = resolver._resolve_project_path(markdown_path)
 
             if output_path is None and self.converter:
                 config = getattr(self.converter, "config", None)
@@ -231,7 +231,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                         ),
                     )
             elif output_path:
-                output_path = resolver.resolve_project_path(output_path)
+                output_path = resolver._resolve_project_path(output_path)
             else:
                 return cast(
                     IntegrationResult[str],
@@ -284,7 +284,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
         try:
-            input_dir = resolver.resolve_project_path(input_dir)
+            input_dir = resolver._resolve_project_path(input_dir)
             input_dir_info = fs.get_file_info(input_dir)
             if (
                 not input_dir_info.success
@@ -302,7 +302,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                 config = getattr(self.converter, "config", None)
                 if isinstance(config, PandocConfig):
                     output_dir = (
-                        resolver.resolve_project_path(output_dir)
+                        resolver._resolve_project_path(output_dir)
                         if output_dir
                         else config.output_dir
                     )

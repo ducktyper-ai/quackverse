@@ -1,8 +1,8 @@
 # src/quackster/academy/results.py
 """
-Result classes for quackster operations.
+Result classes for quackster _operations.
 
-This module provides standardized result classes for quackster operations,
+This module provides standardized result classes for quackster _operations,
 similar to the result pattern used throughout QuackCore.
 """
 

@@ -47,7 +47,7 @@ def get_doc_directories() -> list[str]:
         return [expanded]
 
     # Attempt to detect a content context for tutorials.
-    content_context = resolver.detect_content_context(content_type="tutorial")
+    content_context = resolver._detect_content_context(content_type="tutorial")
     if content_context and content_context.content_dir:
         info = fs.get_file_info(content_context.content_dir)
         if info.success and info.exists and info.is_dir:

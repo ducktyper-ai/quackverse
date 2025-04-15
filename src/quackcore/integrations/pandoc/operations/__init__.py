@@ -1,8 +1,8 @@
-# src/quackcore/integrations/pandoc/operations/__init__.py
+# src/quackcore/integrations/pandoc/_operations/__init__.py
 """
 Operations package for pandoc integration.
 
-This package contains specialized modules for different pandoc operations,
+This package contains specialized modules for different pandoc _operations,
 such as HTML to Markdown and Markdown to DOCX conversion.
 """
 

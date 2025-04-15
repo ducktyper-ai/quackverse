@@ -1,6 +1,6 @@
 # src/quackcore/fs/service/file_operations.py
 """
-File operations utilities for the FileSystemService.
+File _operations utilities for the FileSystemService.
 
 These utilities extend the FileSystemService with methods for file manipulation.
 """
@@ -11,7 +11,7 @@ from pathlib import Path
 import yaml
 
 from quackcore.errors import wrap_io_errors
-from quackcore.fs.operations import FileSystemOperations
+from quackcore.fs._operations import FileSystemOperations
 from quackcore.fs.results import DataResult, OperationResult, ReadResult, WriteResult
 from quackcore.logging import get_logger
 
@@ -19,9 +19,9 @@ logger = get_logger(__name__)
 
 
 class FileOperationsMixin:
-    """Mixin class for file operations in the FileSystemService."""
+    """Mixin class for file _operations in the FileSystemService."""
 
-    # This mixin expects the implementing class to have an attribute 'operations'
+    # This mixin expects the implementing class to have an attribute '_operations'
     # that is an instance of FileSystemOperations.
     operations: FileSystemOperations
 
@@ -328,7 +328,7 @@ class FileOperationsMixin:
                 error=f"Failed to write JSON: {str(e)}",
             )
 
-    # File management operations
+    # File management _operations
     def copy(
         self, src: str | Path, dst: str | Path, overwrite: bool = False
     ) -> WriteResult:

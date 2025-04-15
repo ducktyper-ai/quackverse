@@ -1,9 +1,9 @@
 # src/quackcore/fs/results.py
 """
-Result models for filesystem operations.
+Result models for filesystem _operations.
 
 This module provides standardized result classes for various
-filesystem operations, enhancing error handling and return values.
+filesystem _operations, enhancing error handling and return values.
 """
 
 from pathlib import Path
@@ -123,7 +123,7 @@ class WriteResult(OperationResult):
 
     original_path: Path | None = Field(
         default=None,
-        description="Original path for move/copy operations",
+        description="Original path for move/copy _operations",
     )
 
     checksum: str | None = Field(
@@ -255,7 +255,7 @@ class FindResult(OperationResult):
 
 
 class DataResult(OperationResult, Generic[T]):
-    """Result for structured data operations (YAML, JSON, etc.)."""
+    """Result for structured data _operations (YAML, JSON, etc.)."""
 
     data: T = Field(
         description="The structured data",
@@ -276,7 +276,7 @@ class PathResult(OperationResult):
     Result of a path validation or manipulation operation.
 
     This specialized result type provides detailed information about path
-    validation, normalization, and checking operations.
+    validation, normalization, and checking _operations.
     """
 
     def __init__(

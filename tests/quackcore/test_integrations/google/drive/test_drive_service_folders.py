@@ -1,6 +1,6 @@
 # tests/quackcore/test_integrations/google/drive/test_drive_service_folders.py
 """
-Tests for Google Drive service folder operations.
+Tests for Google Drive service folder _operations.
 """
 
 from unittest.mock import MagicMock, patch
@@ -11,7 +11,7 @@ from quackcore.integrations.google.drive.service import GoogleDriveService
 
 
 class TestGoogleDriveServiceFolders:
-    """Tests for the GoogleDriveService folder operations."""
+    """Tests for the GoogleDriveService folder _operations."""
 
     @patch(
         "quackcore.integrations.google.auth.GoogleAuthProvider._verify_client_secrets_file"

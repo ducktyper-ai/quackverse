@@ -1,6 +1,6 @@
-# src/quackcore/integrations/google/mail/operations/auth.py
+# src/quackcore/integrations/google/mail/_operations/auth.py
 """
-Authentication operations for Google Mail integration.
+Authentication _operations for Google Mail integration.
 
 This module provides functions for authenticating with the Gmail API
 and initializing the service.

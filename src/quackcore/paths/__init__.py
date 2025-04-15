@@ -5,19 +5,12 @@ Path resolution and management utilities for QuackCore.
 This package provides utilities for resolving paths, detecting project structure,
 and inferring context from file locations in QuackCore projects.
 """
-
-from quackcore.paths.context import ContentContext, ProjectContext, ProjectDirectory
-from quackcore.paths.resolver import PathResolver, resolve_project_path
-from quackcore.paths.utils import (
-    find_nearest_directory,
-    find_project_root,
-    get_extension,
-    infer_module_from_path,
-    join_path,
-    normalize_path,
-    resolve_relative_to_project,
-    split_path,
-)
+from quackcore.fs._helpers import _get_extension
+from quackcore.fs._helpers.path_ops import _join_path, _split_path
+from quackcore.paths._internal.context import ContentContext, ProjectContext, ProjectDirectory
+from quackcore.paths._internal.resolver import PathResolver, _resolve_project_path
+from quackcore.paths._internal.utils import _find_project_root, _find_nearest_directory, \
+    _resolve_relative_to_project, _normalize_path, _infer_module_from_path
 
 # Create a global instance for convenience
 resolver = PathResolver()
@@ -30,14 +23,14 @@ __all__ = [
     "ProjectDirectory",
     # Global instance
     "resolver",
-    "resolve_project_path",
+    "_resolve_project_path",
     # Utility functions
-    "find_project_root",
-    "find_nearest_directory",
-    "resolve_relative_to_project",
-    "normalize_path",
-    "join_path",
-    "split_path",
-    "get_extension",
-    "infer_module_from_path",
+    "_find_project_root",
+    "_find_nearest_directory",
+    "_resolve_relative_to_project",
+    "_normalize_path",
+    "_join_path",
+    "_split_path",
+    "_get_extension",
+    "_infer_module_from_path",
 ]

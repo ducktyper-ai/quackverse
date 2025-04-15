@@ -7,7 +7,7 @@ standardized result objects, and comprehensive file operation capabilities.
 """
 
 # Import core components
-from quackcore.fs.operations import FileSystemOperations
+from quackcore.fs._operations import FileSystemOperations
 from quackcore.fs.results import (
     DataResult,
     DirectoryInfoResult,
@@ -19,7 +19,6 @@ from quackcore.fs.results import (
 )
 from quackcore.fs.service import (
     FileSystemService,
-    PathInfo,
     copy,
     create_directory,
     create_service,
@@ -82,7 +81,7 @@ def is_valid_path(path):
 
 def normalize_path_with_info(path):
     """Normalize a path and return detailed information."""
-    return service.normalize_path_with_info(path)
+    return service._normalize_path_with_info(path)
 
 
 __all__ = [
@@ -92,7 +91,7 @@ __all__ = [
     "create_service",
     # Global instance
     "service",
-    # Core operations class
+    # Core _operations class
     "FileSystemOperations",
     # Result classes
     "OperationResult",

@@ -2,7 +2,7 @@
 """
 Data models for Pandoc integration.
 
-This module provides Pydantic models for representing conversion operations,
+This module provides Pydantic models for representing conversion _operations,
 metrics, and results for document format conversions using Pandoc.
 In this refactored version, file paths are represented as strings rather than
 Path objects. All path resolution and normalization is delegated to quackcore.fs.
@@ -17,7 +17,7 @@ T = TypeVar("T")  # Generic type for flexible typing
 
 
 class ConversionMetrics(BaseModel):
-    """Metrics for document conversion operations."""
+    """Metrics for document conversion _operations."""
 
     conversion_times: dict[str, dict[str, float]] = Field(
         default_factory=dict,

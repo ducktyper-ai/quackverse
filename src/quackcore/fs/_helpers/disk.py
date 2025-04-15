@@ -1,6 +1,6 @@
-# src/quackcore/fs/helpers/disk.py
+# src/quackcore/fs/_helpers/disk.py
 """
-Utility functions for disk operations.
+Utility functions for disk _operations.
 """
 
 import os

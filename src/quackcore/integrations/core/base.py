@@ -61,7 +61,7 @@ class BaseAuthProvider(ABC, AuthProviderProtocol):
             str: Resolved absolute path
         """
         try:
-            resolved_path = resolver.resolve_project_path(file_path)
+            resolved_path = resolver._resolve_project_path(file_path)
             return str(resolved_path)
         except Exception as e:
             self.logger.warning(f"Could not resolve project path: {e}")
@@ -264,7 +264,7 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         # Attempt to get the project root, with graceful error handling
         project_root = None
         try:
-            from quackcore.paths.resolver import get_project_root
+            from quackcore.paths._internal.resolver import get_project_root
 
             project_root = get_project_root()
         except (QuackFileNotFoundError, FileNotFoundError, OSError) as e:
@@ -309,7 +309,7 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
             str: Resolved absolute path.
         """
         try:
-            resolved_path = resolver.resolve_project_path(file_path)
+            resolved_path = resolver._resolve_project_path(file_path)
             return str(resolved_path)
         except Exception as e:
             self.logger.warning(f"Could not resolve project path: {e}")

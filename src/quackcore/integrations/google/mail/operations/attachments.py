@@ -1,10 +1,10 @@
-# src/quackcore/integrations/google/mail/operations/attachments.py
+# src/quackcore/integrations/google/mail/_operations/attachments.py
 """
-Upload operations for Google Mail attachments.
+Upload _operations for Google Mail attachments.
 
 This module provides functions for processing email message parts to extract
 HTML content and download attachments, saving them to a given storage path.
-All file path values are handled as strings. Filesystem operations
+All file path values are handled as strings. Filesystem _operations
 (like joining paths, checking file existence, creating directories, writing files, etc.)
 are delegated to the QuackCore FS layer or Python’s os.path utilities.
 """

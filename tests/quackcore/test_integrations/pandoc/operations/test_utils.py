@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/pandoc/operations/test_utils.py
+# tests/quackcore/test_integrations/pandoc/_operations/test_utils.py
 """
 Tests for Pandoc utility functions.
 """

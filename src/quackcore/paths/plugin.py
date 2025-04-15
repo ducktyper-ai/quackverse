@@ -8,8 +8,8 @@ allowing QuackCore to expose path resolution functionality to other modules.
 
 from typing import Protocol
 
-from quackcore.paths.context import ContentContext, ProjectContext
-from quackcore.paths.resolver import PathResolver
+from quackcore.paths._internal.context import ContentContext, ProjectContext
+from quackcore.paths._internal.resolver import PathResolver
 
 
 class PathsPlugin(Protocol):
@@ -82,7 +82,7 @@ class QuackPathsPlugin:
         Returns:
             Path to the project root directory as a string
         """
-        return str(self._resolver.get_project_root(start_dir))
+        return str(self._resolver._get_project_root(start_dir))
 
     def detect_project_context(self, start_dir: str | None = None) -> ProjectContext:
         """
@@ -94,7 +94,7 @@ class QuackPathsPlugin:
         Returns:
             ProjectContext object
         """
-        return self._resolver.detect_project_context(start_dir)
+        return self._resolver._detect_project_context(start_dir)
 
     def detect_content_context(
         self, start_dir: str | None = None, content_type: str | None = None
@@ -109,7 +109,7 @@ class QuackPathsPlugin:
         Returns:
             ContentContext object
         """
-        return self._resolver.detect_content_context(start_dir, content_type)
+        return self._resolver._detect_content_context(start_dir, content_type)
 
 
 def create_plugin() -> PathsPlugin:

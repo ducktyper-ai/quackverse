@@ -1,5 +1,5 @@
 # tests/quackcore/test_integrations/github/test_operations.py
-"""Tests for GitHub API operations."""
+"""Tests for GitHub API _operations."""
 
 import base64
 from unittest.mock import MagicMock, patch
@@ -51,7 +51,7 @@ def mock_response():
 
 
 class TestUserOperations:
-    """Tests for user operations."""
+    """Tests for user _operations."""
 
     def test_get_user_authenticated(self, mock_session, mock_response):
         """Test getting the authenticated user."""
@@ -67,7 +67,7 @@ class TestUserOperations:
 
         # Mock make_request
         with patch(
-            "quackcore.integrations.github.operations.users.make_request"
+            "quackcore.integrations.github._operations.users.make_request"
         ) as mock_make_request:
             mock_make_request.return_value = mock_response
 
@@ -104,7 +104,7 @@ class TestUserOperations:
 
         # Mock make_request
         with patch(
-            "quackcore.integrations.github.operations.users.make_request"
+            "quackcore.integrations.github._operations.users.make_request"
         ) as mock_make_request:
             mock_make_request.return_value = mock_response
 
@@ -133,7 +133,7 @@ class TestUserOperations:
 
 
 class TestRepositoryOperations:
-    """Tests for repository operations."""
+    """Tests for repository _operations."""
 
     def test_get_repo(self, mock_session, mock_response):
         """Test getting a repository."""
@@ -158,7 +158,7 @@ class TestRepositoryOperations:
 
         # Mock make_request
         with patch(
-            "quackcore.integrations.github.operations.repositories.make_request"
+            "quackcore.integrations.github._operations.repositories.make_request"
         ) as mock_make_request:
             mock_make_request.return_value = mock_response
 
@@ -196,7 +196,7 @@ class TestRepositoryOperations:
         """Test starring a repository."""
         # Mock make_request
         with patch(
-            "quackcore.integrations.github.operations.repositories.make_request"
+            "quackcore.integrations.github._operations.repositories.make_request"
         ) as mock_make_request:
             mock_make_request.return_value = mock_response
 
@@ -222,7 +222,7 @@ class TestRepositoryOperations:
         """Test unstarring a repository."""
         # Mock make_request
         with patch(
-            "quackcore.integrations.github.operations.repositories.make_request"
+            "quackcore.integrations.github._operations.repositories.make_request"
         ) as mock_make_request:
             mock_make_request.return_value = mock_response
 
@@ -248,7 +248,7 @@ class TestRepositoryOperations:
         """Test checking if a repository is starred (true case)."""
         # Mock make_request
         with patch(
-            "quackcore.integrations.github.operations.repositories.make_request"
+            "quackcore.integrations.github._operations.repositories.make_request"
         ) as mock_make_request:
             mock_make_request.return_value = mock_response
 
@@ -276,7 +276,7 @@ class TestRepositoryOperations:
         mock_error = QuackApiError("Not found", status_code=404)
 
         with patch(
-            "quackcore.integrations.github.operations.repositories.make_request"
+            "quackcore.integrations.github._operations.repositories.make_request"
         ) as mock_make_request:
             mock_make_request.side_effect = mock_error
 
@@ -304,7 +304,7 @@ class TestRepositoryOperations:
         mock_error = QuackApiError("API error", status_code=500)
 
         with patch(
-            "quackcore.integrations.github.operations.repositories.make_request"
+            "quackcore.integrations.github._operations.repositories.make_request"
         ) as mock_make_request:
             mock_make_request.side_effect = mock_error
 
@@ -342,7 +342,7 @@ class TestRepositoryOperations:
 
         # Mock make_request
         with patch(
-            "quackcore.integrations.github.operations.repositories.make_request"
+            "quackcore.integrations.github._operations.repositories.make_request"
         ) as mock_make_request:
             mock_make_request.return_value = mock_response
 
@@ -376,7 +376,7 @@ class TestRepositoryOperations:
         """Test checking if a repository exists (true case)."""
         # Mock make_request
         with patch(
-            "quackcore.integrations.github.operations.repositories.make_request"
+            "quackcore.integrations.github._operations.repositories.make_request"
         ) as mock_make_request:
             mock_make_request.return_value = mock_response
 
@@ -404,7 +404,7 @@ class TestRepositoryOperations:
         mock_error = QuackApiError("Not found", status_code=404)
 
         with patch(
-            "quackcore.integrations.github.operations.repositories.make_request"
+            "quackcore.integrations.github._operations.repositories.make_request"
         ) as mock_make_request:
             mock_make_request.side_effect = mock_error
 
@@ -437,7 +437,7 @@ class TestRepositoryOperations:
 
         # Mock make_request
         with patch(
-            "quackcore.integrations.github.operations.repositories.make_request"
+            "quackcore.integrations.github._operations.repositories.make_request"
         ) as mock_make_request:
             mock_make_request.return_value = mock_response
 
@@ -467,7 +467,7 @@ class TestRepositoryOperations:
         """Test updating repository file."""
         # Mock make_request
         with patch(
-            "quackcore.integrations.github.operations.repositories.make_request"
+            "quackcore.integrations.github._operations.repositories.make_request"
         ) as mock_make_request:
             mock_make_request.return_value = mock_response
 
@@ -508,7 +508,7 @@ class TestRepositoryOperations:
 
 
 class TestPullRequestOperations:
-    """Tests for pull request operations."""
+    """Tests for pull request _operations."""
 
     def test_create_pull_request(self, mock_session, mock_response):
         """Test creating a pull request."""
@@ -534,7 +534,7 @@ class TestPullRequestOperations:
 
         # Mock make_request
         with patch(
-            "quackcore.integrations.github.operations.pull_requests.make_request"
+            "quackcore.integrations.github._operations.pull_requests.make_request"
         ) as mock_make_request:
             mock_make_request.return_value = mock_response
 
@@ -625,7 +625,7 @@ class TestPullRequestOperations:
 
         # Mock make_request
         with patch(
-            "quackcore.integrations.github.operations.pull_requests.make_request"
+            "quackcore.integrations.github._operations.pull_requests.make_request"
         ) as mock_make_request:
             mock_make_request.return_value = mock_response
 
@@ -685,7 +685,7 @@ class TestPullRequestOperations:
 
         # Mock make_request
         with patch(
-            "quackcore.integrations.github.operations.pull_requests.make_request"
+            "quackcore.integrations.github._operations.pull_requests.make_request"
         ) as mock_make_request:
             mock_make_request.return_value = mock_response
 
@@ -741,7 +741,7 @@ class TestPullRequestOperations:
 
         # Mock make_request
         with patch(
-            "quackcore.integrations.github.operations.pull_requests.make_request"
+            "quackcore.integrations.github._operations.pull_requests.make_request"
         ) as mock_make_request:
             mock_make_request.return_value = mock_response
 
@@ -771,7 +771,7 @@ class TestPullRequestOperations:
 
 
 class TestIssueOperations:
-    """Tests for issue operations."""
+    """Tests for issue _operations."""
 
     def test_create_issue(self, mock_session, mock_response):
         """Test creating an issue."""
@@ -789,7 +789,7 @@ class TestIssueOperations:
 
         # Mock make_request
         with patch(
-            "quackcore.integrations.github.operations.issues.make_request"
+            "quackcore.integrations.github._operations.issues.make_request"
         ) as mock_make_request:
             mock_make_request.return_value = mock_response
 
@@ -842,7 +842,7 @@ class TestIssueOperations:
 
         # Mock make_request
         with patch(
-            "quackcore.integrations.github.operations.issues.make_request"
+            "quackcore.integrations.github._operations.issues.make_request"
         ) as mock_make_request:
             mock_make_request.return_value = mock_response
 
@@ -889,7 +889,7 @@ class TestIssueOperations:
 
         # Mock make_request
         with patch(
-            "quackcore.integrations.github.operations.issues.make_request"
+            "quackcore.integrations.github._operations.issues.make_request"
         ) as mock_make_request:
             mock_make_request.return_value = mock_response
 
@@ -925,7 +925,7 @@ class TestIssueOperations:
 
         # Mock make_request
         with patch(
-            "quackcore.integrations.github.operations.issues.make_request"
+            "quackcore.integrations.github._operations.issues.make_request"
         ) as mock_make_request:
             mock_make_request.return_value = mock_response
 

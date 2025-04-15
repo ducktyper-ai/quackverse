@@ -1047,7 +1047,7 @@ from quackcore.cli import handle_errors
 
 @handle_errors(error_types=(ConnectionError, TimeoutError), title="Network Error")
 def fetch_data(url):
-    # Network operations
+    # Network _operations
     pass
 ```
 
@@ -1063,7 +1063,7 @@ def fetch_data():
     # Long operation
     pass
 
-# For operations with quantifiable progress
+# For _operations with quantifiable progress
 def process_files(files):
     reporter = ProgressReporter(total=len(files), desc="Processing files")
     reporter.start()

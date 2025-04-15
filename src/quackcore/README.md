@@ -100,14 +100,14 @@ custom_config = load_config("path/to/custom_config.yaml")
 from quackcore.paths import resolver
 
 # Find the project root directory
-project_root = resolver.get_project_root()
+project_root = resolver._get_project_root()
 
 # Resolve a path relative to the project root
-config_path = resolver.resolve_project_path("config/settings.yaml")
+config_path = resolver._resolve_project_path("config/settings.yaml")
 
 # Detect project context
-context = resolver.detect_project_context()
-source_dir = context.get_source_dir()
+context = resolver._detect_project_context()
+source_dir = context._get_source_dir()
 ```
 
 ### File Operations
@@ -527,28 +527,30 @@ from quackcore.paths import resolver
 from quackcore.fs import service as fs
 from quackcore.cli import init_cli_env
 
+
 def main():
-    # Initialize the CLI environment
-    context = init_cli_env(app_name="my_quack_tool")
-    
-    # Get configuration
-    config = context.config
-    
-    # Set up logging
-    logger = context.logger
-    logger.info("Starting My Quack Tool")
-    
-    # Use QuackCore functionality
-    project_root = resolver.get_project_root()
-    output_dir = resolver.resolve_project_path("output")
-    
-    # Implement your tool's functionality
-    # ...
-    
-    logger.info("Process completed successfully")
+  # Initialize the CLI environment
+  context = init_cli_env(app_name="my_quack_tool")
+
+  # Get configuration
+  config = context.config
+
+  # Set up logging
+  logger = context.logger
+  logger.info("Starting My Quack Tool")
+
+  # Use QuackCore functionality
+  project_root = resolver._get_project_root()
+  output_dir = resolver._resolve_project_path("output")
+
+  # Implement your tool's functionality
+  # ...
+
+  logger.info("Process completed successfully")
+
 
 if __name__ == "__main__":
-    main()
+  main()
 ```
 
 ## Troubleshooting

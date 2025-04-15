@@ -106,9 +106,9 @@ class TestDocumentConverter:
                 ) as mock_service_get_info:
                     mock_service_get_info.return_value = file_info
 
-                # Also patch the operations.api.get_file_info
+                # Also patch the _operations.api.get_file_info
                 with patch(
-                    "quackcore.integrations.pandoc.operations.api.get_file_info"
+                    "quackcore.integrations.pandoc._operations.api.get_file_info"
                 ) as mock_get_info:
                     # Return a proper FileInfo object
                     mock_get_info.return_value = FileInfo(
@@ -175,9 +175,9 @@ class TestDocumentConverter:
                 ) as mock_service_get_info:
                     mock_service_get_info.return_value = file_info
 
-                # Mock the operations.api.get_file_info function
+                # Mock the _operations.api.get_file_info function
                 with patch(
-                    "quackcore.integrations.pandoc.operations.api.get_file_info"
+                    "quackcore.integrations.pandoc._operations.api.get_file_info"
                 ) as mock_get_info:
                     # Return a proper FileInfo object
                     mock_get_info.return_value = FileInfo(
@@ -235,9 +235,9 @@ class TestDocumentConverter:
                 ) as mock_service_get_info:
                     mock_service_get_info.return_value = file_info
 
-                # Mock the operations.api.get_file_info function
+                # Mock the _operations.api.get_file_info function
                 with patch(
-                    "quackcore.integrations.pandoc.operations.api.get_file_info"
+                    "quackcore.integrations.pandoc._operations.api.get_file_info"
                 ) as mock_get_info:
                     # Return a proper FileInfo object
                     mock_get_info.return_value = FileInfo(
@@ -292,9 +292,9 @@ class TestDocumentConverter:
                 ) as mock_service_get_info:
                     mock_service_get_info.return_value = file_info
 
-                # Mock the operations.api.get_file_info function
+                # Mock the _operations.api.get_file_info function
                 with patch(
-                    "quackcore.integrations.pandoc.operations.api.get_file_info"
+                    "quackcore.integrations.pandoc._operations.api.get_file_info"
                 ) as mock_get_info:
                     # Return a proper FileInfo object
                     mock_get_info.return_value = FileInfo(
@@ -344,9 +344,9 @@ class TestDocumentConverter:
                 ) as mock_service_get_info:
                     mock_service_get_info.return_value = file_info
 
-                # Mock the operations.api.get_file_info function to raise an error
+                # Mock the _operations.api.get_file_info function to raise an error
                 with patch(
-                    "quackcore.integrations.pandoc.operations.api.get_file_info"
+                    "quackcore.integrations.pandoc._operations.api.get_file_info"
                 ) as mock_get_info:
                     mock_get_info.side_effect = QuackIntegrationError("File not found")
 
@@ -427,7 +427,7 @@ class TestDocumentConverter:
         output_path = Path("/path/to/output/file.md")
         input_path = Path("/path/to/input.html")
 
-        # Mock file system operations to ensure paths exist
+        # Mock file system _operations to ensure paths exist
         with patch("quackcore.fs.service.path_exists", return_value=True):
             with patch("quackcore.fs.service.get_file_info") as mock_service_get_info:
                 # Setup output and input file mocks for service calls
@@ -484,7 +484,7 @@ class TestDocumentConverter:
         output_path = Path("/path/to/output/file.docx")
         input_path = Path("/path/to/input.md")
 
-        # Mock file system operations to ensure paths exist
+        # Mock file system _operations to ensure paths exist
         with patch("quackcore.fs.service.path_exists", return_value=True):
             with patch("quackcore.fs.service.get_file_info") as mock_service_get_info:
                 # Setup output and input file mocks for service calls
@@ -511,7 +511,7 @@ class TestDocumentConverter:
 
                     # Mock validate_docx_structure
                     with patch(
-                        "quackcore.integrations.pandoc.operations.api.validate_docx_structure"
+                        "quackcore.integrations.pandoc._operations.api.validate_docx_structure"
                     ) as mock_validate_docx:
                         mock_validate_docx.return_value = (True, [])
 
@@ -539,7 +539,7 @@ class TestDocumentConverter:
         output_path = Path("/path/to/output/file.md")
         input_path = Path("/path/to/input.html")
 
-        # Mock file system operations at the service level
+        # Mock file system _operations at the service level
         with patch("quackcore.fs.service.path_exists") as mock_path_exists:
             # Let path_exists return False for output path, True for any other path
             mock_path_exists.side_effect = lambda p: str(p) != str(output_path)
@@ -573,7 +573,7 @@ class TestDocumentConverter:
         output_path = Path("/path/to/output/file.md")
         input_path = Path("/path/to/input.html")
 
-        # Mock file system operations to control which files exist
+        # Mock file system _operations to control which files exist
         with patch("quackcore.fs.service.path_exists") as mock_path_exists:
             # Let path_exists return False for input path, True for any other path
             mock_path_exists.side_effect = lambda p: str(p) != str(input_path)

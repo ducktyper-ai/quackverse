@@ -1,9 +1,9 @@
-# src/quackcore/fs/operations/file_info.py
+# src/quackcore/fs/_operations/file_info.py
 """
-File information operations.
+File information _operations.
 
-This module provides internal operations for retrieving metadata and information
-about files and paths in the filesystem. These operations are used by the public
+This module provides internal _operations for retrieving metadata and information
+about files and paths in the filesystem. These _operations are used by the public
 API but are not meant to be consumed directly.
 """
 
@@ -20,7 +20,7 @@ logger = get_logger(__name__)
 
 class FileInfoOperationsMixin:
     """
-    File information operations mixin class.
+    File information _operations mixin class.
 
     Provides internal methods for retrieving metadata about files and paths,
     including existence checks, permissions, size, and MIME types.

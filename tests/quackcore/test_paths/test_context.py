@@ -5,7 +5,7 @@ Tests for project context models.
 
 from pathlib import Path
 
-from quackcore.paths.context import ContentContext, ProjectContext, ProjectDirectory
+from quackcore.paths._internal.context import ContentContext, ProjectContext, ProjectDirectory
 
 
 class TestProjectDirectory:
@@ -95,22 +95,22 @@ class TestProjectContext:
         }
 
         # Test getting directories by type
-        assert context.get_source_dir() == Path("/project/src")
-        assert context.get_output_dir() == Path("/project/output")
-        assert context.get_data_dir() == Path("/project/data")
-        assert context.get_config_dir() == Path("/project/config")
+        assert context._get_source_dir() == Path("/project/src")
+        assert context._get_output_dir() == Path("/project/output")
+        assert context._get_data_dir() == Path("/project/data")
+        assert context._get_config_dir() == Path("/project/config")
 
         # Test getting by name
-        assert context.get_directory("src") == Path("/project/src")
-        assert context.get_directory("output") == Path("/project/output")
-        assert context.get_directory("nonexistent") is None
+        assert context._get_directory("src") == Path("/project/src")
+        assert context._get_directory("output") == Path("/project/output")
+        assert context._get_directory("nonexistent") is None
 
     def test_add_directory(self) -> None:
         """Test adding a directory to the context."""
         context = ProjectContext(root_dir=Path("/project"))
 
         # Add directory using the add_directory method
-        context.add_directory(name="src", path=Path("/project/src"), is_source=True)
+        context._add_directory(name="src", path=Path("/project/src"), is_source=True)
 
         # Verify the directory was added
         assert "src" in context.directories
@@ -119,13 +119,13 @@ class TestProjectContext:
         assert context.directories["src"].is_source is True
 
         # Test adding with relative path calculation
-        context.add_directory(
+        context._add_directory(
             name="output", path=Path("/project/output"), is_output=True
         )
         assert context.directories["output"].rel_path == Path("output")
 
         # Test adding path outside project root (rel_path should be None)
-        context.add_directory(
+        context._add_directory(
             name="external",
             path=Path("/external/path"),
         )
@@ -155,29 +155,29 @@ class TestContentContext:
         context = ContentContext(root_dir=Path("/project"))
 
         # Add directories
-        context.add_directory(
+        context._add_directory(
             name="assets", path=Path("/project/assets"), is_asset=True
         )
-        context.add_directory(name="temp", path=Path("/project/temp"), is_temp=True)
+        context._add_directory(name="temp", path=Path("/project/temp"), is_temp=True)
 
         # Test getting content-specific directories
-        assert context.get_assets_dir() == Path("/project/assets")
-        assert context.get_temp_dir() == Path("/project/temp")
+        assert context._get_assets_dir() == Path("/project/assets")
+        assert context._get_temp_dir() == Path("/project/temp")
 
         # Test with missing directories
         context = ContentContext(root_dir=Path("/project"))
-        assert context.get_assets_dir() is None
-        assert context.get_temp_dir() is None
+        assert context._get_assets_dir() is None
+        assert context._get_temp_dir() is None
 
     def test_inherit_from_project_context(self) -> None:
         """Test inheriting from a project context."""
         project_context = ProjectContext(root_dir=Path("/project"), name="test-project")
 
         # Add directories to project context
-        project_context.add_directory(
+        project_context._add_directory(
             name="src", path=Path("/project/src"), is_source=True
         )
-        project_context.add_directory(
+        project_context._add_directory(
             name="assets", path=Path("/project/assets"), is_asset=True
         )
 
@@ -195,6 +195,6 @@ class TestContentContext:
         assert content_context.name == "test-project"
         assert "src" in content_context.directories
         assert "assets" in content_context.directories
-        assert content_context.get_source_dir() == Path("/project/src")
-        assert content_context.get_assets_dir() == Path("/project/assets")
+        assert content_context._get_source_dir() == Path("/project/src")
+        assert content_context._get_assets_dir() == Path("/project/assets")
         assert content_context.content_type == "tutorial"

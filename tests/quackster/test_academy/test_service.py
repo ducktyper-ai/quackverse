@@ -59,7 +59,7 @@ class TestTeachingService:
     def test_initialize_relative_base_dir(self, mock_fs, mock_resolver):
         """Test initialization with relative base_dir."""
         service = TeachingService()
-        mock_resolver.get_project_root.return_value = Path("/project/root")
+        mock_resolver._get_project_root.return_value = Path("/project/root")
 
         with patch(
             "quackster.academy.context.TeachingContext.from_config"
@@ -75,7 +75,7 @@ class TestTeachingService:
     def test_initialize_relative_base_dir_no_project_root(self, mock_fs, mock_resolver):
         """Test initialization with relative base_dir when project root fails."""
         service = TeachingService()
-        mock_resolver.get_project_root.side_effect = Exception("Project root not found")
+        mock_resolver._get_project_root.side_effect = Exception("Project root not found")
 
         with patch(
             "quackster.academy.context.TeachingContext.from_config"
@@ -136,7 +136,7 @@ class TestTeachingService:
     def test_create_context_relative_base_dir(self, mock_fs, mock_resolver):
         """Test context creation with relative base_dir."""
         service = TeachingService()
-        mock_resolver.get_project_root.return_value = Path("/project/root")
+        mock_resolver._get_project_root.return_value = Path("/project/root")
 
         with patch(
             "quackster.academy.context.TeachingContext.create_default"
@@ -642,7 +642,7 @@ class TestTeachingService:
 
     def test_resolve_file_path_relative(self, mock_resolver):
         """Test _resolve_file_path with relative path."""
-        mock_resolver.get_project_root.return_value = Path("/project/root")
+        mock_resolver._get_project_root.return_value = Path("/project/root")
 
         path = "relative/path"
         resolved = TeachingService._resolve_file_path(path)
@@ -650,7 +650,7 @@ class TestTeachingService:
 
     def test_resolve_file_path_relative_no_project_root(self, mock_resolver):
         """Test _resolve_file_path with relative path when project root fails."""
-        mock_resolver.get_project_root.side_effect = Exception("Project root not found")
+        mock_resolver._get_project_root.side_effect = Exception("Project root not found")
 
         with patch("pathlib.Path.resolve") as mock_resolve:
             mock_resolve.return_value = Path("/resolved/path")

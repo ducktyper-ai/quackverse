@@ -1,8 +1,8 @@
-# src/quackcore/fs/operations/directory_ops.py
+# src/quackcore/fs/_operations/directory_ops.py
 """
-Directory operations.
+Directory _operations.
 
-This module provides internal operations for working with directories, including
+This module provides internal _operations for working with directories, including
 listing contents, getting directory information, and filtering by patterns.
 """
 
@@ -22,7 +22,7 @@ logger = get_logger(__name__)
 
 class DirectoryOperationsMixin:
     """
-    Directory operations mixin class.
+    Directory _operations mixin class.
 
     Provides internal methods for working with directories, listing their contents,
     and filtering by patterns.

@@ -2,7 +2,7 @@
 """
 Standalone utility functions that are exposed at the package level.
 
-These functions provide direct access to common filesystem operations
+These functions provide direct access to common filesystem _operations
 without having to create a service instance.
 """
 
@@ -28,7 +28,7 @@ T = TypeVar("T")  # Generic type for flexible typing
 # Create a service instance specifically for standalone functions
 _service = FileSystemService()
 
-# File operations
+# File _operations
 
 
 def read_text(path: str | Path, encoding: str = "utf-8") -> ReadResult[str]:

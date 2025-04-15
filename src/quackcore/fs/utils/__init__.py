@@ -3,7 +3,7 @@
 Utility functions for the filesystem module.
 
 This module provides high-level utility functions that build upon
-the basic operations provided by the FileSystemService.
+the basic _operations provided by the FileSystemService.
 
 Note: This is a legacy name preserved for backward compatibility.
 For new code, prefer using `quackcore.fs.api.public` instead.

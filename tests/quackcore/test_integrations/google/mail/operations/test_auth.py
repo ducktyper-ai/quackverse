@@ -1,6 +1,6 @@
-# tests/quackcore/test_integrations/google/mail/operations/test_auth.py
+# tests/quackcore/test_integrations/google/mail/_operations/test_auth.py
 """
-Tests for Gmail authentication operations.
+Tests for Gmail authentication _operations.
 
 This module tests the authentication functionality for the Google Mail integration,
 including initializing the Gmail service.
@@ -16,7 +16,7 @@ from quackcore.integrations.google.mail.protocols import GoogleCredentials
 
 
 class TestGmailAuthOperations:
-    """Tests for Gmail authentication operations."""
+    """Tests for Gmail authentication _operations."""
 
     def test_initialize_gmail_service(self) -> None:
         """Test initializing the Gmail service."""

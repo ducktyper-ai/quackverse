@@ -778,13 +778,13 @@ class Service2:
    # Bad: Complex initialization
    class MyPlugin:
        def __init__(self):
-           # Expensive operations during initialization
+           # Expensive _operations during initialization
            self.data = self._load_large_dataset()
    
    # Good: Lazy initialization
    class MyPlugin:
        def __init__(self):
-           # Defer expensive operations
+           # Defer expensive _operations
            self._data = None
        
        @property
@@ -1301,7 +1301,7 @@ from quackcore.plugins.protocols import CommandPluginProtocol
 from typing import Any, Callable, List, Dict
 
 class QuackETL:
-    """A plugin for Extract, Transform, Load operations on data."""
+    """A plugin for Extract, Transform, Load _operations on data."""
     
     @property
     def name(self) -> str:

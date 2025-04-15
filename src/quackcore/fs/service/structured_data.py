@@ -1,18 +1,18 @@
 # src/quackcore/fs/service/structured_data.py
 """
-Structured data operations (JSON, YAML) for the FileSystemService.
+Structured data _operations (JSON, YAML) for the FileSystemService.
 """
 
 from pathlib import Path
 
-from quackcore.fs.operations import FileSystemOperations
+from quackcore.fs._operations import FileSystemOperations
 from quackcore.fs.results import DataResult, WriteResult
 
 
 class StructuredDataMixin:
-    """Mixin class for structured data operations in the FileSystemService."""
+    """Mixin class for structured data _operations in the FileSystemService."""
 
-    # This ensures the mixin will only be used with classes that have operations
+    # This ensures the mixin will only be used with classes that have _operations
     operations: FileSystemOperations
 
     # --- Structured Data Operations ---

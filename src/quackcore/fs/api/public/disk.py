@@ -1,13 +1,13 @@
 # src/quackcore/fs/api/public/disk.py
 """
-Public API for disk operations.
+Public API for disk _operations.
 
-This module provides safe, result-oriented wrappers around low-level disk operations.
+This module provides safe, result-oriented wrappers around low-level disk _operations.
 """
 
 from pathlib import Path
 
-from quackcore.fs.helpers.disk import _get_disk_usage, _is_path_writeable
+from quackcore.fs._helpers.disk import _get_disk_usage, _is_path_writeable
 from quackcore.fs.results import DataResult
 from quackcore.logging import get_logger
 

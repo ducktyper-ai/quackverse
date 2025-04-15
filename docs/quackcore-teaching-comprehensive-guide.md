@@ -999,7 +999,7 @@ criteria.add_criterion(
     GradingCriterion.create(
         name="Implementation",
         points=50.0,
-        description="Correct implementation of linked list operations",
+        description="Correct implementation of linked list _operations",
         required=True
     )
 )
@@ -1963,7 +1963,7 @@ from quackcore.teaching.core import github_api
 if not github_api._get_github_client():
     print("GitHub client not available")
     
-# Test GitHub operations directly
+# Test GitHub _operations directly
 user = utils.load_progress()
 if user.github_username:
     has_starred = github_api.has_starred_repo(user.github_username, "quackverse/quackcore")

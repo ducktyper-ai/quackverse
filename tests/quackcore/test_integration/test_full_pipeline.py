@@ -23,7 +23,7 @@ from quackcore.plugins.registry import PluginRegistry
 
 # Test plugins to register in the registry
 class SampleFilePlugin(CommandPluginProtocol):
-    """A test plugin for file operations."""
+    """A test plugin for file _operations."""
 
     def __init__(self, fs_service: FileSystemService) -> None:
         """Initialize with a filesystem service."""
@@ -63,7 +63,7 @@ class SampleFilePlugin(CommandPluginProtocol):
 
 
 class SamplePathPlugin(CommandPluginProtocol):
-    """A test plugin for path operations."""
+    """A test plugin for path _operations."""
 
     def __init__(self, path_resolver: PathResolver) -> None:
         """Initialize with a path resolver."""
@@ -91,11 +91,11 @@ class SamplePathPlugin(CommandPluginProtocol):
 
     def find_project_root(self, start_dir: str | None = None) -> Path:
         """Find the project root directory."""
-        return self.resolver.get_project_root(start_dir)
+        return self.resolver._get_project_root(start_dir)
 
     def resolve_path(self, path: str, project_root: str | None = None) -> Path:
         """Resolve a path relative to the project root."""
-        return self.resolver.resolve_project_path(path, project_root)
+        return self.resolver._resolve_project_path(path, project_root)
 
 
 class SampleConfigProvider(ProviderPluginProtocol):
@@ -130,7 +130,7 @@ class TestIntegration:
     """Integration tests for QuackCore components."""
 
     def test_config_to_filesystem_pipeline(self, temp_dir: Path) -> None:
-        """Test integrating configuration with filesystem operations."""
+        """Test integrating configuration with filesystem _operations."""
         # Create a test configuration file
         config_file = temp_dir / "test_config.yaml"
         config_data = {
@@ -161,7 +161,7 @@ class TestIntegration:
         # Create services using the configuration
         fs_service = FileSystemService(base_dir=config.paths.base_dir)
 
-        # Test read/write operations using configured paths
+        # Test read/write _operations using configured paths
         output_file = output_dir / "output.txt"
 
         write_result = fs_service.write_text(output_file, "Generated output")
@@ -173,7 +173,7 @@ class TestIntegration:
 
         # Test reading through resolved paths
         path_resolver = PathResolver()
-        data_path = path_resolver.resolve_project_path("data/test.txt", temp_dir)
+        data_path = path_resolver._resolve_project_path("data/test.txt", temp_dir)
         assert data_path == test_file
 
         read_result = fs_service.read_text(data_path)
@@ -253,7 +253,7 @@ class TestIntegration:
         # Test path resolution error handling
         path_resolver = PathResolver()
         with pytest.raises(QuackError):
-            path_resolver.get_project_root("/nonexistent/path")
+            path_resolver._get_project_root("/nonexistent/path")
 
         # Test config loading error handling
         with pytest.raises(QuackError):

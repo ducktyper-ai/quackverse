@@ -1,6 +1,6 @@
 # tests/quackcore/test_integrations/google/drive/test_drive_service_delete.py
 """
-Tests for Google Drive service deletion operations.
+Tests for Google Drive service deletion _operations.
 """
 
 from unittest.mock import MagicMock
@@ -10,7 +10,7 @@ from quackcore.integrations.google.drive.service import GoogleDriveService
 
 
 class TestGoogleDriveServiceDelete:
-    """Tests for the GoogleDriveService deletion operations."""
+    """Tests for the GoogleDriveService deletion _operations."""
 
     def test_delete_file(self) -> None:
         """Test deleting a file."""

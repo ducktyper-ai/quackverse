@@ -2,7 +2,7 @@
 """
 ✅ Public Utility Functions (Safe for QuackTools and DuckTyper)
 
-These are stable, documented, and error-handled helpers for working with the filesystem.
+These are stable, documented, and error-handled _helpers for working with the filesystem.
 If you're building with `quackcore.fs.service`, use these functions directly.
 """
 
@@ -41,7 +41,7 @@ from quackcore.fs.api.public.temp import (
 __all__ = [
     # Checksums
     "compute_checksum",
-    # Disk operations
+    # Disk _operations
     "get_disk_usage",
     "is_path_writeable",
     # File information
@@ -50,18 +50,18 @@ __all__ = [
     "get_file_timestamp",
     "get_mime_type",
     "is_file_locked",
-    # File operations
+    # File _operations
     "atomic_write",
     "ensure_directory",
     "find_files_by_content",
     "get_unique_filename",
-    # Path operations
+    # Path _operations
     "expand_user_vars",
     "is_same_file",
     "is_subdirectory",
     "normalize_path",
     "split_path",
-    # Safe operations
+    # Safe _operations
     "copy_safely",
     "delete_safely",
     "move_safely",

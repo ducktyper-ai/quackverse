@@ -1,6 +1,6 @@
 # tests/quackcore/test_integrations/google/drive/test_drive_service_download.py
 """
-Tests for Google Drive service download operations.
+Tests for Google Drive service download _operations.
 """
 
 from pathlib import Path
@@ -14,7 +14,7 @@ from quackcore.integrations.google.drive.service import GoogleDriveService
 
 
 class TestGoogleDriveServiceDownload:
-    """Tests for GoogleDriveService download operations."""
+    """Tests for GoogleDriveService download _operations."""
 
     @pytest.fixture
     def drive_service(self) -> GoogleDriveService:

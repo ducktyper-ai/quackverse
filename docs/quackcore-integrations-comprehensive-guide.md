@@ -482,7 +482,7 @@ This is the base result class used for most integration operations:
 
 ```python
 class IntegrationResult(BaseModel, Generic[T]):
-    """Base result for integration operations."""
+    """Base result for integration _operations."""
 
     success: bool = Field(
         default=True,
@@ -527,7 +527,7 @@ Specialized result class for authentication operations:
 
 ```python
 class AuthResult(BaseModel):
-    """Result for authentication operations."""
+    """Result for authentication _operations."""
 
     success: bool = Field(
         default=True,
@@ -571,7 +571,7 @@ Specialized result class for configuration operations:
 
 ```python
 class ConfigResult(IntegrationResult[dict]):
-    """Result for configuration operations."""
+    """Result for configuration _operations."""
 
     config_path: str | None = Field(
         default=None,

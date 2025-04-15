@@ -157,7 +157,7 @@ def find_project_root() -> str:
     """
     try:
         # Use the imported resolver.
-        root = path_resolver.get_project_root()
+        root = path_resolver._get_project_root()
         return str(root)
     except Exception:
         # Catch all exceptions to ensure tests can run without a project root.

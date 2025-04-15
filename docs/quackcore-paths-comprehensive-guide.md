@@ -42,17 +42,17 @@ The quickest way to start using the `quackcore.paths` module is through the glob
 from quackcore.paths import resolver
 
 # Find project root
-project_root = resolver.get_project_root()
+project_root = resolver._get_project_root()
 print(f"Project root is at: {project_root}")
 
 # Resolve a path relative to project root
-config_path = resolver.resolve_project_path("config/settings.yaml")
+config_path = resolver._resolve_project_path("config/settings.yaml")
 print(f"Config path: {config_path}")
 
 # Get project context with directory information
-context = resolver.detect_project_context()
+context = resolver._detect_project_context()
 print(f"Project name: {context.name}")
-print(f"Source directory: {context.get_source_dir()}")
+print(f"Source directory: {context._get_source_dir()}")
 ```
 
 ## Core Concepts
@@ -102,7 +102,7 @@ The `quackcore.paths` module provides robust utilities for finding the root dire
 from quackcore.paths import resolver, find_project_root
 
 # Using the global resolver
-project_root = resolver.get_project_root()
+project_root = resolver._get_project_root()
 
 # Using the standalone function
 project_root = find_project_root()
@@ -112,8 +112,8 @@ project_root = find_project_root("/path/to/start/search")
 
 # Customizing marker files and directories
 project_root = find_project_root(
-    marker_files=["pyproject.toml", "setup.py"],
-    marker_dirs=["src", "tests"]
+  marker_files=["pyproject.toml", "setup.py"],
+  marker_dirs=["src", "tests"]
 )
 ```
 
@@ -127,19 +127,19 @@ Resolving paths relative to the project root is one of the key features of `quac
 from quackcore.paths import resolver, resolve_project_path
 
 # Resolve a relative path from the project root
-config_path = resolver.resolve_project_path("config/settings.yaml")
+config_path = resolver._resolve_project_path("config/settings.yaml")
 
 # Using the standalone function
 config_path = resolve_project_path("config/settings.yaml")
 
 # Specifying a custom project root
 config_path = resolve_project_path(
-    "config/settings.yaml",
-    project_root="/custom/project/root"
+  "config/settings.yaml",
+  project_root="/custom/project/root"
 )
 
 # Absolute paths are returned unchanged
-abs_path = resolver.resolve_project_path("/absolute/path/to/file.txt")
+abs_path = resolver._resolve_project_path("/absolute/path/to/file.txt")
 ```
 
 This makes it easy to work with project files regardless of the current working directory, eliminating the need for complex path manipulation in your code.
@@ -152,29 +152,29 @@ The `ProjectContext` provides a rich set of information about a project's struct
 from quackcore.paths import resolver
 
 # Detect project context
-context = resolver.detect_project_context()
+context = resolver._detect_project_context()
 
 # Get key directories
-src_dir = context.get_source_dir()
-output_dir = context.get_output_dir()
-data_dir = context.get_data_dir()
-config_dir = context.get_config_dir()
+src_dir = context._get_source_dir()
+output_dir = context._get_output_dir()
+data_dir = context._get_data_dir()
+config_dir = context._get_config_dir()
 
 # Get arbitrary directories by name
-tests_dir = context.get_directory("tests")
-docs_dir = context.get_directory("docs")
+tests_dir = context._get_directory("tests")
+docs_dir = context._get_directory("docs")
 
 # Check project configuration file
 if context.config_file:
-    print(f"Project configuration found at: {context.config_file}")
+  print(f"Project configuration found at: {context.config_file}")
 
 # Enumerate all project directories
 for name, dir_info in context.directories.items():
-    print(f"{name}: {dir_info.path}")
-    if dir_info.is_source:
-        print("  (source directory)")
-    if dir_info.is_output:
-        print("  (output directory)")
+  print(f"{name}: {dir_info.path}")
+  if dir_info.is_source:
+    print("  (source directory)")
+  if dir_info.is_output:
+    print("  (output directory)")
 ```
 
 This context awareness makes it easy to build tools that operate on different parts of a project without hardcoding paths.
@@ -189,20 +189,20 @@ For content creation projects (like tutorials, documentation sites, etc.), `quac
 from quackcore.paths import resolver
 
 # Detect content context
-content_context = resolver.detect_content_context()
+content_context = resolver._detect_content_context()
 
 # Check if content type is identified
 if content_context.content_type:
-    print(f"Content type: {content_context.content_type}")
-    print(f"Content name: {content_context.content_name}")
-    
-    # Access content-specific directories
-    assets_dir = content_context.get_assets_dir()
-    if assets_dir:
-        print(f"Assets directory: {assets_dir}")
+  print(f"Content type: {content_context.content_type}")
+  print(f"Content name: {content_context.content_name}")
+
+  # Access content-specific directories
+  assets_dir = content_context._get_assets_dir()
+  if assets_dir:
+    print(f"Assets directory: {assets_dir}")
 
 # Explicitly specify content type
-tutorial_context = resolver.detect_content_context(content_type="tutorial")
+tutorial_context = resolver._detect_content_context(content_type="tutorial")
 ```
 
 Content context is particularly useful for tools that generate or process specific types of content within a larger project.
@@ -214,28 +214,29 @@ The module automatically identifies common directory types within projects:
 ```python
 from quackcore.paths import resolver
 
-context = resolver.detect_project_context()
+context = resolver._detect_project_context()
 
 # Find all test directories
 test_dirs = [
-    dir_info.path 
-    for dir_info in context.directories.values() 
-    if dir_info.is_test
+  dir_info.path
+  for dir_info in context.directories.values()
+  if dir_info.is_test
 ]
 
 # Find all asset directories
 asset_dirs = [
-    dir_info.path 
-    for dir_info in context.directories.values() 
-    if dir_info.is_asset
+  dir_info.path
+  for dir_info in context.directories.values()
+  if dir_info.is_asset
 ]
+
 
 # Check if a directory is a source directory
 def is_source_directory(directory_path):
-    for dir_info in context.directories.values():
-        if str(dir_info.path) == str(directory_path) and dir_info.is_source:
-            return True
-    return False
+  for dir_info in context.directories.values():
+    if str(dir_info.path) == str(directory_path) and dir_info.is_source:
+      return True
+  return False
 ```
 
 This feature lets you identify the purpose of directories without relying on naming conventions.
@@ -266,8 +267,8 @@ from quackcore.paths import resolver
 from quackcore.fs import service as fs
 
 # Find project and resolve path
-project_context = resolver.detect_project_context()
-config_path = resolver.resolve_project_path("config/settings.yaml")
+project_context = resolver._detect_project_context()
+config_path = resolver._resolve_project_path("config/settings.yaml")
 
 # Check if config exists and read it
 info_result = fs._get_file_info(config_path)
@@ -279,13 +280,13 @@ if info_result.success and info_result.exists:
     print(f"Loaded configuration: {config}")
 else:
   # Create default config
-  source_dir = project_context.get_source_dir()
+  source_dir = project_context._get_source_dir()
   if source_dir:
     # Create default config based on project structure
     default_config = {
       "project_name": project_context.name,
       "source_dir": str(source_dir),
-      "output_dir": str(project_context.get_output_dir() or "output")
+      "output_dir": str(project_context._get_output_dir() or "output")
     }
     # Ensure config directory exists
     fs._create_directory(config_path.parent, exist_ok=True)
@@ -311,7 +312,7 @@ plugin_manager.register_plugin(paths_plugin)
 
 # Now other components can use the paths functionality
 plugin = plugin_manager.get_plugin("paths")
-project_root = plugin.find_project_root()
+project_root = plugin._find_project_root()
 ```
 
 ## Best Practices
@@ -324,8 +325,9 @@ config_path = Path("config/settings.yaml")
 
 # Better: Use project context
 from quackcore.paths import resolver
-project_context = resolver.detect_project_context()
-config_dir = project_context.get_config_dir() or project_context.root_dir / "config"
+
+project_context = resolver._detect_project_context()
+config_dir = project_context._get_config_dir() or project_context.root_dir / "config"
 config_path = config_dir / "settings.yaml"
 ```
 
@@ -334,14 +336,15 @@ config_path = config_dir / "settings.yaml"
 ```python
 # Instead of detecting context for each operation
 def process_file(file_path):
-    context = resolver.detect_project_context()
-    # Process with context...
+  context = resolver._detect_project_context()
+  # Process with context...
+
 
 # Better: Detect once and reuse
 def process_files(file_paths):
-    context = resolver.detect_project_context()
-    for file_path in file_paths:
-        # Process with shared context...
+  context = resolver._detect_project_context()
+  for file_path in file_paths:
+# Process with shared context...
 ```
 
 ### 3. Handle Project Detection Failures Gracefully
@@ -351,14 +354,15 @@ from quackcore.errors import QuackFileNotFoundError
 from quackcore.paths import resolver
 
 try:
-    project_context = resolver.detect_project_context()
-    # Use project context...
+  project_context = resolver._detect_project_context()
+  # Use project context...
 except QuackFileNotFoundError:
-    # Fallback to current directory
-    from pathlib import Path
-    current_dir = Path.cwd()
-    print(f"No project structure detected, using current directory: {current_dir}")
-    # Continue with reduced functionality...
+  # Fallback to current directory
+  from pathlib import Path
+
+  current_dir = Path.cwd()
+  print(f"No project structure detected, using current directory: {current_dir}")
+  # Continue with reduced functionality...
 ```
 
 ### 4. Combine with fs Module for Complete Path Management
@@ -368,8 +372,8 @@ from quackcore.paths import resolver
 from quackcore.fs import service as fs
 
 # Find source directory
-project_context = resolver.detect_project_context()
-src_dir = project_context.get_source_dir()
+project_context = resolver._detect_project_context()
+src_dir = project_context._get_source_dir()
 
 if src_dir:
   # List Python files
@@ -385,18 +389,18 @@ if src_dir:
 from quackcore.paths import resolver
 
 # Detect if we're in a content directory
-content_context = resolver.detect_content_context()
+content_context = resolver._detect_content_context()
 
 if content_context.content_type == "tutorial":
-    # Apply tutorial-specific processing
-    print(f"Processing tutorial: {content_context.content_name}")
-    # ...
+  # Apply tutorial-specific processing
+  print(f"Processing tutorial: {content_context.content_name}")
+  # ...
 elif content_context.content_type == "video":
-    # Apply video-specific processing
-    print(f"Processing video content: {content_context.content_name}")
-    # ...
+  # Apply video-specific processing
+  print(f"Processing video content: {content_context.content_name}")
+  # ...
 else:
-    print("Not in a recognized content directory")
+  print("Not in a recognized content directory")
 ```
 
 ## Common Patterns
@@ -425,10 +429,10 @@ def find_config_file(config_name="config", file_types=None):
 
   # Try to find project root
   try:
-    project_context = resolver.detect_project_context()
+    project_context = resolver._detect_project_context()
 
     # Try config directory first
-    config_dir = project_context.get_config_dir()
+    config_dir = project_context._get_config_dir()
     if config_dir:
       for ext in file_types:
         config_path = config_dir / f"{config_name}{ext}"
@@ -491,13 +495,13 @@ def initialize_project(name, template="basic"):
   }
 
   # Create project context
-  context = resolver.detect_project_context(project_dir)
+  context = resolver._detect_project_context(project_dir)
 
   # Create each directory and register in context
   for name, attrs in directories.items():
     dir_path = project_dir / name
     fs._create_directory(dir_path, exist_ok=True)
-    context.add_directory(name, dir_path, **attrs)
+    context._add_directory(name, dir_path, **attrs)
 
   # Create a basic config file
   config = {
@@ -533,7 +537,7 @@ from pathlib import Path
 def link_projects(main_project, dependency_projects):
   """Link dependency projects to a main project."""
   # Find the main project
-  main_context = resolver.detect_project_context(main_project)
+  main_context = resolver._detect_project_context(main_project)
 
   # Ensure dev directory exists
   dev_dir = main_context.root_dir / "dev"
@@ -541,14 +545,14 @@ def link_projects(main_project, dependency_projects):
 
   # Link each dependency
   for dep_path in dependency_projects:
-    dep_context = resolver.detect_project_context(dep_path)
+    dep_context = resolver._detect_project_context(dep_path)
     dep_name = dep_context.name
 
     # Create symbolic link
     link_path = dev_dir / dep_name
     if not link_path.exists():
       # Get source directory from dependency
-      dep_src = dep_context.get_source_dir()
+      dep_src = dep_context._get_source_dir()
       if dep_src:
         # Create symbolic link to dependency source
         Path(link_path).symlink_to(dep_src, target_is_directory=True)

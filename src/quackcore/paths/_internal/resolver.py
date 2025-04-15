@@ -12,12 +12,12 @@ from os import path as ospath
 from quackcore.errors import QuackFileNotFoundError, wrap_io_errors
 from quackcore.fs import service as fs
 from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
-from quackcore.paths.context import ContentContext, ProjectContext
-from quackcore.paths.utils import find_nearest_directory, find_project_root
+from quackcore.paths._internal.context import ContentContext, ProjectContext
+from quackcore.paths._internal.utils import _find_nearest_directory, _find_project_root
 
 
 # Helper function to determine if one path is relative to another.
-def is_relative_to(child: str, parent: str) -> bool:
+def _is_relative_to(child: str, parent: str) -> bool:
     try:
         return ospath.commonpath(
             [ospath.abspath(child), ospath.abspath(parent)]
@@ -27,15 +27,15 @@ def is_relative_to(child: str, parent: str) -> bool:
 
 
 # Helper function to get parent directory from a string path.
-def get_parent_dir(p: str) -> str:
-    comps = fs.split_path(p)
+def _get_parent_dir(p: str) -> str:
+    comps = fs._split_path(p)
     if len(comps) <= 1:
         return p
-    return fs.join_path(*comps[:-1])
+    return fs._join_path(*comps[:-1])
 
 
 # Helper function to compute relative path.
-def compute_relative_path(full_path: str, base_path: str) -> str | None:
+def _compute_relative_path(full_path: str, base_path: str) -> str | None:
     try:
         abs_full = ospath.abspath(full_path)
         abs_base = ospath.abspath(base_path)
@@ -66,7 +66,7 @@ class PathResolver:
         self.logger.setLevel(log_level)
         self._cache: dict[str, ProjectContext] = {}
 
-    def get_project_root(
+    def _get_project_root(
         self,
         start_dir: str | None = None,
         marker_files: list[str] | None = None,
@@ -88,7 +88,7 @@ class PathResolver:
         """
         start = start_dir if start_dir is not None else getcwd()
         # Assume find_project_root accepts a string and returns a path-like object.
-        root = find_project_root(start, marker_files, marker_dirs)
+        root = _find_project_root(start, marker_files, marker_dirs)
         return str(root)
 
     def _detect_standard_directories(self, context: ProjectContext) -> None:
@@ -102,19 +102,19 @@ class PathResolver:
 
         # Look for source directory
         try:
-            src_dir = self.find_source_directory(root_dir)
-            context.add_directory("src", src_dir, is_source=True)
+            src_dir = self._find_source_directory(root_dir)
+            context._add_directory("src", src_dir, is_source=True)
         except QuackFileNotFoundError:
             try:
-                src_dir = find_nearest_directory("src", root_dir)
-                context.add_directory("src", src_dir, is_source=True)
+                src_dir = _find_nearest_directory("src", root_dir)
+                context._add_directory("src", src_dir, is_source=True)
             except QuackFileNotFoundError:
                 pass
 
         # Look for output directory
         try:
-            output_dir = self.find_output_directory(root_dir)
-            context.add_directory("output", output_dir, is_output=True)
+            output_dir = self._find_output_directory(root_dir)
+            context._add_directory("output", output_dir, is_output=True)
         except QuackFileNotFoundError:
             pass
 
@@ -134,12 +134,12 @@ class PathResolver:
         }
 
         for name, attrs in standard_dirs.items():
-            dir_path = fs.join_path(root_dir, name)
+            dir_path = fs._join_path(root_dir, name)
             info = fs.get_file_info(dir_path)
             if info.success and info.exists and info.is_dir:
-                context.add_directory(name, dir_path, **attrs)
+                context._add_directory(name, dir_path, **attrs)
 
-    def find_source_directory(
+    def _find_source_directory(
         self,
         start_dir: str | None = None,
     ) -> str:
@@ -157,20 +157,20 @@ class PathResolver:
         """
         current_dir = start_dir if start_dir is not None else getcwd()
 
-        init_path = fs.join_path(current_dir, "__init__.py")
+        init_path = fs._join_path(current_dir, "__init__.py")
         info = fs.get_file_info(init_path)
         if info.success and info.exists:
             return current_dir
 
         try:
-            return str(find_nearest_directory("src", current_dir))
+            return str(_find_nearest_directory("src", current_dir))
         except QuackFileNotFoundError as e:
             for _ in range(5):  # Check up to 5 levels upward.
-                init_path = fs.join_path(current_dir, "__init__.py")
+                init_path = fs._join_path(current_dir, "__init__.py")
                 info = fs.get_file_info(init_path)
                 if info.success and info.exists:
                     return current_dir
-                parent_dir = get_parent_dir(current_dir)
+                parent_dir = _get_parent_dir(current_dir)
                 if parent_dir == current_dir:
                     break
                 current_dir = parent_dir
@@ -179,7 +179,7 @@ class PathResolver:
                 f"Could not find source directory in or near {start_dir or getcwd()}",
             ) from e
 
-    def find_output_directory(
+    def _find_output_directory(
         self,
         start_dir: str | None = None,
         create: bool = False,
@@ -199,20 +199,20 @@ class PathResolver:
         """
         if start_dir and create:
             start_path = start_dir
-            output_dir = fs.join_path(start_path, "output")
+            output_dir = fs._join_path(start_path, "output")
             fs.create_directory(output_dir, exist_ok=True)
             return output_dir
 
         try:
-            root_dir = self.get_project_root(start_dir)
+            root_dir = self._get_project_root(start_dir)
             for candidate in ["output", "out", "build"]:
-                output_dir = fs.join_path(root_dir, candidate)
+                output_dir = fs._join_path(root_dir, candidate)
                 info = fs.get_file_info(output_dir)
                 if info.success and info.exists:
                     return output_dir
 
             if create:
-                output_dir = fs.join_path(root_dir, "output")
+                output_dir = fs._join_path(root_dir, "output")
                 fs.create_directory(output_dir, exist_ok=True)
                 return output_dir
 
@@ -222,14 +222,14 @@ class PathResolver:
         except QuackFileNotFoundError as e:
             current_dir = start_dir if start_dir is not None else getcwd()
             if create:
-                output_dir = fs.join_path(current_dir, "output")
+                output_dir = fs._join_path(current_dir, "output")
                 fs.create_directory(output_dir, exist_ok=True)
                 return output_dir
             raise QuackFileNotFoundError(
                 "output", f"Could not find output directory in or near {current_dir}"
             ) from e
 
-    def resolve_project_path(
+    def _resolve_project_path(
         self,
         path_value: str | None,
         project_root: str | None = None,
@@ -251,8 +251,8 @@ class PathResolver:
             return path_value
 
         if project_root is None:
-            project_root = self.get_project_root()
-        return fs.join_path(project_root, path_value)
+            project_root = self._get_project_root()
+        return fs._join_path(project_root, path_value)
 
     def _infer_content_structure(
         self,
@@ -267,11 +267,11 @@ class PathResolver:
             current_dir: Current directory (default: current working directory).
         """
         current = current_dir if current_dir is not None else getcwd()
-        src_dir = context.get_source_dir()
+        src_dir = context._get_source_dir()
         if not src_dir:
             return
 
-        if not is_relative_to(current, src_dir):
+        if not _is_relative_to(current, src_dir):
             return
 
         try:
@@ -286,12 +286,12 @@ class PathResolver:
 
             if len(parts) >= 2:
                 context.content_name = parts[1]
-                context.content_dir = fs.join_path(src_dir, parts[0], parts[1])
+                context.content_dir = fs._join_path(src_dir, parts[0], parts[1])
         except Exception:
             pass
 
     @wrap_io_errors
-    def detect_project_context(
+    def _detect_project_context(
         self,
         start_dir: str | None = None,
     ) -> ProjectContext:
@@ -313,7 +313,7 @@ class PathResolver:
             raise QuackFileNotFoundError(start)
 
         try:
-            root_dir = str(find_project_root(start))
+            root_dir = str(_find_project_root(start))
         except QuackFileNotFoundError:
             root_dir = start
 
@@ -347,13 +347,13 @@ class PathResolver:
             "setup.cfg",
         ]
         for filename in config_files:
-            file_path = fs.join_path(root_dir, filename)
+            file_path = fs._join_path(root_dir, filename)
             info = fs.get_file_info(file_path)
             if info.success and info.exists and info.is_file:
                 context.config_file = file_path
                 break
 
-    def detect_content_context(
+    def _detect_content_context(
         self,
         start_dir: str | None = None,
         content_type: str | None = None,
@@ -368,7 +368,7 @@ class PathResolver:
         Returns:
             ContentContext object.
         """
-        project_context = self.detect_project_context(start_dir)
+        project_context = self._detect_project_context(start_dir)
         context = ContentContext(
             root_dir=project_context.root_dir,
             directories=project_context.directories,
@@ -381,7 +381,7 @@ class PathResolver:
             self._infer_content_structure(context, start_dir)
         return context
 
-    def infer_current_content(
+    def _infer_current_content(
         self,
         start_dir: str | None = None,
     ) -> dict[str, str]:
@@ -394,7 +394,7 @@ class PathResolver:
         Returns:
             Dictionary with 'type' and 'name' keys if found.
         """
-        context = self.detect_content_context(start_dir)
+        context = self._detect_content_context(start_dir)
         result: dict[str, str] = {}
         if context.content_type:
             result["type"] = context.content_type
@@ -404,7 +404,7 @@ class PathResolver:
 
 
 # Module-level function for convenience.
-def get_project_root(
+def _get_project_root(
     start_dir: str | None = None,
     marker_files: list[str] | None = None,
     marker_dirs: list[str] | None = None,
@@ -422,11 +422,11 @@ def get_project_root(
     Returns:
         Absolute path (as a string) to the project root directory.
     """
-    return PathResolver().get_project_root(start_dir, marker_files, marker_dirs)
+    return PathResolver()._get_project_root(start_dir, marker_files, marker_dirs)
 
 
 # Module-level function for convenience.
-def resolve_project_path(
+def _resolve_project_path(
     path_value: str,
     project_root: str | None = None,
 ) -> str:
@@ -442,4 +442,4 @@ def resolve_project_path(
     Returns:
         Resolved absolute path as a string.
     """
-    return PathResolver().resolve_project_path(path_value, project_root)
+    return PathResolver()._resolve_project_path(path_value, project_root)

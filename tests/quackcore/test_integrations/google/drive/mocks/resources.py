@@ -91,7 +91,7 @@ class MockDriveFilesResource(DriveFilesResource):
 
         Args:
             file_id: ID to return for created files
-            file_metadata: Metadata to return for file operations
+            file_metadata: Metadata to return for file _operations
             file_list: List of files to return in list operation
             permissions_resource: Mock permissions resource to use
             create_error: Exception to raise on create operation, if any

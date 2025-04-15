@@ -2,7 +2,7 @@
 """
 Utilities package for Google Mail integration.
 
-This package provides reusable utility functions for Gmail operations,
+This package provides reusable utility functions for Gmail _operations,
 including API wrappers and error handling.
 """
 

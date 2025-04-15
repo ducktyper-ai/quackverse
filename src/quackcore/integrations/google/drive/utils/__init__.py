@@ -2,7 +2,7 @@
 """
 Utilities package for Google Drive integration.
 
-This package provides reusable utility functions for Google Drive operations,
+This package provides reusable utility functions for Google Drive _operations,
 including API wrappers, error handling, and query building.
 """
 

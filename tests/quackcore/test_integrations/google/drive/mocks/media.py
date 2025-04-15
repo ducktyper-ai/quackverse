@@ -1,8 +1,8 @@
 # tests/quackcore/test_integrations/google/drive/mocks/media.py
 """
-Mock objects for Google Drive media operations (downloads, uploads).
+Mock objects for Google Drive media _operations (downloads, uploads).
 
-This module provides mock implementations for media operations such as
+This module provides mock implementations for media _operations such as
 download status, media uploaders, and downloaders.
 """
 
@@ -11,9 +11,9 @@ from collections.abc import Callable
 
 class MockDownloadStatus:
     """
-    A special mock for download status that properly supports comparison operations.
+    A special mock for download status that properly supports comparison _operations.
 
-    This is needed because the real MediaIoBaseDownload status has comparison operations
+    This is needed because the real MediaIoBaseDownload status has comparison _operations
     that are used internally, and MagicMock doesn't handle these correctly.
     """
 

@@ -1,14 +1,14 @@
 # src/quackcore/fs/api/public/file_ops.py
 """
-Public API for file operations.
+Public API for file _operations.
 
-This module provides safe, result-oriented wrappers around low-level file operations.
+This module provides safe, result-oriented wrappers around low-level file _operations.
 """
 
 from pathlib import Path
 from typing import Any
 
-from quackcore.fs.helpers.file_ops import (
+from quackcore.fs._helpers.file_ops import (
     _atomic_write,
     _ensure_directory,
     _find_files_by_content,

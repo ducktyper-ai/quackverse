@@ -2,8 +2,8 @@
 """
 Teaching service module.
 
-This module provides the primary service for quackster operations,
-serving as the main entry point for quackster operations.
+This module provides the primary service for quackster _operations,
+serving as the main entry point for quackster _operations.
 """
 
 import os
@@ -21,7 +21,7 @@ logger = get_logger(__name__)
 
 class TeachingService:
     """
-    Service for quackster operations.
+    Service for quackster _operations.
 
     Provides methods for initialization, context creation,
     repository and assignment management, and integration with
@@ -52,8 +52,8 @@ class TeachingService:
             if base_dir is not None:
                 if not os.path.isabs(base_dir):
                     try:
-                        project_root = resolver.get_project_root()
-                        base_dir = fs.join_path(project_root, base_dir)
+                        project_root = resolver._get_project_root()
+                        base_dir = fs._join_path(project_root, base_dir)
                     except QuackFileNotFoundError as err:
                         logger.warning(
                             f"Project root not found: {err}. Falling back to os.path.abspath(base_dir)."
@@ -92,7 +92,7 @@ class TeachingService:
         if base_dir is not None:
             if not os.path.isabs(base_dir):
                 try:
-                    base_dir = fs.join_path(resolver.get_project_root(), base_dir)
+                    base_dir = fs._join_path(resolver._get_project_root(), base_dir)
                 except QuackFileNotFoundError as err:
                     logger.warning(
                         f"Project root not found: {err}. Falling back to os.path.abspath(base_dir)."
@@ -534,8 +534,8 @@ class TeachingService:
         if os.path.isabs(file_path):
             return file_path
         try:
-            project_root = resolver.get_project_root()
-            return fs.join_path(project_root, file_path)
+            project_root = resolver._get_project_root()
+            return fs._join_path(project_root, file_path)
         except FileNotFoundError as err:
             logger.warning(
                 f"Project root not found: {err}. Falling back to os.path.abspath(file_path)."
@@ -560,7 +560,7 @@ class TeachingService:
                 message="Call initialize() before saving configuration",
             )
         if config_path is None:
-            config_path = fs.join_path(self._context.base_dir, "teaching_config.yaml")
+            config_path = fs._join_path(self._context.base_dir, "teaching_config.yaml")
         else:
             config_path = self._resolve_file_path(config_path)
         config_dict = self._context.config.model_dump()

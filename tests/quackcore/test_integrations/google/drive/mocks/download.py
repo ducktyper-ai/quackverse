@@ -1,6 +1,6 @@
 # tests/quackcore/test_integrations/google/drive/mocks/download.py
 """
-Mock classes for Google Drive download operations.
+Mock classes for Google Drive download _operations.
 """
 
 import logging
@@ -40,10 +40,10 @@ def mock_download_file(
 
 class MockDownloadOperations:
     """
-    Mock class to replace the operations/download.py module.
+    Mock class to replace the _operations/download.py module.
 
     This provides replacement functions with matching signatures
-    to the real download operations module.
+    to the real download _operations module.
     """
 
     @staticmethod

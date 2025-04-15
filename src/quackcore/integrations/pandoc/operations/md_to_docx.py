@@ -1,6 +1,6 @@
-# src/quackcore/integrations/pandoc/operations/md_to_docx.py
+# src/quackcore/integrations/pandoc/_operations/md_to_docx.py
 """
-Markdown to DOCX conversion operations.
+Markdown to DOCX conversion _operations.
 
 This module provides functions for converting Markdown documents to DOCX
 using pandoc with optimized settings and error handling.
@@ -175,7 +175,7 @@ def convert_markdown_to_docx(
         IntegrationResult[tuple[str, ConversionDetails]]: Result of the conversion.
     """
     # Get file name from the input path using fs.split_path
-    filename: str = fs.split_path(markdown_path)[-1]
+    filename: str = fs._split_path(markdown_path)[-1]
 
     if metrics is None:
         metrics = ConversionMetrics()
@@ -328,7 +328,7 @@ def _check_docx_metadata(docx_path: str, source_path: str, check_links: bool) ->
             return
 
         doc = Document(docx_path)
-        source_filename = fs.split_path(source_path)[-1]
+        source_filename = fs._split_path(source_path)[-1]
         source_found = False
 
         if hasattr(doc, "core_properties"):

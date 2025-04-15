@@ -1,6 +1,6 @@
 # src/quackcore/fs/api/__init__.py
 """
-Utility functions for filesystem operations.
+Utility functions for filesystem _operations.
 
 This module aggregates ONLY public helper functions for working with the filesystem.
 """

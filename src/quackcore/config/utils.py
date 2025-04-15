@@ -229,7 +229,7 @@ def _normalize_path(value: str, base_dir: str) -> str:
     Returns:
         str: Normalized path as a string.
     """
-    # Even though much of the system delegates to quackcore.fs for operations,
+    # Even though much of the system delegates to quackcore.fs for _operations,
     # here we use the standard library so that the provided base_dir is preserved.
     if os.path.isabs(value):
         return os.path.normpath(value)

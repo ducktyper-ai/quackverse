@@ -1,6 +1,6 @@
 # src/quackcore/fs/service/path_operations.py
 """
-Path operations utilities for the FileSystemService.
+Path _operations utilities for the FileSystemService.
 
 These utilities extend the FileSystemService with methods for path manipulation.
 """
@@ -20,13 +20,13 @@ from quackcore.fs.api.public import normalize_path as utils_normalize_path
 from quackcore.fs.api.public import (
     split_path,
 )
-from quackcore.fs.operations import FileSystemOperations
+from quackcore.fs._operations import FileSystemOperations
 
 
 class PathOperationsMixin:
-    """Mixin class for path operations in the FileSystemService."""
+    """Mixin class for path _operations in the FileSystemService."""
 
-    # This ensures the mixin will only be used with classes that have operations
+    # This ensures the mixin will only be used with classes that have _operations
     operations: FileSystemOperations
 
     @wrap_io_errors

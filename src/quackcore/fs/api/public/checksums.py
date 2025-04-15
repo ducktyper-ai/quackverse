@@ -1,13 +1,13 @@
 # src/quackcore/fs/api/public/checksums.py
 """
-Public API for file checksum operations.
+Public API for file checksum _operations.
 
-This module provides safe, result-oriented wrappers around low-level checksum operations.
+This module provides safe, result-oriented wrappers around low-level checksum _operations.
 """
 
 from pathlib import Path
 
-from quackcore.fs.helpers.checksums import _compute_checksum
+from quackcore.fs._helpers.checksums import _compute_checksum
 from quackcore.fs.results import DataResult
 from quackcore.logging import get_logger
 

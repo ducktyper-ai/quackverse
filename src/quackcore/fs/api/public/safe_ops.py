@@ -1,14 +1,14 @@
 # src/quackcore/fs/api/public/safe_ops.py
 """
-Public API for safe file operations (copy, move, delete).
+Public API for safe file _operations (copy, move, delete).
 
 This module provides safe, result-oriented wrappers around low-level
-safe file operations.
+safe file _operations.
 """
 
 from pathlib import Path
 
-from quackcore.fs.helpers.safe_ops import _safe_copy, _safe_delete, _safe_move
+from quackcore.fs._helpers.safe_ops import _safe_copy, _safe_delete, _safe_move
 from quackcore.fs.results import OperationResult, WriteResult
 from quackcore.logging import get_logger
 

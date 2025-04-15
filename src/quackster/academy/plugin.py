@@ -82,7 +82,7 @@ class TeachingPlugin(QuackPlugin):
             if not os.path.isabs(base_dir):
                 try:
                     # Use the project root if available.
-                    base_dir = fs.join_path(resolver.get_project_root(), base_dir)
+                    base_dir = fs._join_path(resolver._get_project_root(), base_dir)
                 except QuackFileNotFoundError as err:
                     logger.warning(
                         f"Project root not found: {err}. Falling back to os.path.abspath(base_dir)."
@@ -112,7 +112,7 @@ class TeachingPlugin(QuackPlugin):
         # Optionally, resolve the base_dir if provided.
         if base_dir and not os.path.isabs(base_dir):
             try:
-                base_dir = fs.join_path(resolver.get_project_root(), base_dir)
+                base_dir = fs._join_path(resolver._get_project_root(), base_dir)
             except QuackFileNotFoundError as err:
                 logger.warning(
                     f"Project root not found: {err}. Falling back to os.path.abspath(base_dir)."

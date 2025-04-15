@@ -1,6 +1,6 @@
-# src/quackcore/fs/helpers/safe_ops.py
+# src/quackcore/fs/_helpers/safe_ops.py
 """
-Utility functions for safe file operations (copy, move, delete).
+Utility functions for safe file _operations (copy, move, delete).
 """
 
 import shutil

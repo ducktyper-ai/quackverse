@@ -2,7 +2,7 @@
 """
 Utility functions for Quackster NPC tools.
 
-This module provides helper functions for tool operations,
+This module provides helper functions for tool _operations,
 including tool discovery and invocation.
 """
 

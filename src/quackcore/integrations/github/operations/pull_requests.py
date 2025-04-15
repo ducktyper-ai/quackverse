@@ -1,5 +1,5 @@
-# src/quackcore/integrations/github/operations/pull_requests.py
-"""GitHub pull request operations."""
+# src/quackcore/integrations/github/_operations/pull_requests.py
+"""GitHub pull request _operations."""
 
 from datetime import datetime
 from typing import Any, List, Literal

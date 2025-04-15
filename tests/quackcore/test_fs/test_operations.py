@@ -10,14 +10,14 @@ from unittest.mock import patch
 import yaml
 
 from quackcore.errors import QuackFileExistsError, QuackIOError
-from quackcore.fs.operations import FileSystemOperations
+from quackcore.fs._operations import FileSystemOperations
 
 
 class TestFileSystemOperations:
     """Tests for the FileSystemOperations class."""
 
     def test_initialize(self, temp_dir: Path) -> None:
-        """Test initializing operations with and without base_dir."""
+        """Test initializing _operations with and without base_dir."""
         # Default initialization
         operations = FileSystemOperations()
         assert operations.base_dir == Path.cwd()
@@ -239,7 +239,7 @@ class TestFileSystemOperations:
         assert result.success is True
 
         # Test creating existing directory with exist_ok=False
-        with patch("quackcore.fs.operations.ensure_directory") as mock_ensure_directory:
+        with patch("quackcore.fs._operations.ensure_directory") as mock_ensure_directory:
             mock_ensure_directory.side_effect = QuackFileExistsError(
                 str(temp_dir / "new_dir")
             )
@@ -479,7 +479,7 @@ class TestFileSystemOperations:
             assert "json" in result.error.lower()
 
     def test_error_handling(self, temp_dir: Path) -> None:
-        """Test error handling in operations."""
+        """Test error handling in _operations."""
         operations = FileSystemOperations(base_dir=temp_dir)
 
         # Test permission error
@@ -490,7 +490,7 @@ class TestFileSystemOperations:
             assert "permission denied" in result.error.lower()
 
         # Test IO error
-        with patch("quackcore.fs.operations.atomic_write") as mock_atomic_write:
+        with patch("quackcore.fs._operations.atomic_write") as mock_atomic_write:
             mock_atomic_write.side_effect = QuackIOError("IO error")
             result = operations._write_text("io_error.txt", "content")
             assert result.success is False

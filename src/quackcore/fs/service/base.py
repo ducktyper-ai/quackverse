@@ -7,15 +7,15 @@ This provides the core functionality and initialization for the service.
 
 from pathlib import Path
 
-from quackcore.fs.operations import FileSystemOperations
+from quackcore.fs._operations import FileSystemOperations
 from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
 
 
 class FileSystemService:
     """
-    High-level service for filesystem operations.
+    High-level service for filesystem _operations.
 
-    This service provides a clean, consistent API for all file operations
+    This service provides a clean, consistent API for all file _operations
     in QuackCore, with proper error handling and result objects.
     """
 
@@ -35,6 +35,6 @@ class FileSystemService:
         self.logger = get_logger(__name__)
         self.logger.setLevel(log_level)
 
-        # Initialize operations with base directory
+        # Initialize _operations with base directory
         self.base_dir = Path(base_dir) if base_dir else Path.cwd()
         self.operations = FileSystemOperations(self.base_dir)

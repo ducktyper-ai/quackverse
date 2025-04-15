@@ -226,7 +226,7 @@ if result.success:
 The `write_text` and `write_binary` methods support atomic writing to prevent data corruption:
 
 ```python
-# Atomic write (default for most operations)
+# Atomic write (default for most _operations)
 result = fs._write_text("important.txt", "Critical data", atomic=True)
 ```
 
@@ -1465,7 +1465,7 @@ def batch_process_files(directory, pattern, processor_func, max_workers=4):
 
   # Process in parallel
   with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-    # Start the operations and mark each future with its file
+    # Start the _operations and mark each future with its file
     future_to_file = {
       executor.submit(processor_func, file): file
       for file in result.files
@@ -2836,7 +2836,7 @@ from quackcore.fs.results import ReadResult, WriteResult
 import time
 
 class LoggingFileSystemService(FileSystemService):
-    """A FileSystemService that logs all operations."""
+    """A FileSystemService that logs all _operations."""
     
     def __init__(self, base_dir=None):
         super().__init__(base_dir)
@@ -2904,7 +2904,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 
 class ThreadSafeCounter:
-  """Thread-safe counter for filesystem operations."""
+  """Thread-safe counter for filesystem _operations."""
 
   def __init__(self):
     self.lock = threading.Lock()
@@ -2947,21 +2947,21 @@ def worker(counter, thread_id, dir_path):
 
 
 def run_concurrent_fs_operations(num_threads=10):
-  """Run concurrent filesystem operations."""
+  """Run concurrent filesystem _operations."""
   # Create a temporary directory
   temp_dir = fs._create_temp_directory()
   counter = ThreadSafeCounter()
 
   print(f"Created temporary directory: {temp_dir}")
 
-  # Run operations in multiple threads
+  # Run _operations in multiple threads
   with ThreadPoolExecutor(max_workers=num_threads) as executor:
     futures = []
     for i in range(num_threads):
       futures.append(executor.submit(worker, counter, i, temp_dir))
 
   # Check the results
-  print(f"Completed {counter.count} file operations")
+  print(f"Completed {counter.count} file _operations")
 
   # List the created files
   result = fs._list_directory(temp_dir)

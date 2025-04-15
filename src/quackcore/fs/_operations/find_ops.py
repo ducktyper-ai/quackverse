@@ -1,8 +1,8 @@
-# src/quackcore/fs/operations/find_ops.py
+# src/quackcore/fs/_operations/find_ops.py
 """
-File finding operations.
+File finding _operations.
 
-This module provides internal operations for finding files and directories
+This module provides internal _operations for finding files and directories
 based on patterns, with support for recursive searching and filtering.
 """
 
@@ -22,7 +22,7 @@ logger = get_logger(__name__)
 
 class FindOperationsMixin:
     """
-    File finding operations mixin class.
+    File finding _operations mixin class.
 
     Provides internal methods for finding files and directories based on
     patterns, with support for recursive search and filtering options.

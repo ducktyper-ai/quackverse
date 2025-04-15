@@ -2,7 +2,7 @@
 """
 Tests for Pandoc data models.
 
-This module tests the data models used for representing conversion operations,
+This module tests the data models used for representing conversion _operations,
 metrics, and file information in the Pandoc integration.
 """
 

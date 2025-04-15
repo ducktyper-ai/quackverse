@@ -1,6 +1,6 @@
 # src/quackcore/fs/service/utility_operations.py
 """
-Utility operations for the FileSystemService.
+Utility _operations for the FileSystemService.
 """
 
 from pathlib import Path
@@ -23,13 +23,13 @@ from quackcore.fs.api.public import (
     is_file_locked,
     is_path_writeable,
 )
-from quackcore.fs.operations import FileSystemOperations
+from quackcore.fs._operations import FileSystemOperations
 
 
 class UtilityOperationsMixin:
-    """Mixin class for utility operations in the FileSystemService."""
+    """Mixin class for utility _operations in the FileSystemService."""
 
-    # This ensures the mixin will only be used with classes that have operations
+    # This ensures the mixin will only be used with classes that have _operations
     operations: FileSystemOperations
 
     # --- Advanced and Utility Operations ---

@@ -111,7 +111,7 @@ class TestTeachingPlugin:
     def test_initialize_with_relative_base_dir(self, mock_resolver):
         """Test initialization with relative base_dir."""
         plugin = TeachingPlugin()
-        mock_resolver.get_project_root.return_value = Path("/project/root")
+        mock_resolver._get_project_root.return_value = Path("/project/root")
 
         # Mock _service.initialize
         plugin._service.initialize = MagicMock(
@@ -149,7 +149,7 @@ class TestTeachingPlugin:
     def test_create_context_with_relative_base_dir(self, mock_resolver):
         """Test create_context with relative base_dir."""
         plugin = TeachingPlugin()
-        mock_resolver.get_project_root.return_value = Path("/project/root")
+        mock_resolver._get_project_root.return_value = Path("/project/root")
 
         # Mock _service.create_context
         plugin._service.create_context = MagicMock(

@@ -25,9 +25,9 @@ class FileSystemService(
     UtilityOperationsMixin,
 ):
     """
-    High-level service for filesystem operations.
+    High-level service for filesystem _operations.
 
-    This service provides a clean, consistent API for all file operations
+    This service provides a clean, consistent API for all file _operations
     in QuackCore, with proper error handling and result objects.
     """
 

@@ -28,7 +28,7 @@ def list_badges(user_memory: UserMemory) -> BadgeListOutput:
         BadgeListOutput with badge information
     """
     # Use the user data from memory instead of loading it again
-    user = utils.load_progress()  # Still needed for some badge operations
+    user = utils.load_progress()  # Still needed for some badge _operations
 
     # Use badge IDs from user_memory
     badge_ids = user_memory.badges

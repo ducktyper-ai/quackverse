@@ -16,7 +16,7 @@ from quackcore.config.utils import get_config_value
 
 # Import QuackCore FS and Config utilities
 from quackcore.fs import (
-    service as fs,  # File operations, path utilities, YAML reading, etc.
+    service as fs,  # File _operations, path utilities, YAML reading, etc.
 )
 from quackster.npc.schema import QuacksterProfile
 

@@ -1,6 +1,6 @@
-# src/quackcore/integrations/google/drive/operations/permissions.py
+# src/quackcore/integrations/google/drive/_operations/permissions.py
 """
-Permission operations for Google Drive integration.
+Permission _operations for Google Drive integration.
 
 This module provides functions for managing file permissions in Google Drive,
 including setting permissions and retrieving sharing links.

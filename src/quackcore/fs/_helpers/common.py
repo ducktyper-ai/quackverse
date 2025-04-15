@@ -1,6 +1,6 @@
-# src/quackcore/fs/helpers/common.py
+# src/quackcore/fs/_helpers/common.py
 """
-Common utility functions for filesystem operations.
+Common utility functions for filesystem _operations.
 """
 
 from pathlib import Path

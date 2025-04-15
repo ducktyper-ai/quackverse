@@ -1,5 +1,5 @@
-# src/quackcore/integrations/github/operations/repositories.py
-"""GitHub repository operations."""
+# src/quackcore/integrations/github/_operations/repositories.py
+"""GitHub repository _operations."""
 
 import base64
 from typing import Any

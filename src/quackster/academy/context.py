@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field, model_validator
 from quackcore.config.loader import load_yaml_config
 from quackcore.errors import QuackConfigurationError
 
-# Dogfood QuackCore FS for file and directory operations.
+# Dogfood QuackCore FS for file and directory _operations.
 from quackcore.fs import service as fs
 from quackcore.integrations.core import registry
 from quackcore.logging import get_logger
@@ -91,7 +91,7 @@ class TeachingConfig(BaseModel):
 
 class TeachingContext:
     """
-    Context for quackster operations.
+    Context for quackster _operations.
 
     This class manages the quackster environment, configuration, and dependencies.
     It serves as the central hub for accessing quackster resources and services.
@@ -112,7 +112,7 @@ class TeachingContext:
         # Determine the base directory either from the provided value or by detecting the project root.
         if base_dir is None:
             try:
-                self.base_dir = resolver.get_project_root()
+                self.base_dir = resolver._get_project_root()
             except FileNotFoundError as err:
                 logger.warning(
                     f"Could not determine project root: {err}. Falling back to current working directory."
@@ -150,7 +150,7 @@ class TeachingContext:
         if os.path.isabs(path_value):
             return path_value
         # Otherwise, join with self.base_dir using fs.join_path.
-        return fs.join_path(self.base_dir, path_value)
+        return fs._join_path(self.base_dir, path_value)
 
     def ensure_directories(self) -> None:
         """Ensure all required directories exist."""

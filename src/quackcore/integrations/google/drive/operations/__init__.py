@@ -1,8 +1,8 @@
-# src/quackcore/integrations/google/drive/operations/__init__.py
+# src/quackcore/integrations/google/drive/_operations/__init__.py
 """
 Operations package for Google Drive integration.
 
-This package contains specialized modules for different Google Drive operations,
+This package contains specialized modules for different Google Drive _operations,
 such as uploading, downloading, listing files, and managing permissions.
 """
 

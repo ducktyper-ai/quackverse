@@ -1,10 +1,10 @@
-# src/quackcore/integrations/pandoc/operations/utils.py
+# src/quackcore/integrations/pandoc/_operations/utils.py
 """
-Utility functions for pandoc operations.
+Utility functions for pandoc _operations.
 
-This module provides helper functions for pandoc conversion operations,
+This module provides helper functions for pandoc conversion _operations,
 such as validation, metrics tracking, and pandoc installation verification.
-All file path values are handled as strings. Filesystem operations are delegated
+All file path values are handled as strings. Filesystem _operations are delegated
 to the quackcore.fs service.
 """
 
@@ -243,7 +243,7 @@ def get_file_info(path: str, format_hint: str | None = None) -> FileInfo:
     if format_hint:
         format_name = format_hint
     else:
-        extension = fs.get_extension(path)
+        extension = fs._get_extension(path)
         mapping: dict[str, str] = {
             "md": "markdown",
             "markdown": "markdown",

@@ -80,7 +80,7 @@ def mock_github():
 
 @pytest.fixture
 def mock_fs():
-    """Mock QuackCore FS operations."""
+    """Mock QuackCore FS _operations."""
     with patch("quackcore.fs.service") as mock_fs:
         # Setup read_yaml and write_yaml mocks
         mock_fs.read_yaml.return_value = MagicMock(success=True, data={})

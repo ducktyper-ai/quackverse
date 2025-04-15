@@ -1,6 +1,6 @@
-# src/quackcore/integrations/pandoc/operations/html_to_md.py
+# src/quackcore/integrations/pandoc/_operations/html_to_md.py
 """
-HTML to Markdown conversion operations.
+HTML to Markdown conversion _operations.
 
 This module provides functions for converting HTML documents to Markdown
 using pandoc with optimized settings and error handling.

@@ -3,7 +3,7 @@
 Google Drive integration service for QuackCore.
 
 This module provides the main service class for Google Drive integration,
-handling file operations, folder management, and permissions.
+handling file _operations, folder management, and permissions.
 """
 
 import io
@@ -195,7 +195,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
         Raises:
             QuackIntegrationError: If the file does not exist.
         """
-        path_obj = resolver.resolve_project_path(file_path)
+        path_obj = resolver._resolve_project_path(file_path)
         file_info = fs.get_file_info(path_obj)
         if not file_info.success or not file_info.exists:
             raise QuackIntegrationError(f"File not found: {file_path}")

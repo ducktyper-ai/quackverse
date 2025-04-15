@@ -1,9 +1,9 @@
 # src/quackcore/fs/service/__init__.py
 """
-FileSystemService provides a high-level interface for filesystem operations.
+FileSystemService provides a high-level interface for filesystem _operations.
 
 This module exports the FileSystemService class and provides utility functions
-for common filesystem operations without requiring a service instance.
+for common filesystem _operations without requiring a service instance.
 """
 
 from pathlib import Path
@@ -318,7 +318,7 @@ def path_exists(path: str | Path) -> DataResult[bool]:
     Check if a path exists using the FileSystemService.
 
     This function delegates directly to the underlying service instance,
-    ensuring consistency with all other filesystem operations.
+    ensuring consistency with all other filesystem _operations.
 
     Args:
         path: The file or directory path to check.

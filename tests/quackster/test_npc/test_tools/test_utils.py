@@ -2,7 +2,7 @@
 """
 Tests for the utility functions in quackster.npc.tools.api.
 
-This module tests the helper functions for tool operations,
+This module tests the helper functions for tool _operations,
 including tool discovery and invocation.
 """
 

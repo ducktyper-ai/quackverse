@@ -20,7 +20,7 @@ from quackcore.errors import (
     QuackIOError,
     QuackPermissionError,
 )
-from quackcore.fs.helpers import (
+from quackcore.fs._helpers import (
     _compute_checksum,
     _create_temp_directory,
     _create_temp_file,
@@ -41,13 +41,13 @@ from quackcore.fs.helpers import (
     _safe_delete,
     _safe_move,
 )
-from quackcore.fs.helpers.file_ops import (
+from quackcore.fs._helpers.file_ops import (
     _atomic_write,
     _ensure_directory,
     _find_files_by_content,
     _get_unique_filename,
 )
-from quackcore.fs.helpers.path_ops import _expand_user_vars, _join_path, _split_path
+from quackcore.fs._helpers.path_ops import _expand_user_vars, _join_path, _split_path
 
 
 class TestPathUtilities:
@@ -649,7 +649,7 @@ class TestFileUtilities:
 
     @given(st.text(min_size=1, max_size=100))
     def test_hypothetical_path_operations(self, text: str) -> None:
-        """Test path operations with hypothesis-generated text."""
+        """Test path _operations with hypothesis-generated text."""
         # Handle problematic characters more carefully:
         # 1. Period at start of string
         # 2. Unicode characters that might cause file system issues

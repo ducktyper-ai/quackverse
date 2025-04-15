@@ -57,7 +57,7 @@ class TestTeachingContext:
 
     def test_init_without_base_dir(self, teaching_config, mock_resolver):
         """Test initialization without providing base_dir."""
-        mock_resolver.get_project_root.return_value = Path("/mock/project/root")
+        mock_resolver._get_project_root.return_value = Path("/mock/project/root")
         context = TeachingContext(teaching_config)
 
         # Should use project root as base_dir
@@ -65,7 +65,7 @@ class TestTeachingContext:
 
     def test_init_with_project_root_error(self, teaching_config, mock_resolver):
         """Test initialization when project root detection fails."""
-        mock_resolver.get_project_root.side_effect = Exception("Project root not found")
+        mock_resolver._get_project_root.side_effect = Exception("Project root not found")
         with patch("pathlib.Path.cwd") as mock_cwd:
             mock_cwd.return_value = Path("/mock/current/dir")
             context = TeachingContext(teaching_config)

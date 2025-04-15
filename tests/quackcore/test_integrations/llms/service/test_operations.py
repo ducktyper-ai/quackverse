@@ -1,9 +1,9 @@
 # tests/quackcore/test_integrations/llms/service/test_operations.py
 """
-Comprehensive tests for LLM service operations.
+Comprehensive tests for LLM service _operations.
 
-This module provides complete test coverage for the service/operations.py file,
-which contains the chat and token counting operations.
+This module provides complete test coverage for the service/_operations.py file,
+which contains the chat and token counting _operations.
 """
 
 from unittest.mock import MagicMock
@@ -21,7 +21,7 @@ from quackcore.integrations.llms.service.operations import (
 
 
 class TestLLMOperationsComplete:
-    """Comprehensive tests for LLM operations."""
+    """Comprehensive tests for LLM _operations."""
 
     @pytest.fixture
     def mock_integration(self) -> MagicMock:

@@ -179,7 +179,7 @@ class GoogleMailService(BaseIntegrationService):
                 )
 
             # Resolve the storage path
-            storage_path_obj = resolver.resolve_project_path(self.storage_path)
+            storage_path_obj = resolver._resolve_project_path(self.storage_path)
             self.storage_path = str(storage_path_obj)
 
             create_result = fs.create_directory(storage_path_obj, exist_ok=True)

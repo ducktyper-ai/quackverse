@@ -1,13 +1,13 @@
 # src/quackcore/fs/api/public/file_info.py
 """
-Public API for file information operations.
+Public API for file information _operations.
 
-This module provides safe, result-oriented wrappers around low-level file info operations.
+This module provides safe, result-oriented wrappers around low-level file info _operations.
 """
 
 from pathlib import Path
 
-from quackcore.fs.helpers.file_info import (
+from quackcore.fs._helpers.file_info import (
     _get_file_size_str,
     _get_file_timestamp,
     _get_file_type,

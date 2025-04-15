@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 
 from quackcore.errors import wrap_io_errors
-from quackcore.fs.operations import FileSystemOperations
+from quackcore.fs._operations import FileSystemOperations
 from quackcore.fs.results import DataResult, PathResult
 from quackcore.logging import get_logger
 
@@ -19,19 +19,19 @@ logger = get_logger(__name__)
 
 class PathValidationMixin:
     """
-    Mixin class for path validation operations in the FileSystemService.
+    Mixin class for path validation _operations in the FileSystemService.
 
     This mixin "dogfoods" our existing implementation from FileInfoOperationsMixin
-    (or any compatible implementation exposed via `self.operations`) to check if a path exists.
+    (or any compatible implementation exposed via `self._operations`) to check if a path exists.
     """
 
-    # This ensures the mixin will only be used with classes that have an 'operations' attribute.
+    # This ensures the mixin will only be used with classes that have an '_operations' attribute.
     operations: FileSystemOperations
 
     def path_exists(self, path: str | Path) -> DataResult[bool]:
         """
         Check if a path exists in the filesystem by leveraging the existing
-        FileInfoOperationsMixin implementation via self.operations.
+        FileInfoOperationsMixin implementation via self._operations.
 
         Args:
             path: Path to check for existence
@@ -52,7 +52,7 @@ class PathValidationMixin:
                 message=f"Path {path_obj} {'exists' if exists else 'does not exist'}",
             )
         except Exception as exc:
-            logger.error(f"Error checking if path exists using operations: {exc}")
+            logger.error(f"Error checking if path exists using _operations: {exc}")
             # Fallback: use the standard pathlib.Path.exists() check
             try:
                 exists = path_obj.exists()

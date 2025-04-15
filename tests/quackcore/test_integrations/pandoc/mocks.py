@@ -94,7 +94,7 @@ def create_mock_document_converter(
 
     # Create a mock DocumentConverter using patch to avoid real initialization
     with patch(
-        "quackcore.integrations.pandoc.operations.verify_pandoc",
+        "quackcore.integrations.pandoc._operations.verify_pandoc",
         return_value=pandoc_version,
     ):
         # Create a real DocumentConverter instance with our mocked dependencies
@@ -497,21 +497,21 @@ def setup_mock_file_info_with_size(mock_fs, path: str | Path, size: int) -> None
 
 def patch_operations_module():
     """
-    Create patches for the operations module to avoid real Pandoc calls.
+    Create patches for the _operations module to avoid real Pandoc calls.
 
-    This function returns a context manager that patches key operations
+    This function returns a context manager that patches key _operations
     to prevent calls to the real Pandoc installation.
 
     Returns:
-        A context manager for patching operations
+        A context manager for patching _operations
     """
-    # Create patches for all operations that might access Pandoc
+    # Create patches for all _operations that might access Pandoc
     verify_patch = patch(
-        "quackcore.integrations.pandoc.operations.verify_pandoc", return_value="2.11.4"
+        "quackcore.integrations.pandoc._operations.verify_pandoc", return_value="2.11.4"
     )
 
     html_to_md_patch = patch(
-        "quackcore.integrations.pandoc.operations.convert_html_to_markdown",
+        "quackcore.integrations.pandoc._operations.convert_html_to_markdown",
         return_value=IntegrationResult.success_result(
             (Path("/path/to/output/file.md"), None),
             message="Successfully converted HTML to Markdown",
@@ -519,7 +519,7 @@ def patch_operations_module():
     )
 
     md_to_docx_patch = patch(
-        "quackcore.integrations.pandoc.operations.convert_markdown_to_docx",
+        "quackcore.integrations.pandoc._operations.convert_markdown_to_docx",
         return_value=IntegrationResult.success_result(
             (Path("/path/to/output/file.docx"), None),
             message="Successfully converted Markdown to DOCX",
@@ -528,7 +528,7 @@ def patch_operations_module():
 
     # Return a nested context manager
     return patch.multiple(
-        "quackcore.integrations.pandoc.operations",
+        "quackcore.integrations.pandoc._operations",
         verify_pandoc=verify_patch.start(),
         convert_html_to_markdown=html_to_md_patch.start(),
         convert_markdown_to_docx=md_to_docx_patch.start(),

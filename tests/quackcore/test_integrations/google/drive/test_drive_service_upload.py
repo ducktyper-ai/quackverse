@@ -1,6 +1,6 @@
 # tests/quackcore/test_integrations/google/drive/test_drive_service_upload.py
 """
-Tests for Google Drive service upload operations.
+Tests for Google Drive service upload _operations.
 """
 
 from pathlib import Path
@@ -12,7 +12,7 @@ from quackcore.integrations.google.drive.service import GoogleDriveService
 
 
 class TestGoogleDriveServiceUpload:
-    """Tests for the GoogleDriveService upload operations."""
+    """Tests for the GoogleDriveService upload _operations."""
 
     @patch(
         "quackcore.integrations.google.auth.GoogleAuthProvider._verify_client_secrets_file"

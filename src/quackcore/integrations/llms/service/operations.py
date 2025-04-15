@@ -1,6 +1,6 @@
-# src/quackcore/integrations/llms/service/operations.py
+# src/quackcore/integrations/llms/service/_operations.py
 """
-LLM operations for the integration service.
+LLM _operations for the integration service.
 
 This module provides methods for interacting with LLMs, such as chat and token counting.
 """

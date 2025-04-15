@@ -1,8 +1,8 @@
-# src/quackcore/fs/operations/read_ops.py
+# src/quackcore/fs/_operations/read_ops.py
 """
-File reading operations for the filesystem operations.
+File reading _operations for the filesystem _operations.
 
-This module provides internal operations for reading both text and binary
+This module provides internal _operations for reading both text and binary
 data from files with proper error handling and result formatting.
 """
 
@@ -21,7 +21,7 @@ T = TypeVar("T")
 
 class ReadOperationsMixin:
     """
-    File reading operations mixin class.
+    File reading _operations mixin class.
 
     Provides internal methods for reading text and binary data from files
     with consistent error handling and return types.

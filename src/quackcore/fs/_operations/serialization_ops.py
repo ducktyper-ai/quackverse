@@ -1,8 +1,8 @@
-# src/quackcore/fs/operations/serialization_ops.py
+# src/quackcore/fs/_operations/serialization_ops.py
 """
-Serialization operations (JSON, YAML) for filesystem operations.
+Serialization _operations (JSON, YAML) for filesystem _operations.
 
-This module provides internal operations for reading and writing
+This module provides internal _operations for reading and writing
 structured data formats (JSON, YAML) with proper error handling
 and validation.
 """
@@ -28,7 +28,7 @@ try:
 
     YAML_AVAILABLE = True
 except ImportError:
-    logger.warning("PyYAML library not found. YAML operations will not be available.")
+    logger.warning("PyYAML library not found. YAML _operations will not be available.")
     YAML_AVAILABLE = False
 
 # Define type variable for generic typing
@@ -37,7 +37,7 @@ T = TypeVar("T")
 
 class SerializationOperationsMixin:
     """
-    Serialization operations mixin class.
+    Serialization _operations mixin class.
 
     Provides internal methods for serializing and deserializing structured
     data formats (JSON, YAML) with proper validation and error handling.
@@ -104,7 +104,7 @@ class SerializationOperationsMixin:
         raise NotImplementedError("This method should be overridden")
 
     # -------------------------------
-    # YAML operations
+    # YAML _operations
     # -------------------------------
     def _read_yaml(self, path: str | Path) -> DataResult[dict[str, Any]]:
         """
@@ -269,7 +269,7 @@ class SerializationOperationsMixin:
             return WriteResult(success=False, path=resolved_path, error=str(e))
 
     # -------------------------------
-    # JSON operations
+    # JSON _operations
     # -------------------------------
     def _read_json(self, path: str | Path) -> DataResult[dict[str, Any]]:
         """

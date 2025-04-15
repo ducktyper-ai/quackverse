@@ -1,6 +1,6 @@
-# tests/quackcore/test_integrations/google/drive/operations/test_operations_permissions.py
+# tests/quackcore/test_integrations/google/drive/_operations/test_operations_permissions.py
 """
-Tests for Google Drive operations permissions module.
+Tests for Google Drive _operations permissions module.
 """
 
 from unittest.mock import patch
@@ -17,7 +17,7 @@ from tests.quackcore.test_integrations.google.drive.mocks import (
 
 
 class TestDriveOperationsPermissions:
-    """Tests for the Google Drive operations permissions functions."""
+    """Tests for the Google Drive _operations permissions functions."""
 
     def test_set_file_permissions(self) -> None:
         """Test setting file permissions."""
