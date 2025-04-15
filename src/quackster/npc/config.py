@@ -80,7 +80,7 @@ def get_tutorial_path() -> str:
     # Try each of the default paths.
     for path_str in DEFAULT_TUTORIAL_PATHS:
         expanded_path = fs._expand_user_vars(path_str)
-        info_result = fs.get_file_info(expanded_path)
+        info_result = fs._get_file_info(expanded_path)
         if info_result.success and info_result.exists and info_result.is_dir:
             return expanded_path
 
@@ -109,7 +109,7 @@ def get_npc_profile() -> QuacksterProfile:
     if custom_profile_path:
         try:
             expanded_path = fs._expand_user_vars(custom_profile_path)
-            result = fs.read_yaml(expanded_path)
+            result = fs._read_yaml(expanded_path)
             if result.success:
                 # Merge custom profile data into the default profile.
                 profile = profile.model_copy(update=result.data)

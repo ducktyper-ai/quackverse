@@ -565,7 +565,7 @@ class TeachingService:
             config_path = self._resolve_file_path(config_path)
         config_dict = self._context.config.model_dump()
         try:
-            result = fs.write_yaml(config_path, config_dict)
+            result = fs._write_yaml(config_path, config_dict)
             if result.success:
                 logger.info(f"Configuration saved to {config_path}")
                 return TeachingResult(

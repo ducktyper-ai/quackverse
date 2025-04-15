@@ -54,7 +54,7 @@ class PathValidationMixin:
         """
         try:
             # Delegate to the file_info's path_exists implementation
-            return self.operations.path_exists(path)
+            return self.operations._path_exists(path)
         except Exception as exc:
             logger.error(f"Error checking if path exists using operations: {exc}")
             # Fallback: use the standard pathlib.Path.exists() check

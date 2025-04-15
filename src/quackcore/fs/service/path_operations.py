@@ -10,6 +10,7 @@ import tempfile
 from pathlib import Path
 
 from quackcore.errors import wrap_io_errors
+from quackcore.fs import DataResult
 from quackcore.fs.api.public import (
     expand_user_vars,
     is_same_file,
@@ -48,7 +49,7 @@ class PathOperationsMixin:
         return base_path
 
     @wrap_io_errors
-    def split_path(self, path: str | Path) -> list[str]:
+    def split_path(self, path: str | Path) -> DataResult[list[str]]:
         """
         Split a path into its components.
 
@@ -61,7 +62,7 @@ class PathOperationsMixin:
         return split_path(path)
 
     @wrap_io_errors
-    def normalize_path(self, path: str | Path) -> Path:
+    def normalize_path(self, path: str | Path) -> DataResult[str]:
         """
         Normalize a path for cross-platform compatibility.
 
@@ -75,7 +76,7 @@ class PathOperationsMixin:
         """
         return utils_normalize_path(path)
 
-    def expand_user_vars(self, path: str | Path) -> Path:
+    def expand_user_vars(self, path: str | Path) -> DataResult[str]:
         """
         Expand user variables and environment variables in a path.
 
@@ -87,7 +88,7 @@ class PathOperationsMixin:
         """
         return expand_user_vars(path)
 
-    def is_same_file(self, path1: str | Path, path2: str | Path) -> bool:
+    def is_same_file(self, path1: str | Path, path2: str | Path) -> DataResult[bool]:
         """
         Check if two paths refer to the same file.
 
@@ -100,7 +101,8 @@ class PathOperationsMixin:
         """
         return is_same_file(path1, path2)
 
-    def is_subdirectory(self, child: str | Path, parent: str | Path) -> bool:
+    def is_subdirectory(self, child: str | Path, parent: str | Path) -> DataResult[
+        bool]:
         """
         Check if a path is a subdirectory of another path.
 

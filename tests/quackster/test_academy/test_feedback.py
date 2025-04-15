@@ -609,7 +609,7 @@ class TestFeedbackManager:
                 }
             ]
         }
-        mock_fs.read_yaml.return_value = MagicMock(success=True, data=feedback_data)
+        mock_fs._read_yaml.return_value = MagicMock(success=True, data=feedback_data)
 
         # Load from file
         with patch.object(FeedbackManager, "_resolve_file_path") as mock_resolve:
@@ -654,7 +654,7 @@ class TestFeedbackManager:
         file_path = "/path/to/feedback.yaml"
 
         # Mock read_yaml to return failure
-        mock_fs.read_yaml.return_value = MagicMock(
+        mock_fs._read_yaml.return_value = MagicMock(
             success=False, error="File not found"
         )
 
@@ -670,7 +670,7 @@ class TestFeedbackManager:
 
         # Mock read_yaml to return success with invalid data
         invalid_data = {"not_feedback": []}
-        mock_fs.read_yaml.return_value = MagicMock(success=True, data=invalid_data)
+        mock_fs._read_yaml.return_value = MagicMock(success=True, data=invalid_data)
 
         # Load from file should raise ValueError
         with patch.object(FeedbackManager, "_resolve_file_path") as mock_resolve:
@@ -697,7 +697,7 @@ class TestFeedbackManager:
                 },
             ]
         }
-        mock_fs.read_yaml.return_value = MagicMock(success=True, data=feedback_data)
+        mock_fs._read_yaml.return_value = MagicMock(success=True, data=feedback_data)
 
         # Load from file should still work, but log a warning and skip the invalid feedback
         with patch.object(FeedbackManager, "_resolve_file_path") as mock_resolve:
@@ -731,7 +731,7 @@ class TestFeedbackManager:
         manager.add_multiple_feedback([feedback1, feedback2])
 
         # Mock write_yaml to return success
-        mock_fs.write_yaml.return_value = MagicMock(success=True)
+        mock_fs._write_yaml.return_value = MagicMock(success=True)
 
         # Save to file
         with patch.object(FeedbackManager, "_resolve_file_path") as mock_resolve:
@@ -745,7 +745,7 @@ class TestFeedbackManager:
             expected_data = {
                 "feedback": [feedback1.model_dump(), feedback2.model_dump()]
             }
-            mock_fs.write_yaml.assert_called_once_with(file_path, expected_data)
+            mock_fs._write_yaml.assert_called_once_with(file_path, expected_data)
 
     def test_save_to_file_error(self, mock_fs, mock_logger):
         """Test saving feedback when write fails."""
@@ -761,7 +761,7 @@ class TestFeedbackManager:
         manager.add_feedback(feedback)
 
         # Mock write_yaml to return failure
-        mock_fs.write_yaml.return_value = MagicMock(success=False, error="Write error")
+        mock_fs._write_yaml.return_value = MagicMock(success=False, error="Write error")
 
         # Save to file
         with patch.object(FeedbackManager, "_resolve_file_path") as mock_resolve:

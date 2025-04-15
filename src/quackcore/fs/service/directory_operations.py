@@ -54,7 +54,7 @@ class DirectoryOperationsMixin:
         Returns:
             FileInfoResult with file information
         """
-        return self.operations.get_file_info(path)
+        return self.operations._get_file_info(path)
 
     def list_directory(
         self,
@@ -73,7 +73,7 @@ class DirectoryOperationsMixin:
         Returns:
             DirectoryInfoResult with directory contents
         """
-        return self.operations.list_directory(path, pattern, include_hidden)
+        return self.operations._list_directory(path, pattern, include_hidden)
 
     def find_files(
         self,
@@ -94,4 +94,4 @@ class DirectoryOperationsMixin:
         Returns:
             FindResult with matching files
         """
-        return self.operations.find_files(path, pattern, recursive, include_hidden)
+        return self.operations._find_files(path, pattern, recursive, include_hidden)

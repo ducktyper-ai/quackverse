@@ -40,7 +40,7 @@ def resolve_download_path(
 
     # Resolve the local path
     local_path_obj = resolver.resolve_project_path(local_path)
-    file_info = fs.get_file_info(local_path_obj)
+    file_info = fs._get_file_info(local_path_obj)
 
     if file_info.success and file_info.exists:
         # Handle different cases depending on whether local_path is a directory or file

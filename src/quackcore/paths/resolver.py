@@ -135,7 +135,7 @@ class PathResolver:
 
         for name, attrs in standard_dirs.items():
             dir_path = fs._join_path(root_dir, name)
-            info = fs.get_file_info(dir_path)
+            info = fs._get_file_info(dir_path)
             if info.success and info.exists and info.is_dir:
                 context.add_directory(name, dir_path, **attrs)
 
@@ -158,7 +158,7 @@ class PathResolver:
         current_dir = start_dir if start_dir is not None else getcwd()
 
         init_path = fs._join_path(current_dir, "__init__.py")
-        info = fs.get_file_info(init_path)
+        info = fs._get_file_info(init_path)
         if info.success and info.exists:
             return current_dir
 
@@ -167,7 +167,7 @@ class PathResolver:
         except QuackFileNotFoundError as e:
             for _ in range(5):  # Check up to 5 levels upward.
                 init_path = fs._join_path(current_dir, "__init__.py")
-                info = fs.get_file_info(init_path)
+                info = fs._get_file_info(init_path)
                 if info.success and info.exists:
                     return current_dir
                 parent_dir = get_parent_dir(current_dir)
@@ -207,7 +207,7 @@ class PathResolver:
             root_dir = self.get_project_root(start_dir)
             for candidate in ["output", "out", "build"]:
                 output_dir = fs._join_path(root_dir, candidate)
-                info = fs.get_file_info(output_dir)
+                info = fs._get_file_info(output_dir)
                 if info.success and info.exists:
                     return output_dir
 
@@ -308,7 +308,7 @@ class PathResolver:
             QuackFileNotFoundError: If the start directory does not exist.
         """
         start = start_dir if start_dir is not None else getcwd()
-        info = fs.get_file_info(start)
+        info = fs._get_file_info(start)
         if not (info.success and info.exists):
             raise QuackFileNotFoundError(start)
 
@@ -348,7 +348,7 @@ class PathResolver:
         ]
         for filename in config_files:
             file_path = fs._join_path(root_dir, filename)
-            info = fs.get_file_info(file_path)
+            info = fs._get_file_info(file_path)
             if info.success and info.exists and info.is_file:
                 context.config_file = file_path
                 break

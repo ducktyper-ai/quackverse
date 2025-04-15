@@ -55,7 +55,7 @@ class TestHtmlToMarkdownOperations:
                 is_file=True,
                 size=1024,
             )
-            mock_fs.service.get_file_info.return_value = file_info
+            mock_fs.service._get_file_info.return_value = file_info
 
             # Setup default behavior for directory creation
             dir_result = OperationResult(
@@ -72,7 +72,7 @@ class TestHtmlToMarkdownOperations:
                 content="<html><body><h1>Test</h1><p>Content</p></body></html>",
                 encoding="utf-8",
             )
-            mock_fs.service.read_text.return_value = read_result
+            mock_fs.service._read_text.return_value = read_result
 
             # Setup default behavior for write_text
             write_result = WriteResult(
@@ -103,7 +103,7 @@ class TestHtmlToMarkdownOperations:
 
         # Simply verify that the function doesn't crash with basic inputs
         # Don't try to mock the full implementation and dependencies
-        mock_fs.service.get_file_info.return_value = MockFileInfo()
+        mock_fs.service._get_file_info.return_value = MockFileInfo()
 
         try:
             # Just try to call the function - don't verify exact results
@@ -185,7 +185,7 @@ class TestHtmlToMarkdownOperations:
         output_file_info.size = 100
 
         # Set up the file_info mock to be returned
-        mock_fs.service.get_file_info.return_value = output_file_info
+        mock_fs.service._get_file_info.return_value = output_file_info
 
         # Mock validate_conversion to return no errors
         with patch(

@@ -20,13 +20,13 @@ logger = get_logger(__name__)
 class FindOperationsMixin:
     """File finding operations mixin class."""
 
-    def resolve_path(self, path: str | Path) -> Path:
+    def _resolve_path(self, path: str | Path) -> Path:
         """Resolve a path relative to the base directory."""
         # This method is implemented in the main class
         # It's defined here for type checking
         raise NotImplementedError("This method should be overridden")
 
-    def find_files(
+    def _find_files(
         self,
         path: str | Path,
         pattern: str,
@@ -45,7 +45,7 @@ class FindOperationsMixin:
         Returns:
             FindResult with matching files
         """
-        resolved_path = self.resolve_path(path)
+        resolved_path = self._resolve_path(path)
         logger.debug(
             f"Finding files in {resolved_path} with pattern '{pattern}', "
             f"recursive={recursive}, include_hidden={include_hidden}"

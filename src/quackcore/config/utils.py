@@ -62,7 +62,7 @@ def load_env_config(config: QuackConfig, config_dir: str | None = None) -> Quack
         ]
 
         for candidate in candidates:
-            info = fs.get_file_info(candidate)
+            info = fs._get_file_info(candidate)
             if info.success and info.exists and info.is_dir:
                 config_dir = candidate
                 break
@@ -73,11 +73,11 @@ def load_env_config(config: QuackConfig, config_dir: str | None = None) -> Quack
 
     # Build the environment-specific config file path using fs.join_path.
     env_file: str = fs._join_path(config_dir, f"{env}.yaml")
-    file_info = fs.get_file_info(env_file)
+    file_info = fs._get_file_info(env_file)
     if not (file_info.success and file_info.exists):
         # Try with .yml extension if .yaml is not found.
         env_file = fs._join_path(config_dir, f"{env}.yml")
-        file_info = fs.get_file_info(env_file)
+        file_info = fs._get_file_info(env_file)
         if not (file_info.success and file_info.exists):
             # No environment-specific config was found; return the original configuration.
             return config

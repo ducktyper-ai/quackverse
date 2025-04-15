@@ -10,13 +10,13 @@ from typing import TypeVar
 
 # Import utility functions directly into this namespace for backward compatibility
 # This will make patching work correctly in tests
-from quackcore.fs.api import (
-    atomic_write,
-    compute_checksum,
-    ensure_directory,
-    safe_copy,
-    safe_delete,
-    safe_move,
+from quackcore.fs.helpers import (
+    _atomic_write,
+    _compute_checksum,
+    _ensure_directory,
+    _safe_copy,
+    _safe_delete,
+    _safe_move,
 )
 from quackcore.logging import get_logger
 
@@ -24,7 +24,7 @@ from quackcore.logging import get_logger
 logger = get_logger(__name__)
 
 # Import all the mixins we need
-from .core import initialize_mime_types, resolve_path
+from .core import _initialize_mime_types, _resolve_path
 from .directory_ops import DirectoryOperationsMixin
 from .file_info import FileInfoOperationsMixin
 from .find_ops import FindOperationsMixin
@@ -55,9 +55,9 @@ class FileSystemOperations(
 
         self.base_dir = Path(base_dir) if base_dir else Path.cwd()
         logger.debug(f"Initialized FileSystemOperations with base_dir: {self.base_dir}")
-        initialize_mime_types()
+        _initialize_mime_types()
 
-    def resolve_path(self, path):
+    def _resolve_path(self, path):
         """
         Resolve a path relative to the base directory.
 
@@ -67,18 +67,18 @@ class FileSystemOperations(
         Returns:
             Resolved Path object
         """
-        return resolve_path(self.base_dir, path)
+        return _resolve_path(self.base_dir, path)
 
 
 # Re-export the FileSystemOperations class and utility functions for backward compatibility
 __all__ = [
     "FileSystemOperations",
-    "atomic_write",
-    "compute_checksum",
-    "ensure_directory",
-    "safe_copy",
-    "safe_delete",
-    "safe_move",
+    "_atomic_write",
+    "_compute_checksum",
+    "_ensure_directory",
+    "_safe_copy",
+    "_safe_delete",
+    "_safe_move",
 ]
 
 # Export TypeVar T for backward compatibility

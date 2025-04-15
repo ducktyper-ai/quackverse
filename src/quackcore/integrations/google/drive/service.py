@@ -196,7 +196,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             QuackIntegrationError: If the file does not exist.
         """
         path_obj = resolver.resolve_project_path(file_path)
-        file_info = fs.get_file_info(path_obj)
+        file_info = fs._get_file_info(path_obj)
         if not file_info.success or not file_info.exists:
             raise QuackIntegrationError(f"File not found: {file_path}")
 
@@ -232,7 +232,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
 
         # Resolve the local path
         local_path_obj = resolver.resolve_project_path(local_path)
-        file_info = fs.get_file_info(local_path_obj)
+        file_info = fs._get_file_info(local_path_obj)
 
         if file_info.success and file_info.exists:
             # Handle different cases depending on whether local_path is a directory or file
@@ -352,7 +352,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             if folder_id:
                 file_metadata["parents"] = [folder_id]
 
-            media_content = fs.read_binary(path_obj)
+            media_content = fs._read_binary(path_obj)
             if not media_content.success:
                 return IntegrationResult.error_result(
                     f"Failed to read file: {media_content.error}"

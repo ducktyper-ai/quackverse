@@ -37,7 +37,7 @@ class FileOperationsMixin:
         Returns:
             ReadResult with the file content as text.
         """
-        return self.operations.read_text(path, encoding)
+        return self.operations._read_text(path, encoding)
 
     @wrap_io_errors
     def write_text(
@@ -61,7 +61,7 @@ class FileOperationsMixin:
         Returns:
             WriteResult with operation status.
         """
-        return self.operations.write_text(
+        return self.operations._write_text(
             path, content, encoding, atomic, calculate_checksum
         )
 
@@ -76,7 +76,7 @@ class FileOperationsMixin:
         Returns:
             ReadResult with the file content as bytes.
         """
-        return self.operations.read_binary(path)
+        return self.operations._read_binary(path)
 
     @wrap_io_errors
     def write_binary(
@@ -112,7 +112,7 @@ class FileOperationsMixin:
         Returns:
             ReadResult with the file content as a list of lines.
         """
-        result = self.operations.read_text(path, encoding)
+        result = self.operations._read_text(path, encoding)
         if result.success:
             lines = result.content.splitlines()
             return ReadResult(
@@ -162,7 +162,7 @@ class FileOperationsMixin:
             bytes_content = content.encode(encoding)
             return self.operations.write_binary(path, bytes_content, atomic)
         else:
-            return self.operations.write_text(path, content, encoding, atomic)
+            return self.operations._write_text(path, content, encoding, atomic)
 
     @wrap_io_errors
     def read_yaml(self, path: str | Path) -> DataResult[dict]:

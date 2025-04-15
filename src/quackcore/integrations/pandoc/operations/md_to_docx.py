@@ -39,7 +39,7 @@ def _validate_markdown_input(markdown_path: str) -> int:
     Raises:
         QuackIntegrationError: If the input file is missing or empty.
     """
-    file_info = fs.get_file_info(markdown_path)
+    file_info = fs._get_file_info(markdown_path)
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(
             f"Input file not found: {markdown_path}",
@@ -55,7 +55,7 @@ def _validate_markdown_input(markdown_path: str) -> int:
         original_size = 0
 
     try:
-        read_result = fs.read_text(markdown_path, encoding="utf-8")
+        read_result = fs._read_text(markdown_path, encoding="utf-8")
         if not read_result.success:
             raise QuackIntegrationError(
                 f"Could not read Markdown file: {read_result.error}",
@@ -138,7 +138,7 @@ def _get_conversion_output(output_path: str, start_time: float) -> tuple[float, 
         QuackIntegrationError: If output file info cannot be retrieved.
     """
     conversion_time: float = time.time() - start_time
-    output_info = fs.get_file_info(output_path)
+    output_info = fs._get_file_info(output_path)
     if not output_info.success:
         raise QuackIntegrationError(
             f"Failed to get info for converted file: {output_path}",
@@ -275,7 +275,7 @@ def validate_conversion(
     validation_errors: list[str] = []
     validation = config.validation
 
-    output_info = fs.get_file_info(output_path)
+    output_info = fs._get_file_info(output_path)
     if not output_info.success or not output_info.exists:
         validation_errors.append(f"Output file does not exist: {output_path}")
         return validation_errors
@@ -298,7 +298,7 @@ def validate_conversion(
     if not valid_ratio:
         validation_errors.extend(ratio_errors)
 
-    if validation.verify_structure and fs.get_file_info(output_path).exists:
+    if validation.verify_structure and fs._get_file_info(output_path).exists:
         is_valid, structure_errors = validate_docx_structure(
             output_path, validation.check_links
         )

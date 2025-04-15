@@ -21,14 +21,14 @@ logger = get_logger(__name__)
 class WriteOperationsMixin:
     """File writing operations mixin class."""
 
-    def resolve_path(self, path: str | Path) -> Path:
+    def _resolve_path(self, path: str | Path) -> Path:
         """Resolve a path relative to the base directory.
 
         This must be overridden in the concrete implementation.
         """
         raise NotImplementedError("This method should be overridden")
 
-    def write_text(
+    def _write_text(
         self,
         path: str | Path,
         content: str,
@@ -51,19 +51,19 @@ class WriteOperationsMixin:
         """
         # Import necessary utility functions
         from quackcore.fs.operations import (
-            atomic_write,
-            compute_checksum,
-            ensure_directory,
+            _atomic_write,
+            _compute_checksum,
+            _ensure_directory,
         )
 
-        resolved_path = self.resolve_path(path)
+        resolved_path = self._resolve_path(path)
         logger.debug(
             f"Writing text to {resolved_path} with encoding {encoding}, "
             f"atomic={atomic}, calculate_checksum={calculate_checksum}"
         )
 
         try:
-            ensure_directory(resolved_path.parent)
+            _ensure_directory(resolved_path.parent)
             logger.debug(f"Ensured parent directory exists: {resolved_path.parent}")
 
             # Handle special encoding (UTF-16 variants)
@@ -81,7 +81,7 @@ class WriteOperationsMixin:
                 if atomic:
                     logger.debug("Using atomic write for binary content (UTF-16)")
                     # Capture the return value from atomic_write
-                    written_path = atomic_write(resolved_path, bytes_content)
+                    written_path = _atomic_write(resolved_path, bytes_content)
                     actual_path = written_path
                 else:
                     logger.debug("Using direct write for binary content (UTF-16)")
@@ -93,7 +93,7 @@ class WriteOperationsMixin:
                 if atomic:
                     logger.debug("Using atomic write for text content")
                     # Capture the return value from atomic_write (a Path object)
-                    written_path = atomic_write(resolved_path, content)
+                    written_path = _atomic_write(resolved_path, content)
                     actual_path = written_path
                 else:
                     logger.debug("Using direct write for text content")
@@ -107,7 +107,7 @@ class WriteOperationsMixin:
             checksum = None
             if calculate_checksum:
                 logger.debug(f"Calculating checksum for {actual_path}")
-                checksum = compute_checksum(actual_path)
+                checksum = _compute_checksum(actual_path)
 
             return WriteResult(
                 success=True,
@@ -143,24 +143,24 @@ class WriteOperationsMixin:
             WriteResult with operation status
         """
         from quackcore.fs.operations import (
-            atomic_write,
-            compute_checksum,
-            ensure_directory,
+            _atomic_write,
+            _compute_checksum,
+            _ensure_directory,
         )
 
-        resolved_path = self.resolve_path(path)
+        resolved_path = self._resolve_path(path)
         logger.debug(
             f"Writing binary data to {resolved_path}, "
             f"atomic={atomic}, calculate_checksum={calculate_checksum}"
         )
 
         try:
-            ensure_directory(resolved_path.parent)
+            _ensure_directory(resolved_path.parent)
             logger.debug(f"Ensured parent directory exists: {resolved_path.parent}")
 
             if atomic:
                 logger.debug("Using atomic write for binary data")
-                written_path = atomic_write(resolved_path, content)
+                written_path = _atomic_write(resolved_path, content)
                 actual_path = written_path
             else:
                 logger.debug("Using direct write for binary data")
@@ -173,7 +173,7 @@ class WriteOperationsMixin:
             checksum = None
             if calculate_checksum:
                 logger.debug(f"Calculating checksum for {actual_path}")
-                checksum = compute_checksum(actual_path)
+                checksum = _compute_checksum(actual_path)
 
             return WriteResult(
                 success=True,
@@ -208,14 +208,14 @@ class WriteOperationsMixin:
         Returns:
             WriteResult with operation status
         """
-        from quackcore.fs.operations import safe_copy
+        from quackcore.fs.operations import _safe_copy
 
-        src_path = self.resolve_path(src)
-        dst_path = self.resolve_path(dst)
+        src_path = self._resolve_path(src)
+        dst_path = self._resolve_path(dst)
         logger.debug(f"Copying from {src_path} to {dst_path}, overwrite={overwrite}")
 
         try:
-            copied_path = safe_copy(src_path, dst_path, overwrite=overwrite)
+            copied_path = _safe_copy(src_path, dst_path, overwrite=overwrite)
             bytes_copied = copied_path.stat().st_size if copied_path.is_file() else 0
             logger.info(f"Successfully copied {src_path} to {dst_path}")
 
@@ -265,15 +265,15 @@ class WriteOperationsMixin:
         Returns:
             WriteResult with operation status
         """
-        from quackcore.fs.operations import safe_move
+        from quackcore.fs.operations import _safe_move
 
-        src_path = self.resolve_path(src)
-        dst_path = self.resolve_path(dst)
+        src_path = self._resolve_path(src)
+        dst_path = self._resolve_path(dst)
         logger.debug(f"Moving from {src_path} to {dst_path}, overwrite={overwrite}")
 
         try:
             bytes_moved = src_path.stat().st_size if src_path.is_file() else 0
-            moved_path = safe_move(src_path, dst_path, overwrite=overwrite)
+            moved_path = _safe_move(src_path, dst_path, overwrite=overwrite)
             logger.info(f"Successfully moved {src_path} to {moved_path}")
 
             return WriteResult(
@@ -316,13 +316,13 @@ class WriteOperationsMixin:
         Returns:
             OperationResult with operation status
         """
-        from quackcore.fs.operations import safe_delete
+        from quackcore.fs.operations import _safe_delete
 
-        resolved_path = self.resolve_path(path)
+        resolved_path = self._resolve_path(path)
         logger.debug(f"Deleting {resolved_path}, missing_ok={missing_ok}")
 
         try:
-            result = safe_delete(resolved_path, missing_ok=missing_ok)
+            result = _safe_delete(resolved_path, missing_ok=missing_ok)
 
             if not result and not missing_ok:
                 logger.error(f"Path not found and missing_ok is False: {resolved_path}")
@@ -366,13 +366,13 @@ class WriteOperationsMixin:
         Returns:
             OperationResult with operation status
         """
-        from quackcore.fs.operations import ensure_directory
+        from quackcore.fs.operations import _ensure_directory
 
-        resolved_path = self.resolve_path(path)
+        resolved_path = self._resolve_path(path)
         logger.debug(f"Creating directory {resolved_path}, exist_ok={exist_ok}")
 
         try:
-            dir_path = ensure_directory(resolved_path, exist_ok=exist_ok)
+            dir_path = _ensure_directory(resolved_path, exist_ok=exist_ok)
             logger.info(f"Successfully created directory {dir_path}")
 
             return OperationResult(

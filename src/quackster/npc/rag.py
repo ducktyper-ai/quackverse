@@ -49,7 +49,7 @@ def get_doc_directories() -> list[str]:
     # Attempt to detect a content context for tutorials.
     content_context = resolver.detect_content_context(content_type="tutorial")
     if content_context and content_context.content_dir:
-        info = fs.get_file_info(content_context.content_dir)
+        info = fs._get_file_info(content_context.content_dir)
         if info.success and info.exists and info.is_dir:
             return [content_context.content_dir]
 
@@ -57,7 +57,7 @@ def get_doc_directories() -> list[str]:
     paths: list[str] = []
     for path_str in DEFAULT_DOC_PATHS:
         expanded = fs._expand_user_vars(path_str)
-        info = fs.get_file_info(expanded)
+        info = fs._get_file_info(expanded)
         if info.success and info.exists and info.is_dir:
             paths.append(expanded)
     return paths
@@ -77,15 +77,15 @@ def should_reload_docs(doc_dirs: list[str]) -> bool:
 
     for doc_dir in doc_dirs:
         files: list[str] = []
-        result_md = fs.find_files(doc_dir, "*.md", recursive=True)
+        result_md = fs._find_files(doc_dir, "*.md", recursive=True)
         if result_md.success:
             files.extend(result_md.files)
-        result_mdx = fs.find_files(doc_dir, "*.mdx", recursive=True)
+        result_mdx = fs._find_files(doc_dir, "*.mdx", recursive=True)
         if result_mdx.success:
             files.extend(result_mdx.files)
 
         for file_path in files:
-            info = fs.get_file_info(file_path)
+            info = fs._get_file_info(file_path)
             if not info.success:
                 continue
 
@@ -129,20 +129,20 @@ def load_docs_for_rag() -> str:
 
     for doc_dir in doc_dirs:
         files: list[str] = []
-        result_md = fs.find_files(doc_dir, "*.md", recursive=True)
+        result_md = fs._find_files(doc_dir, "*.md", recursive=True)
         if result_md.success:
             files.extend(result_md.files)
-        result_mdx = fs.find_files(doc_dir, "*.mdx", recursive=True)
+        result_mdx = fs._find_files(doc_dir, "*.mdx", recursive=True)
         if result_mdx.success:
             files.extend(result_mdx.files)
 
         for file_path in files:
             try:
-                info = fs.get_file_info(file_path)
+                info = fs._get_file_info(file_path)
                 if info.success:
                     new_modified_times[file_path] = info.modified_time
 
-                read_result = fs.read_text(file_path)
+                read_result = fs._read_text(file_path)
                 if read_result.success:
                     filename = os.path.basename(file_path)
                     content = f"# {filename}\n\n{read_result.content}\n\n"

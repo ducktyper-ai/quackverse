@@ -68,7 +68,7 @@ def resolve_file_details(
     """
     # Delegate to the resolver to convert the provided file path into a project path.
     resolved_path = resolver.resolve_project_path(file_path)  # returns a string
-    file_info = fs.get_file_info(resolved_path)
+    file_info = fs._get_file_info(resolved_path)
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(f"File not found: {file_path}")
 
@@ -126,7 +126,7 @@ def upload_file(
             file_metadata["parents"] = [folder_id]
 
         # Read file content as binary using our FS API (which expects a string path)
-        media_content = fs.read_binary(resolved_path)
+        media_content = fs._read_binary(resolved_path)
         if not media_content.success:
             return IntegrationResult.error_result(
                 f"Failed to read file: {media_content.error}"

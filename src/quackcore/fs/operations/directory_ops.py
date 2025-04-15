@@ -20,13 +20,13 @@ logger = get_logger(__name__)
 class DirectoryOperationsMixin:
     """Directory operations mixin class."""
 
-    def resolve_path(self, path: str | Path) -> Path:
+    def _resolve_path(self, path: str | Path) -> Path:
         """Resolve a path relative to the base directory."""
         # This method is implemented in the main class
         # It's defined here for type checking
         raise NotImplementedError("This method should be overridden")
 
-    def list_directory(
+    def _list_directory(
         self, path: str | Path, pattern: str | None = None, include_hidden: bool = False
     ) -> DirectoryInfoResult:
         """
@@ -40,7 +40,7 @@ class DirectoryOperationsMixin:
         Returns:
             DirectoryInfoResult with directory contents
         """
-        resolved_path = self.resolve_path(path)
+        resolved_path = self._resolve_path(path)
         logger.debug(
             f"Listing directory {resolved_path}, "
             f"pattern={pattern}, include_hidden={include_hidden}"

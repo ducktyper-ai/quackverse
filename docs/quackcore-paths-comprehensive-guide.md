@@ -270,28 +270,28 @@ project_context = resolver.detect_project_context()
 config_path = resolver.resolve_project_path("config/settings.yaml")
 
 # Check if config exists and read it
-info_result = fs.get_file_info(config_path)
+info_result = fs._get_file_info(config_path)
 if info_result.success and info_result.exists:
-    # Read configuration
-    yaml_result = fs.read_yaml(config_path)
-    if yaml_result.success:
-        config = yaml_result.data
-        print(f"Loaded configuration: {config}")
+  # Read configuration
+  yaml_result = fs._read_yaml(config_path)
+  if yaml_result.success:
+    config = yaml_result.data
+    print(f"Loaded configuration: {config}")
 else:
-    # Create default config
-    source_dir = project_context.get_source_dir()
-    if source_dir:
-        # Create default config based on project structure
-        default_config = {
-            "project_name": project_context.name,
-            "source_dir": str(source_dir),
-            "output_dir": str(project_context.get_output_dir() or "output")
-        }
-        # Ensure config directory exists
-        fs.create_directory(config_path.parent, exist_ok=True)
-        # Write config
-        fs.write_yaml(config_path, default_config)
-        print(f"Created default configuration at: {config_path}")
+  # Create default config
+  source_dir = project_context.get_source_dir()
+  if source_dir:
+    # Create default config based on project structure
+    default_config = {
+      "project_name": project_context.name,
+      "source_dir": str(source_dir),
+      "output_dir": str(project_context.get_output_dir() or "output")
+    }
+    # Ensure config directory exists
+    fs.create_directory(config_path.parent, exist_ok=True)
+    # Write config
+    fs._write_yaml(config_path, default_config)
+    print(f"Created default configuration at: {config_path}")
 ```
 
 ### Plugin System
@@ -372,11 +372,11 @@ project_context = resolver.detect_project_context()
 src_dir = project_context.get_source_dir()
 
 if src_dir:
-    # List Python files
-    result = fs.find_files(src_dir, "*.py", recursive=True)
-    if result.success:
-        for py_file in result.files:
-            # Process Python files...
+  # List Python files
+  result = fs._find_files(src_dir, "*.py", recursive=True)
+  if result.success:
+    for py_file in result.files:
+  # Process Python files...
 ```
 
 ### 5. Use Content Context for Content-Specific Tools
@@ -411,59 +411,59 @@ import os
 
 
 def find_config_file(config_name="config", file_types=None):
-    """Find a configuration file in standard locations."""
-    if file_types is None:
-        file_types = [".yaml", ".yml", ".json", ".toml"]
+  """Find a configuration file in standard locations."""
+  if file_types is None:
+    file_types = [".yaml", ".yml", ".json", ".toml"]
 
-    # Check environment variable first
-    env_var = f"QUACK_{config_name.upper()}_CONFIG"
-    if env_var in os.environ:
-        config_path = fs._expand_user_vars(os.environ[env_var])
-        info = fs.get_file_info(config_path)
+  # Check environment variable first
+  env_var = f"QUACK_{config_name.upper()}_CONFIG"
+  if env_var in os.environ:
+    config_path = fs._expand_user_vars(os.environ[env_var])
+    info = fs._get_file_info(config_path)
+    if info.success and info.exists:
+      return Path(config_path)
+
+  # Try to find project root
+  try:
+    project_context = resolver.detect_project_context()
+
+    # Try config directory first
+    config_dir = project_context.get_config_dir()
+    if config_dir:
+      for ext in file_types:
+        config_path = config_dir / f"{config_name}{ext}"
+        info = fs._get_file_info(config_path)
         if info.success and info.exists:
-            return Path(config_path)
+          return config_path
 
-    # Try to find project root
-    try:
-        project_context = resolver.detect_project_context()
-
-        # Try config directory first
-        config_dir = project_context.get_config_dir()
-        if config_dir:
-            for ext in file_types:
-                config_path = config_dir / f"{config_name}{ext}"
-                info = fs.get_file_info(config_path)
-                if info.success and info.exists:
-                    return config_path
-
-        # Check project root
-        for ext in file_types:
-            config_path = project_context.root_dir / f"{config_name}{ext}"
-            info = fs.get_file_info(config_path)
-            if info.success and info.exists:
-                return config_path
-
-        # Check for config directory in project root
-        for ext in file_types:
-            config_path = project_context.root_dir / "config" / f"{config_name}{ext}"
-            info = fs.get_file_info(config_path)
-            if info.success and info.exists:
-                return config_path
-
-    except Exception:
-        pass  # Fall through to user directory
-
-    # Try user config directory
-    home_dir = Path.home()
-    config_home = home_dir / ".config" / "quack"
+    # Check project root
     for ext in file_types:
-        config_path = config_home / f"{config_name}{ext}"
-        info = fs.get_file_info(config_path)
-        if info.success and info.exists:
-            return config_path
+      config_path = project_context.root_dir / f"{config_name}{ext}"
+      info = fs._get_file_info(config_path)
+      if info.success and info.exists:
+        return config_path
 
-    # Not found
-    return None
+    # Check for config directory in project root
+    for ext in file_types:
+      config_path = project_context.root_dir / "config" / f"{config_name}{ext}"
+      info = fs._get_file_info(config_path)
+      if info.success and info.exists:
+        return config_path
+
+  except Exception:
+    pass  # Fall through to user directory
+
+  # Try user config directory
+  home_dir = Path.home()
+  config_home = home_dir / ".config" / "quack"
+  for ext in file_types:
+    config_path = config_home / f"{config_name}{ext}"
+    info = fs._get_file_info(config_path)
+    if info.success and info.exists:
+      return config_path
+
+  # Not found
+  return None
 ```
 
 ### Creating Project Structure
@@ -473,52 +473,53 @@ from quackcore.paths import resolver
 from quackcore.fs import service as fs
 from pathlib import Path
 
+
 def initialize_project(name, template="basic"):
-    """Initialize a new project with standard structure."""
-    # Create project directory
-    project_dir = Path(name)
-    fs.create_directory(project_dir, exist_ok=True)
-    
-    # Create standard directories
-    directories = {
-        "src": {"is_source": True},
-        "tests": {"is_test": True},
-        "docs": {},
-        "config": {"is_config": True},
-        "data": {"is_data": True},
-        "output": {"is_output": True}
+  """Initialize a new project with standard structure."""
+  # Create project directory
+  project_dir = Path(name)
+  fs.create_directory(project_dir, exist_ok=True)
+
+  # Create standard directories
+  directories = {
+    "src": {"is_source": True},
+    "tests": {"is_test": True},
+    "docs": {},
+    "config": {"is_config": True},
+    "data": {"is_data": True},
+    "output": {"is_output": True}
+  }
+
+  # Create project context
+  context = resolver.detect_project_context(project_dir)
+
+  # Create each directory and register in context
+  for name, attrs in directories.items():
+    dir_path = project_dir / name
+    fs.create_directory(dir_path, exist_ok=True)
+    context.add_directory(name, dir_path, **attrs)
+
+  # Create a basic config file
+  config = {
+    "project": {
+      "name": name,
+      "version": "0.1.0"
+    },
+    "paths": {
+      "source": "src",
+      "tests": "tests",
+      "output": "output"
     }
-    
-    # Create project context
-    context = resolver.detect_project_context(project_dir)
-    
-    # Create each directory and register in context
-    for name, attrs in directories.items():
-        dir_path = project_dir / name
-        fs.create_directory(dir_path, exist_ok=True)
-        context.add_directory(name, dir_path, **attrs)
-    
-    # Create a basic config file
-    config = {
-        "project": {
-            "name": name,
-            "version": "0.1.0"
-        },
-        "paths": {
-            "source": "src",
-            "tests": "tests",
-            "output": "output"
-        }
-    }
-    
-    config_file = project_dir / "config" / "project.yaml"
-    fs.write_yaml(config_file, config)
-    
-    # Create a README
-    readme = f"# {name}\n\nA new QuackTool project."
-    fs.write_text(project_dir / "README.md", readme)
-    
-    return context
+  }
+
+  config_file = project_dir / "config" / "project.yaml"
+  fs._write_yaml(config_file, config)
+
+  # Create a README
+  readme = f"# {name}\n\nA new QuackTool project."
+  fs._write_text(project_dir / "README.md", readme)
+
+  return context
 ```
 
 ### Working with Linked Projects

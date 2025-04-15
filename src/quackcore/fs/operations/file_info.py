@@ -17,13 +17,13 @@ logger = get_logger(__name__)
 class FileInfoOperationsMixin:
     """File information operations mixin class."""
 
-    def resolve_path(self, path: str | Path) -> Path:
+    def _resolve_path(self, path: str | Path) -> Path:
         """Resolve a path relative to the base directory."""
         # This method is implemented in the main class
         # It's defined here for type checking
         raise NotImplementedError("This method should be overridden")
 
-    def path_exists(self, path: str | Path) -> bool:
+    def _path_exists(self, path: str | Path) -> bool:
         """
         Check if a path exists.
 
@@ -33,7 +33,7 @@ class FileInfoOperationsMixin:
         Returns:
             bool: True if the path exists, False otherwise
         """
-        resolved_path = self.resolve_path(path)
+        resolved_path = self._resolve_path(path)
         logger.debug(f"Checking if path exists: {resolved_path}")
 
         try:
@@ -44,7 +44,7 @@ class FileInfoOperationsMixin:
             logger.error(f"Error checking if path exists for {resolved_path}: {str(e)}")
             return False
 
-    def get_file_info(self, path: str | Path) -> FileInfoResult:
+    def _get_file_info(self, path: str | Path) -> FileInfoResult:
         """
         Get information about a file or directory.
 
@@ -54,11 +54,11 @@ class FileInfoOperationsMixin:
         Returns:
             FileInfoResult with file information
         """
-        resolved_path = self.resolve_path(path)
+        resolved_path = self._resolve_path(path)
         logger.debug(f"Getting file info for: {resolved_path}")
 
         try:
-            if not self.path_exists(resolved_path):
+            if not self._path_exists(resolved_path):
                 logger.info(f"Path does not exist: {resolved_path}")
                 return FileInfoResult(
                     success=True,

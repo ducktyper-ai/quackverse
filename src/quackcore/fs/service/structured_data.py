@@ -27,7 +27,7 @@ class StructuredDataMixin:
         Returns:
             DataResult with parsed YAML data
         """
-        return self.operations.read_yaml(path)
+        return self.operations._read_yaml(path)
 
     def write_yaml(
         self,
@@ -46,7 +46,7 @@ class StructuredDataMixin:
         Returns:
             WriteResult with operation status
         """
-        return self.operations.write_yaml(path, data, atomic)
+        return self.operations._write_yaml(path, data, atomic)
 
     def read_json(self, path: str | Path) -> DataResult[dict]:
         """
@@ -58,7 +58,7 @@ class StructuredDataMixin:
         Returns:
             DataResult with parsed JSON data
         """
-        return self.operations.read_json(path)
+        return self.operations._read_json(path)
 
     def write_json(
         self,
@@ -79,4 +79,4 @@ class StructuredDataMixin:
         Returns:
             WriteResult with operation status
         """
-        return self.operations.write_json(path, data, atomic, indent)
+        return self.operations._write_json(path, data, atomic, indent)

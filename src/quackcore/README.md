@@ -116,22 +116,22 @@ source_dir = context.get_source_dir()
 from quackcore.fs import service as fs
 
 # Read text from a file
-result = fs.read_text("path/to/file.txt")
+result = fs._read_text("path/to/file.txt")
 if result.success:
-    content = result.content
+  content = result.content
 else:
-    print(f"Error: {result.error}")
+  print(f"Error: {result.error}")
 
 # Write text to a file
-fs.write_text("path/to/output.txt", "Hello, QuackCore!")
+fs._write_text("path/to/output.txt", "Hello, QuackCore!")
 
 # Create a directory
 fs.create_directory("path/to/new/directory")
 
 # Read structured data
-yaml_result = fs.read_yaml("config.yaml")
+yaml_result = fs._read_yaml("config.yaml")
 if yaml_result.success:
-    config_data = yaml_result.data
+  config_data = yaml_result.data
 ```
 
 ### Using Plugins

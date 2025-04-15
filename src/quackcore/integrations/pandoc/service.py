@@ -285,7 +285,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
 
         try:
             input_dir = resolver.resolve_project_path(input_dir)
-            input_dir_info = fs.get_file_info(input_dir)
+            input_dir_info = fs._get_file_info(input_dir)
             if (
                 not input_dir_info.success
                 or not input_dir_info.exists
@@ -338,7 +338,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                 )
             source_format, extension_pattern = params
 
-            find_result = fs.find_files(input_dir, extension_pattern, recursive)
+            find_result = fs._find_files(input_dir, extension_pattern, recursive)
             if not find_result.success or not find_result.files:
                 msg = (
                     f"No matching files found in {input_dir}"

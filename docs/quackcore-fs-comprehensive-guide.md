@@ -53,14 +53,14 @@ The quickest way to start using the `quackcore.fs` module is through the global 
 from quackcore.fs import service as fs
 
 # Read a text file
-result = fs.read_text("config.txt")
+result = fs._read_text("config.txt")
 if result.success:
-    print(result.content)
+  print(result.content)
 else:
-    print(f"Error: {result.error}")
+  print(f"Error: {result.error}")
 
 # Write a text file
-fs.write_text("output.txt", "Hello, QuackVerse!")
+fs._write_text("output.txt", "Hello, QuackVerse!")
 
 # Create a directory
 fs.create_directory("data", exist_ok=True)
@@ -91,14 +91,14 @@ Specific operation types have their own result classes with additional attribute
 Example of working with a result object:
 
 ```python
-result = fs.read_text("config.txt")
+result = fs._read_text("config.txt")
 if result.success:
-    # Access result attributes
-    content = result.content
-    print(f"Successfully read {len(content)} characters from {result.path}")
+  # Access result attributes
+  content = result.content
+  print(f"Successfully read {len(content)} characters from {result.path}")
 else:
-    # Handle the error
-    print(f"Failed to read file: {result.error}")
+  # Handle the error
+  print(f"Failed to read file: {result.error}")
 ```
 
 ### Error Handling
@@ -112,16 +112,16 @@ This dual approach allows you to handle common file operation errors (like file 
 
 ```python
 try:
-    result = fs.read_text("config.txt")
-    if not result.success:
-        # Handle expected error through result object
-        print(f"Could not read file: {result.error}")
-    else:
-        # Process the content
-        process_content(result.content)
+  result = fs._read_text("config.txt")
+  if not result.success:
+    # Handle expected error through result object
+    print(f"Could not read file: {result.error}")
+  else:
+    # Process the content
+    process_content(result.content)
 except Exception as e:
-    # Handle unexpected errors
-    print(f"Unexpected error: {str(e)}")
+  # Handle unexpected errors
+  print(f"Unexpected error: {str(e)}")
 ```
 
 The module defines several custom exception types for different error scenarios:
@@ -143,46 +143,46 @@ The `quackcore.fs` module provides several methods for reading files:
 
 ```python
 # Read a text file
-result = fs.read_text("document.txt")
+result = fs._read_text("document.txt")
 if result.success:
-    content = result.content
-    print(content)
+  content = result.content
+  print(content)
 
 # Read with specific encoding
-result = fs.read_text("international.txt", encoding="utf-16")
+result = fs._read_text("international.txt", encoding="utf-16")
 if result.success:
-    content = result.content
-    print(content)
+  content = result.content
+  print(content)
 
 # Read lines from a file
 result = fs.read_lines("data.csv")
 if result.success:
-    lines = result.content  # List of lines
-    for line in lines:
-        process_line(line)
+  lines = result.content  # List of lines
+  for line in lines:
+    process_line(line)
 ```
 
 **Reading Binary Files**:
 
 ```python
 # Read binary data
-result = fs.read_binary("image.png")
+result = fs._read_binary("image.png")
 if result.success:
-    binary_data = result.content  # bytes object
-    process_binary(binary_data)
+  binary_data = result.content  # bytes object
+  process_binary(binary_data)
 ```
 
 **Getting Text from Binary Result**:
 
 ```python
-result = fs.read_binary("potentially_text.bin")
+result = fs._read_binary("potentially_text.bin")
 if result.success:
-    try:
-        # Try to get content as text (will raise exception if not possible)
-        text = result.text
-        print(f"File is text: {text}")
-    except UnicodeDecodeError:
-        print("File is binary, not text")
+  try:
+    # Try to get content as text (will raise exception if not possible)
+    text = result.text
+    print(f"File is text: {text}")
+  except UnicodeDecodeError:
+    print("File is binary, not text")
 ```
 
 ### Writing Files
@@ -193,18 +193,18 @@ Writing files is just as straightforward:
 
 ```python
 # Write a text file
-result = fs.write_text("output.txt", "Hello, QuackVerse!")
+result = fs._write_text("output.txt", "Hello, QuackVerse!")
 if result.success:
-    print(f"Successfully wrote {result.bytes_written} bytes")
+  print(f"Successfully wrote {result.bytes_written} bytes")
 
 # Write with specific encoding
-result = fs.write_text("international.txt", "こんにちは世界", encoding="utf-8")
+result = fs._write_text("international.txt", "こんにちは世界", encoding="utf-8")
 
 # Write lines to a file
 lines = ["Header", "Data1,Value1", "Data2,Value2"]
 result = fs.write_lines("data.csv", lines)
 if result.success:
-    print(f"Successfully wrote {len(lines)} lines")
+  print(f"Successfully wrote {len(lines)} lines")
 
 # Write lines with custom line ending
 result = fs.write_lines("windows.txt", lines, line_ending="\r\n")
@@ -227,7 +227,7 @@ The `write_text` and `write_binary` methods support atomic writing to prevent da
 
 ```python
 # Atomic write (default for most operations)
-result = fs.write_text("important.txt", "Critical data", atomic=True)
+result = fs._write_text("important.txt", "Critical data", atomic=True)
 ```
 
 ### Deleting Files
@@ -385,30 +385,30 @@ The module provides a powerful directory listing function:
 
 ```python
 # List directory contents
-result = fs.list_directory("data")
+result = fs._list_directory("data")
 if result.success:
-    print(f"Files: {len(result.files)}")
-    for file in result.files:
-        print(f"  {file.name}")
-    
-    print(f"Directories: {len(result.directories)}")
-    for directory in result.directories:
-        print(f"  {directory.name}")
-    
-    print(f"Total size: {result.total_size} bytes")
+  print(f"Files: {len(result.files)}")
+  for file in result.files:
+    print(f"  {file.name}")
+
+  print(f"Directories: {len(result.directories)}")
+  for directory in result.directories:
+    print(f"  {directory.name}")
+
+  print(f"Total size: {result.total_size} bytes")
 
 # List only matching files
-result = fs.list_directory("logs", pattern="*.log")
+result = fs._list_directory("logs", pattern="*.log")
 if result.success:
-    for log_file in result.files:
-        process_log_file(log_file)
+  for log_file in result.files:
+    process_log_file(log_file)
 
 # Include hidden files
-result = fs.list_directory("config", include_hidden=True)
+result = fs._list_directory("config", include_hidden=True)
 if result.success:
-    for file in result.files:
-        if file.name.startswith('.'):
-            print(f"Hidden file: {file}")
+  for file in result.files:
+    if file.name.startswith('.'):
+      print(f"Hidden file: {file}")
 ```
 
 ### Finding Files
@@ -417,23 +417,23 @@ The module provides utilities for finding files:
 
 ```python
 # Find files matching a pattern
-result = fs.find_files("src", "*.py")
+result = fs._find_files("src", "*.py")
 if result.success:
-    print(f"Found {result.total_matches} Python files:")
-    for file in result.files:
-        print(f"  {file}")
+  print(f"Found {result.total_matches} Python files:")
+  for file in result.files:
+    print(f"  {file}")
 
 # Find files recursively
-result = fs.find_files("project", "*.json", recursive=True)
+result = fs._find_files("project", "*.json", recursive=True)
 if result.success:
-    print(f"Found {len(result.files)} JSON files")
+  print(f"Found {len(result.files)} JSON files")
 
 # Find files and include hidden ones
-result = fs.find_files(".", ".*rc", include_hidden=True)
+result = fs._find_files(".", ".*rc", include_hidden=True)
 if result.success:
-    print(f"Found {len(result.files)} rc files:")
-    for file in result.files:
-        print(f"  {file}")
+  print(f"Found {len(result.files)} rc files:")
+  for file in result.files:
+    print(f"  {file}")
 ```
 
 For even more advanced searching, you can search by content:
@@ -456,45 +456,45 @@ The module provides specialized methods for working with structured data formats
 
 ```python
 # Read and parse YAML
-result = fs.read_yaml("config.yaml")
+result = fs._read_yaml("config.yaml")
 if result.success:
-    config = result.data  # Already parsed as Python dict
-    print(f"App name: {config.get('app_name')}")
-    print(f"Version: {config.get('version')}")
+  config = result.data  # Already parsed as Python dict
+  print(f"App name: {config.get('app_name')}")
+  print(f"Version: {config.get('version')}")
 
 # Write YAML
 data = {
-    "app_name": "QuackTool",
-    "version": "1.0.0",
-    "settings": {
-        "debug": True,
-        "log_level": "INFO"
-    }
+  "app_name": "QuackTool",
+  "version": "1.0.0",
+  "settings": {
+    "debug": True,
+    "log_level": "INFO"
+  }
 }
-result = fs.write_yaml("config.yaml", data)
+result = fs._write_yaml("config.yaml", data)
 if result.success:
-    print(f"Successfully wrote YAML to {result.path}")
+  print(f"Successfully wrote YAML to {result.path}")
 ```
 
 **JSON Operations**:
 
 ```python
 # Read and parse JSON
-result = fs.read_json("data.json")
+result = fs._read_json("data.json")
 if result.success:
-    json_data = result.data  # Already parsed as Python dict
-    print(f"User: {json_data.get('user')}")
-    print(f"ID: {json_data.get('id')}")
+  json_data = result.data  # Already parsed as Python dict
+  print(f"User: {json_data.get('user')}")
+  print(f"ID: {json_data.get('id')}")
 
 # Write JSON
 data = {
-    "user": "quacker",
-    "id": 12345,
-    "roles": ["admin", "developer"]
+  "user": "quacker",
+  "id": 12345,
+  "roles": ["admin", "developer"]
 }
-result = fs.write_json("user.json", data, indent=4)
+result = fs._write_json("user.json", data, indent=4)
 if result.success:
-    print(f"Successfully wrote JSON to {result.path}")
+  print(f"Successfully wrote JSON to {result.path}")
 ```
 
 ### File Copying and Moving
@@ -532,13 +532,13 @@ The module supports atomic operations for several methods, ensuring that files a
 
 ```python
 # Atomic write (write to temp file then rename)
-result = fs.write_text("important.txt", "Critical data", atomic=True)
+result = fs._write_text("important.txt", "Critical data", atomic=True)
 
 # Atomic write for YAML
-result = fs.write_yaml("config.yaml", config_data, atomic=True)
+result = fs._write_yaml("config.yaml", config_data, atomic=True)
 
 # Atomic write for JSON
-result = fs.write_json("data.json", json_data, atomic=True)
+result = fs._write_json("data.json", json_data, atomic=True)
 
 # Direct atomic write utility
 path = fs._atomic_write("output.txt", "Content to write safely")
@@ -551,16 +551,16 @@ The module provides methods for getting detailed information about files:
 
 ```python
 # Get file information
-result = fs.get_file_info("document.txt")
+result = fs._get_file_info("document.txt")
 if result.success:
-    print(f"Exists: {result.exists}")
-    if result.exists:
-        print(f"Is file: {result.is_file}")
-        print(f"Is directory: {result.is_dir}")
-        print(f"Size: {result.size} bytes")
-        print(f"Modified: {result.modified}")
-        print(f"Created: {result.created}")
-        print(f"MIME type: {result.mime_type}")
+  print(f"Exists: {result.exists}")
+  if result.exists:
+    print(f"Is file: {result.is_file}")
+    print(f"Is directory: {result.is_dir}")
+    print(f"Size: {result.size} bytes")
+    print(f"Modified: {result.modified}")
+    print(f"Created: {result.created}")
+    print(f"MIME type: {result.mime_type}")
 ```
 
 Additional file information utilities:
@@ -608,7 +608,7 @@ md5_checksum = fs._compute_checksum("document.txt", algorithm="md5")
 print(f"MD5: {md5_checksum}")
 
 # Compute checksum during write operation
-result = fs.write_text("document.txt", "Content", calculate_checksum=True)
+result = fs._write_text("document.txt", "Content", calculate_checksum=True)
 if result.success:
   print(f"Checksum: {result.checksum}")
 ```
@@ -729,21 +729,21 @@ The `quackcore.fs` module provides many features that aren't available in `pathl
 
 ```python
 # Good - checks for success before using the content
-result = fs.read_text("config.yaml")
+result = fs._read_text("config.yaml")
 if result.success:
-    config_data = result.content
-    # Do something with config_data
+  config_data = result.content
+  # Do something with config_data
 else:
-    logger.error(f"Failed to read config file: {result.error}")
+  logger.error(f"Failed to read config file: {result.error}")
 ```
 
 ### 2. Use Type-Specific Operations
 
 ```python
 # Good - uses type-specific method
-yaml_result = fs.read_yaml("config.yaml")
+yaml_result = fs._read_yaml("config.yaml")
 if yaml_result.success:
-    config = yaml_result.data  # Already parsed as a dictionary
+  config = yaml_result.data  # Already parsed as a dictionary
 ```
 
 ### 3. Handle Paths Consistently
@@ -760,31 +760,31 @@ fs.create_directory(config_dir)
 ```python
 # Good - ensures directory exists first
 fs.create_directory("logs/2023/01/01", exist_ok=True)
-fs.write_text("logs/2023/01/01/app.log", log_content)
+fs._write_text("logs/2023/01/01/app.log", log_content)
 ```
 
 ### 5. Use Atomic Operations for Critical Data
 
 ```python
 # Good - uses atomic write for safety
-fs.write_text("important_data.txt", data, atomic=True)
+fs._write_text("important_data.txt", data, atomic=True)
 ```
 
 ### 6. Leverage Result Objects for Error Handling
 
 ```python
 # Good - uses result objects for expected errors
-result = fs.read_text("config.yaml")
+result = fs._read_text("config.yaml")
 if not result.success:
-    if "not found" in result.error:
-        # Handle file not found
-        create_default_config()
-    elif "permission denied" in result.error:
-        # Handle permission error
-        request_permission_elevation()
-    else:
-        # Handle other errors
-        log_unexpected_error(result.error)
+  if "not found" in result.error:
+    # Handle file not found
+    create_default_config()
+  elif "permission denied" in result.error:
+    # Handle permission error
+    request_permission_elevation()
+  else:
+    # Handle other errors
+    log_unexpected_error(result.error)
 ```
 
 ## Common Pitfalls
@@ -793,15 +793,15 @@ if not result.success:
 
 ```python
 # Bad - assumes success and ignores error handling
-content = fs.read_text("config.yaml").content  # Might raise AttributeError if not successful
+content = fs._read_text("config.yaml").content  # Might raise AttributeError if not successful
 
 # Good - checks the result
-result = fs.read_text("config.yaml")
+result = fs._read_text("config.yaml")
 if result.success:
-    content = result.content
+  content = result.content
 else:
-    # Handle the error
-    log_error(result.error)
+  # Handle the error
+  log_error(result.error)
 ```
 
 ### 2. Bypassing the Module
@@ -831,11 +831,11 @@ config_file = fs._join_path(base_dir, "config.yaml")
 
 ```python
 # Bad - assumes directory exists
-fs.write_text("logs/2023/01/01/app.log", log_content)  # Might fail if directory doesn't exist
+fs._write_text("logs/2023/01/01/app.log", log_content)  # Might fail if directory doesn't exist
 
 # Good - ensures directory exists first
 fs.create_directory("logs/2023/01/01", exist_ok=True)
-fs.write_text("logs/2023/01/01/app.log", log_content)
+fs._write_text("logs/2023/01/01/app.log", log_content)
 ```
 
 ## API Reference
@@ -936,13 +936,13 @@ class ConfigManager:
     config_path = fs._join_path(self.config_dir, f"{name}.yaml")
 
     # Check if the config file exists
-    file_info = fs.get_file_info(config_path)
+    file_info = fs._get_file_info(config_path)
     if not file_info.exists:
       logger.warning(f"Config file {name}.yaml not found, creating default")
       return self._create_default_config(name)
 
     # Read the config
-    result = fs.read_yaml(config_path)
+    result = fs._read_yaml(config_path)
     if not result.success:
       logger.error(f"Failed to read config {name}: {result.error}")
       return None
@@ -956,7 +956,7 @@ class ConfigManager:
     config_path = fs._join_path(self.config_dir, f"{name}.yaml")
 
     # Write the config atomically
-    result = fs.write_yaml(config_path, config_data, atomic=True)
+    result = fs._write_yaml(config_path, config_data, atomic=True)
     if not result.success:
       logger.error(f"Failed to save config {name}: {result.error}")
       return False
@@ -1011,7 +1011,7 @@ class LogRotator:
   def _initialize(self):
     """Find or create the current log file."""
     # List log files
-    result = fs.list_directory(self.log_dir, pattern="*.log")
+    result = fs._list_directory(self.log_dir, pattern="*.log")
     if not result.success:
       logger.error(f"Failed to list log directory: {result.error}")
       # Create a new log file
@@ -1027,7 +1027,7 @@ class LogRotator:
     latest_log = max(result.files, key=lambda p: fs._get_file_timestamp(p))
 
     # Check if it's too large
-    info_result = fs.get_file_info(latest_log)
+    info_result = fs._get_file_info(latest_log)
     if info_result.success and info_result.size < self.max_size:
       self.current_log = latest_log
       logger.info(f"Using existing log file: {self.current_log}")
@@ -1041,7 +1041,7 @@ class LogRotator:
     new_log_path = fs._join_path(self.log_dir, f"app_{timestamp}.log")
 
     # Create an empty log file
-    result = fs.write_text(new_log_path, "")
+    result = fs._write_text(new_log_path, "")
     if not result.success:
       logger.error(f"Failed to create new log file: {result.error}")
       raise RuntimeError(f"Failed to create new log file: {result.error}")
@@ -1054,7 +1054,7 @@ class LogRotator:
 
   def _cleanup_old_logs(self):
     """Remove old log files if we have too many."""
-    result = fs.list_directory(self.log_dir, pattern="*.log")
+    result = fs._list_directory(self.log_dir, pattern="*.log")
     if not result.success or len(result.files) <= self.max_logs:
       return
 
@@ -1081,14 +1081,14 @@ class LogRotator:
 
     # Append to the current log
     content = log_entry
-    info_result = fs.get_file_info(self.current_log)
+    info_result = fs._get_file_info(self.current_log)
     if info_result.success and info_result.exists:
-      read_result = fs.read_text(self.current_log)
+      read_result = fs._read_text(self.current_log)
       if read_result.success:
         content = read_result.content + log_entry
 
     # Write the updated content
-    result = fs.write_text(self.current_log, content)
+    result = fs._write_text(self.current_log, content)
     if not result.success:
       logger.error(f"Failed to write to log: {result.error}")
       return False
@@ -1149,7 +1149,7 @@ class BackupTool:
     total_size = 0
 
     for pattern in self.patterns:
-      find_result = fs.find_files(self.source_dir, pattern, recursive=True)
+      find_result = fs._find_files(self.source_dir, pattern, recursive=True)
       if not find_result.success:
         logger.error(f"Failed to find files with pattern {pattern}: {find_result.error}")
         continue
@@ -1173,7 +1173,7 @@ class BackupTool:
           continue
 
         # Add to manifest
-        file_info = fs.get_file_info(source_file)
+        file_info = fs._get_file_info(source_file)
         file_entry = {
           "path": rel_path_str,
           "size": file_info.size if file_info.success else 0,
@@ -1198,7 +1198,7 @@ class BackupTool:
 
     # Write manifest
     manifest_path = fs._join_path(backup_path, "manifest.json")
-    manifest_result = fs.write_json(manifest_path, manifest, indent=2)
+    manifest_result = fs._write_json(manifest_path, manifest, indent=2)
     if not manifest_result.success:
       logger.error(f"Failed to write manifest: {manifest_result.error}")
 
@@ -1209,7 +1209,7 @@ class BackupTool:
     """Verify the integrity of a backup using checksums."""
     # Read the manifest
     manifest_path = fs._join_path(backup_path, "manifest.json")
-    manifest_result = fs.read_json(manifest_path)
+    manifest_result = fs._read_json(manifest_path)
     if not manifest_result.success:
       logger.error(f"Failed to read manifest: {manifest_result.error}")
       return False
@@ -1229,7 +1229,7 @@ class BackupTool:
       backup_file = fs._join_path(backup_path, file_path)
 
       # Verify the file exists
-      file_info = fs.get_file_info(backup_file)
+      file_info = fs._get_file_info(backup_file)
       if not file_info.success or not file_info.exists:
         logger.warning(f"Backup file missing: {file_path}")
         continue
@@ -1267,7 +1267,7 @@ from quackcore.fs import service as fs
 # Reading binary file as chunks
 def process_large_binary_file(file_path, chunk_size=1024 * 1024):
   """Process a large binary file in chunks."""
-  info_result = fs.get_file_info(file_path)
+  info_result = fs._get_file_info(file_path)
   if not info_result.success or not info_result.exists:
     raise FileNotFoundError(f"File not found: {file_path}")
 
@@ -1296,7 +1296,7 @@ def is_image_file(file_path):
     return True
 
   # Check magic numbers as fallback
-  binary_result = fs.read_binary(file_path)
+  binary_result = fs._read_binary(file_path)
   if not binary_result.success:
     return False
 
@@ -1323,37 +1323,40 @@ Working with international filenames or paths with special characters:
 ```python
 from quackcore.fs import service as fs
 
+
 def safe_filename(filename):
-    """Convert a string to a safe filename."""
-    # Replace problematic characters
-    unsafe_chars = '<>:"/\\|?*'
-    for char in unsafe_chars:
-        filename = filename.replace(char, '_')
-    
-    # Ensure reasonable length
-    if len(filename) > 255:
-        # Keep extension if present
-        parts = filename.rsplit('.', 1)
-        if len(parts) > 1:
-            filename = parts[0][:250] + '.' + parts[1]
-        else:
-            filename = filename[:255]
-    
-    return filename
+  """Convert a string to a safe filename."""
+  # Replace problematic characters
+  unsafe_chars = '<>:"/\\|?*'
+  for char in unsafe_chars:
+    filename = filename.replace(char, '_')
+
+  # Ensure reasonable length
+  if len(filename) > 255:
+    # Keep extension if present
+    parts = filename.rsplit('.', 1)
+    if len(parts) > 1:
+      filename = parts[0][:250] + '.' + parts[1]
+    else:
+      filename = filename[:255]
+
+  return filename
+
 
 # Working with international filenames
 def save_international_file(content, filename):
-    """Save content to a file with an international filename."""
-    # Make filename safe
-    safe_name = safe_filename(filename)
-    
-    # Ensure we use UTF-8 encoding
-    result = fs.write_text(safe_name, content, encoding="utf-8")
-    if not result.success:
-        print(f"Failed to save file: {result.error}")
-        return False
-    
-    return True
+  """Save content to a file with an international filename."""
+  # Make filename safe
+  safe_name = safe_filename(filename)
+
+  # Ensure we use UTF-8 encoding
+  result = fs._write_text(safe_name, content, encoding="utf-8")
+  if not result.success:
+    print(f"Failed to save file: {result.error}")
+    return False
+
+  return True
+
 
 # Example with Japanese filename
 japanese_filename = "日本語のファイル名.txt"
@@ -1404,38 +1407,39 @@ For performance-sensitive applications, you might want to cache file information
 from quackcore.fs import service as fs
 import time
 
+
 class FileInfoCache:
-    def __init__(self, max_age=60):  # Cache entries for 60 seconds by default
-        self.cache = {}
-        self.max_age = max_age
-    
-    def get_file_info(self, path):
-        """Get file info, using cache if available and not expired."""
-        now = time.time()
-        
-        # Check if we have a cached entry
-        if path in self.cache:
-            entry = self.cache[path]
-            age = now - entry['timestamp']
-            
-            # If the entry is still valid, return it
-            if age < self.max_age:
-                return entry['info']
-            
-            # Otherwise, remove the stale entry
-            del self.cache[path]
-        
-        # Get fresh info
-        info = fs.get_file_info(path)
-        
-        # Cache the result if successful
-        if info.success:
-            self.cache[path] = {
-                'info': info,
-                'timestamp': now
-            }
-        
-        return info
+  def __init__(self, max_age=60):  # Cache entries for 60 seconds by default
+    self.cache = {}
+    self.max_age = max_age
+
+  def get_file_info(self, path):
+    """Get file info, using cache if available and not expired."""
+    now = time.time()
+
+    # Check if we have a cached entry
+    if path in self.cache:
+      entry = self.cache[path]
+      age = now - entry['timestamp']
+
+      # If the entry is still valid, return it
+      if age < self.max_age:
+        return entry['info']
+
+      # Otherwise, remove the stale entry
+      del self.cache[path]
+
+    # Get fresh info
+    info = fs._get_file_info(path)
+
+    # Cache the result if successful
+    if info.success:
+      self.cache[path] = {
+        'info': info,
+        'timestamp': now
+      }
+
+    return info
 ```
 
 ### Batch Operations
@@ -1446,35 +1450,36 @@ For operations on multiple files, consider using batch patterns:
 from quackcore.fs import service as fs
 import concurrent.futures
 
+
 def batch_process_files(directory, pattern, processor_func, max_workers=4):
-    """Process multiple files in parallel."""
-    # Find the files
-    result = fs.find_files(directory, pattern, recursive=True)
-    if not result.success:
-        print(f"Failed to find files: {result.error}")
-        return []
-    
-    processed_results = []
-    
-    # Process in parallel
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        # Start the operations and mark each future with its file
-        future_to_file = {
-            executor.submit(processor_func, file): file 
-            for file in result.files
-        }
-        
-        # Process as they complete
-        for future in concurrent.futures.as_completed(future_to_file):
-            file = future_to_file[future]
-            try:
-                data = future.result()
-                processed_results.append((file, data, None))
-            except Exception as exc:
-                print(f"{file} generated an exception: {exc}")
-                processed_results.append((file, None, str(exc)))
-    
-    return processed_results
+  """Process multiple files in parallel."""
+  # Find the files
+  result = fs._find_files(directory, pattern, recursive=True)
+  if not result.success:
+    print(f"Failed to find files: {result.error}")
+    return []
+
+  processed_results = []
+
+  # Process in parallel
+  with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+    # Start the operations and mark each future with its file
+    future_to_file = {
+      executor.submit(processor_func, file): file
+      for file in result.files
+    }
+
+    # Process as they complete
+    for future in concurrent.futures.as_completed(future_to_file):
+      file = future_to_file[future]
+      try:
+        data = future.result()
+        processed_results.append((file, data, None))
+      except Exception as exc:
+        print(f"{file} generated an exception: {exc}")
+        processed_results.append((file, None, str(exc)))
+
+  return processed_results
 ```
 
 ## Creating a Reusable Path Utility Class
@@ -1496,25 +1501,25 @@ class QuackPath:
   @property
   def exists(self):
     """Check if the path exists."""
-    result = fs.get_file_info(self.path)
+    result = fs._get_file_info(self.path)
     return result.success and result.exists
 
   @property
   def is_file(self):
     """Check if the path is a file."""
-    result = fs.get_file_info(self.path)
+    result = fs._get_file_info(self.path)
     return result.success and result.is_file
 
   @property
   def is_dir(self):
     """Check if the path is a directory."""
-    result = fs.get_file_info(self.path)
+    result = fs._get_file_info(self.path)
     return result.success and result.is_dir
 
   @property
   def size(self):
     """Get the file size."""
-    result = fs.get_file_info(self.path)
+    result = fs._get_file_info(self.path)
     return result.size if result.success else None
 
   @property
@@ -1526,7 +1531,7 @@ class QuackPath:
   @property
   def modified(self):
     """Get the last modified timestamp."""
-    result = fs.get_file_info(self.path)
+    result = fs._get_file_info(self.path)
     return result.modified if result.success else None
 
   @property
@@ -1551,42 +1556,42 @@ class QuackPath:
 
   def read_text(self, encoding="utf-8"):
     """Read text content from the file."""
-    result = fs.read_text(self.path, encoding)
+    result = fs._read_text(self.path, encoding)
     if not result.success:
       raise IOError(f"Failed to read file: {result.error}")
     return result.content
 
   def write_text(self, content, encoding="utf-8", atomic=True):
     """Write text content to the file."""
-    result = fs.write_text(self.path, content, encoding, atomic)
+    result = fs._write_text(self.path, content, encoding, atomic)
     if not result.success:
       raise IOError(f"Failed to write file: {result.error}")
     return True
 
   def read_yaml(self):
     """Read and parse YAML content."""
-    result = fs.read_yaml(self.path)
+    result = fs._read_yaml(self.path)
     if not result.success:
       raise IOError(f"Failed to read YAML: {result.error}")
     return result.data
 
   def write_yaml(self, data, atomic=True):
     """Write data as YAML."""
-    result = fs.write_yaml(self.path, data, atomic)
+    result = fs._write_yaml(self.path, data, atomic)
     if not result.success:
       raise IOError(f"Failed to write YAML: {result.error}")
     return True
 
   def read_json(self):
     """Read and parse JSON content."""
-    result = fs.read_json(self.path)
+    result = fs._read_json(self.path)
     if not result.success:
       raise IOError(f"Failed to read JSON: {result.error}")
     return result.data
 
   def write_json(self, data, atomic=True, indent=2):
     """Write data as JSON."""
-    result = fs.write_json(self.path, data, atomic, indent)
+    result = fs._write_json(self.path, data, atomic, indent)
     if not result.success:
       raise IOError(f"Failed to write JSON: {result.error}")
     return True
@@ -1610,7 +1615,7 @@ class QuackPath:
 
   def list_dir(self, pattern=None, include_hidden=False):
     """List contents of the directory."""
-    result = fs.list_directory(self.path, pattern, include_hidden)
+    result = fs._list_directory(self.path, pattern, include_hidden)
     if not result.success:
       raise IOError(f"Failed to list directory: {result.error}")
 
@@ -1622,7 +1627,7 @@ class QuackPath:
 
   def find_files(self, pattern, recursive=True, include_hidden=False):
     """Find files matching a pattern."""
-    result = fs.find_files(self.path, pattern, recursive, include_hidden)
+    result = fs._find_files(self.path, pattern, recursive, include_hidden)
     if not result.success:
       raise IOError(f"Failed to find files: {result.error}")
 
@@ -1704,20 +1709,21 @@ The fs module integrates with QuackCore's error handling system:
 from quackcore.fs import service as fs
 from quackcore.errors import QuackError, QuackIOError
 
+
 def safe_read_config(config_path):
-    """Safely read a config file with QuackCore error handling."""
-    try:
-        result = fs.read_yaml(config_path)
-        if not result.success:
-            # Convert fs error to QuackError
-            raise QuackIOError(f"Failed to read config: {result.error}", config_path)
-        return result.data
-    except QuackError as e:
-        # QuackErrors can be handled by QuackCore error system
-        raise
-    except Exception as e:
-        # Convert other exceptions to QuackError
-        raise QuackIOError(f"Unexpected error reading config: {str(e)}", config_path) from e
+  """Safely read a config file with QuackCore error handling."""
+  try:
+    result = fs._read_yaml(config_path)
+    if not result.success:
+      # Convert fs error to QuackError
+      raise QuackIOError(f"Failed to read config: {result.error}", config_path)
+    return result.data
+  except QuackError as e:
+    # QuackErrors can be handled by QuackCore error system
+    raise
+  except Exception as e:
+    # Convert other exceptions to QuackError
+    raise QuackIOError(f"Unexpected error reading config: {str(e)}", config_path) from e
 ```
 
 ### Using as a Plugin
@@ -1770,7 +1776,7 @@ class QuackConfig:
   def load_setting(self, name):
     """Load a setting file by name."""
     path = fs._join_path(self.config_dir, f"{name}.yaml")
-    result = fs.read_yaml(path)
+    result = fs._read_yaml(path)
     if not result.success:
       logger.warning(f"Failed to load setting {name}: {result.error}")
       return None
@@ -1781,7 +1787,7 @@ class QuackConfig:
   def save_setting(self, name, data):
     """Save a setting file."""
     path = fs._join_path(self.config_dir, f"{name}.yaml")
-    result = fs.write_yaml(path, data, atomic=True)
+    result = fs._write_yaml(path, data, atomic=True)
     if not result.success:
       logger.error(f"Failed to save setting {name}: {result.error}")
       raise QuackIOError(f"Failed to save setting: {result.error}", path)
@@ -1812,78 +1818,79 @@ from threading import Thread
 from quackcore.fs import service as fs
 from quackcore.events import EventEmitter
 
+
 class FileWatcher(EventEmitter):
-    """Watch files for changes and emit events."""
-    
-    def __init__(self, paths_to_watch, check_interval=5):
-        """Initialize the file watcher."""
-        super().__init__()
-        self.paths = paths_to_watch
-        self.check_interval = check_interval
-        self.last_modified = self._get_initial_timestamps()
-        self.running = False
-        self.watch_thread = None
-    
-    def _get_initial_timestamps(self):
-        """Get initial timestamps for all watched paths."""
-        timestamps = {}
-        for path in self.paths:
-            try:
-                info_result = fs.get_file_info(path)
-                if info_result.success and info_result.exists:
-                    timestamps[path] = info_result.modified
-                else:
-                    timestamps[path] = 0  # File doesn't exist yet
-            except Exception as e:
-                timestamps[path] = 0
-        return timestamps
-    
-    def start(self):
-        """Start watching for file changes."""
-        if self.running:
-            return
-        
-        self.running = True
-        self.watch_thread = Thread(target=self._watch_loop, daemon=True)
-        self.watch_thread.start()
-    
-    def stop(self):
-        """Stop watching for file changes."""
-        self.running = False
-        if self.watch_thread:
-            self.watch_thread.join(timeout=self.check_interval + 1)
-    
-    def _watch_loop(self):
-        """Main watching loop."""
-        while self.running:
-            self._check_for_changes()
-            time.sleep(self.check_interval)
-    
-    def _check_for_changes(self):
-        """Check all watched paths for changes."""
-        for path in self.paths:
-            try:
-                info_result = fs.get_file_info(path)
-                if not info_result.success:
-                    continue
-                
-                # Check if file was created
-                if path in self.last_modified and self.last_modified[path] == 0 and info_result.exists:
-                    self.emit('file_created', path)
-                    self.last_modified[path] = info_result.modified
-                
-                # Check if file was modified
-                elif info_result.exists and path in self.last_modified and info_result.modified > self.last_modified[path]:
-                    self.emit('file_modified', path, info_result.modified - self.last_modified[path])
-                    self.last_modified[path] = info_result.modified
-                
-                # Check if file was deleted
-                elif path in self.last_modified and self.last_modified[path] > 0 and not info_result.exists:
-                    self.emit('file_deleted', path)
-                    self.last_modified[path] = 0
-            
-            except Exception as e:
-                self.emit('error', path, str(e))
+  """Watch files for changes and emit events."""
+
+  def __init__(self, paths_to_watch, check_interval=5):
+    """Initialize the file watcher."""
+    super().__init__()
+    self.paths = paths_to_watch
+    self.check_interval = check_interval
+    self.last_modified = self._get_initial_timestamps()
+    self.running = False
+    self.watch_thread = None
+
+  def _get_initial_timestamps(self):
+    """Get initial timestamps for all watched paths."""
+    timestamps = {}
+    for path in self.paths:
+      try:
+        info_result = fs._get_file_info(path)
+        if info_result.success and info_result.exists:
+          timestamps[path] = info_result.modified
+        else:
+          timestamps[path] = 0  # File doesn't exist yet
+      except Exception as e:
+        timestamps[path] = 0
+    return timestamps
+
+  def start(self):
+    """Start watching for file changes."""
+    if self.running:
+      return
+
+    self.running = True
+    self.watch_thread = Thread(target=self._watch_loop, daemon=True)
+    self.watch_thread.start()
+
+  def stop(self):
+    """Stop watching for file changes."""
+    self.running = False
+    if self.watch_thread:
+      self.watch_thread.join(timeout=self.check_interval + 1)
+
+  def _watch_loop(self):
+    """Main watching loop."""
+    while self.running:
+      self._check_for_changes()
+      time.sleep(self.check_interval)
+
+  def _check_for_changes(self):
+    """Check all watched paths for changes."""
+    for path in self.paths:
+      try:
+        info_result = fs._get_file_info(path)
+        if not info_result.success:
+          continue
+
+        # Check if file was created
+        if path in self.last_modified and self.last_modified[path] == 0 and info_result.exists:
+          self.emit('file_created', path)
+          self.last_modified[path] = info_result.modified
+
+        # Check if file was modified
+        elif info_result.exists and path in self.last_modified and info_result.modified > self.last_modified[path]:
+          self.emit('file_modified', path, info_result.modified - self.last_modified[path])
+          self.last_modified[path] = info_result.modified
+
+        # Check if file was deleted
+        elif path in self.last_modified and self.last_modified[path] > 0 and not info_result.exists:
+          self.emit('file_deleted', path)
+          self.last_modified[path] = 0
+
+      except Exception as e:
+        self.emit('error', path, str(e))
 ```
 
 ## Transitioning from pathlib to quackcore.fs
@@ -1938,26 +1945,27 @@ Here are some examples of migrating more complex pathlib-based code to quackcore
 from pathlib import Path
 import json
 
+
 def process_json_files(directory):
-    # Find all JSON files
-    json_files = list(Path(directory).glob('**/*.json'))
-    
-    results = []
-    for file_path in json_files:
-        try:
-            # Read and parse JSON
-            data = json.loads(file_path.read_text())
-            
-            # Process data
-            results.append({
-                'path': str(file_path),
-                'name': file_path.name,
-                'data': data
-            })
-        except Exception as e:
-            print(f"Error processing {file_path}: {e}")
-    
-    return results
+  # Find all JSON files
+  json_files = list(Path(directory).glob('**/*.json'))
+
+  results = []
+  for file_path in json_files:
+    try:
+      # Read and parse JSON
+      data = json.loads(file_path._read_text())
+
+      # Process data
+      results.append({
+        'path': str(file_path),
+        'name': file_path.name,
+        'data': data
+      })
+    except Exception as e:
+      print(f"Error processing {file_path}: {e}")
+
+  return results
 ```
 
 **The same function with quackcore.fs:**
@@ -1968,7 +1976,7 @@ from quackcore.fs import service as fs
 
 def process_json_files(directory):
   # Find all JSON files
-  find_result = fs.find_files(directory, '*.json', recursive=True)
+  find_result = fs._find_files(directory, '*.json', recursive=True)
   if not find_result.success:
     print(f"Error finding files: {find_result.error}")
     return []
@@ -1976,7 +1984,7 @@ def process_json_files(directory):
   results = []
   for file_path in find_result.files:
     # Read and parse JSON directly
-    json_result = fs.read_json(file_path)
+    json_result = fs._read_json(file_path)
     if not json_result.success:
       print(f"Error processing {file_path}: {json_result.error}")
       continue
@@ -2033,7 +2041,7 @@ from quackcore.fs import service as fs
 def setup_project(project_name):
   # Check if project exists
   project_dir = project_name
-  info_result = fs.get_file_info(project_dir)
+  info_result = fs._get_file_info(project_dir)
   if info_result.success and info_result.exists:
     print(f"Project {project_name} already exists")
     return False
@@ -2048,13 +2056,13 @@ def setup_project(project_name):
 
     # Create basic files
     readme_path = fs._join_path(project_dir, 'README.md')
-    fs.write_text(readme_path, f"# {project_name}\n\nA new project.")
+    fs._write_text(readme_path, f"# {project_name}\n\nA new project.")
 
     init_src = fs._join_path(project_dir, 'src', '__init__.py')
-    fs.write_text(init_src, '')
+    fs._write_text(init_src, '')
 
     init_tests = fs._join_path(project_dir, 'tests', '__init__.py')
-    fs.write_text(init_tests, '')
+    fs._write_text(init_tests, '')
 
     print(f"Created project structure for {project_name}")
     return True
@@ -2107,13 +2115,13 @@ class FileSystemRepository(Generic[T]):
     """Save an entity."""
     path = self._get_path(id)
     data = self.serializer(entity)
-    result = fs.write_json(path, data, atomic=True)
+    result = fs._write_json(path, data, atomic=True)
     return result.success
 
   def get(self, id: str) -> Optional[T]:
     """Get an entity by ID."""
     path = self._get_path(id)
-    result = fs.read_json(path)
+    result = fs._read_json(path)
     if not result.success:
       return None
     return self.deserializer(result.data)
@@ -2126,13 +2134,13 @@ class FileSystemRepository(Generic[T]):
 
   def list_all(self) -> List[T]:
     """List all entities."""
-    result = fs.list_directory(self.base_dir, pattern="*.json")
+    result = fs._list_directory(self.base_dir, pattern="*.json")
     if not result.success:
       return []
 
     entities = []
     for file_path in result.files:
-      read_result = fs.read_json(file_path)
+      read_result = fs._read_json(file_path)
       if read_result.success:
         entity = self.deserializer(read_result.data)
         entities.append(entity)
@@ -2236,18 +2244,18 @@ file_factory = FileHandlerFactory()
 
 # Register handlers for different file types
 file_factory.register_handler('json',
-                              reader=lambda path: fs.read_json(path).data if fs.read_json(path).success else None,
-                              writer=lambda path, data: fs.write_json(path, data).success
+                              reader=lambda path: fs._read_json(path).data if fs._read_json(path).success else None,
+                              writer=lambda path, data: fs._write_json(path, data).success
                               )
 
 file_factory.register_handler('yaml',
-                              reader=lambda path: fs.read_yaml(path).data if fs.read_yaml(path).success else None,
-                              writer=lambda path, data: fs.write_yaml(path, data).success
+                              reader=lambda path: fs._read_yaml(path).data if fs._read_yaml(path).success else None,
+                              writer=lambda path, data: fs._write_yaml(path, data).success
                               )
 
 file_factory.register_handler('txt',
-                              reader=lambda path: fs.read_text(path).content if fs.read_text(path).success else "",
-                              writer=lambda path, data: fs.write_text(path, data).success
+                              reader=lambda path: fs._read_text(path).content if fs._read_text(path).success else "",
+                              writer=lambda path, data: fs._write_text(path, data).success
                               )
 
 # Use the factory
@@ -2265,150 +2273,154 @@ import time
 from typing import Dict, List, Callable, Any
 from threading import Thread
 
+
 class FileObserver:
-    """Monitor files for changes."""
+  """Monitor files for changes."""
+
+  def __init__(self, check_interval: int = 5):
+    self.files: Dict[str, Dict] = {}  # Path -> metadata
+    self.observers: Dict[str, List[Callable]] = {}  # Path -> callbacks
+    self.check_interval = check_interval
+    self.running = False
+    self.thread = None
+
+  def watch(self, path: str, callback: Callable[[str, Dict], None]) -> bool:
+    """
+    Watch a file for changes.
     
-    def __init__(self, check_interval: int = 5):
-        self.files: Dict[str, Dict] = {}  # Path -> metadata
-        self.observers: Dict[str, List[Callable]] = {}  # Path -> callbacks
-        self.check_interval = check_interval
-        self.running = False
-        self.thread = None
+    Args:
+        path: Path to watch
+        callback: Function to call when file changes
+                  Signature: callback(path, metadata)
+    """
+    # Get initial file info
+    info = fs._get_file_info(path)
+    if not info.success:
+      return False
+
+    # Store file metadata
+    metadata = {
+      'exists': info.exists,
+      'size': info.size if info.exists else 0,
+      'modified': info.modified if info.exists else 0
+    }
+
+    # Register the file and callback
+    self.files[path] = metadata
+
+    if path not in self.observers:
+      self.observers[path] = []
+    self.observers[path].append(callback)
+
+    # Start the watcher if not already running
+    if not self.running:
+      self.start()
+
+    return True
+
+  def unwatch(self, path: str, callback: Callable = None) -> None:
+    """
+    Stop watching a file.
     
-    def watch(self, path: str, callback: Callable[[str, Dict], None]) -> bool:
-        """
-        Watch a file for changes.
-        
-        Args:
-            path: Path to watch
-            callback: Function to call when file changes
-                      Signature: callback(path, metadata)
-        """
-        # Get initial file info
-        info = fs.get_file_info(path)
-        if not info.success:
-            return False
-        
-        # Store file metadata
-        metadata = {
-            'exists': info.exists,
-            'size': info.size if info.exists else 0,
-            'modified': info.modified if info.exists else 0
-        }
-        
-        # Register the file and callback
-        self.files[path] = metadata
-        
-        if path not in self.observers:
-            self.observers[path] = []
-        self.observers[path].append(callback)
-        
-        # Start the watcher if not already running
-        if not self.running:
-            self.start()
-        
-        return True
-    
-    def unwatch(self, path: str, callback: Callable = None) -> None:
-        """
-        Stop watching a file.
-        
-        Args:
-            path: Path to stop watching
-            callback: Specific callback to remove (or all if None)
-        """
-        if path not in self.observers:
-            return
-        
-        if callback is None:
-            # Remove all callbacks
-            del self.observers[path]
-        else:
-            # Remove specific callback
-            self.observers[path] = [cb for cb in self.observers[path] if cb != callback]
-        
-        if not self.observers[path]:
-            del self.observers[path]
-        
-        # If no files are being watched, stop the watcher
-        if not self.observers:
-            self.stop()
-    
-    def start(self) -> None:
-        """Start the file watcher."""
-        if self.running:
-            return
-        
-        self.running = True
-        self.thread = Thread(target=self._watch_loop, daemon=True)
-        self.thread.start()
-    
-    def stop(self) -> None:
-        """Stop the file watcher."""
-        self.running = False
-        if self.thread:
-            self.thread.join(timeout=self.check_interval * 2)
-    
-    def _watch_loop(self) -> None:
-        """Main watching loop."""
-        while self.running and self.observers:
-            self._check_all_files()
-            time.sleep(self.check_interval)
-    
-    def _check_all_files(self) -> None:
-        """Check all watched files for changes."""
-        for path, metadata in list(self.files.items()):
-            if path not in self.observers:
-                continue
-            
-            info = fs.get_file_info(path)
-            if not info.success:
-                continue
-            
-            new_metadata = {
-                'exists': info.exists,
-                'size': info.size if info.exists else 0,
-                'modified': info.modified if info.exists else 0
-            }
-            
-            # Check for changes
-            if self._has_changed(metadata, new_metadata):
-                # Update stored metadata
-                self.files[path] = new_metadata
-                
-                # Notify observers
-                for callback in self.observers[path]:
-                    try:
-                        callback(path, new_metadata)
-                    except Exception as e:
-                        print(f"Error in observer callback for {path}: {e}")
-    
-    def _has_changed(self, old_metadata: Dict, new_metadata: Dict) -> bool:
-        """Determine if a file has changed."""
-        # Check existence
-        if old_metadata['exists'] != new_metadata['exists']:
-            return True
-        
-        # If file doesn't exist, no other changes matter
-        if not new_metadata['exists']:
-            return False
-        
-        # Check size and modification time
-        return (old_metadata['size'] != new_metadata['size'] or 
-                old_metadata['modified'] != new_metadata['modified'])
+    Args:
+        path: Path to stop watching
+        callback: Specific callback to remove (or all if None)
+    """
+    if path not in self.observers:
+      return
+
+    if callback is None:
+      # Remove all callbacks
+      del self.observers[path]
+    else:
+      # Remove specific callback
+      self.observers[path] = [cb for cb in self.observers[path] if cb != callback]
+
+    if not self.observers[path]:
+      del self.observers[path]
+
+    # If no files are being watched, stop the watcher
+    if not self.observers:
+      self.stop()
+
+  def start(self) -> None:
+    """Start the file watcher."""
+    if self.running:
+      return
+
+    self.running = True
+    self.thread = Thread(target=self._watch_loop, daemon=True)
+    self.thread.start()
+
+  def stop(self) -> None:
+    """Stop the file watcher."""
+    self.running = False
+    if self.thread:
+      self.thread.join(timeout=self.check_interval * 2)
+
+  def _watch_loop(self) -> None:
+    """Main watching loop."""
+    while self.running and self.observers:
+      self._check_all_files()
+      time.sleep(self.check_interval)
+
+  def _check_all_files(self) -> None:
+    """Check all watched files for changes."""
+    for path, metadata in list(self.files.items()):
+      if path not in self.observers:
+        continue
+
+      info = fs._get_file_info(path)
+      if not info.success:
+        continue
+
+      new_metadata = {
+        'exists': info.exists,
+        'size': info.size if info.exists else 0,
+        'modified': info.modified if info.exists else 0
+      }
+
+      # Check for changes
+      if self._has_changed(metadata, new_metadata):
+        # Update stored metadata
+        self.files[path] = new_metadata
+
+        # Notify observers
+        for callback in self.observers[path]:
+          try:
+            callback(path, new_metadata)
+          except Exception as e:
+            print(f"Error in observer callback for {path}: {e}")
+
+  def _has_changed(self, old_metadata: Dict, new_metadata: Dict) -> bool:
+    """Determine if a file has changed."""
+    # Check existence
+    if old_metadata['exists'] != new_metadata['exists']:
+      return True
+
+    # If file doesn't exist, no other changes matter
+    if not new_metadata['exists']:
+      return False
+
+    # Check size and modification time
+    return (old_metadata['size'] != new_metadata['size'] or
+            old_metadata['modified'] != new_metadata['modified'])
+
 
 # Example usage:
 observer = FileObserver(check_interval=2)
 
+
 def on_file_change(path, metadata):
-    print(f"File changed: {path}")
-    print(f"New metadata: {metadata}")
-    
-    # Read the updated file
-    if metadata['exists']:
-        result = fs.read_text(path)
-        if result.success:
-            print(f"New content: {result.content}")
+  print(f"File changed: {path}")
+  print(f"New metadata: {metadata}")
+
+  # Read the updated file
+  if metadata['exists']:
+    result = fs._read_text(path)
+    if result.success:
+      print(f"New content: {result.content}")
+
 
 # Watch a file
 observer.watch("config.txt", on_file_change)
@@ -2430,45 +2442,46 @@ from unittest.mock import MagicMock, patch
 from quackcore.fs import service as fs
 from quackcore.fs.results import ReadResult, FileInfoResult
 
+
 def test_config_reader():
-    # Function we want to test
-    def read_config(config_path):
-        result = fs.read_yaml(config_path)
-        if not result.success:
-            return {}
-        return result.data
-    
-    # Mock the fs.read_yaml method
-    with patch('quackcore.fs.service.read_yaml') as mock_read_yaml:
-        # Setup the mock to return a successful result
-        mock_result = MagicMock(spec=ReadResult)
-        mock_result.success = True
-        mock_result.data = {"app_name": "TestApp", "version": "1.0.0"}
-        mock_read_yaml.return_value = mock_result
-        
-        # Call the function under test
-        config = read_config("config.yaml")
-        
-        # Verify the result
-        assert config["app_name"] == "TestApp"
-        assert config["version"] == "1.0.0"
-        
-        # Verify fs.read_yaml was called with the correct path
-        mock_read_yaml.assert_called_once_with("config.yaml")
-    
-    # Test error handling
-    with patch('quackcore.fs.service.read_yaml') as mock_read_yaml:
-        # Setup the mock to return a failed result
-        mock_result = MagicMock(spec=ReadResult)
-        mock_result.success = False
-        mock_result.error = "File not found"
-        mock_read_yaml.return_value = mock_result
-        
-        # Call the function under test
-        config = read_config("missing.yaml")
-        
-        # Verify the result
-        assert config == {}
+  # Function we want to test
+  def read_config(config_path):
+    result = fs._read_yaml(config_path)
+    if not result.success:
+      return {}
+    return result.data
+
+  # Mock the fs.read_yaml method
+  with patch('quackcore.fs.service.read_yaml') as mock_read_yaml:
+    # Setup the mock to return a successful result
+    mock_result = MagicMock(spec=ReadResult)
+    mock_result.success = True
+    mock_result.data = {"app_name": "TestApp", "version": "1.0.0"}
+    mock_read_yaml.return_value = mock_result
+
+    # Call the function under test
+    config = read_config("config.yaml")
+
+    # Verify the result
+    assert config["app_name"] == "TestApp"
+    assert config["version"] == "1.0.0"
+
+    # Verify fs.read_yaml was called with the correct path
+    mock_read_yaml.assert_called_once_with("config.yaml")
+
+  # Test error handling
+  with patch('quackcore.fs.service.read_yaml') as mock_read_yaml:
+    # Setup the mock to return a failed result
+    mock_result = MagicMock(spec=ReadResult)
+    mock_result.success = False
+    mock_result.error = "File not found"
+    mock_read_yaml.return_value = mock_result
+
+    # Call the function under test
+    config = read_config("missing.yaml")
+
+    # Verify the result
+    assert config == {}
 ```
 
 ### Using a Fake FileSystemService
@@ -2479,77 +2492,79 @@ For more complex tests, you might want to create a fake implementation of the `F
 from quackcore.fs.results import ReadResult, WriteResult, FileInfoResult
 from pathlib import Path
 
+
 class FakeFileSystemService:
-    """A fake FileSystemService for testing."""
-    
-    def __init__(self):
-        # In-memory filesystem
-        self.files = {}
-    
-    def read_text(self, path, encoding="utf-8"):
-        """Simulate reading a text file."""
-        path_str = str(path)
-        if path_str in self.files:
-            return ReadResult(
-                success=True,
-                path=Path(path_str),
-                content=self.files[path_str],
-                encoding=encoding
-            )
-        return ReadResult(
-            success=False,
-            path=Path(path_str),
-            content="",
-            error="File not found"
-        )
-    
-    def write_text(self, path, content, encoding="utf-8", atomic=False):
-        """Simulate writing a text file."""
-        path_str = str(path)
-        self.files[path_str] = content
-        return WriteResult(
-            success=True,
-            path=Path(path_str),
-            bytes_written=len(content.encode(encoding))
-        )
-    
-    def get_file_info(self, path):
-        """Simulate getting file info."""
-        path_str = str(path)
-        exists = path_str in self.files
-        return FileInfoResult(
-            success=True,
-            path=Path(path_str),
-            exists=exists,
-            is_file=exists,
-            is_dir=False,
-            size=len(self.files.get(path_str, "").encode("utf-8")) if exists else 0
-        )
-    
-    # Add more methods as needed for your tests
+  """A fake FileSystemService for testing."""
+
+  def __init__(self):
+    # In-memory filesystem
+    self.files = {}
+
+  def read_text(self, path, encoding="utf-8"):
+    """Simulate reading a text file."""
+    path_str = str(path)
+    if path_str in self.files:
+      return ReadResult(
+        success=True,
+        path=Path(path_str),
+        content=self.files[path_str],
+        encoding=encoding
+      )
+    return ReadResult(
+      success=False,
+      path=Path(path_str),
+      content="",
+      error="File not found"
+    )
+
+  def write_text(self, path, content, encoding="utf-8", atomic=False):
+    """Simulate writing a text file."""
+    path_str = str(path)
+    self.files[path_str] = content
+    return WriteResult(
+      success=True,
+      path=Path(path_str),
+      bytes_written=len(content.encode(encoding))
+    )
+
+  def get_file_info(self, path):
+    """Simulate getting file info."""
+    path_str = str(path)
+    exists = path_str in self.files
+    return FileInfoResult(
+      success=True,
+      path=Path(path_str),
+      exists=exists,
+      is_file=exists,
+      is_dir=False,
+      size=len(self.files.get(path_str, "").encode("utf-8")) if exists else 0
+    )
+
+  # Add more methods as needed for your tests
+
 
 # Use the fake in tests
 def test_with_fake_fs():
-    # Create a fake fs
-    fake_fs = FakeFileSystemService()
-    
-    # Write a test file
-    fake_fs.write_text("test.txt", "Hello, World!")
-    
-    # Function to test that uses the fake
-    def read_first_line(fs, path):
-        result = fs.read_text(path)
-        if not result.success:
-            return None
-        return result.content.split("\n")[0]
-    
-    # Test the function with our fake
-    first_line = read_first_line(fake_fs, "test.txt")
-    assert first_line == "Hello, World!"
-    
-    # Test with a missing file
-    first_line = read_first_line(fake_fs, "missing.txt")
-    assert first_line is None
+  # Create a fake fs
+  fake_fs = FakeFileSystemService()
+
+  # Write a test file
+  fake_fs.write_text("test.txt", "Hello, World!")
+
+  # Function to test that uses the fake
+  def read_first_line(fs, path):
+    result = fs._read_text(path)
+    if not result.success:
+      return None
+    return result.content.split("\n")[0]
+
+  # Test the function with our fake
+  first_line = read_first_line(fake_fs, "test.txt")
+  assert first_line == "Hello, World!"
+
+  # Test with a missing file
+  first_line = read_first_line(fake_fs, "missing.txt")
+  assert first_line is None
 ```
 
 ### Creating a Test Fixture
@@ -2578,16 +2593,16 @@ def temp_dir():
 def test_file_operations(temp_dir):
   # Create a test file
   test_file = fs._join_path(temp_dir, "test.txt")
-  fs.write_text(test_file, "Test content")
+  fs._write_text(test_file, "Test content")
 
   # Verify the file exists
-  info = fs.get_file_info(test_file)
+  info = fs._get_file_info(test_file)
   assert info.success
   assert info.exists
   assert info.is_file
 
   # Read the file
-  result = fs.read_text(test_file)
+  result = fs._read_text(test_file)
   assert result.success
   assert result.content == "Test content"
 
@@ -2596,7 +2611,7 @@ def test_file_operations(temp_dir):
   assert delete_result.success
 
   # Verify the file no longer exists
-  info = fs.get_file_info(test_file)
+  info = fs._get_file_info(test_file)
   assert info.success
   assert not info.exists
 ```
@@ -2610,13 +2625,13 @@ Proper error handling is crucial when working with filesystem operations. Here a
 The simplest pattern is to check the `success` attribute of result objects:
 
 ```python
-result = fs.read_text("config.txt")
+result = fs._read_text("config.txt")
 if result.success:
-    # Process the content
-    process_content(result.content)
+  # Process the content
+  process_content(result.content)
 else:
-    # Handle the error
-    print(f"Error reading config: {result.error}")
+  # Handle the error
+  print(f"Error reading config: {result.error}")
 ```
 
 ### Centralized Error Handler
@@ -2625,57 +2640,60 @@ For more complex applications, you might want to create a centralized error hand
 
 ```python
 class FSErrorHandler:
-    """Centralized handler for filesystem errors."""
-    
-    def __init__(self, logger):
-        self.logger = logger
-    
-    def handle_error(self, result, operation, path):
-        """Handle a filesystem operation error."""
-        if "not found" in result.error.lower():
-            self.logger.warning(f"{path} not found when performing {operation}")
-            return "NOT_FOUND"
-        
-        if "permission denied" in result.error.lower():
-            self.logger.error(f"Permission denied for {path} when performing {operation}")
-            return "PERMISSION_DENIED"
-        
-        if "exists" in result.error.lower():
-            self.logger.warning(f"{path} already exists when performing {operation}")
-            return "ALREADY_EXISTS"
-        
-        # Generic error
-        self.logger.error(f"Error {operation} {path}: {result.error}")
-        return "ERROR"
-    
-    def handle_read_error(self, result, path):
-        """Handle a read operation error."""
-        return self.handle_error(result, "reading", path)
-    
-    def handle_write_error(self, result, path):
-        """Handle a write operation error."""
-        return self.handle_error(result, "writing", path)
-    
-    def handle_delete_error(self, result, path):
-        """Handle a delete operation error."""
-        return self.handle_error(result, "deleting", path)
+  """Centralized handler for filesystem errors."""
+
+  def __init__(self, logger):
+    self.logger = logger
+
+  def handle_error(self, result, operation, path):
+    """Handle a filesystem operation error."""
+    if "not found" in result.error.lower():
+      self.logger.warning(f"{path} not found when performing {operation}")
+      return "NOT_FOUND"
+
+    if "permission denied" in result.error.lower():
+      self.logger.error(f"Permission denied for {path} when performing {operation}")
+      return "PERMISSION_DENIED"
+
+    if "exists" in result.error.lower():
+      self.logger.warning(f"{path} already exists when performing {operation}")
+      return "ALREADY_EXISTS"
+
+    # Generic error
+    self.logger.error(f"Error {operation} {path}: {result.error}")
+    return "ERROR"
+
+  def handle_read_error(self, result, path):
+    """Handle a read operation error."""
+    return self.handle_error(result, "reading", path)
+
+  def handle_write_error(self, result, path):
+    """Handle a write operation error."""
+    return self.handle_error(result, "writing", path)
+
+  def handle_delete_error(self, result, path):
+    """Handle a delete operation error."""
+    return self.handle_error(result, "deleting", path)
+
 
 # Example usage:
 from quackcore.logging import get_logger
+
 logger = get_logger(__name__)
 error_handler = FSErrorHandler(logger)
 
+
 def safe_read_config(config_path):
-    """Safely read a configuration file."""
-    result = fs.read_yaml(config_path)
-    if not result.success:
-        error_code = error_handler.handle_read_error(result, config_path)
-        if error_code == "NOT_FOUND":
-            # Create default config
-            return create_default_config()
-        # For other errors, return empty dict
-        return {}
-    return result.data
+  """Safely read a configuration file."""
+  result = fs._read_yaml(config_path)
+  if not result.success:
+    error_code = error_handler.handle_read_error(result, config_path)
+    if error_code == "NOT_FOUND":
+      # Create default config
+      return create_default_config()
+    # For other errors, return empty dict
+    return {}
+  return result.data
 ```
 
 ### Using Try/Except with Result Objects
@@ -2684,35 +2702,35 @@ You can combine traditional exception handling with result object checking:
 
 ```python
 def process_config_file(config_path):
-    """Process a configuration file with robust error handling."""
-    try:
-        # Check if the file exists
-        info_result = fs.get_file_info(config_path)
-        if not info_result.success:
-            raise RuntimeError(f"Error checking config file: {info_result.error}")
-        
-        if not info_result.exists:
-            # File doesn't exist - create default
-            return create_default_config(config_path)
-        
-        # Read the config file
-        read_result = fs.read_yaml(config_path)
-        if not read_result.success:
-            raise RuntimeError(f"Error reading config file: {read_result.error}")
-        
-        # Process the config
-        config = read_result.data
-        # ... process config ...
-        return config
-    
-    except RuntimeError as e:
-        # Handle expected errors
-        logger.error(str(e))
-        return None
-    except Exception as e:
-        # Handle unexpected errors
-        logger.exception(f"Unexpected error processing config file: {str(e)}")
-        return None
+  """Process a configuration file with robust error handling."""
+  try:
+    # Check if the file exists
+    info_result = fs._get_file_info(config_path)
+    if not info_result.success:
+      raise RuntimeError(f"Error checking config file: {info_result.error}")
+
+    if not info_result.exists:
+      # File doesn't exist - create default
+      return create_default_config(config_path)
+
+    # Read the config file
+    read_result = fs._read_yaml(config_path)
+    if not read_result.success:
+      raise RuntimeError(f"Error reading config file: {read_result.error}")
+
+    # Process the config
+    config = read_result.data
+    # ... process config ...
+    return config
+
+  except RuntimeError as e:
+    # Handle expected errors
+    logger.error(str(e))
+    return None
+  except Exception as e:
+    # Handle unexpected errors
+    logger.exception(f"Unexpected error processing config file: {str(e)}")
+    return None
 ```
 
 ### Creating Custom Exception Handlers
@@ -2722,39 +2740,44 @@ You can create custom exception handlers for specific types of filesystem operat
 ```python
 from functools import wraps
 
+
 def handle_fs_errors(default_return=None):
-    """
-    Decorator to handle filesystem errors.
-    
-    Args:
-        default_return: Value to return in case of error
-    
-    Returns:
-        Decorated function
-    """
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            try:
-                result = func(*args, **kwargs)
-                if hasattr(result, 'success') and not result.success:
-                    logger.error(f"Error in {func.__name__}: {result.error}")
-                    return default_return
-                return result
-            except Exception as e:
-                logger.exception(f"Unexpected error in {func.__name__}: {str(e)}")
-                return default_return
-        return wrapper
-    return decorator
+  """
+  Decorator to handle filesystem errors.
+  
+  Args:
+      default_return: Value to return in case of error
+  
+  Returns:
+      Decorated function
+  """
+
+  def decorator(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+      try:
+        result = func(*args, **kwargs)
+        if hasattr(result, 'success') and not result.success:
+          logger.error(f"Error in {func.__name__}: {result.error}")
+          return default_return
+        return result
+      except Exception as e:
+        logger.exception(f"Unexpected error in {func.__name__}: {str(e)}")
+        return default_return
+
+    return wrapper
+
+  return decorator
+
 
 # Example usage:
 @handle_fs_errors(default_return={})
 def load_config(config_path):
-    """Load configuration safely."""
-    result = fs.read_yaml(config_path)
-    if not result.success:
-        return {}
-    return result.data
+  """Load configuration safely."""
+  result = fs._read_yaml(config_path)
+  if not result.success:
+    return {}
+  return result.data
 ```
 
 ## Advanced Topics
@@ -2764,39 +2787,39 @@ def load_config(config_path):
 When working with large files, it's important to process them efficiently. Here are patterns for working with large files using `quackcore.fs`:
 
 ```python
-def process_large_file(file_path, chunk_size=1024*1024):
-    """
-    Process a large file in chunks.
-    
-    Args:
-        file_path: Path to the file
-        chunk_size: Size of each chunk in bytes
-    """
-    # Check if the file exists and get its size
-    info_result = fs.get_file_info(file_path)
-    if not info_result.success or not info_result.exists:
-        print(f"File not found: {file_path}")
-        return
-    
-    total_size = info_result.size
-    processed = 0
-    
-    # Open the file directly for reading in binary mode
-    # For very large files, we don't want to read the whole file at once
-    with open(file_path, 'rb') as f:
-        while processed < total_size:
-            # Read a chunk
-            chunk = f.read(chunk_size)
-            if not chunk:
-                break
-            
-            # Process the chunk
-            process_chunk(chunk)
-            
-            # Update progress
-            processed += len(chunk)
-            progress = (processed / total_size) * 100
-            print(f"Progress: {progress:.1f}% ({processed}/{total_size} bytes)")
+def process_large_file(file_path, chunk_size=1024 * 1024):
+  """
+  Process a large file in chunks.
+  
+  Args:
+      file_path: Path to the file
+      chunk_size: Size of each chunk in bytes
+  """
+  # Check if the file exists and get its size
+  info_result = fs._get_file_info(file_path)
+  if not info_result.success or not info_result.exists:
+    print(f"File not found: {file_path}")
+    return
+
+  total_size = info_result.size
+  processed = 0
+
+  # Open the file directly for reading in binary mode
+  # For very large files, we don't want to read the whole file at once
+  with open(file_path, 'rb') as f:
+    while processed < total_size:
+      # Read a chunk
+      chunk = f.read(chunk_size)
+      if not chunk:
+        break
+
+      # Process the chunk
+      process_chunk(chunk)
+
+      # Update progress
+      processed += len(chunk)
+      progress = (processed / total_size) * 100
+      print(f"Progress: {progress:.1f}% ({processed}/{total_size} bytes)")
 ```
 
 ### Creating a Custom FileSystemService
@@ -2898,21 +2921,21 @@ def worker(counter, thread_id, dir_path):
 
   for i in range(5):
     # Read, modify, and write
-    info = fs.get_file_info(file_path)
+    info = fs._get_file_info(file_path)
 
     if not info.exists:
       # Create the file if it doesn't exist
       content = f"Thread {thread_id} iteration {i}\n"
     else:
       # Append to the file if it exists
-      result = fs.read_text(file_path)
+      result = fs._read_text(file_path)
       if result.success:
         content = result.content + f"Thread {thread_id} iteration {i}\n"
       else:
         content = f"Thread {thread_id} iteration {i}\n"
 
     # Write the updated content
-    write_result = fs.write_text(file_path, content, atomic=True)
+    write_result = fs._write_text(file_path, content, atomic=True)
     if write_result.success:
       counter.increment()
 
@@ -2938,7 +2961,7 @@ def run_concurrent_fs_operations(num_threads=10):
   print(f"Completed {counter.count} file operations")
 
   # List the created files
-  result = fs.list_directory(temp_dir)
+  result = fs._list_directory(temp_dir)
   if result.success:
     print(f"Created {len(result.files)} files:")
     for file in result.files:
@@ -2959,47 +2982,49 @@ If you need specialized result objects for new types of operations:
 from quackcore.fs.results import OperationResult
 from pydantic import Field
 
+
 class ImageInfoResult(OperationResult):
-    """Result of an image information operation."""
-    
-    width: int = Field(default=0, description="Image width in pixels")
-    height: int = Field(default=0, description="Image height in pixels")
-    format: str = Field(default="", description="Image format (e.g., PNG, JPEG)")
-    color_mode: str = Field(default="", description="Color mode (e.g., RGB, CMYK)")
-    dpi: tuple = Field(default=(0, 0), description="Resolution in DPI (x, y)")
+  """Result of an image information operation."""
+
+  width: int = Field(default=0, description="Image width in pixels")
+  height: int = Field(default=0, description="Image height in pixels")
+  format: str = Field(default="", description="Image format (e.g., PNG, JPEG)")
+  color_mode: str = Field(default="", description="Color mode (e.g., RGB, CMYK)")
+  dpi: tuple = Field(default=(0, 0), description="Resolution in DPI (x, y)")
+
 
 # Function that uses the custom result
 def get_image_info(path):
-    """Get information about an image file."""
-    from PIL import Image
-    
-    # Check if the file exists
-    info_result = fs.get_file_info(path)
-    if not info_result.success or not info_result.exists:
-        return ImageInfoResult(
-            success=False,
-            path=path,
-            error="File not found"
-        )
-    
-    try:
-        # Open the image
-        with Image.open(path) as img:
-            return ImageInfoResult(
-                success=True,
-                path=path,
-                width=img.width,
-                height=img.height,
-                format=img.format,
-                color_mode=img.mode,
-                dpi=img.info.get('dpi', (0, 0))
-            )
-    except Exception as e:
-        return ImageInfoResult(
-            success=False,
-            path=path,
-            error=f"Error reading image: {str(e)}"
-        )
+  """Get information about an image file."""
+  from PIL import Image
+
+  # Check if the file exists
+  info_result = fs._get_file_info(path)
+  if not info_result.success or not info_result.exists:
+    return ImageInfoResult(
+      success=False,
+      path=path,
+      error="File not found"
+    )
+
+  try:
+    # Open the image
+    with Image.open(path) as img:
+      return ImageInfoResult(
+        success=True,
+        path=path,
+        width=img.width,
+        height=img.height,
+        format=img.format,
+        color_mode=img.mode,
+        dpi=img.info.get('dpi', (0, 0))
+      )
+  except Exception as e:
+    return ImageInfoResult(
+      success=False,
+      path=path,
+      error=f"Error reading image: {str(e)}"
+    )
 ```
 
 ### Creating Custom Utilities
@@ -3023,19 +3048,19 @@ class FileIndexer:
 
   def _load_index(self):
     """Load the existing index or create a new one."""
-    result = fs.read_json(self.index_file)
+    result = fs._read_json(self.index_file)
     if result.success:
       return result.data
     return {"files": {}, "tags": {}}
 
   def _save_index(self):
     """Save the index to disk."""
-    result = fs.write_json(self.index_file, self.index, atomic=True)
+    result = fs._write_json(self.index_file, self.index, atomic=True)
     return result.success
 
   def _compute_file_hash(self, file_path):
     """Compute a hash of the file content."""
-    result = fs.read_binary(file_path)
+    result = fs._read_binary(file_path)
     if not result.success:
       return None
 
@@ -3055,7 +3080,7 @@ class FileIndexer:
         True if successful, False otherwise
     """
     # Get file info
-    info_result = fs.get_file_info(file_path)
+    info_result = fs._get_file_info(file_path)
     if not info_result.success or not info_result.exists:
       return False
 
@@ -3134,14 +3159,14 @@ Here are some common issues you might encounter when using `quackcore.fs` and ho
 
 ```python
 # Bad - uses a relative path that might be relative to the wrong directory
-result = fs.read_text("data/config.txt")
+result = fs._read_text("data/config.txt")
 
 # Good - use absolute paths or join with the correct base directory
 import os
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 config_path = fs._join_path(base_dir, "data", "config.txt")
-result = fs.read_text(config_path)
+result = fs._read_text(config_path)
 ```
 
 #### 2. Unexpected encoding issues with text files
@@ -3152,10 +3177,10 @@ result = fs.read_text(config_path)
 
 ```python
 # Bad - uses default encoding which might not be UTF-8
-result = fs.read_text("international.txt")
+result = fs._read_text("international.txt")
 
 # Good - explicitly specify UTF-8 encoding
-result = fs.read_text("international.txt", encoding="utf-8")
+result = fs._read_text("international.txt", encoding="utf-8")
 ```
 
 #### 3. Cannot create a directory because the parent directory doesn't exist
@@ -3169,7 +3194,7 @@ result = fs.read_text("international.txt", encoding="utf-8")
 fs.create_directory("path/to/nested/directory", exist_ok=True)
 
 # Now create a file in this directory
-fs.write_text("path/to/nested/directory/file.txt", "content")
+fs._write_text("path/to/nested/directory/file.txt", "content")
 ```
 
 #### 4. Not checking for success/error in results
@@ -3180,15 +3205,15 @@ fs.write_text("path/to/nested/directory/file.txt", "content")
 
 ```python
 # Bad - assumes success
-content = fs.read_text("config.txt").content  # May raise AttributeError if read fails
+content = fs._read_text("config.txt").content  # May raise AttributeError if read fails
 
 # Good - checks for success
-result = fs.read_text("config.txt")
+result = fs._read_text("config.txt")
 if result.success:
-    content = result.content
+  content = result.content
 else:
-    print(f"Error: {result.error}")
-    content = None
+  print(f"Error: {result.error}")
+  content = None
 ```
 
 ### Debugging Tips
@@ -3222,7 +3247,7 @@ result = debug_fs.read_text("problem_file.txt")
 
 ```python
 # Print the entire result object
-result = fs.read_text("config.txt")
+result = fs._read_text("config.txt")
 print(f"Result: {result}")
 print(f"Success: {result.success}")
 print(f"Path: {result.path}")
@@ -3256,112 +3281,113 @@ import threading
 from quackcore.fs import service as fs
 from typing import Dict, Callable, Any
 
+
 class FileWatchService:
-    """Service that watches files and runs actions when they change."""
+  """Service that watches files and runs actions when they change."""
+
+  def __init__(self, poll_interval=1.0):
+    """
+    Initialize the file watch service.
     
-    def __init__(self, poll_interval=1.0):
-        """
-        Initialize the file watch service.
-        
-        Args:
-            poll_interval: How often to check for changes (in seconds)
-        """
-        self.poll_interval = poll_interval
-        self.watched_files = {}  # path -> (timestamp, callback)
-        self.running = False
-        self.thread = None
-        self.lock = threading.Lock()
+    Args:
+        poll_interval: How often to check for changes (in seconds)
+    """
+    self.poll_interval = poll_interval
+    self.watched_files = {}  # path -> (timestamp, callback)
+    self.running = False
+    self.thread = None
+    self.lock = threading.Lock()
+
+  def start(self):
+    """Start watching files."""
+    if self.running:
+      return
+
+    self.running = True
+    self.thread = threading.Thread(target=self._watch_loop, daemon=True)
+    self.thread.start()
+
+  def stop(self):
+    """Stop watching files."""
+    self.running = False
+    if self.thread:
+      self.thread.join(timeout=self.poll_interval * 2)
+
+  def watch(self, path: str, callback: Callable[[str], Any]) -> bool:
+    """
+    Add a file to watch.
     
-    def start(self):
-        """Start watching files."""
-        if self.running:
-            return
-        
-        self.running = True
-        self.thread = threading.Thread(target=self._watch_loop, daemon=True)
-        self.thread.start()
+    Args:
+        path: Path to watch
+        callback: Function to call when the file changes
+                 The function will be called with the file path
     
-    def stop(self):
-        """Stop watching files."""
-        self.running = False
-        if self.thread:
-            self.thread.join(timeout=self.poll_interval * 2)
+    Returns:
+        True if the file was added, False otherwise
+    """
+    info = fs._get_file_info(path)
+    if not info.success:
+      return False
+
+    with self.lock:
+      self.watched_files[str(path)] = {
+        'timestamp': info.modified if info.exists else 0,
+        'callback': callback
+      }
+
+    if not self.running:
+      self.start()
+
+    return True
+
+  def unwatch(self, path: str) -> bool:
+    """
+    Remove a file from watching.
     
-    def watch(self, path: str, callback: Callable[[str], Any]) -> bool:
-        """
-        Add a file to watch.
-        
-        Args:
-            path: Path to watch
-            callback: Function to call when the file changes
-                     The function will be called with the file path
-        
-        Returns:
-            True if the file was added, False otherwise
-        """
-        info = fs.get_file_info(path)
-        if not info.success:
-            return False
-        
-        with self.lock:
-            self.watched_files[str(path)] = {
-                'timestamp': info.modified if info.exists else 0,
-                'callback': callback
-            }
-        
-        if not self.running:
-            self.start()
-        
+    Args:
+        path: Path to stop watching
+    
+    Returns:
+        True if the file was removed, False if it wasn't watched
+    """
+    with self.lock:
+      if str(path) in self.watched_files:
+        del self.watched_files[str(path)]
         return True
-    
-    def unwatch(self, path: str) -> bool:
-        """
-        Remove a file from watching.
-        
-        Args:
-            path: Path to stop watching
-        
-        Returns:
-            True if the file was removed, False if it wasn't watched
-        """
+    return False
+
+  def _watch_loop(self):
+    """Main loop for watching files."""
+    while self.running:
+      self._check_files()
+      time.sleep(self.poll_interval)
+
+  def _check_files(self):
+    """Check all watched files for changes."""
+    with self.lock:
+      # Make a copy of the watched files to avoid modification during iteration
+      files_to_check = self.watched_files.copy()
+
+    for path, info in files_to_check.items():
+      file_info = fs._get_file_info(path)
+      if not file_info.success:
+        continue
+
+      last_timestamp = info['timestamp']
+      current_timestamp = file_info.modified if file_info.exists else 0
+
+      # Check if the file has changed
+      if current_timestamp > last_timestamp:
+        # Update the timestamp
         with self.lock:
-            if str(path) in self.watched_files:
-                del self.watched_files[str(path)]
-                return True
-        return False
-    
-    def _watch_loop(self):
-        """Main loop for watching files."""
-        while self.running:
-            self._check_files()
-            time.sleep(self.poll_interval)
-    
-    def _check_files(self):
-        """Check all watched files for changes."""
-        with self.lock:
-            # Make a copy of the watched files to avoid modification during iteration
-            files_to_check = self.watched_files.copy()
-        
-        for path, info in files_to_check.items():
-            file_info = fs.get_file_info(path)
-            if not file_info.success:
-                continue
-            
-            last_timestamp = info['timestamp']
-            current_timestamp = file_info.modified if file_info.exists else 0
-            
-            # Check if the file has changed
-            if current_timestamp > last_timestamp:
-                # Update the timestamp
-                with self.lock:
-                    if path in self.watched_files:  # Check again, it might have been unwatched
-                        self.watched_files[path]['timestamp'] = current_timestamp
-                
-                # Call the callback
-                try:
-                    info['callback'](path)
-                except Exception as e:
-                    print(f"Error in file change callback for {path}: {e}")
+          if path in self.watched_files:  # Check again, it might have been unwatched
+            self.watched_files[path]['timestamp'] = current_timestamp
+
+        # Call the callback
+        try:
+          info['callback'](path)
+        except Exception as e:
+          print(f"Error in file change callback for {path}: {e}")
 ```
 
 ### CSV File Utilities
@@ -3374,112 +3400,115 @@ import csv
 from io import StringIO
 from typing import List, Dict, Any, Union
 
+
 def read_csv(
-    path: str,
-    delimiter: str = ',',
-    has_header: bool = True
+        path: str,
+        delimiter: str = ',',
+        has_header: bool = True
 ) -> Union[List[Dict[str, str]], List[List[str]]]:
-    """
-    Read a CSV file and return its contents.
-    
-    Args:
-        path: Path to the CSV file
-        delimiter: Field delimiter
-        has_header: Whether the CSV has a header row
-    
-    Returns:
-        If has_header is True, returns a list of dictionaries (one per row)
-        If has_header is False, returns a list of lists (one per row)
-    """
-    result = fs.read_text(path)
-    if not result.success:
-        raise IOError(f"Failed to read CSV file: {result.error}")
-    
-    # Parse the CSV
-    csv_content = result.content
-    csv_file = StringIO(csv_content)
-    
-    if has_header:
-        reader = csv.DictReader(csv_file, delimiter=delimiter)
-        return list(reader)
-    else:
-        reader = csv.reader(csv_file, delimiter=delimiter)
-        return list(reader)
+  """
+  Read a CSV file and return its contents.
+  
+  Args:
+      path: Path to the CSV file
+      delimiter: Field delimiter
+      has_header: Whether the CSV has a header row
+  
+  Returns:
+      If has_header is True, returns a list of dictionaries (one per row)
+      If has_header is False, returns a list of lists (one per row)
+  """
+  result = fs._read_text(path)
+  if not result.success:
+    raise IOError(f"Failed to read CSV file: {result.error}")
+
+  # Parse the CSV
+  csv_content = result.content
+  csv_file = StringIO(csv_content)
+
+  if has_header:
+    reader = csv.DictReader(csv_file, delimiter=delimiter)
+    return list(reader)
+  else:
+    reader = csv.reader(csv_file, delimiter=delimiter)
+    return list(reader)
+
 
 def write_csv(
-    path: str,
-    data: Union[List[Dict[str, Any]], List[List[Any]]],
-    fieldnames: List[str] = None,
-    delimiter: str = ',',
-    quoting: int = csv.QUOTE_MINIMAL
+        path: str,
+        data: Union[List[Dict[str, Any]], List[List[Any]]],
+        fieldnames: List[str] = None,
+        delimiter: str = ',',
+        quoting: int = csv.QUOTE_MINIMAL
 ) -> bool:
-    """
-    Write data to a CSV file.
-    
-    Args:
-        path: Path to the CSV file
-        data: Data to write (list of dicts or list of lists)
-        fieldnames: Column names (required for list of dicts)
-        delimiter: Field delimiter
-        quoting: CSV quoting style
-    
-    Returns:
-        True if successful, False otherwise
-    """
-    csv_file = StringIO()
-    
-    if data and isinstance(data[0], dict):
-        # List of dictionaries
-        if not fieldnames:
-            # If fieldnames not provided, use keys from first dict
-            fieldnames = list(data[0].keys())
-        
-        writer = csv.DictWriter(
-            csv_file,
-            fieldnames=fieldnames,
-            delimiter=delimiter,
-            quoting=quoting
-        )
-        writer.writeheader()
-        writer.writerows(data)
-    else:
-        # List of lists
-        writer = csv.writer(
-            csv_file,
-            delimiter=delimiter,
-            quoting=quoting
-        )
-        writer.writerows(data)
-    
-    # Get the CSV content
-    csv_content = csv_file.getvalue()
-    
-    # Write the file
-    result = fs.write_text(path, csv_content)
-    return result.success
+  """
+  Write data to a CSV file.
+  
+  Args:
+      path: Path to the CSV file
+      data: Data to write (list of dicts or list of lists)
+      fieldnames: Column names (required for list of dicts)
+      delimiter: Field delimiter
+      quoting: CSV quoting style
+  
+  Returns:
+      True if successful, False otherwise
+  """
+  csv_file = StringIO()
+
+  if data and isinstance(data[0], dict):
+    # List of dictionaries
+    if not fieldnames:
+      # If fieldnames not provided, use keys from first dict
+      fieldnames = list(data[0].keys())
+
+    writer = csv.DictWriter(
+      csv_file,
+      fieldnames=fieldnames,
+      delimiter=delimiter,
+      quoting=quoting
+    )
+    writer.writeheader()
+    writer.writerows(data)
+  else:
+    # List of lists
+    writer = csv.writer(
+      csv_file,
+      delimiter=delimiter,
+      quoting=quoting
+    )
+    writer.writerows(data)
+
+  # Get the CSV content
+  csv_content = csv_file.getvalue()
+
+  # Write the file
+  result = fs._write_text(path, csv_content)
+  return result.success
+
 
 def csv_to_json(csv_path: str, json_path: str, delimiter: str = ',') -> bool:
-    """
-    Convert a CSV file to JSON.
-    
-    Args:
-        csv_path: Path to the CSV file
-        json_path: Path to write the JSON file
-        delimiter: CSV field delimiter
-    
-    Returns:
-        True if successful, False otherwise
-    """
-    try:
-        # Read the CSV
-        data = read_csv(csv_path, delimiter=delimiter, has_header=True)
-        
-        # Write as JSON
-        result = fs.write_json(json_path, data, indent=2)
-        return result.success
-    except Exception as e:
-        print(f"Error converting CSV to JSON: {e}")
-        return False
+  """
+  Convert a CSV file to JSON.
+  
+  Args:
+      csv_path: Path to the CSV file
+      json_path: Path to write the JSON file
+      delimiter: CSV field delimiter
+  
+  Returns:
+      True if successful, False otherwise
+  """
+  try:
+    # Read the CSV
+    data = read_csv(csv_path, delimiter=delimiter, has_header=True)
+
+    # Write as JSON
+    result = fs._write_json(json_path, data, indent=2)
+    return result.success
+  except Exception as e:
+    print(f"Error converting CSV to JSON: {e}")
+    return False
 ```
 
 ### Directory Synchronization
@@ -3513,12 +3542,12 @@ class DirectorySynchronizer:
         Dictionary with lists of files to create, update, and delete
     """
     # Get source files
-    source_result = fs.find_files(self.source_dir, "*", recursive=True)
+    source_result = fs._find_files(self.source_dir, "*", recursive=True)
     if not source_result.success:
       raise IOError(f"Failed to list source directory: {source_result.error}")
 
     # Get target files
-    target_result = fs.find_files(self.target_dir, "*", recursive=True)
+    target_result = fs._find_files(self.target_dir, "*", recursive=True)
     if not target_result.success:
       raise IOError(f"Failed to list target directory: {target_result.error}")
 
@@ -3536,8 +3565,8 @@ class DirectorySynchronizer:
       source_path = fs._join_path(self.source_dir, rel_path)
       target_path = fs._join_path(self.target_dir, rel_path)
 
-      source_info = fs.get_file_info(source_path)
-      target_info = fs.get_file_info(target_path)
+      source_info = fs._get_file_info(source_path)
+      target_info = fs._get_file_info(target_path)
 
       if (source_info.success and target_info.success and
               source_info.modified > target_info.modified):
@@ -3628,149 +3657,151 @@ import os
 import random
 from datetime import datetime, timedelta
 
+
 class FileLock:
+  """
+  File-based locking utility.
+  
+  This implements a simple advisory locking system using a lock file.
+  It's safe to use across multiple processes but is not thread-safe 
+  within the same process (use threading.Lock for that).
+  """
+
+  def __init__(self, path, timeout=60, retry_delay=0.1):
     """
-    File-based locking utility.
+    Initialize the file lock.
     
-    This implements a simple advisory locking system using a lock file.
-    It's safe to use across multiple processes but is not thread-safe 
-    within the same process (use threading.Lock for that).
+    Args:
+        path: Path to the file to lock. The lock file will be path + ".lock"
+        timeout: Maximum time to wait for the lock (in seconds)
+        retry_delay: Time to wait between lock attempts (in seconds)
     """
+    self.file_path = path
+    self.lock_path = str(path) + ".lock"
+    self.timeout = timeout
+    self.retry_delay = retry_delay
+    self.locked = False
+    self.owner = f"{os.getpid()}-{random.randint(1000, 9999)}"
+
+  def acquire(self):
+    """
+    Acquire the lock.
     
-    def __init__(self, path, timeout=60, retry_delay=0.1):
-        """
-        Initialize the file lock.
-        
-        Args:
-            path: Path to the file to lock. The lock file will be path + ".lock"
-            timeout: Maximum time to wait for the lock (in seconds)
-            retry_delay: Time to wait between lock attempts (in seconds)
-        """
-        self.file_path = path
-        self.lock_path = str(path) + ".lock"
-        self.timeout = timeout
-        self.retry_delay = retry_delay
-        self.locked = False
-        self.owner = f"{os.getpid()}-{random.randint(1000, 9999)}"
+    Returns:
+        True if the lock was acquired, False otherwise
     
-    def acquire(self):
-        """
-        Acquire the lock.
-        
-        Returns:
-            True if the lock was acquired, False otherwise
-        
-        Raises:
-            TimeoutError: If the lock could not be acquired within the timeout
-        """
-        if self.locked:
-            return True
-        
-        start_time = time.time()
-        
-        while True:
-            # Check if we've exceeded the timeout
-            if time.time() - start_time > self.timeout:
-                raise TimeoutError(f"Could not acquire lock for {self.file_path} within {self.timeout} seconds")
-            
-            # Try to create the lock file
-            lock_info = self._read_lock_info()
-            
-            if lock_info:
-                # Lock exists, check if it's stale
-                if self._is_lock_stale(lock_info):
-                    # Lock is stale, try to break it
-                    self._break_lock()
-                else:
-                    # Lock is valid, wait and retry
-                    time.sleep(self.retry_delay)
-                    continue
-            
-            # Try to create the lock
-            if self._create_lock():
-                self.locked = True
-                return True
-            
-            # If we get here, someone else created the lock just before us
-            time.sleep(self.retry_delay)
-    
-    def release(self):
-        """Release the lock."""
-        if not self.locked:
-            return
-        
-        # Only delete the lock file if we own it
-        lock_info = self._read_lock_info()
-        if lock_info and lock_info.get("owner") == self.owner:
-            fs.delete(self.lock_path)
-        
-        self.locked = False
-    
-    def _create_lock(self):
-        """Try to create the lock file."""
-        lock_data = {
-            "owner": self.owner,
-            "created": datetime.now().isoformat(),
-            "pid": os.getpid()
-        }
-        
-        # Write the lock file
-        result = fs.write_json(self.lock_path, lock_data, atomic=True)
-        return result.success
-    
-    def _read_lock_info(self):
-        """Read information from the lock file."""
-        result = fs.read_json(self.lock_path)
-        if result.success:
-            return result.data
-        return None
-    
-    def _is_lock_stale(self, lock_info):
-        """Check if a lock is stale (older than timeout)."""
-        if not lock_info or "created" not in lock_info:
-            return True
-        
-        try:
-            created = datetime.fromisoformat(lock_info["created"])
-            now = datetime.now()
-            
-            # Lock is stale if it's older than the timeout
-            return (now - created) > timedelta(seconds=self.timeout)
-        except Exception:
-            # If we can't parse the date, consider the lock stale
-            return True
-    
-    def _break_lock(self):
-        """Break a stale lock."""
-        fs.delete(self.lock_path)
-    
-    def __enter__(self):
-        """Context manager protocol: acquire the lock."""
-        self.acquire()
-        return self
-    
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager protocol: release the lock."""
-        self.release()
+    Raises:
+        TimeoutError: If the lock could not be acquired within the timeout
+    """
+    if self.locked:
+      return True
+
+    start_time = time.time()
+
+    while True:
+      # Check if we've exceeded the timeout
+      if time.time() - start_time > self.timeout:
+        raise TimeoutError(f"Could not acquire lock for {self.file_path} within {self.timeout} seconds")
+
+      # Try to create the lock file
+      lock_info = self._read_lock_info()
+
+      if lock_info:
+        # Lock exists, check if it's stale
+        if self._is_lock_stale(lock_info):
+          # Lock is stale, try to break it
+          self._break_lock()
+        else:
+          # Lock is valid, wait and retry
+          time.sleep(self.retry_delay)
+          continue
+
+      # Try to create the lock
+      if self._create_lock():
+        self.locked = True
+        return True
+
+      # If we get here, someone else created the lock just before us
+      time.sleep(self.retry_delay)
+
+  def release(self):
+    """Release the lock."""
+    if not self.locked:
+      return
+
+    # Only delete the lock file if we own it
+    lock_info = self._read_lock_info()
+    if lock_info and lock_info.get("owner") == self.owner:
+      fs.delete(self.lock_path)
+
+    self.locked = False
+
+  def _create_lock(self):
+    """Try to create the lock file."""
+    lock_data = {
+      "owner": self.owner,
+      "created": datetime.now().isoformat(),
+      "pid": os.getpid()
+    }
+
+    # Write the lock file
+    result = fs._write_json(self.lock_path, lock_data, atomic=True)
+    return result.success
+
+  def _read_lock_info(self):
+    """Read information from the lock file."""
+    result = fs._read_json(self.lock_path)
+    if result.success:
+      return result.data
+    return None
+
+  def _is_lock_stale(self, lock_info):
+    """Check if a lock is stale (older than timeout)."""
+    if not lock_info or "created" not in lock_info:
+      return True
+
+    try:
+      created = datetime.fromisoformat(lock_info["created"])
+      now = datetime.now()
+
+      # Lock is stale if it's older than the timeout
+      return (now - created) > timedelta(seconds=self.timeout)
+    except Exception:
+      # If we can't parse the date, consider the lock stale
+      return True
+
+  def _break_lock(self):
+    """Break a stale lock."""
+    fs.delete(self.lock_path)
+
+  def __enter__(self):
+    """Context manager protocol: acquire the lock."""
+    self.acquire()
+    return self
+
+  def __exit__(self, exc_type, exc_val, exc_tb):
+    """Context manager protocol: release the lock."""
+    self.release()
+
 
 # Example usage:
 def update_shared_file(path, data):
-    """Update a file that might be accessed by multiple processes."""
-    with FileLock(path):
-        # Read the current content
-        result = fs.read_text(path)
-        if result.success:
-            content = result.content
-        else:
-            content = ""
-        
-        # Update the content
-        new_content = content + data
-        
-        # Write back
-        fs.write_text(path, new_content)
-        
-        return True
+  """Update a file that might be accessed by multiple processes."""
+  with FileLock(path):
+    # Read the current content
+    result = fs._read_text(path)
+    if result.success:
+      content = result.content
+    else:
+      content = ""
+
+    # Update the content
+    new_content = content + data
+
+    # Write back
+    fs._write_text(path, new_content)
+
+    return True
 ```
 
 ## Conclusion

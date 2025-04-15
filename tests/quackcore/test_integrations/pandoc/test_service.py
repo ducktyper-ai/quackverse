@@ -198,7 +198,7 @@ class TestPandocService:
                 exists=True,
                 is_dir=True,
             )
-            mock_fs.service.get_file_info.return_value = dir_info
+            mock_fs.service._get_file_info.return_value = dir_info
 
             # Mock _create_conversion_tasks
             with patch.object(service, "_create_conversion_tasks") as mock_create_tasks:
@@ -274,7 +274,7 @@ class TestPandocService:
             exists=False,
             is_dir=False,
         )
-        mock_fs.service.get_file_info.return_value = dir_info
+        mock_fs.service._get_file_info.return_value = dir_info
 
         # Ensure convert_directory doesn't proceed to finding files
         with patch.object(service, "_determine_conversion_params") as mock_determine:
@@ -474,7 +474,7 @@ class TestPandocService:
                     is_file=True,
                     is_dir=True,  # Important for directory validation
                 )
-                mock_fs.service.get_file_info.return_value = file_info
+                mock_fs.service._get_file_info.return_value = file_info
 
                 # Setup default behavior for directory creation
                 dir_result = OperationResult(

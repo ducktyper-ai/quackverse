@@ -137,7 +137,7 @@ def handle_attachment(
 
         # Handle filename collisions: if the file already exists, append a counter
         counter = 1
-        file_info = fs.get_file_info(file_path)
+        file_info = fs._get_file_info(file_path)
         while file_info.success and file_info.exists:
             # Split file_path into directory and filename components using fs.split_path
             path_parts = fs._split_path(file_path)
@@ -147,7 +147,7 @@ def handle_attachment(
             ext = f".{filename_parts[1]}" if len(filename_parts) > 1 else ""
             new_filename = f"{base_name}-{counter}{ext}"
             file_path = fs._join_path(storage_path, new_filename)
-            file_info = fs.get_file_info(file_path)
+            file_info = fs._get_file_info(file_path)
             counter += 1
 
         # Ensure the directory where the file should be saved exists.

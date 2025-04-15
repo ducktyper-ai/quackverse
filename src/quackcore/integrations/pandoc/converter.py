@@ -222,8 +222,8 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             True if validation passes, otherwise False.
         """
         try:
-            output_info = fs.get_file_info(output_path)
-            input_info = fs.get_file_info(input_path)
+            output_info = fs._get_file_info(output_path)
+            input_info = fs._get_file_info(input_path)
             if not output_info.success or not output_info.exists:
                 logger.error(f"Output file does not exist: {output_path}")
                 return False
@@ -243,7 +243,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             ext = fs._get_extension(output_path)
             if ext in ("md", "markdown"):
                 try:
-                    read_result = fs.read_text(output_path, encoding="utf-8")
+                    read_result = fs._read_text(output_path, encoding="utf-8")
                     if not read_result.success:
                         logger.error(
                             f"Failed to read markdown file: {read_result.error}"

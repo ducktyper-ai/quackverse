@@ -109,7 +109,7 @@ class TestPandocUtilities:
             QuackIntegrationError: If the file does not exist
         """
         # Use the global service instance
-        file_info_result = fs.get_file_info(path)
+        file_info_result = fs._get_file_info(path)
         if not file_info_result.success or not file_info_result.exists:
             logger.error(f"File not found: {path}")
             raise QuackIntegrationError(f"File not found: {path}")

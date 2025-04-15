@@ -290,7 +290,7 @@ Tags: {", ".join(s.tags)}
 
             # Determine output format based on file extension.
             if str(path).lower().endswith(".json"):
-                result = fs.write_json(path, export_data, indent=2)
+                result = fs._write_json(path, export_data, indent=2)
                 if not result.success:
                     raise IOError(f"Failed to export prompt: {result.error}")
             else:
@@ -306,11 +306,11 @@ Tags: {", ".join(s.tags)}
                     ) as temp_file:
                         temp_path = temp_file.name
 
-                    json_result = fs.write_json(
+                    json_result = fs._write_json(
                         temp_path, export_data["metadata"], indent=2
                     )
                     if json_result.success:
-                        read_result = fs.read_text(temp_path)
+                        read_result = fs._read_text(temp_path)
                         if read_result.success:
                             content += f"{read_result.content}\n\n"
                             fs.delete(temp_path, missing_ok=True)
@@ -326,7 +326,7 @@ Tags: {", ".join(s.tags)}
 
                 content += f"# Explanation\n\n{export_data['explanation']}\n"
 
-                result = fs.write_text(path, content)
+                result = fs._write_text(path, content)
                 if not result.success:
                     raise IOError(f"Failed to export prompt: {result.error}")
 

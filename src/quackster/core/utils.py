@@ -100,13 +100,13 @@ def load_progress() -> UserProgress:
     """
     file_path = get_progress_file_path()
 
-    result = fs.get_file_info(file_path)
+    result = fs._get_file_info(file_path)
     if not result.success or not result.exists:
         logger.debug(f"Progress file not found at {file_path}, creating new progress")
         return create_new_progress()
 
     try:
-        result = fs.read_json(file_path)
+        result = fs._read_json(file_path)
         if not result.success:
             logger.warning(f"Failed to read progress file: {result.error}")
             return create_new_progress()
@@ -137,7 +137,7 @@ def save_progress(progress: UserProgress) -> bool:
     data = progress.model_dump()
 
     try:
-        result = fs.write_json(file_path, data)
+        result = fs._write_json(file_path, data)
         if not result.success:
             logger.error(f"Failed to save progress file: {result.error}")
             return False
@@ -172,7 +172,7 @@ def reset_progress() -> bool:
         True if reset successfully; False otherwise.
     """
     file_path = get_progress_file_path()
-    result = fs.get_file_info(file_path)
+    result = fs._get_file_info(file_path)
     if not result.success or not result.exists:
         logger.debug(f"No progress file to reset at {file_path}")
         return True
@@ -199,7 +199,7 @@ def backup_progress(backup_name: str = None) -> bool:
     import datetime
 
     file_path = get_progress_file_path()
-    result = fs.get_file_info(file_path)
+    result = fs._get_file_info(file_path)
     if not result.success or not result.exists:
         logger.debug(f"No progress file to backup at {file_path}")
         return False

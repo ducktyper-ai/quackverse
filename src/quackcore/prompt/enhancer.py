@@ -49,7 +49,7 @@ def _load_config():
         config_paths = ["config/prompt_enhancer.yaml", "prompt_enhancer.yaml"]
 
         for path in config_paths:
-            result = fs.read_yaml(path)
+            result = fs._read_yaml(path)
             if result.success:
                 enhancer_config = result.data
                 logger.debug(f"Loaded enhancer config from {path}")

@@ -11,7 +11,7 @@ from quackcore.errors import (
     QuackIOError,
     QuackValidationError,
 )
-from quackcore.fs.results import DataResult, ReadResult, WriteResult
+from quackcore.fs.results import DataResult, WriteResult
 from quackcore.logging import get_logger
 
 # Set up logger
@@ -29,19 +29,19 @@ except ImportError:
 class SerializationOperationsMixin:
     """Serialization operations mixin class."""
 
-    def resolve_path(self, path: str | Path) -> Path:
+    def _resolve_path(self, path: str | Path) -> Path:
         """Resolve a path relative to the base directory."""
         # This method is implemented in the main class
         # It's defined here for type checking
         raise NotImplementedError("This method should be overridden")
 
-    def read_text(self, path: str | Path, encoding: str = "utf-8"):
+    def _read_text(self, path: str | Path, encoding: str = "utf-8"):
         """Read text from a file."""
         # This method is implemented in ReadOperationsMixin
         # It's defined here for type checking
         raise NotImplementedError("This method should be overridden")
 
-    def write_text(
+    def _write_text(
         self, path: str | Path, content: str, encoding: str = "utf-8", **kwargs
     ):
         """Write text to a file."""
@@ -52,7 +52,7 @@ class SerializationOperationsMixin:
     # -------------------------------
     # YAML operations
     # -------------------------------
-    def read_yaml(self, path: str | Path) -> DataResult[dict]:
+    def _read_yaml(self, path: str | Path) -> DataResult[dict]:
         """
         Read YAML file and parse its contents.
 
@@ -67,17 +67,17 @@ class SerializationOperationsMixin:
             logger.error(error_msg)
             return DataResult(
                 success=False,
-                path=self.resolve_path(path),
+                path=self._resolve_path(path),
                 data={},
                 format="yaml",
                 error=error_msg,
             )
 
-        resolved_path = self.resolve_path(path)
+        resolved_path = self._resolve_path(path)
         logger.debug(f"Reading YAML from: {resolved_path}")
 
         try:
-            text_result = self.read_text(resolved_path)
+            text_result = self._read_text(resolved_path)
             if not text_result.success:
                 logger.error(f"Failed to read YAML file: {text_result.error}")
                 raise QuackIOError(text_result.error, resolved_path)
@@ -142,7 +142,7 @@ class SerializationOperationsMixin:
                 error=str(e),
             )
 
-    def write_yaml(
+    def _write_yaml(
         self, path: str | Path, data: dict, atomic: bool = True
     ) -> WriteResult:
         """
@@ -160,10 +160,10 @@ class SerializationOperationsMixin:
             error_msg = "PyYAML library not available. Cannot write YAML file."
             logger.error(error_msg)
             return WriteResult(
-                success=False, path=self.resolve_path(path), error=error_msg
+                success=False, path=self._resolve_path(path), error=error_msg
             )
 
-        resolved_path = self.resolve_path(path)
+        resolved_path = self._resolve_path(path)
         logger.debug(f"Writing YAML to: {resolved_path}, atomic={atomic}")
 
         try:
@@ -184,7 +184,7 @@ class SerializationOperationsMixin:
                 ) from e
 
             logger.debug(f"Writing YAML content to {resolved_path}")
-            return self.write_text(resolved_path, yaml_content, atomic=atomic)
+            return self._write_text(resolved_path, yaml_content, atomic=atomic)
         except (QuackFormatError, QuackIOError) as e:
             logger.error(f"Error writing YAML file {resolved_path}: {str(e)}")
             return WriteResult(success=False, path=resolved_path, error=str(e))
@@ -197,7 +197,7 @@ class SerializationOperationsMixin:
     # -------------------------------
     # JSON operations
     # -------------------------------
-    def read_json(self, path: str | Path) -> DataResult[dict]:
+    def _read_json(self, path: str | Path) -> DataResult[dict]:
         """
         Read JSON file and parse its contents.
 
@@ -207,11 +207,11 @@ class SerializationOperationsMixin:
         Returns:
             DataResult with parsed JSON data
         """
-        resolved_path = self.resolve_path(path)
+        resolved_path = self._resolve_path(path)
         logger.debug(f"Reading JSON from: {resolved_path}")
 
         try:
-            text_result = self.read_text(resolved_path)
+            text_result = self._read_text(resolved_path)
             if not text_result.success:
                 logger.error(f"Failed to read JSON file: {text_result.error}")
                 raise QuackIOError(text_result.error, resolved_path)
@@ -273,7 +273,7 @@ class SerializationOperationsMixin:
                 error=str(e),
             )
 
-    def write_json(
+    def _write_json(
         self,
         path: str | Path,
         data: dict,
@@ -292,7 +292,7 @@ class SerializationOperationsMixin:
         Returns:
             WriteResult with operation status
         """
-        resolved_path = self.resolve_path(path)
+        resolved_path = self._resolve_path(path)
         logger.debug(
             f"Writing JSON to: {resolved_path}, atomic={atomic}, indent={indent}"
         )
@@ -315,7 +315,7 @@ class SerializationOperationsMixin:
                 ) from e
 
             logger.debug(f"Writing JSON content to {resolved_path}")
-            return self.write_text(resolved_path, json_content, atomic=atomic)
+            return self._write_text(resolved_path, json_content, atomic=atomic)
         except (QuackFormatError, QuackIOError) as e:
             logger.error(f"Error writing JSON file {resolved_path}: {str(e)}")
             return WriteResult(success=False, path=resolved_path, error=str(e))

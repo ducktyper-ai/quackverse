@@ -468,8 +468,8 @@ def setup_mock_file_info_for_tests(mock_fs, size: int = 512) -> None:
     )
 
     # Set up the file_info attribute with a concrete value
-    mock_fs.get_file_info.return_value = file_info
-    mock_fs.service.get_file_info.return_value = file_info
+    mock_fs._get_file_info.return_value = file_info
+    mock_fs.service._get_file_info.return_value = file_info
 
 
 def setup_mock_file_info_with_size(mock_fs, path: str | Path, size: int) -> None:
@@ -491,8 +491,8 @@ def setup_mock_file_info_with_size(mock_fs, path: str | Path, size: int) -> None
     )
 
     # Set up the file_info return value with a concrete value
-    mock_fs.service.get_file_info.return_value = file_info
-    mock_fs.get_file_info.return_value = file_info
+    mock_fs.service._get_file_info.return_value = file_info
+    mock_fs._get_file_info.return_value = file_info
 
 
 def patch_operations_module():

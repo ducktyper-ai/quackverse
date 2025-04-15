@@ -12,7 +12,7 @@ from quackcore.logging import get_logger
 logger = get_logger(__name__)
 
 
-def resolve_path(base_dir: Path, path: str | Path) -> Path:
+def _resolve_path(base_dir: Path, path: str | Path) -> Path:
     """
     Resolve a path relative to the base directory.
 
@@ -34,7 +34,7 @@ def resolve_path(base_dir: Path, path: str | Path) -> Path:
     return resolved
 
 
-def initialize_mime_types() -> None:
+def _initialize_mime_types() -> None:
     """Initialize MIME types database."""
     mimetypes.init()
     logger.debug("MIME types database initialized")

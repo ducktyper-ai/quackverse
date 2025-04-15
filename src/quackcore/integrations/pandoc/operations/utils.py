@@ -229,7 +229,7 @@ def get_file_info(path: str, format_hint: str | None = None) -> FileInfo:
     Raises:
         QuackIntegrationError: If the file does not exist.
     """
-    file_info = fs.get_file_info(path)
+    file_info = fs._get_file_info(path)
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(f"File not found: {path}")
     try:

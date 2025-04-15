@@ -15,13 +15,13 @@ logger = get_logger(__name__)
 class ReadOperationsMixin:
     """File reading operations mixin class."""
 
-    def resolve_path(self, path: str | Path) -> Path:
+    def _resolve_path(self, path: str | Path) -> Path:
         """Resolve a path relative to the base directory."""
         # This method is implemented in the main class
         # It's defined here for type checking
         raise NotImplementedError("This method should be overridden")
 
-    def read_text(self, path: str | Path, encoding: str = "utf-8") -> ReadResult[str]:
+    def _read_text(self, path: str | Path, encoding: str = "utf-8") -> ReadResult[str]:
         """
         Read text from a file.
 
@@ -32,7 +32,7 @@ class ReadOperationsMixin:
         Returns:
             ReadResult with the file content as text
         """
-        resolved_path = self.resolve_path(path)
+        resolved_path = self._resolve_path(path)
         logger.debug(f"Reading text from: {resolved_path} with encoding: {encoding}")
 
         try:
@@ -77,7 +77,7 @@ class ReadOperationsMixin:
                 error=str(e),
             )
 
-    def read_binary(self, path: str | Path) -> ReadResult[bytes]:
+    def _read_binary(self, path: str | Path) -> ReadResult[bytes]:
         """
         Read binary data from a file.
 
@@ -87,7 +87,7 @@ class ReadOperationsMixin:
         Returns:
             ReadResult with the file content as bytes
         """
-        resolved_path = self.resolve_path(path)
+        resolved_path = self._resolve_path(path)
         logger.debug(f"Reading binary data from: {resolved_path}")
 
         try:

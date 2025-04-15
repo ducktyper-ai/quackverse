@@ -411,7 +411,7 @@ class StudentRoster:
             QuackValidationError: If the file format is invalid.
         """
         resolved_path = cls._resolve_file_path(file_path)
-        result = fs.read_yaml(resolved_path)
+        result = fs._read_yaml(resolved_path)
         if not result.success:
             raise QuackFileNotFoundError(
                 resolved_path,
@@ -446,7 +446,7 @@ class StudentRoster:
         data = {
             "students": [student.model_dump() for student in self.students.values()]
         }
-        result = fs.write_yaml(resolved_path, data)
+        result = fs._write_yaml(resolved_path, data)
         if not result.success:
             logger.error(
                 f"Error saving student roster to {resolved_path}: {result.error}"

@@ -484,7 +484,7 @@ class TestStudentRoster:
                 },
             ]
         }
-        mock_fs.read_yaml.return_value = MagicMock(success=True, data=students_data)
+        mock_fs._read_yaml.return_value = MagicMock(success=True, data=students_data)
 
         # Load from file
         with patch.object(Student, "sync_with_progress"):
@@ -524,7 +524,7 @@ class TestStudentRoster:
         file_path = "/path/to/students.yaml"
 
         # Mock read_yaml to return failure
-        mock_fs.read_yaml.return_value = MagicMock(
+        mock_fs._read_yaml.return_value = MagicMock(
             success=False, error="File not found"
         )
 
@@ -540,4 +540,4 @@ class TestStudentRoster:
 
         # Mock read_yaml to return success with invalid data
         invalid_data = {"not_students": []}
-        mock_fs.read_yaml.return_value = MagicMock(success=False, data=invalid_data)
+        mock_fs._read_yaml.return_value = MagicMock(success=False, data=invalid_data)

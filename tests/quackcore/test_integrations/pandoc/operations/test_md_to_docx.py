@@ -55,7 +55,7 @@ class TestMarkdownToDocxOperations:
                 is_file=True,
                 size=512,  # Use 512 as expected by the test
             )
-            mock_fs.service.get_file_info.return_value = file_info
+            mock_fs.service._get_file_info.return_value = file_info
 
             # Setup default behavior for directory creation
             dir_result = OperationResult(
@@ -72,7 +72,7 @@ class TestMarkdownToDocxOperations:
                 content="# Test\n\nContent",
                 encoding="utf-8",
             )
-            mock_fs.service.read_text.return_value = read_result
+            mock_fs.service._read_text.return_value = read_result
 
             # Setup default behavior for write_text
             write_result = WriteResult(
@@ -95,11 +95,11 @@ class TestMarkdownToDocxOperations:
         original_size = _validate_markdown_input(markdown_path)
 
         assert original_size == 512
-        mock_fs.service.get_file_info.assert_called_with(markdown_path)
-        mock_fs.service.read_text.assert_called_with(markdown_path, encoding="utf-8")
+        mock_fs.service._get_file_info.assert_called_with(markdown_path)
+        mock_fs.service._read_text.assert_called_with(markdown_path, encoding="utf-8")
 
         # Test with file not found
-        mock_fs.service.get_file_info.return_value.exists = False
+        mock_fs.service._get_file_info.return_value.exists = False
 
         with pytest.raises(QuackIntegrationError) as excinfo:
             _validate_markdown_input(markdown_path)
@@ -107,8 +107,8 @@ class TestMarkdownToDocxOperations:
         assert "Input file not found" in str(excinfo.value)
 
         # Test with empty content
-        mock_fs.service.get_file_info.return_value.exists = True
-        mock_fs.service.read_text.return_value.content = ""
+        mock_fs.service._get_file_info.return_value.exists = True
+        mock_fs.service._read_text.return_value.content = ""
 
         with pytest.raises(QuackIntegrationError) as excinfo:
             _validate_markdown_input(markdown_path)
@@ -116,7 +116,7 @@ class TestMarkdownToDocxOperations:
         assert "Markdown file is empty" in str(excinfo.value)
 
         # Test with read error
-        mock_fs.service.read_text.side_effect = Exception("Read error")
+        mock_fs.service._read_text.side_effect = Exception("Read error")
 
         with pytest.raises(QuackIntegrationError) as excinfo:
             _validate_markdown_input(markdown_path)
@@ -195,10 +195,10 @@ class TestMarkdownToDocxOperations:
 
             assert conversion_time == 2.0
             assert output_size == 512  # From mock_fs.service.get_file_info
-            mock_fs.service.get_file_info.assert_called_with(output_path)
+            mock_fs.service._get_file_info.assert_called_with(output_path)
 
         # Test with file info error
-        mock_fs.service.get_file_info.return_value.success = False
+        mock_fs.service._get_file_info.return_value.success = False
 
         with pytest.raises(QuackIntegrationError) as excinfo:
             _get_conversion_output(output_path, start_time)
@@ -436,7 +436,7 @@ class TestMarkdownToDocxOperations:
                 is_file=True,
                 size=10240,  # Use the expected size for the test
             )
-            patched_fs.service.get_file_info.return_value = output_info
+            patched_fs.service._get_file_info.return_value = output_info
 
             # Make sure output file seems to exist
             patched_fs.path_exists = lambda p: True  # Simple mock for path_exists
@@ -485,7 +485,7 @@ class TestMarkdownToDocxOperations:
                                 )
 
         # Test with output file not found
-        mock_fs.service.get_file_info.return_value.exists = False
+        mock_fs.service._get_file_info.return_value.exists = False
 
         validation_errors = validate_conversion(
             output_path, input_path, original_size, config
@@ -495,7 +495,7 @@ class TestMarkdownToDocxOperations:
         assert "Output file does not exist" in validation_errors[0]
 
         # Test with file size check failure
-        mock_fs.service.get_file_info.return_value.exists = True
+        mock_fs.service._get_file_info.return_value.exists = True
 
         with patch(
             "quackcore.integrations.pandoc.operations.md_to_docx.check_file_size"

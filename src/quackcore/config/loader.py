@@ -64,7 +64,7 @@ def load_yaml_config(path: str) -> dict[str, Any]:
         QuackConfigurationError: If the file cannot be loaded.
     """
     try:
-        read_result = fs.read_text(path, encoding="utf-8")
+        read_result = fs._read_text(path, encoding="utf-8")
         if not read_result.success:
             raise QuackConfigurationError(
                 f"Failed to load YAML config: {read_result.error}", path
@@ -173,13 +173,13 @@ def find_config_file() -> str | None:
     # Check environment variable first.
     if config_path := os.environ.get("QUACK_CONFIG"):
         expanded = fs._expand_user_vars(config_path)
-        if fs.get_file_info(expanded).success and fs.get_file_info(expanded).exists:
+        if fs._get_file_info(expanded).success and fs._get_file_info(expanded).exists:
             return str(expanded)
 
     # Check default locations.
     for location in DEFAULT_CONFIG_LOCATIONS:
         expanded = fs._expand_user_vars(location)
-        if fs.get_file_info(expanded).success and fs.get_file_info(expanded).exists:
+        if fs._get_file_info(expanded).success and fs._get_file_info(expanded).exists:
             return str(expanded)
 
     # Try to find project root and check for config there.
@@ -188,8 +188,8 @@ def find_config_file() -> str | None:
         for name in ["quack_config.yaml", "config/quack_config.yaml"]:
             candidate = fs._join_path(str(root), name)
             if (
-                fs.get_file_info(candidate).success
-                and fs.get_file_info(candidate).exists
+                fs._get_file_info(candidate).success
+                and fs._get_file_info(candidate).exists
             ):
                 return str(candidate)
     except Exception as e:
@@ -222,7 +222,7 @@ def load_config(
     if config_path:
         expanded = fs._expand_user_vars(str(config_path))
         if not (
-            fs.get_file_info(expanded).success and fs.get_file_info(expanded).exists
+                fs._get_file_info(expanded).success and fs._get_file_info(expanded).exists
         ):
             raise QuackConfigurationError(
                 f"Configuration file not found: {expanded}", expanded
