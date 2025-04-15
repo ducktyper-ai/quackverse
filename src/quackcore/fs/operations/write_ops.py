@@ -123,7 +123,7 @@ class WriteOperationsMixin:
             logger.error(f"Unexpected error writing to file {resolved_path}: {str(e)}")
             return WriteResult(success=False, path=resolved_path, error=str(e))
 
-    def write_binary(
+    def _write_binary(
         self,
         path: str | Path,
         content: bytes,
@@ -191,7 +191,7 @@ class WriteOperationsMixin:
             )
             return WriteResult(success=False, path=resolved_path, error=str(e))
 
-    def copy(
+    def _copy(
         self,
         src: str | Path,
         dst: str | Path,
@@ -248,7 +248,7 @@ class WriteOperationsMixin:
                 error=str(e),
             )
 
-    def move(
+    def _move(
         self,
         src: str | Path,
         dst: str | Path,
@@ -305,7 +305,7 @@ class WriteOperationsMixin:
                 error=str(e),
             )
 
-    def delete(self, path: str | Path, missing_ok: bool = True) -> OperationResult:
+    def _delete(self, path: str | Path, missing_ok: bool = True) -> OperationResult:
         """
         Delete a file or directory.
 
@@ -353,7 +353,7 @@ class WriteOperationsMixin:
                 error=str(e),
             )
 
-    def create_directory(
+    def _create_directory(
         self, path: str | Path, exist_ok: bool = True
     ) -> OperationResult:
         """

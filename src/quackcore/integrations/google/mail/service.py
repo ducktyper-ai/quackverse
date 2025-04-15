@@ -182,7 +182,7 @@ class GoogleMailService(BaseIntegrationService):
             storage_path_obj = resolver.resolve_project_path(self.storage_path)
             self.storage_path = str(storage_path_obj)
 
-            create_result = fs.create_directory(storage_path_obj, exist_ok=True)
+            create_result = fs._create_directory(storage_path_obj, exist_ok=True)
             if not create_result.success:
                 self.logger.warning(
                     f"Could not create storage directory: {create_result.error}. "

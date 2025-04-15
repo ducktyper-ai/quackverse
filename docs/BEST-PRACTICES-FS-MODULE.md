@@ -39,12 +39,13 @@ if yaml_result.success:
 The module provides specialized methods for common file formats like YAML and JSON.
 
 ### 4. Handle Paths Consistently
+
 ```python
 from pathlib import Path
 
 # Good - works with both string and Path objects
 config_dir = Path("config")
-fs.create_directory(config_dir)
+fs._create_directory(config_dir)
 ```
 
 All methods accept both string paths and Path objects.
@@ -131,13 +132,14 @@ file_path = fs._join_path(base_dir, "config", "settings.yaml")
 Use the fs module's path utilities for path manipulation.
 
 ### 4. Recreating Functionality
+
 ```python
 # Bad - recreates functionality
 if not os.path.exists(dir_path):
     os.makedirs(dir_path)
 
 # Good - uses fs module
-fs.create_directory(dir_path, exist_ok=True)
+fs._create_directory(dir_path, exist_ok=True)
 ```
 
 Don't recreate functionality that already exists in the fs module.
@@ -177,7 +179,7 @@ Be consistent in how you handle paths throughout your code.
 fs._write_text("logs/2023/01/01/app.log", log_content)
 
 # Good - ensures directory exists first
-fs.create_directory("logs/2023/01/01", exist_ok=True)
+fs._create_directory("logs/2023/01/01", exist_ok=True)
 fs._write_text("logs/2023/01/01/app.log", log_content)
 ```
 

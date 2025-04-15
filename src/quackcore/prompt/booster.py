@@ -286,7 +286,7 @@ Tags: {", ".join(s.tags)}
             # Ensure parent directory exists using quackcore.fs.
             # Compute parent directory by splitting the path and joining all parts except the last.
             parent_dir = fs._join_path(*fs._split_path(path)[:-1])
-            fs.create_directory(parent_dir, exist_ok=True)
+            fs._create_directory(parent_dir, exist_ok=True)
 
             # Determine output format based on file extension.
             if str(path).lower().endswith(".json"):
@@ -313,7 +313,7 @@ Tags: {", ".join(s.tags)}
                         read_result = fs._read_text(temp_path)
                         if read_result.success:
                             content += f"{read_result.content}\n\n"
-                            fs.delete(temp_path, missing_ok=True)
+                            fs._delete(temp_path, missing_ok=True)
                         else:
                             raise ValueError("Failed to read temporary JSON file")
                     else:

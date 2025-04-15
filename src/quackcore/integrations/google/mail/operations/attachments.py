@@ -152,13 +152,13 @@ def handle_attachment(
 
         # Ensure the directory where the file should be saved exists.
         dir_path = os.path.dirname(file_path)
-        dir_result = fs.create_directory(dir_path, exist_ok=True)
+        dir_result = fs._create_directory(dir_path, exist_ok=True)
         if not (dir_result.success if hasattr(dir_result, "success") else False):
             logger.error(f"Failed to create directory: {dir_result.error}")
             return None
 
         # Write binary content to file using the FS service’s write_binary method.
-        write_result = fs.service.write_binary(file_path, content)
+        write_result = fs.service._write_binary(file_path, content)
         if not (write_result.success if hasattr(write_result, "success") else False):
             logger.error(f"Failed to write attachment: {write_result.error}")
             return None

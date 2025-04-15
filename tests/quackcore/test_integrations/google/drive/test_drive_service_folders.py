@@ -104,7 +104,7 @@ class TestGoogleDriveServiceFolders:
 
         # Mock API response for delete
         mock_delete = MagicMock()
-        service.drive_service.files().delete.return_value = mock_delete
+        service.drive_service.files()._delete.return_value = mock_delete
         mock_delete.execute.return_value = None
 
         # Mock API response for update (move to trash)
@@ -115,7 +115,7 @@ class TestGoogleDriveServiceFolders:
         # Test permanent deletion
         result = service.delete_file("file_id", permanent=True)
         assert result.success is True
-        service.drive_service.files().delete.assert_called_once_with(fileId="file_id")
+        service.drive_service.files()._delete.assert_called_once_with(fileId="file_id")
 
         # Test move to trash
         service.drive_service.files().update.reset_mock()

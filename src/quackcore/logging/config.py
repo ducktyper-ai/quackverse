@@ -94,7 +94,7 @@ def configure_logger(
 
             # Resolve parent directory for the log file.
             parent_dir = fs._join_path(*fs._split_path(log_file)[:-1])
-            fs.create_directory(parent_dir, exist_ok=True)
+            fs._create_directory(parent_dir, exist_ok=True)
             file_handler = logging.FileHandler(log_file)
             file_handler.setFormatter(TeachingAwareFormatter(color_enabled=False))
             logger.addHandler(file_handler)

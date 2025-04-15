@@ -95,7 +95,7 @@ def download_file(
 
         # Ensure parent directory exists
         parent_dir = fs._join_path(download_path).parent
-        parent_result = fs.create_directory(parent_dir, exist_ok=True)
+        parent_result = fs._create_directory(parent_dir, exist_ok=True)
         if not parent_result.success:
             return IntegrationResult.error_result(
                 f"Failed to create directory: {parent_result.error}"
@@ -126,7 +126,7 @@ def download_file(
         file_content = fh.read()
 
         # Write file to disk
-        write_result = fs.write_binary(download_path, file_content)
+        write_result = fs._write_binary(download_path, file_content)
         if not write_result.success:
             return IntegrationResult.error_result(
                 f"Failed to write file: {write_result.error}"

@@ -126,7 +126,7 @@ else:
 fs._write_text("path/to/output.txt", "Hello, QuackCore!")
 
 # Create a directory
-fs.create_directory("path/to/new/directory")
+fs._create_directory("path/to/new/directory")
 
 # Read structured data
 yaml_result = fs._read_yaml("config.yaml")

@@ -288,7 +288,7 @@ else:
       "output_dir": str(project_context.get_output_dir() or "output")
     }
     # Ensure config directory exists
-    fs.create_directory(config_path.parent, exist_ok=True)
+    fs._create_directory(config_path.parent, exist_ok=True)
     # Write config
     fs._write_yaml(config_path, default_config)
     print(f"Created default configuration at: {config_path}")
@@ -478,7 +478,7 @@ def initialize_project(name, template="basic"):
   """Initialize a new project with standard structure."""
   # Create project directory
   project_dir = Path(name)
-  fs.create_directory(project_dir, exist_ok=True)
+  fs._create_directory(project_dir, exist_ok=True)
 
   # Create standard directories
   directories = {
@@ -496,7 +496,7 @@ def initialize_project(name, template="basic"):
   # Create each directory and register in context
   for name, attrs in directories.items():
     dir_path = project_dir / name
-    fs.create_directory(dir_path, exist_ok=True)
+    fs._create_directory(dir_path, exist_ok=True)
     context.add_directory(name, dir_path, **attrs)
 
   # Create a basic config file
@@ -529,31 +529,32 @@ from quackcore.paths import resolver
 from quackcore.fs import service as fs
 from pathlib import Path
 
+
 def link_projects(main_project, dependency_projects):
-    """Link dependency projects to a main project."""
-    # Find the main project
-    main_context = resolver.detect_project_context(main_project)
-    
-    # Ensure dev directory exists
-    dev_dir = main_context.root_dir / "dev"
-    fs.create_directory(dev_dir, exist_ok=True)
-    
-    # Link each dependency
-    for dep_path in dependency_projects:
-        dep_context = resolver.detect_project_context(dep_path)
-        dep_name = dep_context.name
-        
-        # Create symbolic link
-        link_path = dev_dir / dep_name
-        if not link_path.exists():
-            # Get source directory from dependency
-            dep_src = dep_context.get_source_dir()
-            if dep_src:
-                # Create symbolic link to dependency source
-                Path(link_path).symlink_to(dep_src, target_is_directory=True)
-                print(f"Linked {dep_name} -> {dep_src}")
-            else:
-                print(f"Could not find source directory in {dep_name}")
+  """Link dependency projects to a main project."""
+  # Find the main project
+  main_context = resolver.detect_project_context(main_project)
+
+  # Ensure dev directory exists
+  dev_dir = main_context.root_dir / "dev"
+  fs._create_directory(dev_dir, exist_ok=True)
+
+  # Link each dependency
+  for dep_path in dependency_projects:
+    dep_context = resolver.detect_project_context(dep_path)
+    dep_name = dep_context.name
+
+    # Create symbolic link
+    link_path = dev_dir / dep_name
+    if not link_path.exists():
+      # Get source directory from dependency
+      dep_src = dep_context.get_source_dir()
+      if dep_src:
+        # Create symbolic link to dependency source
+        Path(link_path).symlink_to(dep_src, target_is_directory=True)
+        print(f"Linked {dep_name} -> {dep_src}")
+      else:
+        print(f"Could not find source directory in {dep_name}")
 ```
 
 ## API Reference

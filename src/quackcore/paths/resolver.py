@@ -200,7 +200,7 @@ class PathResolver:
         if start_dir and create:
             start_path = start_dir
             output_dir = fs._join_path(start_path, "output")
-            fs.create_directory(output_dir, exist_ok=True)
+            fs._create_directory(output_dir, exist_ok=True)
             return output_dir
 
         try:
@@ -213,7 +213,7 @@ class PathResolver:
 
             if create:
                 output_dir = fs._join_path(root_dir, "output")
-                fs.create_directory(output_dir, exist_ok=True)
+                fs._create_directory(output_dir, exist_ok=True)
                 return output_dir
 
             raise QuackFileNotFoundError(
@@ -223,7 +223,7 @@ class PathResolver:
             current_dir = start_dir if start_dir is not None else getcwd()
             if create:
                 output_dir = fs._join_path(current_dir, "output")
-                fs.create_directory(output_dir, exist_ok=True)
+                fs._create_directory(output_dir, exist_ok=True)
                 return output_dir
             raise QuackFileNotFoundError(
                 "output", f"Could not find output directory in or near {current_dir}"

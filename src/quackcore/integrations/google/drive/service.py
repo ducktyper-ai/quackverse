@@ -432,7 +432,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
 
             # Ensure parent directory exists
             parent_dir = fs._join_path(download_path).parent
-            parent_result = fs.create_directory(parent_dir, exist_ok=True)
+            parent_result = fs._create_directory(parent_dir, exist_ok=True)
             if not parent_result.success:
                 return IntegrationResult.error_result(
                     f"Failed to create directory: {parent_result.error}"
@@ -463,7 +463,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             file_content = fh.read()
 
             # Write file to disk using fs module
-            write_result = fs.write_binary(download_path, file_content)
+            write_result = fs._write_binary(download_path, file_content)
             if not write_result.success:
                 return IntegrationResult.error_result(
                     f"Failed to write file: {write_result.error}"
@@ -722,7 +722,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
         try:
             try:
                 if permanent:
-                    self.drive_service.files().delete(fileId=file_id).execute()
+                    self.drive_service.files()._delete(fileId=file_id).execute()
                 else:
                     self.drive_service.files().update(
                         fileId=file_id, body={"trashed": True}

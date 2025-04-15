@@ -32,7 +32,7 @@ def get_user_data_dir() -> str:
     # Expand the user variables.
     expanded = fs._expand_user_vars(data_dir)
     # Create the directory if it does not exist.
-    fs.create_directory(expanded, exist_ok=True)
+    fs._create_directory(expanded, exist_ok=True)
     return expanded
 
 
@@ -177,7 +177,7 @@ def reset_progress() -> bool:
         logger.debug(f"No progress file to reset at {file_path}")
         return True
 
-    result = fs.delete(file_path)
+    result = fs._delete(file_path)
     if not result.success:
         logger.error(f"Failed to delete progress file: {result.error}")
         return False
@@ -210,7 +210,7 @@ def backup_progress(backup_name: str = None) -> bool:
 
     data_dir = get_user_data_dir()
     backup_path = fs._join_path(data_dir, backup_name)
-    result = fs.copy(file_path, backup_path)
+    result = fs._copy(file_path, backup_path)
     if not result.success:
         logger.error(f"Failed to create backup: {result.error}")
         return False

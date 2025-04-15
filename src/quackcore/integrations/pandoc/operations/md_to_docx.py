@@ -98,7 +98,7 @@ def _convert_markdown_to_docx_once(
 
     # Get the parent directory of the output file by splitting and joining parts
     parent_dir = fs._join_path(*fs._split_path(output_path)[:-1])
-    dir_result = fs.create_directory(parent_dir, exist_ok=True)
+    dir_result = fs._create_directory(parent_dir, exist_ok=True)
     if not dir_result.success:
         raise QuackIntegrationError(
             f"Failed to create output directory: {dir_result.error}",

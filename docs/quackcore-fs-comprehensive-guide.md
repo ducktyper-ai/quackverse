@@ -63,7 +63,7 @@ else:
 fs._write_text("output.txt", "Hello, QuackVerse!")
 
 # Create a directory
-fs.create_directory("data", exist_ok=True)
+fs._create_directory("data", exist_ok=True)
 ```
 
 ## Core Concepts
@@ -215,10 +215,10 @@ result = fs.write_lines("windows.txt", lines, line_ending="\r\n")
 ```python
 # Write binary data
 with open("original.png", "rb") as f:
-    binary_data = f.read()
-result = fs.write_binary("copy.png", binary_data)
+  binary_data = f.read()
+result = fs._write_binary("copy.png", binary_data)
 if result.success:
-    print(f"Successfully wrote {result.bytes_written} bytes")
+  print(f"Successfully wrote {result.bytes_written} bytes")
 ```
 
 **Atomic Writing**:
@@ -236,22 +236,22 @@ Deleting files and directories is handled by the `delete` method:
 
 ```python
 # Delete a file
-result = fs.delete("temp.txt")
+result = fs._delete("temp.txt")
 if result.success:
-    print(f"Successfully deleted {result.path}")
+  print(f"Successfully deleted {result.path}")
 
 # Delete only if exists (default behavior)
-result = fs.delete("may_not_exist.txt", missing_ok=True)
+result = fs._delete("may_not_exist.txt", missing_ok=True)
 
 # Require file to exist (will report error if missing)
-result = fs.delete("must_exist.txt", missing_ok=False)
+result = fs._delete("must_exist.txt", missing_ok=False)
 if not result.success:
-    print(f"Error: {result.error}")
+  print(f"Error: {result.error}")
 
 # Delete a directory and all its contents
-result = fs.delete("temp_dir")
+result = fs._delete("temp_dir")
 if result.success:
-    print(f"Successfully deleted directory {result.path}")
+  print(f"Successfully deleted directory {result.path}")
 ```
 
 ## Path Management
@@ -360,15 +360,15 @@ The module provides utilities for creating directories:
 
 ```python
 # Create a directory
-result = fs.create_directory("data")
+result = fs._create_directory("data")
 if result.success:
-    print(f"Created directory: {result.path}")
+  print(f"Created directory: {result.path}")
 
 # Create if it doesn't exist, ignore if it does
-result = fs.create_directory("logs", exist_ok=True)
+result = fs._create_directory("logs", exist_ok=True)
 
 # Create parent directories automatically
-result = fs.create_directory("projects/quacktool/data/cache", exist_ok=True)
+result = fs._create_directory("projects/quacktool/data/cache", exist_ok=True)
 ```
 
 The `ensure_directory` function is a lower-level utility that works similarly:
@@ -503,27 +503,27 @@ The module provides safe methods for copying and moving files:
 
 ```python
 # Copy a file
-result = fs.copy("original.txt", "backup.txt")
+result = fs._copy("original.txt", "backup.txt")
 if result.success:
-    print(f"Copied {result.original_path} to {result.path}")
+  print(f"Copied {result.original_path} to {result.path}")
 
 # Copy and overwrite if destination exists
-result = fs.copy("config.yaml", "config.yaml.backup", overwrite=True)
+result = fs._copy("config.yaml", "config.yaml.backup", overwrite=True)
 
 # Copy a directory and all its contents
-result = fs.copy("templates", "templates.backup")
+result = fs._copy("templates", "templates.backup")
 if result.success:
-    print(f"Copied directory {result.original_path} to {result.path}")
+  print(f"Copied directory {result.original_path} to {result.path}")
 
 # Move a file
-result = fs.move("old_location.txt", "new_location.txt")
+result = fs._move("old_location.txt", "new_location.txt")
 if result.success:
-    print(f"Moved {result.original_path} to {result.path}")
+  print(f"Moved {result.original_path} to {result.path}")
 
 # Move a directory
-result = fs.move("old_dir", "new_dir", overwrite=True)
+result = fs._move("old_dir", "new_dir", overwrite=True)
 if result.success:
-    print(f"Moved directory {result.original_path} to {result.path}")
+  print(f"Moved directory {result.original_path} to {result.path}")
 ```
 
 ### Atomic Operations
@@ -751,15 +751,16 @@ if yaml_result.success:
 ```python
 # Good - works with both string and Path objects
 from pathlib import Path
+
 config_dir = Path("config")
-fs.create_directory(config_dir)
+fs._create_directory(config_dir)
 ```
 
 ### 4. Ensure Parent Directories Exist
 
 ```python
 # Good - ensures directory exists first
-fs.create_directory("logs/2023/01/01", exist_ok=True)
+fs._create_directory("logs/2023/01/01", exist_ok=True)
 fs._write_text("logs/2023/01/01/app.log", log_content)
 ```
 
@@ -809,11 +810,12 @@ else:
 ```python
 # Bad - bypasses the fs module
 import os
+
 if not os.path.exists("data"):
-    os.makedirs("data")
+  os.makedirs("data")
 
 # Good - uses the fs module
-fs.create_directory("data", exist_ok=True)
+fs._create_directory("data", exist_ok=True)
 ```
 
 ### 3. Mixing Path Styles
@@ -834,7 +836,7 @@ config_file = fs._join_path(base_dir, "config.yaml")
 fs._write_text("logs/2023/01/01/app.log", log_content)  # Might fail if directory doesn't exist
 
 # Good - ensures directory exists first
-fs.create_directory("logs/2023/01/01", exist_ok=True)
+fs._create_directory("logs/2023/01/01", exist_ok=True)
 fs._write_text("logs/2023/01/01/app.log", log_content)
 ```
 
@@ -923,7 +925,7 @@ logger = logging.getLogger(__name__)
 class ConfigManager:
   def __init__(self, config_dir="config"):
     # Ensure the config directory exists
-    result = fs.create_directory(config_dir, exist_ok=True)
+    result = fs._create_directory(config_dir, exist_ok=True)
     if not result.success:
       logger.error(f"Failed to create config directory: {result.error}")
       raise RuntimeError(f"Failed to initialize config directory: {result.error}")
@@ -998,7 +1000,7 @@ logger = logging.getLogger(__name__)
 class LogRotator:
   def __init__(self, log_dir="logs", max_size_mb=10, max_logs=5):
     # Create log directory if it doesn't exist
-    result = fs.create_directory(log_dir, exist_ok=True)
+    result = fs._create_directory(log_dir, exist_ok=True)
     if not result.success:
       raise RuntimeError(f"Failed to create log directory: {result.error}")
 
@@ -1064,7 +1066,7 @@ class LogRotator:
     # Delete oldest logs to stay under the limit
     logs_to_delete = sorted_logs[:len(sorted_logs) - self.max_logs]
     for log_file in logs_to_delete:
-      delete_result = fs.delete(log_file)
+      delete_result = fs._delete(log_file)
       if delete_result.success:
         logger.info(f"Deleted old log file: {log_file}")
       else:
@@ -1121,7 +1123,7 @@ class BackupTool:
     self.patterns = patterns or ["*"]  # Default to all files
 
     # Ensure the backup directory exists
-    result = fs.create_directory(backup_dir, exist_ok=True)
+    result = fs._create_directory(backup_dir, exist_ok=True)
     if not result.success:
       raise RuntimeError(f"Failed to create backup directory: {result.error}")
 
@@ -1132,7 +1134,7 @@ class BackupTool:
     backup_name = f"backup_{timestamp}"
     backup_path = fs._join_path(self.backup_dir, backup_name)
 
-    dir_result = fs.create_directory(backup_path)
+    dir_result = fs._create_directory(backup_path)
     if not dir_result.success:
       logger.error(f"Failed to create backup directory: {dir_result.error}")
       return None
@@ -1161,13 +1163,13 @@ class BackupTool:
 
         # Create parent directories in backup
         parent_dir = fs._join_path(backup_path, fs._split_path(rel_path_str)[:-1])
-        fs.create_directory(parent_dir, exist_ok=True)
+        fs._create_directory(parent_dir, exist_ok=True)
 
         # Destination path in backup
         dest_file = fs._join_path(backup_path, rel_path_str)
 
         # Copy the file
-        copy_result = fs.copy(source_file, dest_file)
+        copy_result = fs._copy(source_file, dest_file)
         if not copy_result.success:
           logger.error(f"Failed to copy {source_file}: {copy_result.error}")
           continue
@@ -1598,7 +1600,7 @@ class QuackPath:
 
   def delete(self, missing_ok=True):
     """Delete the file or directory."""
-    result = fs.delete(self.path, missing_ok)
+    result = fs._delete(self.path, missing_ok)
     if not result.success:
       raise IOError(f"Failed to delete: {result.error}")
     return True
@@ -1608,7 +1610,7 @@ class QuackPath:
     if self.is_file:
       raise IOError(f"Path exists as a file, not a directory: {self.path}")
 
-    result = fs.create_directory(self.path, exist_ok=True)
+    result = fs._create_directory(self.path, exist_ok=True)
     if not result.success:
       raise IOError(f"Failed to create directory: {result.error}")
     return self
@@ -1643,14 +1645,14 @@ class QuackPath:
 
   def copy_to(self, dst, overwrite=False):
     """Copy this file or directory to destination."""
-    result = fs.copy(self.path, dst, overwrite)
+    result = fs._copy(self.path, dst, overwrite)
     if not result.success:
       raise IOError(f"Failed to copy: {result.error}")
     return QuackPath(result.path)
 
   def move_to(self, dst, overwrite=False):
     """Move this file or directory to destination."""
-    result = fs.move(self.path, dst, overwrite)
+    result = fs._move(self.path, dst, overwrite)
     if not result.success:
       raise IOError(f"Failed to move: {result.error}")
     return QuackPath(result.path)
@@ -1677,28 +1679,29 @@ from quackcore.logging import get_logger
 # Initialize logger
 logger = get_logger(__name__)
 
+
 def initialize_app_directories(app_name):
-    """Initialize standard directories for a QuackTool application."""
-    # Create standard directories
-    directories = {
-        'config': f"{app_name}/config",
-        'data': f"{app_name}/data",
-        'logs': f"{app_name}/logs",
-        'cache': f"{app_name}/cache",
-        'temp': f"{app_name}/temp"
-    }
-    
-    created_dirs = {}
-    
-    for name, path in directories.items():
-        result = fs.create_directory(path, exist_ok=True)
-        if result.success:
-            logger.info(f"Initialized {name} directory at {result.path}")
-            created_dirs[name] = result.path
-        else:
-            logger.error(f"Failed to create {name} directory: {result.error}")
-    
-    return created_dirs
+  """Initialize standard directories for a QuackTool application."""
+  # Create standard directories
+  directories = {
+    'config': f"{app_name}/config",
+    'data': f"{app_name}/data",
+    'logs': f"{app_name}/logs",
+    'cache': f"{app_name}/cache",
+    'temp': f"{app_name}/temp"
+  }
+
+  created_dirs = {}
+
+  for name, path in directories.items():
+    result = fs._create_directory(path, exist_ok=True)
+    if result.success:
+      logger.info(f"Initialized {name} directory at {result.path}")
+      created_dirs[name] = result.path
+    else:
+      logger.error(f"Failed to create {name} directory: {result.error}")
+
+  return created_dirs
 ```
 
 ### Integration with QuackCore Error System
@@ -1768,7 +1771,7 @@ class QuackConfig:
 
   def ensure_config_dir(self):
     """Ensure the config directory exists."""
-    result = fs.create_directory(self.config_dir, exist_ok=True)
+    result = fs._create_directory(self.config_dir, exist_ok=True)
     if not result.success:
       logger.error(f"Failed to create config directory: {result.error}")
       raise QuackIOError(f"Failed to create config directory: {result.error}", self.config_dir)
@@ -2050,7 +2053,7 @@ def setup_project(project_name):
     # Create directories
     for subdir in ['src', 'docs', 'tests', 'data']:
       subdir_path = fs._join_path(project_dir, subdir)
-      dir_result = fs.create_directory(subdir_path, exist_ok=True)
+      dir_result = fs._create_directory(subdir_path, exist_ok=True)
       if not dir_result.success:
         raise Exception(f"Failed to create directory {subdir}: {dir_result.error}")
 
@@ -2068,7 +2071,7 @@ def setup_project(project_name):
     return True
   except Exception as e:
     # Clean up on failure
-    delete_result = fs.delete(project_dir)
+    delete_result = fs._delete(project_dir)
     print(f"Error creating project: {e}")
     return False
 ```
@@ -2105,7 +2108,7 @@ class FileSystemRepository(Generic[T]):
     self.deserializer = deserializer
 
     # Ensure the directory exists
-    fs.create_directory(base_dir, exist_ok=True)
+    fs._create_directory(base_dir, exist_ok=True)
 
   def _get_path(self, id: str) -> str:
     """Get the file path for an entity."""
@@ -2129,7 +2132,7 @@ class FileSystemRepository(Generic[T]):
   def delete(self, id: str) -> bool:
     """Delete an entity."""
     path = self._get_path(id)
-    result = fs.delete(path)
+    result = fs._delete(path)
     return result.success
 
   def list_all(self) -> List[T]:
@@ -2607,7 +2610,7 @@ def test_file_operations(temp_dir):
   assert result.content == "Test content"
 
   # Delete the file
-  delete_result = fs.delete(test_file)
+  delete_result = fs._delete(test_file)
   assert delete_result.success
 
   # Verify the file no longer exists
@@ -3191,7 +3194,7 @@ result = fs._read_text("international.txt", encoding="utf-8")
 
 ```python
 # Ensure all parent directories exist
-fs.create_directory("path/to/nested/directory", exist_ok=True)
+fs._create_directory("path/to/nested/directory", exist_ok=True)
 
 # Now create a file in this directory
 fs._write_text("path/to/nested/directory/file.txt", "content")
@@ -3598,10 +3601,10 @@ class DirectorySynchronizer:
 
       # Ensure parent directory exists
       parent_dir = fs._join_path(*fs._split_path(target_path)[:-1])
-      fs.create_directory(parent_dir, exist_ok=True)
+      fs._create_directory(parent_dir, exist_ok=True)
 
       # Copy the file
-      result = fs.copy(source_path, target_path)
+      result = fs._copy(source_path, target_path)
       if result.success:
         stats["created"] += 1
       else:
@@ -3613,7 +3616,7 @@ class DirectorySynchronizer:
       target_path = fs._join_path(self.target_dir, rel_path)
 
       # Copy and overwrite
-      result = fs.copy(source_path, target_path, overwrite=True)
+      result = fs._copy(source_path, target_path, overwrite=True)
       if result.success:
         stats["updated"] += 1
       else:
@@ -3624,7 +3627,7 @@ class DirectorySynchronizer:
       for rel_path in differences["delete"]:
         target_path = fs._join_path(self.target_dir, rel_path)
 
-        result = fs.delete(target_path)
+        result = fs._delete(target_path)
         if result.success:
           stats["deleted"] += 1
         else:
@@ -3732,7 +3735,7 @@ class FileLock:
     # Only delete the lock file if we own it
     lock_info = self._read_lock_info()
     if lock_info and lock_info.get("owner") == self.owner:
-      fs.delete(self.lock_path)
+      fs._delete(self.lock_path)
 
     self.locked = False
 
@@ -3772,7 +3775,7 @@ class FileLock:
 
   def _break_lock(self):
     """Break a stale lock."""
-    fs.delete(self.lock_path)
+    fs._delete(self.lock_path)
 
   def __enter__(self):
     """Context manager protocol: acquire the lock."""

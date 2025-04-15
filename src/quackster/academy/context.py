@@ -160,7 +160,7 @@ class TeachingContext:
             self.grading_dir,
             self.submissions_dir,
         ]:
-            fs.create_directory(directory, exist_ok=True)
+            fs._create_directory(directory, exist_ok=True)
         logger.debug(f"Ensured quackster directories exist in {self.base_dir}")
 
     @property

@@ -123,20 +123,20 @@ class TestFileSystemOperations:
         operations = FileSystemOperations(base_dir=temp_dir)
 
         # Test writing to a new file
-        result = operations.write_binary("binary.bin", b"\x00\x01\x02\x03")
+        result = operations._write_binary("binary.bin", b"\x00\x01\x02\x03")
         assert result.success is True
         assert result.bytes_written == 4
         assert (temp_dir / "binary.bin").read_bytes() == b"\x00\x01\x02\x03"
 
         # Test with atomic=False
-        result = operations.write_binary(
+        result = operations._write_binary(
             "nonatomic.bin", b"\x04\x05\x06\x07", atomic=False
         )
         assert result.success is True
         assert (temp_dir / "nonatomic.bin").read_bytes() == b"\x04\x05\x06\x07"
 
         # Test with calculate_checksum=True
-        result = operations.write_binary(
+        result = operations._write_binary(
             "checksum.bin", b"\x08\x09\x0a\x0b", calculate_checksum=True
         )
         assert result.success is True
@@ -151,22 +151,22 @@ class TestFileSystemOperations:
         source_path.write_text("source content")
 
         # Test successful copy
-        result = operations.copy("source.txt", "dest.txt")
+        result = operations._copy("source.txt", "dest.txt")
         assert result.success is True
         assert (temp_dir / "dest.txt").exists()
         assert (temp_dir / "dest.txt").read_text() == "source content"
 
         # Test copy to existing file (should fail)
-        result = operations.copy("source.txt", "dest.txt")
+        result = operations._copy("source.txt", "dest.txt")
         assert result.success is False
         assert "already exists" in result.error
 
         # Test copy with overwrite
-        result = operations.copy("source.txt", "dest.txt", overwrite=True)
+        result = operations._copy("source.txt", "dest.txt", overwrite=True)
         assert result.success is True
 
         # Test copy with non-existent source
-        result = operations.copy("nonexistent.txt", "new_dest.txt")
+        result = operations._copy("nonexistent.txt", "new_dest.txt")
         assert result.success is False
         assert "not found" in result.error.lower()
 
@@ -179,7 +179,7 @@ class TestFileSystemOperations:
         source_path.write_text("move content")
 
         # Test successful move
-        result = operations.move("move_source.txt", "move_dest.txt")
+        result = operations._move("move_source.txt", "move_dest.txt")
         assert result.success is True
         assert (temp_dir / "move_dest.txt").exists()
         assert not (temp_dir / "move_source.txt").exists()
@@ -189,17 +189,17 @@ class TestFileSystemOperations:
         source_path.write_text("new move content")
 
         # Test move to existing file (should fail)
-        result = operations.move("move_source.txt", "move_dest.txt")
+        result = operations._move("move_source.txt", "move_dest.txt")
         assert result.success is False
         assert "already exists" in result.error
 
         # Test move with overwrite
-        result = operations.move("move_source.txt", "move_dest.txt", overwrite=True)
+        result = operations._move("move_source.txt", "move_dest.txt", overwrite=True)
         assert result.success is True
         assert (temp_dir / "move_dest.txt").read_text() == "new move content"
 
         # Test move with non-existent source
-        result = operations.move("nonexistent.txt", "new_dest.txt")
+        result = operations._move("nonexistent.txt", "new_dest.txt")
         assert result.success is False
         assert "not found" in result.error.lower()
 
@@ -212,16 +212,16 @@ class TestFileSystemOperations:
         file_path.write_text("delete me")
 
         # Test successful delete
-        result = operations.delete("to_delete.txt")
+        result = operations._delete("to_delete.txt")
         assert result.success is True
         assert not file_path.exists()
 
         # Test deleting non-existent file (should succeed with missing_ok=True)
-        result = operations.delete("to_delete.txt")
+        result = operations._delete("to_delete.txt")
         assert result.success is True
 
         # Test deleting non-existent file with missing_ok=False
-        result = operations.delete("to_delete.txt", missing_ok=False)
+        result = operations._delete("to_delete.txt", missing_ok=False)
         assert result.success is False
         assert "not found" in result.error.lower()
 
@@ -230,12 +230,12 @@ class TestFileSystemOperations:
         operations = FileSystemOperations(base_dir=temp_dir)
 
         # Test creating directory
-        result = operations.create_directory("new_dir")
+        result = operations._create_directory("new_dir")
         assert result.success is True
         assert (temp_dir / "new_dir").is_dir()
 
         # Test creating existing directory (should succeed with exist_ok=True)
-        result = operations.create_directory("new_dir")
+        result = operations._create_directory("new_dir")
         assert result.success is True
 
         # Test creating existing directory with exist_ok=False
@@ -243,7 +243,7 @@ class TestFileSystemOperations:
             mock_ensure_directory.side_effect = QuackFileExistsError(
                 str(temp_dir / "new_dir")
             )
-            result = operations.create_directory("new_dir", exist_ok=False)
+            result = operations._create_directory("new_dir", exist_ok=False)
             assert result.success is False
             assert "already exists" in result.error.lower()
 

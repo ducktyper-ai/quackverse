@@ -117,7 +117,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             self.converter = DocumentConverter(conversion_config)
 
             # Ensure output directory exists by delegating to fs; all paths are strings.
-            result = fs.create_directory(conversion_config.output_dir, exist_ok=True)
+            result = fs._create_directory(conversion_config.output_dir, exist_ok=True)
             if not result.success:
                 return IntegrationResult.error_result(
                     f"Failed to create output directory: {result.error}"
@@ -319,7 +319,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                     IntegrationResult.error_result("Converter not initialized"),
                 )
 
-            dir_result = fs.create_directory(output_dir, exist_ok=True)
+            dir_result = fs._create_directory(output_dir, exist_ok=True)
             if not dir_result.success:
                 return cast(
                     IntegrationResult[list[str]],

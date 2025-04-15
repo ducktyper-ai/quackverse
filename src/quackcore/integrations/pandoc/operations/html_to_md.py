@@ -144,7 +144,7 @@ def _write_and_validate_output(
         tuple: (conversion_time, output_size, validation_errors)
     """
     output_dir = os.path.dirname(output_path)
-    dir_result = fs.create_directory(output_dir, exist_ok=True)
+    dir_result = fs._create_directory(output_dir, exist_ok=True)
     if not dir_result.success:
         raise QuackIntegrationError(
             f"Failed to create output directory: {dir_result.error}"

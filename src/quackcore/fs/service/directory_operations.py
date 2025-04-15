@@ -40,7 +40,7 @@ class DirectoryOperationsMixin:
         Returns:
             OperationResult with operation status
         """
-        return self.operations.create_directory(path, exist_ok)
+        return self.operations._create_directory(path, exist_ok)
 
     # --- Information and Listing Operations ---
 

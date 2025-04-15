@@ -106,9 +106,9 @@ class TestTeachingContext:
         ]
 
         # Check that create_directory was called for each path
-        assert mock_fs.create_directory.call_count == 4
+        assert mock_fs._create_directory.call_count == 4
         for call in expected_calls:
-            mock_fs.create_directory.assert_any_call(*call[0], **call[1])
+            mock_fs._create_directory.assert_any_call(*call[0], **call[1])
 
     def test_github_property_success(self, teaching_context, mock_integration_registry):
         """Test the github property when integration is available."""

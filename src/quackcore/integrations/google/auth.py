@@ -238,7 +238,7 @@ class GoogleAuthProvider(BaseAuthProvider):
         parent_dir = fs._split_path(self.credentials_file)[:-1]
         if parent_dir:
             directory_path = fs._join_path(*parent_dir)
-            result = fs.create_directory(directory_path, exist_ok=True)
+            result = fs._create_directory(directory_path, exist_ok=True)
             if not result.success:
                 self.logger.error(
                     f"Failed to create credentials directory: {result.error}"

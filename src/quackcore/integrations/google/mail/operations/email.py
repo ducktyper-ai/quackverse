@@ -404,12 +404,12 @@ def handle_attachment(
 
         # Ensure the directory exists using os.path.dirname to get the directory string.
         dir_path = os.path.dirname(file_path)
-        dir_result = fs.create_directory(dir_path, exist_ok=True)
+        dir_result = fs._create_directory(dir_path, exist_ok=True)
         if not (dir_result.success if hasattr(dir_result, "success") else False):
             logger.error(f"Failed to create directory for attachment: {file_path}")
             return None
 
-        write_result = fs.write_binary(file_path, content)
+        write_result = fs._write_binary(file_path, content)
         if not (write_result.success if hasattr(write_result, "success") else False):
             logger.error(f"Failed to write attachment: {write_result.error}")
             return None

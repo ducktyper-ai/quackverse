@@ -98,7 +98,7 @@ class FileOperationsMixin:
         Returns:
             WriteResult with operation status.
         """
-        return self.operations.write_binary(path, content, atomic, calculate_checksum)
+        return self.operations._write_binary(path, content, atomic, calculate_checksum)
 
     @wrap_io_errors
     def read_lines(
@@ -166,7 +166,7 @@ class FileOperationsMixin:
         # For non-default line endings, encode and write in binary mode.
         if line_ending != "\n":
             bytes_content = content.encode(encoding)
-            return self.operations.write_binary(path, bytes_content, atomic)
+            return self.operations._write_binary(path, bytes_content, atomic)
         else:
             return self.operations._write_text(path, content, encoding, atomic)
 
@@ -343,7 +343,7 @@ class FileOperationsMixin:
         Returns:
             WriteResult with operation status
         """
-        return self.operations.copy(src, dst, overwrite)
+        return self.operations._copy(src, dst, overwrite)
 
     def move(
         self, src: str | Path, dst: str | Path, overwrite: bool = False
@@ -359,7 +359,7 @@ class FileOperationsMixin:
         Returns:
             WriteResult with operation status
         """
-        return self.operations.move(src, dst, overwrite)
+        return self.operations._move(src, dst, overwrite)
 
     def delete(self, path: str | Path, missing_ok: bool = True) -> OperationResult:
         """
@@ -372,4 +372,4 @@ class FileOperationsMixin:
         Returns:
             OperationResult with operation status
         """
-        return self.operations.delete(path, missing_ok)
+        return self.operations._delete(path, missing_ok)
