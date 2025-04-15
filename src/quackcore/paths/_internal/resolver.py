@@ -28,10 +28,10 @@ def _is_relative_to(child: str, parent: str) -> bool:
 
 # Helper function to get parent directory from a string path.
 def _get_parent_dir(p: str) -> str:
-    comps = fs._split_path(p)
+    comps = fs.split_path(p)
     if len(comps) <= 1:
         return p
-    return fs._join_path(*comps[:-1])
+    return fs.join_path(*comps[:-1])
 
 
 # Helper function to compute relative path.
@@ -134,7 +134,7 @@ class PathResolver:
         }
 
         for name, attrs in standard_dirs.items():
-            dir_path = fs._join_path(root_dir, name)
+            dir_path = fs.join_path(root_dir, name)
             info = fs.get_file_info(dir_path)
             if info.success and info.exists and info.is_dir:
                 context._add_directory(name, dir_path, **attrs)
@@ -157,7 +157,7 @@ class PathResolver:
         """
         current_dir = start_dir if start_dir is not None else getcwd()
 
-        init_path = fs._join_path(current_dir, "__init__.py")
+        init_path = fs.join_path(current_dir, "__init__.py")
         info = fs.get_file_info(init_path)
         if info.success and info.exists:
             return current_dir
@@ -166,7 +166,7 @@ class PathResolver:
             return str(_find_nearest_directory("src", current_dir))
         except QuackFileNotFoundError as e:
             for _ in range(5):  # Check up to 5 levels upward.
-                init_path = fs._join_path(current_dir, "__init__.py")
+                init_path = fs.join_path(current_dir, "__init__.py")
                 info = fs.get_file_info(init_path)
                 if info.success and info.exists:
                     return current_dir
@@ -199,20 +199,20 @@ class PathResolver:
         """
         if start_dir and create:
             start_path = start_dir
-            output_dir = fs._join_path(start_path, "output")
+            output_dir = fs.join_path(start_path, "output")
             fs.create_directory(output_dir, exist_ok=True)
             return output_dir
 
         try:
             root_dir = self._get_project_root(start_dir)
             for candidate in ["output", "out", "build"]:
-                output_dir = fs._join_path(root_dir, candidate)
+                output_dir = fs.join_path(root_dir, candidate)
                 info = fs.get_file_info(output_dir)
                 if info.success and info.exists:
                     return output_dir
 
             if create:
-                output_dir = fs._join_path(root_dir, "output")
+                output_dir = fs.join_path(root_dir, "output")
                 fs.create_directory(output_dir, exist_ok=True)
                 return output_dir
 
@@ -222,7 +222,7 @@ class PathResolver:
         except QuackFileNotFoundError as e:
             current_dir = start_dir if start_dir is not None else getcwd()
             if create:
-                output_dir = fs._join_path(current_dir, "output")
+                output_dir = fs.join_path(current_dir, "output")
                 fs.create_directory(output_dir, exist_ok=True)
                 return output_dir
             raise QuackFileNotFoundError(
@@ -252,7 +252,7 @@ class PathResolver:
 
         if project_root is None:
             project_root = self._get_project_root()
-        return fs._join_path(project_root, path_value)
+        return fs.join_path(project_root, path_value)
 
     def _infer_content_structure(
         self,
@@ -286,7 +286,7 @@ class PathResolver:
 
             if len(parts) >= 2:
                 context.content_name = parts[1]
-                context.content_dir = fs._join_path(src_dir, parts[0], parts[1])
+                context.content_dir = fs.join_path(src_dir, parts[0], parts[1])
         except Exception:
             pass
 
@@ -347,7 +347,7 @@ class PathResolver:
             "setup.cfg",
         ]
         for filename in config_files:
-            file_path = fs._join_path(root_dir, filename)
+            file_path = fs.join_path(root_dir, filename)
             info = fs.get_file_info(file_path)
             if info.success and info.exists and info.is_file:
                 context.config_file = file_path

@@ -243,7 +243,7 @@ def get_file_info(path: str, format_hint: str | None = None) -> FileInfo:
     if format_hint:
         format_name = format_hint
     else:
-        extension = fs._get_extension(path)
+        extension = fs.get_extension(path)
         mapping: dict[str, str] = {
             "md": "markdown",
             "markdown": "markdown",

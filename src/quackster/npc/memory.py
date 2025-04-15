@@ -31,7 +31,7 @@ def _get_memory_file_path() -> str:
         The absolute path to the user memory file as a string.
     """
     data_dir = get_user_data_dir()  # Expecting a string.
-    return fs._join_path(data_dir, MEMORY_FILE_NAME)
+    return fs.join_path(data_dir, MEMORY_FILE_NAME)
 
 
 def _load_persistent_memory(github_username: str | None) -> dict[str, Any] | None:

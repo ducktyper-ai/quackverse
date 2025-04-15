@@ -392,3 +392,15 @@ def is_valid_path(path: str | Path) -> DataResult[bool]:
         DataResult with boolean indicating if the path has valid syntax.
     """
     return _service.is_valid_path(path)
+
+def get_extension(self, path: str | Path) -> DataResult[str]:
+    """
+    Get the file extension from a path.
+
+    Args:
+        path: Path to get extension from
+
+    Returns:
+        DataResult with file extension without the dot
+    """
+    return _service.get_extension(path)

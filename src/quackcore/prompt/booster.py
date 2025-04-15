@@ -285,7 +285,7 @@ Tags: {", ".join(s.tags)}
         try:
             # Ensure parent directory exists using quackcore.fs.
             # Compute parent directory by splitting the path and joining all parts except the last.
-            parent_dir = fs._join_path(*fs._split_path(path)[:-1])
+            parent_dir = fs.join_path(*fs._split_path(path)[:-1])
             fs.create_directory(parent_dir, exist_ok=True)
 
             # Determine output format based on file extension.
