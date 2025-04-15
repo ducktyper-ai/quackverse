@@ -16,13 +16,13 @@ Unlike the `quackcore.fs` module, which provides low-level file system operation
 
 ## PathService
 
-The main entry point for the paths module is the `PathService` class, which provides a comprehensive API for path operations. A global instance is available as `quackcore.paths.path_service`.
+The main entry point for the paths module is the `PathService` class, which provides a comprehensive API for path operations. A global instance is available as `quackcore.paths.paths`.
 
 ```python
-from quackcore.paths import path_service
+from quackcore.paths import service as paths
 
 # Get the project root
-result = path_service.get_project_root()
+result = paths.get_project_root()
 if result.success:
     print(f"Project root: {result.path}")
 else:
@@ -39,7 +39,8 @@ Path operations return strongly-typed result objects:
 These result types follow a consistent pattern, allowing you to check for success before accessing the result:
 
 ```python
-result = path_service.get_module_path("myproject.utils.helper")
+from quackcore.paths import service as paths
+result = paths.get_module_path("myproject.utils.helper")
 if result.success:
     print(f"Module path: {result.path}")
 else:
@@ -51,7 +52,8 @@ else:
 ### Finding Project Root
 
 ```python
-result = path_service.get_project_root()
+from quackcore.paths import service as paths
+result = paths.get_project_root()
 if result.success:
     project_root = result.path
 ```
@@ -59,7 +61,8 @@ if result.success:
 ### Resolving Project Paths
 
 ```python
-result = path_service.resolve_project_path("src/module.py")
+from quackcore.paths import service as paths
+result = paths.resolve_project_path("src/module.py")
 if result.success:
     absolute_path = result.path
 ```
@@ -67,7 +70,8 @@ if result.success:
 ### Getting Relative Paths
 
 ```python
-result = path_service.get_relative_path("/home/user/project/src/module.py")
+from quackcore.paths import service as paths
+result = paths.get_relative_path("/home/user/project/src/module.py")
 if result.success:
     relative_path = result.path  # "src/module.py"
 ```
@@ -77,25 +81,27 @@ if result.success:
 ### Getting Known Directories
 
 ```python
+from quackcore.paths import service as paths
 # Get a specific known directory
-result = path_service.get_known_directory("src")
+result = paths.get_known_directory("src")
 if result.success:
     src_dir = result.path
 
 # List all known directories
-known_dirs = path_service.list_known_directories()
+known_dirs = paths.list_known_directories()
 ```
 
 ### Working with Content
 
 ```python
+from quackcore.paths import service as paths
 # Get a content directory
-result = path_service.get_content_dir("tutorials", "ducktyper")
+result = paths.get_content_dir("tutorials", "ducktyper")
 if result.success:
     tutorial_dir = result.path
 
 # Infer current content
-content_info = path_service.infer_current_content()
+content_info = paths.infer_current_content()
 if "type" in content_info:
     content_type = content_info["type"]
     content_name = content_info.get("name")
@@ -104,13 +110,14 @@ if "type" in content_info:
 ### Finding Special Directories
 
 ```python
+from quackcore.paths import service as paths
 # Find source directory
-result = path_service.find_source_directory()
+result = paths.find_source_directory()
 if result.success:
     src_dir = result.path
 
 # Find or create output directory
-result = path_service.find_output_directory(create=True)
+result = paths.find_output_directory(create=True)
 if result.success:
     output_dir = result.path
 ```
@@ -120,7 +127,8 @@ if result.success:
 ### Path to Module
 
 ```python
-result = path_service.resolve_content_module("/home/user/project/src/tutorials/ducktyper/intro.py")
+from quackcore.paths import service as paths
+result = paths.resolve_content_module("/home/user/project/src/tutorials/ducktyper/intro.py")
 if result.success:
     module_name = result.path  # "tutorials.ducktyper.intro"
 ```
@@ -128,7 +136,8 @@ if result.success:
 ### Module to Path
 
 ```python
-result = path_service.get_module_path("tutorials.ducktyper.intro")
+from quackcore.paths import service as paths
+result = paths.get_module_path("tutorials.ducktyper.intro")
 if result.success:
     file_path = result.path  # "/home/user/project/src/tutorials/ducktyper/intro.py"
 ```
@@ -138,14 +147,16 @@ if result.success:
 ### Inside Project Check
 
 ```python
-if path_service.is_inside_project("/home/user/project/src/module.py"):
+from quackcore.paths import service as paths
+if paths.is_inside_project("/home/user/project/src/module.py"):
     print("Path is inside the project")
 ```
 
 ### Path Exists in Known Directory
 
 ```python
-if path_service.path_exists_in_known_dir("assets", "images/logo.png"):
+from quackcore.paths import service as paths
+if paths.path_exists_in_known_dir("assets", "images/logo.png"):
     print("Asset exists")
 ```
 
@@ -154,7 +165,8 @@ if path_service.path_exists_in_known_dir("assets", "images/logo.png"):
 For more advanced use cases, you can access the full project context:
 
 ```python
-result = path_service.detect_project_context()
+from quackcore.paths import service as paths
+result = paths.detect_project_context()
 if result.success:
     context = result.context
     
@@ -176,7 +188,8 @@ if result.success:
 For content-specific projects, you can access the content context:
 
 ```python
-result = path_service.detect_content_context()
+from quackcore.paths import service as paths
+result = paths.detect_content_context()
 if result.success:
     context = result.context
     
@@ -195,11 +208,11 @@ if result.success:
 The paths module is designed to be used by other QuackCore modules that need project-aware path resolution. For example, a content generation module might use the paths module to locate the appropriate output directory for generated content.
 
 ```python
-from quackcore.paths import path_service
+from quackcore.paths import service as paths
 
 def generate_content(content_name, content_type="tutorials"):
     # Find the content directory
-    result = path_service.get_content_dir(content_type, content_name)
+    result = paths.get_content_dir(content_type, content_name)
     if not result.success:
         raise ValueError(f"Could not find content directory: {result.error}")
     
@@ -220,8 +233,9 @@ def generate_content(content_name, content_type="tutorials"):
 4. **Cache project context**: For performance-critical code, consider caching the project context instead of detecting it repeatedly.
 
 ```python
+from quackcore.paths import service as paths
 # Cache the project context
-context_result = path_service.detect_project_context()
+context_result = paths.detect_project_context()
 if context_result.success:
     context = context_result.context
     

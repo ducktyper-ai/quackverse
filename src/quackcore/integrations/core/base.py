@@ -264,9 +264,9 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         # Attempt to get the project root, with graceful error handling
         project_root = None
         try:
-            from quackcore.paths._internal.resolver import get_project_root
+            from quackcore.paths import service as paths
 
-            project_root = get_project_root()
+            project_root = paths.get_project_root()
         except (QuackFileNotFoundError, FileNotFoundError, OSError) as e:
             self.logger.debug(
                 f"Project root not found, checking only direct paths: {e}"

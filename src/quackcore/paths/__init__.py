@@ -29,7 +29,7 @@ from quackcore.paths.service import PathService
 
 # Create a global instance for convenience
 resolver = PathResolver()
-path_service = PathService()
+service = PathService()
 
 __all__ = [
     # Classes
@@ -40,7 +40,7 @@ __all__ = [
     "ProjectDirectory",
     # Global instances
     "resolver",
-    "path_service",
+    "service",
     # Internal utility functions (may be deprecated in future versions)
     "_find_project_root",
     "_find_nearest_directory",
