@@ -594,7 +594,7 @@ class TestCourseManager:
                 {"id": "course-2", "name": "Course 2", "code": "C2"},
             ]
         }
-        mock_fs._read_yaml.return_value = MagicMock(success=True, data=courses_data)
+        mock_fs.read_yaml.return_value = MagicMock(success=True, data=courses_data)
 
         # Load from file
         with patch.object(CourseManager, "_resolve_file_path") as mock_resolve:
@@ -629,7 +629,7 @@ class TestCourseManager:
         file_path = "/path/to/courses.yaml"
 
         # Mock read_yaml to return failure
-        mock_fs._read_yaml.return_value = MagicMock(
+        mock_fs.read_yaml.return_value = MagicMock(
             success=False, error="File not found"
         )
 
@@ -645,7 +645,7 @@ class TestCourseManager:
 
         # Mock read_yaml to return success with invalid data
         invalid_data = {"not_courses": []}
-        mock_fs._read_yaml.return_value = MagicMock(success=True, data=invalid_data)
+        mock_fs.read_yaml.return_value = MagicMock(success=True, data=invalid_data)
 
         # Load from file should raise ValueError
         with patch.object(CourseManager, "_resolve_file_path") as mock_resolve:
@@ -667,7 +667,7 @@ class TestCourseManager:
                 },
             ]
         }
-        mock_fs._read_yaml.return_value = MagicMock(success=True, data=courses_data)
+        mock_fs.read_yaml.return_value = MagicMock(success=True, data=courses_data)
 
         # Load from file should still work, but log a warning and skip the invalid course
         with patch.object(CourseManager, "_resolve_file_path") as mock_resolve:
@@ -693,7 +693,7 @@ class TestCourseManager:
         manager.add_courses([course1, course2])
 
         # Mock write_yaml to return success
-        mock_fs._write_yaml.return_value = MagicMock(success=True)
+        mock_fs.write_yaml.return_value = MagicMock(success=True)
 
         # Save to file
         with patch.object(CourseManager, "_resolve_file_path") as mock_resolve:
@@ -705,7 +705,7 @@ class TestCourseManager:
 
             # Verify write_yaml was called with correct data
             expected_data = {"courses": [course1.model_dump(), course2.model_dump()]}
-            mock_fs._write_yaml.assert_called_once_with(file_path, expected_data)
+            mock_fs.write_yaml.assert_called_once_with(file_path, expected_data)
 
     def test_save_to_file_error(self, mock_fs, mock_logger):
         """Test saving courses when write fails."""
@@ -717,7 +717,7 @@ class TestCourseManager:
         manager.add_course(course)
 
         # Mock write_yaml to return failure
-        mock_fs._write_yaml.return_value = MagicMock(success=False, error="Write error")
+        mock_fs.write_yaml.return_value = MagicMock(success=False, error="Write error")
 
         # Save to file
         with patch.object(CourseManager, "_resolve_file_path") as mock_resolve:

@@ -109,7 +109,7 @@ class TestPandocUtilities:
             QuackIntegrationError: If the file does not exist
         """
         # Use the global service instance
-        file_info_result = fs._get_file_info(path)
+        file_info_result = fs.get_file_info(path)
         if not file_info_result.success or not file_info_result.exists:
             logger.error(f"File not found: {path}")
             raise QuackIntegrationError(f"File not found: {path}")
@@ -118,7 +118,7 @@ class TestPandocUtilities:
         if format_hint:
             format_name = format_hint
         else:
-            extension_result = fs._get_extension(path)
+            extension_result = fs.get_extension(path)
             extension = extension_result.extension if extension_result.success else ""
             format_mapping = {
                 "md": "markdown",
@@ -158,8 +158,8 @@ class TestPandocUtilities:
 
         if validation_min_size > 0 and converted_size < validation_min_size:
             # Use the global service instance for file size strings
-            converted_size_str = fs._get_file_size_str(converted_size)
-            min_size_str = fs._get_file_size_str(validation_min_size)
+            converted_size_str = fs.get_file_size_str(converted_size)
+            min_size_str = fs.get_file_size_str(validation_min_size)
 
             error_msg = (
                 f"Converted file size ({converted_size_str}) "
@@ -193,8 +193,8 @@ class TestPandocUtilities:
             conversion_ratio = converted_size / original_size
             if conversion_ratio < threshold:
                 # Use the global service instance for file size strings
-                converted_size_str = fs._get_file_size_str(converted_size)
-                original_size_str = fs._get_file_size_str(original_size)
+                converted_size_str = fs.get_file_size_str(converted_size)
+                original_size_str = fs.get_file_size_str(original_size)
 
                 error_msg = (
                     f"Conversion error: Converted file size "
@@ -246,8 +246,8 @@ class TestPandocUtilities:
             }
 
             # Use fs module's utility for formatting file sizes
-            original_size_str = fs._get_file_size_str(original_size)
-            converted_size_str = fs._get_file_size_str(converted_size)
+            original_size_str = fs.get_file_size_str(original_size)
+            converted_size_str = fs.get_file_size_str(converted_size)
 
             logger.info(
                 f"File size change for {filename}: "

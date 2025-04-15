@@ -374,7 +374,7 @@ class TestAssignmentManager:
                 },
             ]
         }
-        mock_fs._read_yaml.return_value = MagicMock(success=True, data=assignments_data)
+        mock_fs.read_yaml.return_value = MagicMock(success=True, data=assignments_data)
 
         # Load from file
         manager = AssignmentManager.load_from_file(file_path)
@@ -404,7 +404,7 @@ class TestAssignmentManager:
         file_path = "/path/to/assignments.yaml"
 
         # Mock read_yaml to return failure
-        mock_fs._read_yaml.return_value = MagicMock(
+        mock_fs.read_yaml.return_value = MagicMock(
             success=False, error="File not found"
         )
 
@@ -418,7 +418,7 @@ class TestAssignmentManager:
 
         # Mock read_yaml to return success with invalid data
         invalid_data = {"not_assignments": []}
-        mock_fs._read_yaml.return_value = MagicMock(success=True, data=invalid_data)
+        mock_fs.read_yaml.return_value = MagicMock(success=True, data=invalid_data)
 
         # Load from file should raise ValueError
         with pytest.raises(ValueError):
@@ -438,7 +438,7 @@ class TestAssignmentManager:
                 },
             ]
         }
-        mock_fs._read_yaml.return_value = MagicMock(success=True, data=assignments_data)
+        mock_fs.read_yaml.return_value = MagicMock(success=True, data=assignments_data)
 
         # Load from file should still work, but log a warning and skip the invalid assignment
         manager = AssignmentManager.load_from_file(file_path)
@@ -462,7 +462,7 @@ class TestAssignmentManager:
         manager.add_assignments([assignment1, assignment2])
 
         # Mock write_yaml to return success
-        mock_fs._write_yaml.return_value = MagicMock(success=True)
+        mock_fs.write_yaml.return_value = MagicMock(success=True)
 
         # Save to file
         result = manager.save_to_file(file_path)
@@ -474,7 +474,7 @@ class TestAssignmentManager:
         expected_data = {
             "assignments": [assignment1.model_dump(), assignment2.model_dump()]
         }
-        mock_fs._write_yaml.assert_called_once_with(file_path, expected_data)
+        mock_fs.write_yaml.assert_called_once_with(file_path, expected_data)
 
     def test_save_to_file_error(self, mock_fs, mock_logger):
         """Test saving assignments when write fails."""
@@ -486,7 +486,7 @@ class TestAssignmentManager:
         manager.add_assignment(assignment)
 
         # Mock write_yaml to return failure
-        mock_fs._write_yaml.return_value = MagicMock(success=False, error="Write error")
+        mock_fs.write_yaml.return_value = MagicMock(success=False, error="Write error")
 
         # Save to file
         result = manager.save_to_file(file_path)

@@ -48,13 +48,13 @@ class TestTeachingService:
     def test_initialize_expand_user_vars(self, mock_fs):
         """Test that user variables are expanded in config_path."""
         service = TeachingService()
-        mock_fs._expand_user_vars.return_value = "/expanded/path"
+        mock_fs.expand_user_vars.return_value = "/expanded/path"
 
         with patch("quackster.academy.context.TeachingContext.from_config"):
             service.initialize("~/config.yaml")
 
             # Verify expand_user_vars was called
-            mock_fs._expand_user_vars.assert_called_once_with("~/config.yaml")
+            mock_fs.expand_user_vars.assert_called_once_with("~/config.yaml")
 
     def test_initialize_relative_base_dir(self, mock_fs, mock_resolver):
         """Test initialization with relative base_dir."""
@@ -675,14 +675,14 @@ class TestTeachingService:
         service._context.config.model_dump.return_value = {"key": "value"}
 
         # Mock write_yaml to return success
-        mock_fs._write_yaml.return_value = MagicMock(success=True)
+        mock_fs.write_yaml.return_value = MagicMock(success=True)
 
         # Test with default path
         result = service.save_config()
 
         assert result.success
         assert "Configuration saved" in result.message
-        mock_fs._write_yaml.assert_called_once_with(
+        mock_fs.write_yaml.assert_called_once_with(
             "/base/dir/teaching_config.yaml", {"key": "value"}
         )
 
@@ -693,7 +693,7 @@ class TestTeachingService:
         service._context.config.model_dump.return_value = {"key": "value"}
 
         # Mock write_yaml to return success
-        mock_fs._write_yaml.return_value = MagicMock(success=True)
+        mock_fs.write_yaml.return_value = MagicMock(success=True)
 
         # Test with custom path
         with patch.object(TeachingService, "_resolve_file_path") as mock_resolve:
@@ -702,7 +702,7 @@ class TestTeachingService:
 
             assert result.success
             assert "Configuration saved" in result.message
-            mock_fs._write_yaml.assert_called_once_with(
+            mock_fs.write_yaml.assert_called_once_with(
                 "/custom/path/config.yaml", {"key": "value"}
             )
 
@@ -714,7 +714,7 @@ class TestTeachingService:
         service._context.config.model_dump.return_value = {"key": "value"}
 
         # Mock write_yaml to return failure
-        mock_fs._write_yaml.return_value = MagicMock(success=False, error="Write error")
+        mock_fs.write_yaml.return_value = MagicMock(success=False, error="Write error")
 
         result = service.save_config()
 
@@ -730,7 +730,7 @@ class TestTeachingService:
         service._context.config.model_dump.return_value = {"key": "value"}
 
         # Mock write_yaml to raise an exception
-        mock_fs._write_yaml.side_effect = Exception("Unexpected error")
+        mock_fs.write_yaml.side_effect = Exception("Unexpected error")
 
         result = service.save_config()
 

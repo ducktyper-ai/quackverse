@@ -25,16 +25,16 @@ class TestGetUserDataDir:
     def test_default_directory(self, mock_fs):
         """Test getting the default user data directory."""
         # Setup mock for fs.expand_user_vars and fs.create_directory
-        mock_fs._expand_user_vars.return_value = "/home/user/.quack"
-        mock_fs._create_directory.return_value = MagicMock(success=True)
+        mock_fs.expand_user_vars.return_value = "/home/user/.quack"
+        mock_fs.create_directory.return_value = MagicMock(success=True)
 
         # Call the function
         result = get_user_data_dir()
 
         # Check the result and mock calls
         assert result == Path("/home/user/.quack")
-        mock_fs._expand_user_vars.assert_called_once_with("~/.quack")
-        mock_fs._create_directory.assert_called_once_with(
+        mock_fs.expand_user_vars.assert_called_once_with("~/.quack")
+        mock_fs.create_directory.assert_called_once_with(
             Path("/home/user/.quack"), exist_ok=True
         )
 
@@ -44,16 +44,16 @@ class TestGetUserDataDir:
         monkeypatch.setenv("QUACK_DATA_DIR", "~/custom_data")
 
         # Setup mock for fs.expand_user_vars and fs.create_directory
-        mock_fs._expand_user_vars.return_value = "/home/user/custom_data"
-        mock_fs._create_directory.return_value = MagicMock(success=True)
+        mock_fs.expand_user_vars.return_value = "/home/user/custom_data"
+        mock_fs.create_directory.return_value = MagicMock(success=True)
 
         # Call the function
         result = get_user_data_dir()
 
         # Check the result and mock calls
         assert result == Path("/home/user/custom_data")
-        mock_fs._expand_user_vars.assert_called_once_with("~/custom_data")
-        mock_fs._create_directory.assert_called_once_with(
+        mock_fs.expand_user_vars.assert_called_once_with("~/custom_data")
+        mock_fs.create_directory.assert_called_once_with(
             Path("/home/user/custom_data"), exist_ok=True
         )
 
@@ -197,7 +197,7 @@ class TestLoadProgress:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
-            mock_fs._get_file_info.return_value = MagicMock(success=True, exists=True)
+            mock_fs.get_file_info.return_value = MagicMock(success=True, exists=True)
 
             # Mock fs.read_json to return progress data
             progress_data = {
@@ -212,7 +212,7 @@ class TestLoadProgress:
                 "last_active_date": "2023-01-15",
                 "metadata": {"key": "value"},
             }
-            mock_fs._read_json.return_value = MagicMock(
+            mock_fs.read_json.return_value = MagicMock(
                 success=True, data=progress_data
             )
 
@@ -234,10 +234,10 @@ class TestLoadProgress:
             assert result.metadata == {"key": "value"}
 
             # Verify mock calls
-            mock_fs._get_file_info.assert_called_once_with(
+            mock_fs.get_file_info.assert_called_once_with(
                 Path("/home/user/.quack/ducktyper_user.json")
             )
-            mock_fs._read_json.assert_called_once_with(
+            mock_fs.read_json.assert_called_once_with(
                 Path("/home/user/.quack/ducktyper_user.json")
             )
 
@@ -254,7 +254,7 @@ class TestLoadProgress:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file doesn't exist
-            mock_fs._get_file_info.return_value = MagicMock(success=True, exists=False)
+            mock_fs.get_file_info.return_value = MagicMock(success=True, exists=False)
 
             # Mock create_new_progress
             with patch(
@@ -270,7 +270,7 @@ class TestLoadProgress:
                 assert result is mock_progress
 
                 # Verify mock calls
-                mock_fs._get_file_info.assert_called_once_with(
+                mock_fs.get_file_info.assert_called_once_with(
                     Path("/home/user/.quack/ducktyper_user.json")
                 )
                 mock_create_progress.assert_called_once()
@@ -288,10 +288,10 @@ class TestLoadProgress:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
-            mock_fs._get_file_info.return_value = MagicMock(success=True, exists=True)
+            mock_fs.get_file_info.return_value = MagicMock(success=True, exists=True)
 
             # Mock fs.read_json to return error
-            mock_fs._read_json.return_value = MagicMock(
+            mock_fs.read_json.return_value = MagicMock(
                 success=False, error="Invalid JSON"
             )
 
@@ -309,10 +309,10 @@ class TestLoadProgress:
                 assert result is mock_progress
 
                 # Verify mock calls
-                mock_fs._get_file_info.assert_called_once_with(
+                mock_fs.get_file_info.assert_called_once_with(
                     Path("/home/user/.quack/ducktyper_user.json")
                 )
-                mock_fs._read_json.assert_called_once_with(
+                mock_fs.read_json.assert_called_once_with(
                     Path("/home/user/.quack/ducktyper_user.json")
                 )
                 mock_create_progress.assert_called_once()
@@ -330,11 +330,11 @@ class TestLoadProgress:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
-            mock_fs._get_file_info.return_value = MagicMock(success=True, exists=True)
+            mock_fs.get_file_info.return_value = MagicMock(success=True, exists=True)
 
             # Mock fs.read_json to return invalid data
             invalid_data = {"invalid_field": "value"}  # Missing required fields
-            mock_fs._read_json.return_value = MagicMock(success=True, data=invalid_data)
+            mock_fs.read_json.return_value = MagicMock(success=True, data=invalid_data)
 
             # Mock create_new_progress
             with patch(
@@ -350,10 +350,10 @@ class TestLoadProgress:
                 assert result is mock_progress
 
                 # Verify mock calls
-                mock_fs._get_file_info.assert_called_once_with(
+                mock_fs.get_file_info.assert_called_once_with(
                     Path("/home/user/.quack/ducktyper_user.json")
                 )
-                mock_fs._read_json.assert_called_once_with(
+                mock_fs.read_json.assert_called_once_with(
                     Path("/home/user/.quack/ducktyper_user.json")
                 )
                 mock_create_progress.assert_called_once()
@@ -384,7 +384,7 @@ class TestSaveProgress:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.write_json to succeed
-            mock_fs._write_json.return_value = MagicMock(success=True)
+            mock_fs.write_json.return_value = MagicMock(success=True)
 
             # Call the function
             result = save_progress(progress)
@@ -393,7 +393,7 @@ class TestSaveProgress:
             assert result is True
 
             # Verify mock calls
-            mock_fs._write_json.assert_called_once_with(
+            mock_fs.write_json.assert_called_once_with(
                 Path("/home/user/.quack/ducktyper_user.json"), progress.model_dump()
             )
 
@@ -413,7 +413,7 @@ class TestSaveProgress:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.write_json to fail
-            mock_fs._write_json.return_value = MagicMock(
+            mock_fs.write_json.return_value = MagicMock(
                 success=False, error="Write error"
             )
 
@@ -424,7 +424,7 @@ class TestSaveProgress:
             assert result is False
 
             # Verify mock calls
-            mock_fs._write_json.assert_called_once_with(
+            mock_fs.write_json.assert_called_once_with(
                 Path("/home/user/.quack/ducktyper_user.json"), progress.model_dump()
             )
 
@@ -444,7 +444,7 @@ class TestSaveProgress:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.write_json to raise exception
-            mock_fs._write_json.side_effect = Exception("Unexpected error")
+            mock_fs.write_json.side_effect = Exception("Unexpected error")
 
             # Call the function
             result = save_progress(progress)
@@ -453,7 +453,7 @@ class TestSaveProgress:
             assert result is False
 
             # Verify mock calls
-            mock_fs._write_json.assert_called_once_with(
+            mock_fs.write_json.assert_called_once_with(
                 Path("/home/user/.quack/ducktyper_user.json"), progress.model_dump()
             )
 
@@ -502,10 +502,10 @@ class TestResetProgress:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
-            mock_fs._get_file_info.return_value = MagicMock(success=True, exists=True)
+            mock_fs.get_file_info.return_value = MagicMock(success=True, exists=True)
 
             # Mock fs.delete to succeed
-            mock_fs._delete.return_value = MagicMock(success=True)
+            mock_fs.delete.return_value = MagicMock(success=True)
 
             # Call the function
             result = reset_progress()
@@ -514,10 +514,10 @@ class TestResetProgress:
             assert result is True
 
             # Verify mock calls
-            mock_fs._get_file_info.assert_called_once_with(
+            mock_fs.get_file_info.assert_called_once_with(
                 Path("/home/user/.quack/ducktyper_user.json")
             )
-            mock_fs._delete.assert_called_once_with(
+            mock_fs.delete.assert_called_once_with(
                 Path("/home/user/.quack/ducktyper_user.json")
             )
 
@@ -534,7 +534,7 @@ class TestResetProgress:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file doesn't exist
-            mock_fs._get_file_info.return_value = MagicMock(success=True, exists=False)
+            mock_fs.get_file_info.return_value = MagicMock(success=True, exists=False)
 
             # Call the function
             result = reset_progress()
@@ -543,10 +543,10 @@ class TestResetProgress:
             assert result is True
 
             # Verify mock calls
-            mock_fs._get_file_info.assert_called_once_with(
+            mock_fs.get_file_info.assert_called_once_with(
                 Path("/home/user/.quack/ducktyper_user.json")
             )
-            mock_fs._delete.assert_not_called()
+            mock_fs.delete.assert_not_called()
 
             # Verify log message
             assert any(
@@ -561,10 +561,10 @@ class TestResetProgress:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
-            mock_fs._get_file_info.return_value = MagicMock(success=True, exists=True)
+            mock_fs.get_file_info.return_value = MagicMock(success=True, exists=True)
 
             # Mock fs.delete to fail
-            mock_fs._delete.return_value = MagicMock(
+            mock_fs.delete.return_value = MagicMock(
                 success=False, error="Delete error"
             )
 
@@ -575,10 +575,10 @@ class TestResetProgress:
             assert result is False
 
             # Verify mock calls
-            mock_fs._get_file_info.assert_called_once_with(
+            mock_fs.get_file_info.assert_called_once_with(
                 Path("/home/user/.quack/ducktyper_user.json")
             )
-            mock_fs._delete.assert_called_once_with(
+            mock_fs.delete.assert_called_once_with(
                 Path("/home/user/.quack/ducktyper_user.json")
             )
 
@@ -599,14 +599,14 @@ class TestBackupProgress:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
-            mock_fs._get_file_info.return_value = MagicMock(success=True, exists=True)
+            mock_fs.get_file_info.return_value = MagicMock(success=True, exists=True)
 
             # Mock get_user_data_dir
             with patch("quackster.core.api.get_user_data_dir") as mock_get_dir:
                 mock_get_dir.return_value = Path("/home/user/.quack")
 
                 # Mock fs.copy to succeed
-                mock_fs._copy.return_value = MagicMock(success=True)
+                mock_fs.copy.return_value = MagicMock(success=True)
 
                 # Mock datetime
                 with patch("datetime.datetime") as mock_datetime:
@@ -621,10 +621,10 @@ class TestBackupProgress:
                     assert result is True
 
                     # Verify mock calls
-                    mock_fs._get_file_info.assert_called_once_with(
+                    mock_fs.get_file_info.assert_called_once_with(
                         Path("/home/user/.quack/ducktyper_user.json")
                     )
-                    mock_fs._copy.assert_called_once_with(
+                    mock_fs.copy.assert_called_once_with(
                         Path("/home/user/.quack/ducktyper_user.json"),
                         Path("/home/user/.quack/ducktyper_user_20230101_120000.json"),
                     )
@@ -642,14 +642,14 @@ class TestBackupProgress:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
-            mock_fs._get_file_info.return_value = MagicMock(success=True, exists=True)
+            mock_fs.get_file_info.return_value = MagicMock(success=True, exists=True)
 
             # Mock get_user_data_dir
             with patch("quackster.core.api.get_user_data_dir") as mock_get_dir:
                 mock_get_dir.return_value = Path("/home/user/.quack")
 
                 # Mock fs.copy to succeed
-                mock_fs._copy.return_value = MagicMock(success=True)
+                mock_fs.copy.return_value = MagicMock(success=True)
 
                 # Call the function with custom name
                 result = backup_progress("custom_backup.json")
@@ -658,10 +658,10 @@ class TestBackupProgress:
                 assert result is True
 
                 # Verify mock calls
-                mock_fs._get_file_info.assert_called_once_with(
+                mock_fs.get_file_info.assert_called_once_with(
                     Path("/home/user/.quack/ducktyper_user.json")
                 )
-                mock_fs._copy.assert_called_once_with(
+                mock_fs.copy.assert_called_once_with(
                     Path("/home/user/.quack/ducktyper_user.json"),
                     Path("/home/user/.quack/custom_backup.json"),
                 )
@@ -679,7 +679,7 @@ class TestBackupProgress:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file doesn't exist
-            mock_fs._get_file_info.return_value = MagicMock(success=True, exists=False)
+            mock_fs.get_file_info.return_value = MagicMock(success=True, exists=False)
 
             # Call the function
             result = backup_progress()
@@ -688,10 +688,10 @@ class TestBackupProgress:
             assert result is False
 
             # Verify mock calls
-            mock_fs._get_file_info.assert_called_once_with(
+            mock_fs.get_file_info.assert_called_once_with(
                 Path("/home/user/.quack/ducktyper_user.json")
             )
-            mock_fs._copy.assert_not_called()
+            mock_fs.copy.assert_not_called()
 
             # Verify log message
             assert any(
@@ -706,14 +706,14 @@ class TestBackupProgress:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
-            mock_fs._get_file_info.return_value = MagicMock(success=True, exists=True)
+            mock_fs.get_file_info.return_value = MagicMock(success=True, exists=True)
 
             # Mock get_user_data_dir
             with patch("quackster.core.api.get_user_data_dir") as mock_get_dir:
                 mock_get_dir.return_value = Path("/home/user/.quack")
 
                 # Mock fs.copy to fail
-                mock_fs._copy.return_value = MagicMock(
+                mock_fs.copy.return_value = MagicMock(
                     success=False, error="Copy error"
                 )
 
@@ -724,10 +724,10 @@ class TestBackupProgress:
                 assert result is False
 
                 # Verify mock calls
-                mock_fs._get_file_info.assert_called_once_with(
+                mock_fs.get_file_info.assert_called_once_with(
                     Path("/home/user/.quack/ducktyper_user.json")
                 )
-                mock_fs._copy.assert_called_once()
+                mock_fs.copy.assert_called_once()
 
                 # Verify log message
                 assert any(
