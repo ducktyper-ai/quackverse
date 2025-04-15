@@ -562,7 +562,9 @@ class TestFeedbackManager:
 
     def test_resolve_file_path_relative_no_project_root(self, mock_resolver):
         """Test _resolve_file_path with relative path when project root fails."""
-        mock_resolver._get_project_root.side_effect = Exception("Project root not found")
+        mock_resolver._get_project_root.side_effect = Exception(
+            "Project root not found"
+        )
 
         with patch("pathlib.Path.resolve") as mock_resolve:
             mock_resolve.return_value = Path("/resolved/path")

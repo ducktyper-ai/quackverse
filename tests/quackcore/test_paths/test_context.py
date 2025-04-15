@@ -5,7 +5,11 @@ Tests for project context models.
 
 from pathlib import Path
 
-from quackcore.paths._internal.context import ContentContext, ProjectContext, ProjectDirectory
+from quackcore.paths._internal.context import (
+    ContentContext,
+    ProjectContext,
+    ProjectDirectory,
+)
 
 
 class TestProjectDirectory:

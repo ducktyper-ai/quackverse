@@ -239,7 +239,9 @@ class TestFileSystemOperations:
         assert result.success is True
 
         # Test creating existing directory with exist_ok=False
-        with patch("quackcore.fs._operations.ensure_directory") as mock_ensure_directory:
+        with patch(
+            "quackcore.fs._operations.ensure_directory"
+        ) as mock_ensure_directory:
             mock_ensure_directory.side_effect = QuackFileExistsError(
                 str(temp_dir / "new_dir")
             )

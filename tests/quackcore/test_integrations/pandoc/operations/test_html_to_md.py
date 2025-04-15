@@ -46,7 +46,9 @@ class TestHtmlToMarkdownOperations:
     @pytest.fixture
     def mock_fs(self):
         """Fixture to mock fs module."""
-        with patch("quackcore.integrations.pandoc._operations.html_to_md.fs") as mock_fs:
+        with patch(
+            "quackcore.integrations.pandoc._operations.html_to_md.fs"
+        ) as mock_fs:
             # Setup default behavior for file info checks
             file_info = FileInfoResult(
                 success=True,

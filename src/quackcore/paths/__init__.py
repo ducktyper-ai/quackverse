@@ -11,32 +11,41 @@ NOTE: This module intentionally does NOT expose low-level path functions.
 Use `quackcore.fs` for join_path, split_path, etc. to avoid API duplication.
 """
 
-
-from quackcore.fs.service.standalone import join_path, split_path, get_extension
-from quackcore.paths._internal.context import ContentContext, ProjectContext, ProjectDirectory
-from quackcore.paths._internal.resolver import PathResolver, _resolve_project_path
-from quackcore.paths._internal.utils import _find_project_root, _find_nearest_directory, \
-    _resolve_relative_to_project, _normalize_path, _infer_module_from_path
+from quackcore.fs.service.standalone import get_extension
+from quackcore.paths._internal.context import (
+    ContentContext,
+    ProjectContext,
+    ProjectDirectory,
+)
+from quackcore.paths._internal.resolver import PathResolver
+from quackcore.paths._internal.utils import (
+    _find_nearest_directory,
+    _find_project_root,
+    _infer_module_from_path,
+    _normalize_path,
+    _resolve_relative_to_project,
+)
+from quackcore.paths.service import PathService
 
 # Create a global instance for convenience
 resolver = PathResolver()
+path_service = PathService()
 
 __all__ = [
     # Classes
     "PathResolver",
+    "PathService",
     "ProjectContext",
     "ContentContext",
     "ProjectDirectory",
-    # Global instance
+    # Global instances
     "resolver",
-    "_resolve_project_path",
-    # Utility functions
+    "path_service",
+    # Internal utility functions (may be deprecated in future versions)
     "_find_project_root",
     "_find_nearest_directory",
     "_resolve_relative_to_project",
     "_normalize_path",
-    "join_path",
-    "split_path",
     "get_extension",
     "_infer_module_from_path",
 ]

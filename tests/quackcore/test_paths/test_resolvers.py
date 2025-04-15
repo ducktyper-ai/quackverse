@@ -102,7 +102,9 @@ class TestPathResolver:
         resolver = PathResolver()
 
         # Test resolving a relative path
-        resolved = resolver._resolve_project_path("src/file.txt", mock_project_structure)
+        resolved = resolver._resolve_project_path(
+            "src/file.txt", mock_project_structure
+        )
         assert resolved == mock_project_structure / "src" / "file.txt"
 
         # Test resolving an absolute path (should remain unchanged)

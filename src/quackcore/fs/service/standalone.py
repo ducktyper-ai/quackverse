@@ -393,6 +393,7 @@ def is_valid_path(path: str | Path) -> DataResult[bool]:
     """
     return _service.is_valid_path(path)
 
+
 def get_extension(self, path: str | Path) -> DataResult[str]:
     """
     Get the file extension from a path.

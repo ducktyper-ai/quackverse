@@ -7,6 +7,7 @@ from pathlib import Path
 
 from quackcore.errors import wrap_io_errors
 from quackcore.fs import DataResult, OperationResult, WriteResult
+from quackcore.fs._operations import FileSystemOperations
 from quackcore.fs.api.public import (
     atomic_write,
     compute_checksum,
@@ -23,7 +24,6 @@ from quackcore.fs.api.public import (
     is_file_locked,
     is_path_writeable,
 )
-from quackcore.fs._operations import FileSystemOperations
 
 
 class UtilityOperationsMixin:

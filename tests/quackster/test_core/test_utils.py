@@ -212,9 +212,7 @@ class TestLoadProgress:
                 "last_active_date": "2023-01-15",
                 "metadata": {"key": "value"},
             }
-            mock_fs.read_json.return_value = MagicMock(
-                success=True, data=progress_data
-            )
+            mock_fs.read_json.return_value = MagicMock(success=True, data=progress_data)
 
             # Call the function
             result = load_progress()
@@ -564,9 +562,7 @@ class TestResetProgress:
             mock_fs.get_file_info.return_value = MagicMock(success=True, exists=True)
 
             # Mock fs.delete to fail
-            mock_fs.delete.return_value = MagicMock(
-                success=False, error="Delete error"
-            )
+            mock_fs.delete.return_value = MagicMock(success=False, error="Delete error")
 
             # Call the function
             result = reset_progress()
@@ -713,9 +709,7 @@ class TestBackupProgress:
                 mock_get_dir.return_value = Path("/home/user/.quack")
 
                 # Mock fs.copy to fail
-                mock_fs.copy.return_value = MagicMock(
-                    success=False, error="Copy error"
-                )
+                mock_fs.copy.return_value = MagicMock(success=False, error="Copy error")
 
                 # Call the function
                 result = backup_progress()
