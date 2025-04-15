@@ -13,7 +13,6 @@ from quackcore.config.loader import load_config
 from quackcore.config.models import QuackConfig
 from quackcore.errors import QuackError
 from quackcore.fs.service import FileSystemService
-from quackcore.paths.resolver import PathResolver
 from quackcore.plugins.protocols import (
     CommandPluginProtocol,
     ProviderPluginProtocol,

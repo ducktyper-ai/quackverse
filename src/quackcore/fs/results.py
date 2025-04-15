@@ -279,6 +279,11 @@ class PathResult(OperationResult):
     validation, normalization, and checking _operations.
     """
 
+    # Adding default values for is_absolute and is_valid to prevent errors when fields are accessed
+    is_absolute: bool = False
+    is_valid: bool = False
+    exists: bool = False
+
     def __init__(
         self,
         success: bool = True,
@@ -320,7 +325,6 @@ class PathResult(OperationResult):
             f"exists={self.exists}, valid={self.is_valid}, "
             f"absolute={self.is_absolute})"
         )
-
 
 # Aliases for backward compatibility with quackcore.fs.types
 DirectoryListResult = DirectoryInfoResult

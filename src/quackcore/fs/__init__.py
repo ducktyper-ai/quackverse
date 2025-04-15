@@ -6,43 +6,20 @@ This package provides a robust filesystem abstraction with proper error handling
 standardized result objects, and comprehensive file operation capabilities.
 """
 
-# Import core components
-from quackcore.fs._operations import FileSystemOperations
+# Import core result classes first since many modules depend on them
 from quackcore.fs.results import (
     DataResult,
     DirectoryInfoResult,
     FileInfoResult,
     FindResult,
     OperationResult,
+    PathResult,
     ReadResult,
     WriteResult,
 )
-from quackcore.fs.service import (
-    FileSystemService,
-    copy,
-    create_directory,
-    create_service,
-    delete,
-    find_files,
-    get_file_info,
-    get_path_info,
-    is_valid_path,
-    list_directory,
-    move,
-    normalize_path_with_info,
-    read_binary,
-    read_json,
-    read_text,
-    read_yaml,
-    service,
-    write_binary,
-    write_json,
-    write_text,
-    write_yaml,
-)
 
-# Import utility functions
-from quackcore.fs.utils import (
+# Import utility functions directly to make them available at package level
+from quackcore.fs.api.public import (
     atomic_write,
     compute_checksum,
     copy_safely,
@@ -67,22 +44,115 @@ from quackcore.fs.utils import (
     split_path,
 )
 
-
-# Define path validation functions directly here for backward compatibility
+# Define path validation functions for backward compatibility
 def get_path_info(path):
     """Get information about a path's validity and format."""
+    # Import here to avoid circular imports
+    from quackcore.fs.service import service
     return service.get_path_info(path)
 
 
 def is_valid_path(path):
     """Check if a path has valid syntax."""
+    # Import here to avoid circular imports
+    from quackcore.fs.service import service
     return service.is_valid_path(path)
 
 
 def normalize_path_with_info(path):
     """Normalize a path and return detailed information."""
+    # Import here to avoid circular imports
+    from quackcore.fs.service import service
     return service._normalize_path_with_info(path)
 
+
+# Create service lazily to avoid circular imports
+def _get_service():
+    """Get the global filesystem service instance."""
+    # Import here to avoid circular imports
+    from quackcore.fs.service import service
+    return service
+
+
+# Expose service functions through getters to avoid circular imports
+def get_file_info(path):
+    """Get information about a file or directory."""
+    return _get_service().get_file_info(path)
+
+
+def create_directory(path, exist_ok=True):
+    """Create a directory if it doesn't exist."""
+    return _get_service().create_directory(path, exist_ok)
+
+
+def read_yaml(path):
+    """Read a YAML file and parse its contents."""
+    return _get_service().read_yaml(path)
+
+
+def read_text(path, encoding="utf-8"):
+    """Read text from a file."""
+    return _get_service().read_text(path, encoding)
+
+
+def write_text(path, content, encoding="utf-8", atomic=True):
+    """Write text to a file."""
+    return _get_service().write_text(path, content, encoding, atomic)
+
+
+def read_binary(path):
+    """Read binary data from a file."""
+    return _get_service().read_binary(path)
+
+
+def write_binary(path, content, atomic=True):
+    """Write binary data to a file."""
+    return _get_service().write_binary(path, content, atomic)
+
+
+def write_yaml(path, data, atomic=True):
+    """Write data to a YAML file."""
+    return _get_service().write_yaml(path, data, atomic)
+
+
+def read_json(path):
+    """Read a JSON file and parse its contents."""
+    return _get_service().read_json(path)
+
+
+def write_json(path, data, atomic=True, indent=2):
+    """Write data to a JSON file."""
+    return _get_service().write_json(path, data, atomic, indent)
+
+
+def list_directory(path, pattern=None, include_hidden=False):
+    """List contents of a directory."""
+    return _get_service().list_directory(path, pattern, include_hidden)
+
+
+def find_files(path, pattern, recursive=True, include_hidden=False):
+    """Find files matching a pattern."""
+    return _get_service().find_files(path, pattern, recursive, include_hidden)
+
+
+def copy(src, dst, overwrite=False):
+    """Copy a file or directory."""
+    return _get_service().copy(src, dst, overwrite)
+
+
+def move(src, dst, overwrite=False):
+    """Move a file or directory."""
+    return _get_service().move(src, dst, overwrite)
+
+
+def delete(path, missing_ok=True):
+    """Delete a file or directory."""
+    return _get_service().delete(path, missing_ok)
+
+
+# For explicit use when needed
+from quackcore.fs._operations import FileSystemOperations
+from quackcore.fs.service import FileSystemService, create_service, service
 
 __all__ = [
     # Main service class
@@ -101,6 +171,7 @@ __all__ = [
     "DirectoryInfoResult",
     "FindResult",
     "DataResult",
+    "PathResult",
     # Service utility functions
     "get_file_info",
     "create_directory",
@@ -118,7 +189,6 @@ __all__ = [
     "move",
     "delete",
     # Compatibility methods
-    "PathInfo",
     "get_path_info",
     "is_valid_path",
     "normalize_path_with_info",

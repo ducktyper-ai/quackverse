@@ -16,7 +16,8 @@ from quackcore.config.utils import get_config_value
 
 # Import QuackCore FS and Config utilities
 from quackcore.fs import (
-    service as fs,  # File _operations, path utilities, YAML reading, etc.
+    service as fs,
+    expand_user_vars,  # File _operations, path utilities, YAML reading, etc.
 )
 from quackster.npc.schema import QuacksterProfile
 
@@ -74,18 +75,18 @@ def get_tutorial_path() -> str:
     # Check for an override via the environment variable.
     custom_path = os.environ.get(ENV_TUTORIAL_PATH)
     if custom_path:
-        expanded = fs.expand_user_vars(custom_path)
+        expanded = expand_user_vars(custom_path)
         return expanded
 
     # Try each of the default paths.
     for path_str in DEFAULT_TUTORIAL_PATHS:
-        expanded_path = fs.expand_user_vars(path_str)
+        expanded_path = expand_user_vars(path_str)
         info_result = fs.get_file_info(expanded_path)
         if info_result.success and info_result.exists and info_result.is_dir:
             return expanded_path
 
     # Fallback to the first default path (expanded).
-    fallback = fs.expand_user_vars(DEFAULT_TUTORIAL_PATHS[0])
+    fallback = expand_user_vars(DEFAULT_TUTORIAL_PATHS[0])
     return fallback
 
 
@@ -108,7 +109,7 @@ def get_npc_profile() -> QuacksterProfile:
     custom_profile_path = os.environ.get(ENV_QUACKSTER_PROFILE)
     if custom_profile_path:
         try:
-            expanded_path = fs.expand_user_vars(custom_profile_path)
+            expanded_path = expand_user_vars(custom_profile_path)
             result = fs.read_yaml(expanded_path)
             if result.success:
                 # Merge custom profile data into the default profile.

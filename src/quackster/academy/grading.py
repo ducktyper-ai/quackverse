@@ -12,7 +12,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field, model_validator
 
 # Use QuackCore FS for file _operations and path expansion.
-from quackcore.fs import service as fs
+from quackcore.fs import service as fs, expand_user_vars
 from quackcore.logging import get_logger
 
 logger = get_logger(__name__)
@@ -94,7 +94,7 @@ class FileCheckCriterion(GradingCriterion):
         Returns:
             The instance with all file paths expanded.
         """
-        self.files = [fs.expand_user_vars(f) for f in self.files]
+        self.files = [expand_user_vars(f) for f in self.files]
         return self
 
     @classmethod
@@ -154,7 +154,7 @@ class PatternCheckCriterion(GradingCriterion):
         Returns:
             The instance with file patterns expanded.
         """
-        self.file_patterns = [fs.expand_user_vars(fp) for fp in self.file_patterns]
+        self.file_patterns = [expand_user_vars(fp) for fp in self.file_patterns]
         return self
 
     @classmethod

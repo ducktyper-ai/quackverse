@@ -12,7 +12,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from quackcore.errors import QuackConfigurationError, QuackFileNotFoundError
-from quackcore.fs import service as fs
+from quackcore.fs import service as fs, expand_user_vars
 from quackcore.integrations.core.protocols import (
     AuthProviderProtocol,
     ConfigProviderProtocol,
@@ -255,7 +255,7 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
             # Import these specifically at runtime to match the patching in tests
             from quackcore.fs import service as fs
 
-            expanded_path = fs.expand_user_vars(config_path)
+            expanded_path = expand_user_vars(config_path)
             # Convert Path to string to match test expectation
             file_info = fs.get_file_info(str(expanded_path))
             if file_info.success and file_info.exists:
@@ -277,7 +277,7 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
 
         # Check default locations.
         for location in self.DEFAULT_CONFIG_LOCATIONS:
-            expanded_location = fs.expand_user_vars(location)
+            expanded_location = expand_user_vars(location)
             # If the expanded location is relative
             # and we have a project root, join them.
             if not os.path.isabs(str(expanded_location)) and project_root:
@@ -290,7 +290,7 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         # Fallback: try candidate in project root.
         if project_root:
             candidate = fs.join_path(project_root, "quack_config.yaml")
-            candidate = fs.expand_user_vars(candidate)
+            candidate = expand_user_vars(candidate)
             # Convert Path to string for consistency with tests
             file_info = fs.get_file_info(str(candidate))
             if file_info.success and file_info.exists:

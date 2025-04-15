@@ -5,18 +5,19 @@ Utility functions for configuration management.
 This module provides utility functions for working with configuration,
 such as loading environment-specific configuration and validating configuration values.
 All file paths are handled exclusively as strings. Any path manipulation is delegated
-to functions in the quackcore.fs module.
+to standard library functions to avoid circular imports.
 """
 
 import os
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
-from quackcore.config.models import QuackConfig
 from quackcore.errors import QuackConfigurationError
-from quackcore.fs import service as fs
+from quackcore.logging import get_logger
 
-T = TypeVar("T")
+T = TypeVar("T")  # Generic type for flexible typing
+
+logger = get_logger(__name__)
 
 
 def get_env() -> str:
@@ -32,7 +33,7 @@ def get_env() -> str:
     return os.environ.get("QUACK_ENV", "development").lower()
 
 
-def load_env_config(config: QuackConfig, config_dir: str | None = None) -> QuackConfig:
+def load_env_config(config, config_dir: str | None = None):
     """
     Load environment-specific configuration and merge it with the base configuration.
 
@@ -46,6 +47,9 @@ def load_env_config(config: QuackConfig, config_dir: str | None = None) -> Quack
     Raises:
         QuackConfigurationError: If the environment configuration file cannot be loaded.
     """
+    # Import here to avoid circular import
+    from quackcore.config.models import QuackConfig
+
     env: str = get_env()
 
     if not config_dir:
@@ -55,15 +59,14 @@ def load_env_config(config: QuackConfig, config_dir: str | None = None) -> Quack
 
         # Use common candidate directories (all as strings) for configuration files.
         candidates: list[str] = [
-            fs.join_path(".", "config"),
-            fs.join_path(".", "configs"),
-            fs.join_path(config.paths.base_dir, "config"),
-            fs.join_path(config.paths.base_dir, "configs"),
+            "./config",
+            "./configs",
+            os.path.join(config.paths.base_dir, "config"),
+            os.path.join(config.paths.base_dir, "configs"),
         ]
 
         for candidate in candidates:
-            info = fs.get_file_info(candidate)
-            if info.success and info.exists and info.is_dir:
+            if os.path.exists(candidate) and os.path.isdir(candidate):
                 config_dir = candidate
                 break
 
@@ -71,14 +74,12 @@ def load_env_config(config: QuackConfig, config_dir: str | None = None) -> Quack
             # If no candidate was found, return the original configuration.
             return config
 
-    # Build the environment-specific config file path using fs.join_path.
-    env_file: str = fs.join_path(config_dir, f"{env}.yaml")
-    file_info = fs.get_file_info(env_file)
-    if not (file_info.success and file_info.exists):
+    # Build the environment-specific config file path
+    env_file: str = os.path.join(config_dir, f"{env}.yaml")
+    if not os.path.exists(env_file):
         # Try with .yml extension if .yaml is not found.
-        env_file = fs.join_path(config_dir, f"{env}.yml")
-        file_info = fs.get_file_info(env_file)
-        if not (file_info.success and file_info.exists):
+        env_file = os.path.join(config_dir, f"{env}.yml")
+        if not os.path.exists(env_file):
             # No environment-specific config was found; return the original configuration.
             return config
 
@@ -86,7 +87,7 @@ def load_env_config(config: QuackConfig, config_dir: str | None = None) -> Quack
         # load_yaml_config is assumed to read YAML from a string–identified file.
         env_config: dict = load_yaml_config(env_file)
         # Merge with base configuration.
-        base_dict: dict = config.to_dict()
+        base_dict: dict = config.model_dump()  # Using model_dump() is more reliable
         merged_dict: dict = _deep_merge(base_dict, env_config)
         # Create a new config object using validated model data.
         return QuackConfig.model_validate(merged_dict)
@@ -96,7 +97,7 @@ def load_env_config(config: QuackConfig, config_dir: str | None = None) -> Quack
 
 
 def get_config_value(
-    config: QuackConfig, path: str, default: T | None = None
+        config, path: str, default: T | None = None
 ) -> T | None:
     """
     Get a configuration value by dot-separated path.
@@ -109,7 +110,7 @@ def get_config_value(
     Returns:
         The configuration value if found; otherwise, the default.
     """
-    config_dict: dict = config.to_dict()
+    config_dict: dict = config.model_dump()  # Using model_dump() is more reliable
     parts: list[str] = path.split(".")
 
     current: Any = config_dict
@@ -122,7 +123,7 @@ def get_config_value(
 
 
 def validate_required_config(
-    config: QuackConfig, required_keys: list[str]
+        config, required_keys: list[str]
 ) -> list[str]:
     """
     Validate that the configuration contains all required keys.
@@ -141,7 +142,7 @@ def validate_required_config(
     return missing
 
 
-def normalize_paths(config: QuackConfig) -> QuackConfig:
+def normalize_paths(config):
     """
     Normalize all paths in the configuration.
 
@@ -155,8 +156,11 @@ def normalize_paths(config: QuackConfig) -> QuackConfig:
     Returns:
         QuackConfig: A new QuackConfig object with all paths normalized.
     """
+    # Import here to avoid circular import
+    from quackcore.config.models import QuackConfig
+
     # Get the configuration as a dictionary.
-    config_dict: dict = config.to_dict()
+    config_dict: dict = config.model_dump()  # Using model_dump() is more reliable
     # Explicitly extract the base_dir from the dictionary to preserve a user-provided value.
     base_dir: str = config_dict.get("paths", {}).get("base_dir") or find_project_root()
 
@@ -179,9 +183,9 @@ def normalize_paths(config: QuackConfig) -> QuackConfig:
 
     # Normalize plugins paths.
     if (
-        "plugins" in config_dict
-        and isinstance(config_dict["plugins"], dict)
-        and "paths" in config_dict["plugins"]
+            "plugins" in config_dict
+            and isinstance(config_dict["plugins"], dict)
+            and "paths" in config_dict["plugins"]
     ):
         plugin_paths = config_dict["plugins"]["paths"]
         if plugin_paths and isinstance(plugin_paths, list):
@@ -191,9 +195,9 @@ def normalize_paths(config: QuackConfig) -> QuackConfig:
 
     # Normalize Google integration paths.
     if (
-        "integrations" in config_dict
-        and isinstance(config_dict["integrations"], dict)
-        and "google" in config_dict["integrations"]
+            "integrations" in config_dict
+            and isinstance(config_dict["integrations"], dict)
+            and "google" in config_dict["integrations"]
     ):
         google = config_dict["integrations"]["google"]
         for key in ["client_secrets_file", "credentials_file"]:
@@ -202,9 +206,9 @@ def normalize_paths(config: QuackConfig) -> QuackConfig:
 
     # Normalize logging file path.
     if (
-        "logging" in config_dict
-        and isinstance(config_dict["logging"], dict)
-        and config_dict["logging"].get("file")
+            "logging" in config_dict
+            and isinstance(config_dict["logging"], dict)
+            and config_dict["logging"].get("file")
     ):
         config_dict["logging"]["file"] = _normalize_path(
             config_dict["logging"]["file"], base_dir
@@ -218,19 +222,18 @@ def normalize_paths(config: QuackConfig) -> QuackConfig:
     return normalized_config
 
 
-def _normalize_path(value: str, base_dir: str) -> str:
+def _normalize_path(value: str, base_dir: str = "./") -> str:
     """
     Normalize a path relative to a base directory.
 
     Args:
         value: Path to normalize.
-        base_dir: Base directory.
+        base_dir: Base directory (defaults to current directory).
 
     Returns:
         str: Normalized path as a string.
     """
-    # Even though much of the system delegates to quackcore.fs for _operations,
-    # here we use the standard library so that the provided base_dir is preserved.
+    # Use the standard library directly to avoid circular imports
     if os.path.isabs(value):
         return os.path.normpath(value)
     return os.path.normpath(os.path.join(base_dir, value))
@@ -286,10 +289,25 @@ def find_project_root() -> str:
     Returns:
         str: The project root directory as a string.
     """
-    try:
-        from quackcore.paths import resolver
+    # Check for common project markers
+    cwd = os.getcwd()
 
-        root: str = resolver.get_project_root()
-        return root  # Assuming resolver.get_project_root() returns a string
-    except Exception:
-        return os.getcwd()
+    # Common project files to check for
+    markers = [
+        ".git",
+        "pyproject.toml",
+        "setup.py",
+        "poetry.lock",
+        "requirements.txt",
+    ]
+
+    current_dir = cwd
+    while current_dir != os.path.dirname(current_dir):  # Stop at root
+        for marker in markers:
+            if os.path.exists(os.path.join(current_dir, marker)):
+                return current_dir
+        # Move up one directory
+        current_dir = os.path.dirname(current_dir)
+
+    # If no project root found, return current directory
+    return cwd

@@ -9,7 +9,7 @@ serving as the main entry point for quackster _operations.
 import os
 
 from quackcore.errors import QuackError, QuackFileNotFoundError
-from quackcore.fs import service as fs
+from quackcore.fs import service as fs, expand_user_vars
 from quackcore.logging import get_logger
 from quackcore.paths import resolver
 from quackster.academy.context import TeachingContext
@@ -48,7 +48,7 @@ class TeachingService:
         """
         try:
             if config_path is not None:
-                config_path = fs.expand_user_vars(config_path)
+                config_path = expand_user_vars(config_path)
             if base_dir is not None:
                 if not os.path.isabs(base_dir):
                     try:

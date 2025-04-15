@@ -62,24 +62,32 @@ class FileInfoOperationsMixin:
 
         try:
             exists = resolved_path.exists()
-            logger.debug(f"Path {resolved_path} exists: {exists}")
+            is_abs = resolved_path.is_absolute()
+            logger.debug(
+                f"Path {resolved_path} exists: {exists}, is absolute: {is_abs}")
 
             return PathResult(
                 success=True,
                 path=resolved_path,
                 exists=exists,
                 is_valid=True,
-                is_absolute=resolved_path.is_absolute(),
+                is_absolute=is_abs,
                 message=f"Path {'exists' if exists else 'does not exist'}: {resolved_path}",
             )
         except Exception as e:
             logger.error(f"Error checking if path exists for {resolved_path}: {str(e)}")
+            # In case of exception, set a default value for is_absolute
+            try:
+                is_abs = resolved_path.is_absolute()
+            except Exception:
+                is_abs = False
+
             return PathResult(
                 success=False,
                 path=resolved_path,
                 exists=False,
                 is_valid=False,
-                is_absolute=resolved_path.is_absolute(),
+                is_absolute=is_abs,
                 error=f"Error checking path: {str(e)}",
             )
 

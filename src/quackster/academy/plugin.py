@@ -10,7 +10,7 @@ import os
 from typing import Any
 
 from quackcore.errors import QuackFileNotFoundError  # Dogfood our errors
-from quackcore.fs import service as fs
+from quackcore.fs import service as fs, expand_user_vars
 from quackcore.logging import get_logger
 from quackcore.paths import resolver
 from quackcore.plugins.discovery import PluginInfo
@@ -75,7 +75,7 @@ class TeachingPlugin(QuackPlugin):
         config_path = options.get("config_path")
         if config_path:
             # Expand user variables (e.g., '~') in the provided config path.
-            config_path = fs.expand_user_vars(config_path)
+            config_path = expand_user_vars(config_path)
 
         base_dir = options.get("base_dir")
         if base_dir:

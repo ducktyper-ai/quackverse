@@ -6,13 +6,29 @@ This module provides Pydantic models for configuration management,
 with support for validation, defaults, and merging of configurations.
 """
 
+import os
 from typing import Any, ClassVar, TypeVar
 
 from pydantic import BaseModel, Field, field_validator
 
-from quackcore.paths import normalize_path
-
 T = TypeVar("T")  # Generic type for flexible typing
+
+
+# Implement normalize_path directly in the models module to avoid circular dependencies
+def _normalize_path(value: str) -> str:
+    """
+    Normalize a path.
+
+    Args:
+        value: Path to normalize.
+
+    Returns:
+        str: Normalized path as a string.
+    """
+    # Basic normalization without base_dir dependency
+    if os.path.isabs(value):
+        return os.path.normpath(value)
+    return os.path.normpath(value)
 
 
 class LoggingConfig(BaseModel):
@@ -45,7 +61,7 @@ class LoggingConfig(BaseModel):
         """Normalize the log file path (if provided)."""
         if v is None:
             return None
-        return normalize_path(v)
+        return _normalize_path(v)
 
     def setup_logging(self) -> None:
         """Set up logging based on configuration."""
@@ -64,8 +80,8 @@ class LoggingConfig(BaseModel):
                 import logging
 
                 if (
-                    isinstance(handler, logging.StreamHandler)
-                    and handler.stream.name == "<stderr>"
+                        isinstance(handler, logging.StreamHandler)
+                        and handler.stream.name == "<stderr>"
                 ):
                     logger.removeHandler(handler)
 
@@ -83,7 +99,7 @@ class PathsConfig(BaseModel):
     @field_validator("*", mode="before")
     @classmethod
     def normalize_paths(cls, v: str) -> str:
-        return normalize_path(v)
+        return _normalize_path(v)
 
 
 class GoogleConfig(BaseModel):
@@ -110,7 +126,7 @@ class GoogleConfig(BaseModel):
     def normalize_google_paths(cls, v: str | None) -> str | None:
         if v is None:
             return None
-        return normalize_path(v)
+        return _normalize_path(v)
 
 
 class NotionConfig(BaseModel):
@@ -164,7 +180,7 @@ class PluginsConfig(BaseModel):
         # If a single string is provided, wrap it in a list
         if isinstance(v, str):
             v = [v]
-        return [normalize_path(path_str) for path_str in v]
+        return [_normalize_path(path_str) for path_str in v]
 
 
 class QuackConfig(BaseModel):
@@ -190,6 +206,17 @@ class QuackConfig(BaseModel):
     def setup_logging(self) -> None:
         """Set up logging based on configuration."""
         self.logging.setup_logging()
+
+    def model_dump(self) -> dict[str, Any]:
+        """
+        Convert the configuration to a dictionary.
+
+        This is an alias for to_dict() to support both Pydantic v1 and v2 APIs.
+
+        Returns:
+            dict[str, Any]: Dictionary representation of the configuration
+        """
+        return super().model_dump()
 
     def to_dict(self) -> dict[str, Any]:
         """

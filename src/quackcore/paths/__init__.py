@@ -41,11 +41,4 @@ __all__ = [
     # Global instances
     "resolver",
     "service",
-    # Internal utility functions (may be deprecated in future versions)
-    "_find_project_root",
-    "_find_nearest_directory",
-    "_resolve_relative_to_project",
-    "_normalize_path",
-    "get_extension",
-    "_infer_module_from_path",
 ]

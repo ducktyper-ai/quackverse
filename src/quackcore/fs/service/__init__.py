@@ -19,17 +19,38 @@ from quackcore.fs.results import (
     ReadResult,
     WriteResult,
 )
+
+# Import the factory function but defer creating the service
 from quackcore.fs.service.factory import create_service
 
-# Import the complete FileSystemService with all mixins
+# Import the complete FileSystemService with all mixins for type hints
 from quackcore.fs.service.full_class import FileSystemService
 
-# Create a global instance for convenience
-service = create_service()
+# Create a global instance but initialize it lazily
+_service = None
 
 
-# Define standalone functions at the module level to avoid circular imports
+def get_service():
+    """
+    Get the global filesystem service instance.
 
+    This function initializes the service on first access to avoid circular imports.
+
+    Returns:
+        FileSystemService: The global filesystem service instance
+    """
+    global _service
+    if _service is None:
+        _service = create_service()
+    return _service
+
+
+# Access the service through a property to ensure lazy initialization
+service = property(get_service)
+
+
+# Define standalone functions for direct use
+# These are wrappers around the service functions that lazily initialize the service
 
 def create_directory(path: str | Path, exist_ok: bool = True) -> OperationResult:
     """
@@ -43,7 +64,7 @@ def create_directory(path: str | Path, exist_ok: bool = True) -> OperationResult
         An OperationResult indicating whether the directory
         was created or already exists.
     """
-    return service.create_directory(path, exist_ok)
+    return get_service().create_directory(path, exist_ok)
 
 
 def read_yaml(path: str | Path) -> DataResult[dict]:
@@ -56,7 +77,7 @@ def read_yaml(path: str | Path) -> DataResult[dict]:
     Returns:
         A DataResult containing the parsed YAML data.
     """
-    return service.read_yaml(path)
+    return get_service().read_yaml(path)
 
 
 def get_file_info(path: str | Path) -> FileInfoResult:
@@ -69,7 +90,7 @@ def get_file_info(path: str | Path) -> FileInfoResult:
     Returns:
         FileInfoResult with file information
     """
-    return service.get_file_info(path)
+    return get_service().get_file_info(path)
 
 
 def read_text(path: str | Path, encoding: str = "utf-8") -> ReadResult[str]:
@@ -83,14 +104,14 @@ def read_text(path: str | Path, encoding: str = "utf-8") -> ReadResult[str]:
     Returns:
         ReadResult with the file content as text
     """
-    return service.read_text(path, encoding)
+    return get_service().read_text(path, encoding)
 
 
 def write_text(
-    path: str | Path,
-    content: str,
-    encoding: str = "utf-8",
-    atomic: bool = True,
+        path: str | Path,
+        content: str,
+        encoding: str = "utf-8",
+        atomic: bool = True,
 ) -> WriteResult:
     """
     Write text to a file.
@@ -104,7 +125,7 @@ def write_text(
     Returns:
         WriteResult with operation status
     """
-    return service.write_text(path, content, encoding, atomic)
+    return get_service().write_text(path, content, encoding, atomic)
 
 
 def read_binary(path: str | Path) -> ReadResult[bytes]:
@@ -117,13 +138,13 @@ def read_binary(path: str | Path) -> ReadResult[bytes]:
     Returns:
         ReadResult with the file content as bytes
     """
-    return service.read_binary(path)
+    return get_service().read_binary(path)
 
 
 def write_binary(
-    path: str | Path,
-    content: bytes,
-    atomic: bool = True,
+        path: str | Path,
+        content: bytes,
+        atomic: bool = True,
 ) -> WriteResult:
     """
     Write binary data to a file.
@@ -136,13 +157,13 @@ def write_binary(
     Returns:
         WriteResult with operation status
     """
-    return service.write_binary(path, content, atomic)
+    return get_service().write_binary(path, content, atomic)
 
 
 def write_yaml(
-    path: str | Path,
-    data: dict,
-    atomic: bool = True,
+        path: str | Path,
+        data: dict,
+        atomic: bool = True,
 ) -> WriteResult:
     """
     Write data to a YAML file.
@@ -155,7 +176,7 @@ def write_yaml(
     Returns:
         WriteResult with operation status
     """
-    return service.write_yaml(path, data, atomic)
+    return get_service().write_yaml(path, data, atomic)
 
 
 def read_json(path: str | Path) -> DataResult[dict]:
@@ -168,14 +189,14 @@ def read_json(path: str | Path) -> DataResult[dict]:
     Returns:
         DataResult with parsed JSON data
     """
-    return service.read_json(path)
+    return get_service().read_json(path)
 
 
 def write_json(
-    path: str | Path,
-    data: dict,
-    atomic: bool = True,
-    indent: int = 2,
+        path: str | Path,
+        data: dict,
+        atomic: bool = True,
+        indent: int = 2,
 ) -> WriteResult:
     """
     Write data to a JSON file.
@@ -189,13 +210,13 @@ def write_json(
     Returns:
         WriteResult with operation status
     """
-    return service.write_json(path, data, atomic, indent)
+    return get_service().write_json(path, data, atomic, indent)
 
 
 def list_directory(
-    path: str | Path,
-    pattern: str | None = None,
-    include_hidden: bool = False,
+        path: str | Path,
+        pattern: str | None = None,
+        include_hidden: bool = False,
 ) -> DirectoryInfoResult:
     """
     List contents of a directory.
@@ -208,14 +229,14 @@ def list_directory(
     Returns:
         DirectoryInfoResult with directory contents
     """
-    return service.list_directory(path, pattern, include_hidden)
+    return get_service().list_directory(path, pattern, include_hidden)
 
 
 def find_files(
-    path: str | Path,
-    pattern: str,
-    recursive: bool = True,
-    include_hidden: bool = False,
+        path: str | Path,
+        pattern: str,
+        recursive: bool = True,
+        include_hidden: bool = False,
 ) -> FindResult:
     """
     Find files matching a pattern.
@@ -229,7 +250,7 @@ def find_files(
     Returns:
         FindResult with matching files
     """
-    return service.find_files(path, pattern, recursive, include_hidden)
+    return get_service().find_files(path, pattern, recursive, include_hidden)
 
 
 def copy(src: str | Path, dst: str | Path, overwrite: bool = False) -> WriteResult:
@@ -244,7 +265,7 @@ def copy(src: str | Path, dst: str | Path, overwrite: bool = False) -> WriteResu
     Returns:
         WriteResult with operation status
     """
-    return service.copy(src, dst, overwrite)
+    return get_service().copy(src, dst, overwrite)
 
 
 def move(src: str | Path, dst: str | Path, overwrite: bool = False) -> WriteResult:
@@ -259,7 +280,7 @@ def move(src: str | Path, dst: str | Path, overwrite: bool = False) -> WriteResu
     Returns:
         WriteResult with operation status
     """
-    return service.move(src, dst, overwrite)
+    return get_service().move(src, dst, overwrite)
 
 
 def delete(path: str | Path, missing_ok: bool = True) -> OperationResult:
@@ -273,7 +294,7 @@ def delete(path: str | Path, missing_ok: bool = True) -> OperationResult:
     Returns:
         OperationResult with operation status
     """
-    return service.delete(path, missing_ok)
+    return get_service().delete(path, missing_ok)
 
 
 def read_lines(path: str | Path, encoding: str = "utf-8") -> ReadResult:
@@ -287,15 +308,15 @@ def read_lines(path: str | Path, encoding: str = "utf-8") -> ReadResult:
     Returns:
         ReadResult with the file content as a list of lines
     """
-    return service.read_lines(path, encoding)
+    return get_service().read_lines(path, encoding)
 
 
 def write_lines(
-    path: str | Path,
-    lines: list[str],
-    encoding: str = "utf-8",
-    atomic: bool = True,
-    line_ending: str = "\n",
+        path: str | Path,
+        lines: list[str],
+        encoding: str = "utf-8",
+        atomic: bool = True,
+        line_ending: str = "\n",
 ) -> WriteResult:
     """
     Write lines to a text file.
@@ -310,7 +331,7 @@ def write_lines(
     Returns:
         WriteResult indicating the outcome of the operation
     """
-    return service.write_lines(path, lines, encoding, atomic, line_ending)
+    return get_service().write_lines(path, lines, encoding, atomic, line_ending)
 
 
 def path_exists(path: str | Path) -> DataResult[bool]:
@@ -326,7 +347,7 @@ def path_exists(path: str | Path) -> DataResult[bool]:
     Returns:
         DataResult with boolean indicating if the path exists.
     """
-    return service.path_exists(path)
+    return get_service().path_exists(path)
 
 
 def normalize_path_with_info(path: str | Path) -> PathResult:
@@ -339,7 +360,7 @@ def normalize_path_with_info(path: str | Path) -> PathResult:
     Returns:
         PathResult containing the normalized path and status information
     """
-    return service.normalize_path_with_info(path)
+    return get_service().normalize_path_with_info(path)
 
 
 def get_path_info(path: str | Path) -> PathResult:
@@ -352,7 +373,7 @@ def get_path_info(path: str | Path) -> PathResult:
     Returns:
         PathResult containing validation results
     """
-    return service.get_path_info(path)
+    return get_service().get_path_info(path)
 
 
 def is_valid_path(path: str | Path) -> DataResult[bool]:
@@ -365,7 +386,7 @@ def is_valid_path(path: str | Path) -> DataResult[bool]:
     Returns:
         DataResult with boolean indicating if the path has valid syntax
     """
-    return service.is_valid_path(path)
+    return get_service().is_valid_path(path)
 
 
 # Type variables
@@ -376,6 +397,7 @@ __all__ = [
     "FileSystemService",
     "create_service",
     "service",
+    "get_service",
     # Standalone functions
     "create_directory",
     "get_file_info",
@@ -397,6 +419,7 @@ __all__ = [
     "normalize_path_with_info",
     "get_path_info",
     "is_valid_path",
+    "path_exists",
     # Result classes for type hints
     "OperationResult",
     "ReadResult",
