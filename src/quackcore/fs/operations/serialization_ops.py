@@ -1,22 +1,28 @@
 # src/quackcore/fs/operations/serialization_ops.py
 """
 Serialization operations (JSON, YAML) for filesystem operations.
+
+This module provides internal operations for reading and writing
+structured data formats (JSON, YAML) with proper error handling
+and validation.
 """
 
 import json
 from pathlib import Path
+from typing import Any, TypeVar
 
 from quackcore.errors import (
     QuackFormatError,
     QuackIOError,
     QuackValidationError,
 )
-from quackcore.fs.results import DataResult, WriteResult
+from quackcore.fs.results import DataResult, ReadResult, WriteResult
 from quackcore.logging import get_logger
 
 # Set up logger
 logger = get_logger(__name__)
 
+# Try to import YAML library
 try:
     import yaml
 
@@ -25,26 +31,74 @@ except ImportError:
     logger.warning("PyYAML library not found. YAML operations will not be available.")
     YAML_AVAILABLE = False
 
+# Define type variable for generic typing
+T = TypeVar("T")
+
 
 class SerializationOperationsMixin:
-    """Serialization operations mixin class."""
+    """
+    Serialization operations mixin class.
+
+    Provides internal methods for serializing and deserializing structured
+    data formats (JSON, YAML) with proper validation and error handling.
+    """
 
     def _resolve_path(self, path: str | Path) -> Path:
-        """Resolve a path relative to the base directory."""
+        """
+        Resolve a path relative to the base directory.
+
+        Args:
+            path: Path to resolve
+
+        Returns:
+            Path: Resolved Path object
+
+        Note:
+            Internal helper method implemented in the main class.
+            Not meant for external consumption.
+        """
         # This method is implemented in the main class
         # It's defined here for type checking
         raise NotImplementedError("This method should be overridden")
 
-    def _read_text(self, path: str | Path, encoding: str = "utf-8"):
-        """Read text from a file."""
+    def _read_text(self, path: str | Path, encoding: str = "utf-8") -> ReadResult[str]:
+        """
+        Read text from a file.
+
+        Args:
+            path: Path to file
+            encoding: Text encoding
+
+        Returns:
+            ReadResult[str]: Result containing the file content
+
+        Note:
+            Method implemented in ReadOperationsMixin.
+            Defined here for type checking.
+        """
         # This method is implemented in ReadOperationsMixin
         # It's defined here for type checking
         raise NotImplementedError("This method should be overridden")
 
     def _write_text(
         self, path: str | Path, content: str, encoding: str = "utf-8", **kwargs
-    ):
-        """Write text to a file."""
+    ) -> WriteResult:
+        """
+        Write text to a file.
+
+        Args:
+            path: Path to file
+            content: Text content
+            encoding: Text encoding
+            **kwargs: Additional arguments
+
+        Returns:
+            WriteResult: Result of the write operation
+
+        Note:
+            Method implemented in WriteOperationsMixin.
+            Defined here for type checking.
+        """
         # This method is implemented in WriteOperationsMixin
         # It's defined here for type checking
         raise NotImplementedError("This method should be overridden")
@@ -52,15 +106,28 @@ class SerializationOperationsMixin:
     # -------------------------------
     # YAML operations
     # -------------------------------
-    def _read_yaml(self, path: str | Path) -> DataResult[dict]:
+    def _read_yaml(self, path: str | Path) -> DataResult[dict[str, Any]]:
         """
         Read YAML file and parse its contents.
+
+        This method reads a YAML file, parses it, and validates that
+        it contains a dictionary. Empty YAML files are treated as
+        empty dictionaries.
 
         Args:
             path: Path to YAML file
 
         Returns:
-            DataResult with parsed YAML data
+            DataResult[dict[str, Any]]: Result object containing:
+                - success: Whether the operation was successful
+                - path: The resolved file path
+                - data: The parsed YAML data as a dictionary
+                - format: "yaml"
+                - error: Error message if operation failed
+
+        Note:
+            Internal helper method not meant for external consumption.
+            Used by public-facing methods in the service layer.
         """
         if not YAML_AVAILABLE:
             error_msg = "PyYAML library not available. Cannot read YAML file."
@@ -143,18 +210,25 @@ class SerializationOperationsMixin:
             )
 
     def _write_yaml(
-        self, path: str | Path, data: dict, atomic: bool = True
+        self, path: str | Path, data: dict[str, Any], atomic: bool = True
     ) -> WriteResult:
         """
         Write data to a YAML file.
 
+        This method serializes a dictionary to YAML format and writes
+        it to the specified file.
+
         Args:
             path: Path to YAML file
-            data: Data to write
-            atomic: Whether to use atomic writing
+            data: Dictionary data to write
+            atomic: Whether to use atomic writing (safer but slower)
 
         Returns:
-            WriteResult with operation status
+            WriteResult: Result of the write operation
+
+        Note:
+            Internal helper method not meant for external consumption.
+            Used by public-facing methods in the service layer.
         """
         if not YAML_AVAILABLE:
             error_msg = "PyYAML library not available. Cannot write YAML file."
@@ -197,15 +271,27 @@ class SerializationOperationsMixin:
     # -------------------------------
     # JSON operations
     # -------------------------------
-    def _read_json(self, path: str | Path) -> DataResult[dict]:
+    def _read_json(self, path: str | Path) -> DataResult[dict[str, Any]]:
         """
         Read JSON file and parse its contents.
+
+        This method reads a JSON file, parses it, and validates that
+        it contains a dictionary (JSON object).
 
         Args:
             path: Path to JSON file
 
         Returns:
-            DataResult with parsed JSON data
+            DataResult[dict[str, Any]]: Result object containing:
+                - success: Whether the operation was successful
+                - path: The resolved file path
+                - data: The parsed JSON data as a dictionary
+                - format: "json"
+                - error: Error message if operation failed
+
+        Note:
+            Internal helper method not meant for external consumption.
+            Used by public-facing methods in the service layer.
         """
         resolved_path = self._resolve_path(path)
         logger.debug(f"Reading JSON from: {resolved_path}")
@@ -276,21 +362,28 @@ class SerializationOperationsMixin:
     def _write_json(
         self,
         path: str | Path,
-        data: dict,
+        data: dict[str, Any],
         atomic: bool = True,
         indent: int = 2,
     ) -> WriteResult:
         """
         Write data to a JSON file.
 
+        This method serializes a dictionary to JSON format and writes
+        it to the specified file with optional formatting options.
+
         Args:
             path: Path to JSON file
-            data: Data to write
-            atomic: Whether to use atomic writing
-            indent: Number of spaces to indent
+            data: Dictionary data to write
+            atomic: Whether to use atomic writing (safer but slower)
+            indent: Number of spaces to indent (for readability)
 
         Returns:
-            WriteResult with operation status
+            WriteResult: Result of the write operation
+
+        Note:
+            Internal helper method not meant for external consumption.
+            Used by public-facing methods in the service layer.
         """
         resolved_path = self._resolve_path(path)
         logger.debug(

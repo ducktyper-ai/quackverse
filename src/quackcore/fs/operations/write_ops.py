@@ -1,6 +1,10 @@
 # src/quackcore/fs/operations/write_ops.py
 """
 File writing, copying, moving and deleting operations.
+
+This module provides internal operations for modifying the filesystem,
+including writing files, copying, moving, deleting files and directories,
+and directory creation with proper error handling.
 """
 
 from pathlib import Path
@@ -19,12 +23,26 @@ logger = get_logger(__name__)
 
 
 class WriteOperationsMixin:
-    """File writing operations mixin class."""
+    """
+    File writing operations mixin class.
+
+    Provides internal methods for writing, copying, moving, and deleting
+    files and directories with consistent error handling and return types.
+    """
 
     def _resolve_path(self, path: str | Path) -> Path:
-        """Resolve a path relative to the base directory.
+        """
+        Resolve a path relative to the base directory.
 
-        This must be overridden in the concrete implementation.
+        Args:
+            path: The path to resolve
+
+        Returns:
+            Path: Resolved Path object
+
+        Note:
+            Internal helper method that must be implemented in the concrete class.
+            Not meant for external consumption.
         """
         raise NotImplementedError("This method should be overridden")
 
@@ -37,17 +55,29 @@ class WriteOperationsMixin:
         calculate_checksum: bool = False,
     ) -> WriteResult:
         """
-        Write text to a file.
+        Write text content to a file.
+
+        This method handles various text encodings and can perform atomic writes
+        for safer file operations. It can also calculate checksums for data integrity.
 
         Args:
             path: Path to the file
             content: Text content to write
-            encoding: Text encoding
-            atomic: Whether to use atomic writing
-            calculate_checksum: Whether to calculate a checksum
+            encoding: Text encoding (default: utf-8)
+            atomic: Whether to use atomic writing (safer but slower)
+            calculate_checksum: Whether to calculate a checksum for verification
 
         Returns:
-            WriteResult with operation status
+            WriteResult with operation status including:
+                - success: Whether the operation was successful
+                - path: The actual path where the file was written
+                - bytes_written: Number of bytes written
+                - checksum: File checksum if requested
+                - error: Error message if operation failed
+
+        Note:
+            Internal helper method not meant for external consumption.
+            Used by public-facing methods in the service layer.
         """
         # Import necessary utility functions
         from quackcore.fs.operations import (
@@ -133,14 +163,26 @@ class WriteOperationsMixin:
         """
         Write binary data to a file.
 
+        This method writes raw binary data to a file with optional atomic
+        writing and checksum calculation.
+
         Args:
             path: Path to the file
             content: Binary content to write
-            atomic: Whether to use atomic writing
-            calculate_checksum: Whether to calculate a checksum
+            atomic: Whether to use atomic writing (safer but slower)
+            calculate_checksum: Whether to calculate a checksum for verification
 
         Returns:
-            WriteResult with operation status
+            WriteResult with operation status including:
+                - success: Whether the operation was successful
+                - path: The actual path where the file was written
+                - bytes_written: Number of bytes written
+                - checksum: File checksum if requested
+                - error: Error message if operation failed
+
+        Note:
+            Internal helper method not meant for external consumption.
+            Used by public-facing methods in the service layer.
         """
         from quackcore.fs.operations import (
             _atomic_write,
@@ -200,13 +242,25 @@ class WriteOperationsMixin:
         """
         Copy a file or directory.
 
+        This method copies a file or directory to a new location with
+        optional overwriting of existing files.
+
         Args:
             src: Source path
             dst: Destination path
             overwrite: Whether to overwrite if destination exists
 
         Returns:
-            WriteResult with operation status
+            WriteResult with operation status including:
+                - success: Whether the operation was successful
+                - path: The destination path
+                - original_path: The source path
+                - bytes_written: Number of bytes copied (for files)
+                - error: Error message if operation failed
+
+        Note:
+            Internal helper method not meant for external consumption.
+            Used by public-facing methods in the service layer.
         """
         from quackcore.fs.operations import _safe_copy
 
@@ -257,13 +311,25 @@ class WriteOperationsMixin:
         """
         Move a file or directory.
 
+        This method moves a file or directory to a new location with
+        optional overwriting of existing files.
+
         Args:
             src: Source path
             dst: Destination path
             overwrite: Whether to overwrite if destination exists
 
         Returns:
-            WriteResult with operation status
+            WriteResult with operation status including:
+                - success: Whether the operation was successful
+                - path: The destination path where the file was moved
+                - original_path: The source path
+                - bytes_written: Size of the moved file (for files)
+                - error: Error message if operation failed
+
+        Note:
+            Internal helper method not meant for external consumption.
+            Used by public-facing methods in the service layer.
         """
         from quackcore.fs.operations import _safe_move
 
@@ -272,7 +338,13 @@ class WriteOperationsMixin:
         logger.debug(f"Moving from {src_path} to {dst_path}, overwrite={overwrite}")
 
         try:
-            bytes_moved = src_path.stat().st_size if src_path.is_file() else 0
+            # Get file size before moving (if it's a file)
+            try:
+                bytes_moved = src_path.stat().st_size if src_path.is_file() else 0
+            except (FileNotFoundError, PermissionError):
+                bytes_moved = 0
+                logger.warning(f"Could not determine size of {src_path} before moving")
+
             moved_path = _safe_move(src_path, dst_path, overwrite=overwrite)
             logger.info(f"Successfully moved {src_path} to {moved_path}")
 
@@ -309,12 +381,22 @@ class WriteOperationsMixin:
         """
         Delete a file or directory.
 
+        This method safely removes a file or directory with configurable
+        behavior for handling missing files.
+
         Args:
             path: Path to delete
             missing_ok: Whether to ignore if the path doesn't exist
 
         Returns:
-            OperationResult with operation status
+            OperationResult with operation status including:
+                - success: Whether the operation was successful
+                - path: The path that was deleted (or attempted to delete)
+                - error: Error message if operation failed
+
+        Note:
+            Internal helper method not meant for external consumption.
+            Used by public-facing methods in the service layer.
         """
         from quackcore.fs.operations import _safe_delete
 
@@ -359,12 +441,22 @@ class WriteOperationsMixin:
         """
         Create a directory.
 
+        This method creates a directory with configurable behavior
+        for handling existing directories.
+
         Args:
             path: Path to create
             exist_ok: Whether to ignore if the directory already exists
 
         Returns:
-            OperationResult with operation status
+            OperationResult with operation status including:
+                - success: Whether the operation was successful
+                - path: The path of the created directory
+                - error: Error message if operation failed
+
+        Note:
+            Internal helper method not meant for external consumption.
+            Used by public-facing methods in the service layer.
         """
         from quackcore.fs.operations import _ensure_directory
 

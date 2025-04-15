@@ -564,7 +564,9 @@ class TestResetProgress:
             mock_fs._get_file_info.return_value = MagicMock(success=True, exists=True)
 
             # Mock fs.delete to fail
-            mock_fs._delete.return_value = MagicMock(success=False, error="Delete error")
+            mock_fs._delete.return_value = MagicMock(
+                success=False, error="Delete error"
+            )
 
             # Call the function
             result = reset_progress()
@@ -711,7 +713,9 @@ class TestBackupProgress:
                 mock_get_dir.return_value = Path("/home/user/.quack")
 
                 # Mock fs.copy to fail
-                mock_fs._copy.return_value = MagicMock(success=False, error="Copy error")
+                mock_fs._copy.return_value = MagicMock(
+                    success=False, error="Copy error"
+                )
 
                 # Call the function
                 result = backup_progress()

@@ -3,9 +3,18 @@
 Core filesystem operations implementation.
 
 This module provides the implementation of filesystem operations
-with proper error handling and consistent return values.
+with proper error handling and consistent return values. It assembles
+all the operation mixins into the FileSystemOperations class,
+which is the primary internal implementation used by the public API.
+
+The operations package follows this contract:
+- Internal methods (with '_' prefix) can return basic types like Path
+- All public methods return Result objects (WriteResult, ReadResult, etc.)
+- Input types are flexible (str | Path) and resolved early
+- Comprehensive error handling and logging throughout
 """
 
+from pathlib import Path
 from typing import TypeVar
 
 # Import utility functions directly into this namespace for backward compatibility
@@ -42,14 +51,27 @@ class FileSystemOperations(
     FindOperationsMixin,
     SerializationOperationsMixin,
 ):
-    """Core implementation of filesystem operations."""
+    """
+    Core implementation of filesystem operations.
 
-    def __init__(self, base_dir=None) -> None:
+    This class combines all operation mixins to provide a complete
+    filesystem operations implementation with consistent error handling,
+    logging, and return types. It serves as the internal implementation
+    layer used by the public API in quackcore.fs.service.
+
+    All methods follow this contract:
+    - Internal methods (with '_' prefix) can return basic types like Path
+    - External methods return Result objects (WriteResult, ReadResult, etc.)
+    - All methods accept flexible input paths (str | Path)
+    """
+
+    def __init__(self, base_dir: str | Path | None = None) -> None:
         """
         Initialize filesystem operations.
 
         Args:
-            base_dir: Optional base directory for relative paths
+            base_dir: Optional base directory for relative paths.
+                     If not provided, the current working directory is used.
         """
         from pathlib import Path
 
@@ -57,15 +79,22 @@ class FileSystemOperations(
         logger.debug(f"Initialized FileSystemOperations with base_dir: {self.base_dir}")
         _initialize_mime_types()
 
-    def _resolve_path(self, path):
+    def _resolve_path(self, path: str | Path) -> Path:
         """
         Resolve a path relative to the base directory.
 
+        This method is used internally by all operations to normalize
+        paths relative to the base directory set during initialization.
+
         Args:
-            path: Path to resolve
+            path: Path to resolve, can be string or Path object
 
         Returns:
-            Resolved Path object
+            Path: Resolved Path object
+
+        Note:
+            This is an internal helper method called by all other methods.
+            It implements the abstract method defined in the mixins.
         """
         return _resolve_path(self.base_dir, path)
 

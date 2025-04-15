@@ -78,7 +78,9 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             input_info = get_file_info(input_path)
             # Create output directory from the output_path (using os.path.dirname)
             output_dir = os.path.dirname(output_path)
-            dir_result: OperationResult = fs._create_directory(output_dir, exist_ok=True)
+            dir_result: OperationResult = fs._create_directory(
+                output_dir, exist_ok=True
+            )
             if not dir_result.success:
                 return IntegrationResult.error_result(
                     f"Failed to create output directory: {dir_result.error}"

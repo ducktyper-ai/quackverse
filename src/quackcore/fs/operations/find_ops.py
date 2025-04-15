@@ -1,6 +1,9 @@
 # src/quackcore/fs/operations/find_ops.py
 """
 File finding operations.
+
+This module provides internal operations for finding files and directories
+based on patterns, with support for recursive searching and filtering.
 """
 
 from pathlib import Path
@@ -18,10 +21,27 @@ logger = get_logger(__name__)
 
 
 class FindOperationsMixin:
-    """File finding operations mixin class."""
+    """
+    File finding operations mixin class.
+
+    Provides internal methods for finding files and directories based on
+    patterns, with support for recursive search and filtering options.
+    """
 
     def _resolve_path(self, path: str | Path) -> Path:
-        """Resolve a path relative to the base directory."""
+        """
+        Resolve a path relative to the base directory.
+
+        Args:
+            path: The path to resolve
+
+        Returns:
+            Path: Resolved Path object
+
+        Note:
+            Internal helper method implemented in the main class.
+            Not meant for external consumption.
+        """
         # This method is implemented in the main class
         # It's defined here for type checking
         raise NotImplementedError("This method should be overridden")
@@ -34,16 +54,21 @@ class FindOperationsMixin:
         include_hidden: bool = False,
     ) -> FindResult:
         """
-        Find files matching a pattern.
+        Find files and directories matching a pattern.
 
         Args:
             path: Directory to search
-            pattern: Pattern to match files against
-            recursive: Whether to search recursively
-            include_hidden: Whether to include hidden files
+            pattern: Pattern to match files against (glob pattern)
+            recursive: Whether to search recursively in subdirectories
+            include_hidden: Whether to include hidden files/directories
+                           (those starting with ".")
 
         Returns:
-            FindResult with matching files
+            FindResult with matching files and directories
+
+        Note:
+            Internal helper method not meant for external consumption.
+            Used by public-facing methods in the service layer.
         """
         resolved_path = self._resolve_path(path)
         logger.debug(
@@ -62,6 +87,9 @@ class FindOperationsMixin:
                     path=resolved_path,
                     pattern=pattern,
                     recursive=recursive,
+                    files=[],
+                    directories=[],
+                    total_matches=0,
                     error=f"Directory does not exist or "
                     f"is not a directory: {resolved_path}",
                 )
@@ -96,6 +124,9 @@ class FindOperationsMixin:
                 path=resolved_path,
                 pattern=pattern,
                 recursive=recursive,
+                files=[],
+                directories=[],
+                total_matches=0,
                 error=str(e),
             )
         except Exception as e:
@@ -105,6 +136,9 @@ class FindOperationsMixin:
                 path=resolved_path,
                 pattern=pattern,
                 recursive=recursive,
+                files=[],
+                directories=[],
+                total_matches=0,
                 error=str(e),
             )
 
@@ -116,7 +150,11 @@ class FindOperationsMixin:
             path: Path to validate
 
         Returns:
-            True if the path exists and is a directory, False otherwise
+            bool: True if the path exists and is a directory, False otherwise
+
+        Note:
+            Internal helper method not meant for external consumption.
+            Used by _find_files to validate search paths.
         """
         valid = path.exists() and path.is_dir()
         if not valid:
@@ -132,13 +170,17 @@ class FindOperationsMixin:
         Perform the actual search for files and directories matching a pattern.
 
         Args:
-            directory: Directory to search in.
-            pattern: Pattern to match against.
-            recursive: Whether to search recursively.
-            include_hidden: Whether to include hidden files.
+            directory: Directory to search in
+            pattern: Pattern to match against (glob pattern)
+            recursive: Whether to search recursively
+            include_hidden: Whether to include hidden files/directories
 
         Returns:
-            Tuple of (matching files, matching directories)
+            tuple[list[Path], list[Path]]: tuple of (matching files, matching directories)
+
+        Note:
+            Internal helper method not meant for external consumption.
+            Used by _find_files to perform the actual search logic.
         """
         files: list[Path] = []
         directories: list[Path] = []
@@ -146,10 +188,18 @@ class FindOperationsMixin:
         # Choose the appropriate search method explicitly
         if recursive:
             logger.debug(f"Performing recursive glob with pattern '{pattern}'")
-            items = list(directory.rglob(pattern))
+            try:
+                items = list(directory.rglob(pattern))
+            except Exception as e:
+                logger.error(f"Error during recursive glob: {str(e)}")
+                return [], []
         else:
             logger.debug(f"Performing non-recursive glob with pattern '{pattern}'")
-            items = list(directory.glob(pattern))
+            try:
+                items = list(directory.glob(pattern))
+            except Exception as e:
+                logger.error(f"Error during non-recursive glob: {str(e)}")
+                return [], []
 
         logger.debug(f"Found {len(items)} total items matching pattern")
 
@@ -159,11 +209,16 @@ class FindOperationsMixin:
                 logger.debug(f"Skipping hidden item: {item}")
                 continue
 
-            if item.is_file():
-                files.append(item)
-                logger.debug(f"Found matching file: {item}")
-            elif item.is_dir():
-                directories.append(item)
-                logger.debug(f"Found matching directory: {item}")
+            try:
+                if item.is_file():
+                    files.append(item)
+                    logger.debug(f"Found matching file: {item}")
+                elif item.is_dir():
+                    directories.append(item)
+                    logger.debug(f"Found matching directory: {item}")
+            except (PermissionError, OSError) as e:
+                # Skip items we can't access
+                logger.warning(f"Skipping inaccessible item {item}: {str(e)}")
+                continue
 
         return files, directories

@@ -1,6 +1,9 @@
 # src/quackcore/fs/operations/directory_ops.py
 """
 Directory operations.
+
+This module provides internal operations for working with directories, including
+listing contents, getting directory information, and filtering by patterns.
 """
 
 from pathlib import Path
@@ -18,10 +21,28 @@ logger = get_logger(__name__)
 
 
 class DirectoryOperationsMixin:
-    """Directory operations mixin class."""
+    """
+    Directory operations mixin class.
+
+    Provides internal methods for working with directories, listing their contents,
+    and filtering by patterns.
+    """
 
     def _resolve_path(self, path: str | Path) -> Path:
-        """Resolve a path relative to the base directory."""
+        """
+        Resolve a path relative to the base directory.
+
+        Args:
+            path: The path to resolve, can be string or Path object
+
+        Returns:
+            Path: Resolved Path object
+
+        Note:
+            This method is implemented in the main class.
+            It's defined here for type checking.
+            Internal helper method not meant for external consumption.
+        """
         # This method is implemented in the main class
         # It's defined here for type checking
         raise NotImplementedError("This method should be overridden")
@@ -30,15 +51,25 @@ class DirectoryOperationsMixin:
         self, path: str | Path, pattern: str | None = None, include_hidden: bool = False
     ) -> DirectoryInfoResult:
         """
-        List contents of a directory.
+        List contents of a directory with optional pattern filtering.
+
+        This method scans a directory and returns information about its contents,
+        including files and subdirectories. Results can be filtered using
+        a glob pattern and hidden files can be optionally included.
 
         Args:
-            path: Path to list
-            pattern: Pattern to match files against
-            include_hidden: Whether to include hidden files
+            path: Path to the directory to list
+            pattern: Optional glob pattern to match files and directories against
+                     (e.g., "*.py", "data*", etc.)
+            include_hidden: Whether to include hidden files/directories
+                           (those starting with ".")
 
         Returns:
-            DirectoryInfoResult with directory contents
+            DirectoryInfoResult with directory contents information
+
+        Note:
+            Internal helper method not meant for external consumption.
+            Used by public-facing methods in the service layer.
         """
         resolved_path = self._resolve_path(path)
         logger.debug(
@@ -47,6 +78,7 @@ class DirectoryOperationsMixin:
         )
 
         try:
+            # Check if the path exists and is a directory
             if not resolved_path.exists():
                 logger.error(f"Directory does not exist: {resolved_path}")
                 return DirectoryInfoResult(
@@ -81,10 +113,14 @@ class DirectoryOperationsMixin:
                     continue
 
                 if item.is_file():
-                    files.append(item)
-                    item_size = item.stat().st_size
-                    total_size += item_size
-                    logger.debug(f"Found file: {item}, size: {item_size}")
+                    try:
+                        item_size = item.stat().st_size
+                        total_size += item_size
+                        files.append(item)
+                        logger.debug(f"Found file: {item}, size: {item_size}")
+                    except (PermissionError, OSError) as e:
+                        # Skip files we can't access but log the issue
+                        logger.warning(f"Skipping inaccessible file {item}: {str(e)}")
                 elif item.is_dir():
                     directories.append(item)
                     logger.debug(f"Found directory: {item}")
@@ -92,6 +128,9 @@ class DirectoryOperationsMixin:
             logger.info(
                 f"Found {len(files)} files and {len(directories)} directories in {resolved_path}"
             )
+
+            # Ensure pattern is displayed correctly in message
+            pattern_msg = f"matching '{pattern}'" if pattern else ""
 
             return DirectoryInfoResult(
                 success=True,
@@ -105,14 +144,18 @@ class DirectoryOperationsMixin:
                 total_size=total_size,
                 message=(
                     f"Found {len(files)} files and {len(directories)} directories "
-                    f"matching '{pattern}'"
+                    f"{pattern_msg}".strip()
                 ),
             )
         except (QuackFileNotFoundError, QuackPermissionError, QuackIOError) as e:
             logger.error(f"Error listing directory {resolved_path}: {str(e)}")
-            return DirectoryInfoResult(success=False, path=resolved_path, error=str(e))
+            return DirectoryInfoResult(
+                success=False, path=resolved_path, exists=False, error=str(e)
+            )
         except Exception as e:
             logger.error(
                 f"Unexpected error listing directory {resolved_path}: {str(e)}"
             )
-            return DirectoryInfoResult(success=False, path=resolved_path, error=str(e))
+            return DirectoryInfoResult(
+                success=False, path=resolved_path, exists=False, error=str(e)
+            )

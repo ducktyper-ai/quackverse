@@ -1,9 +1,13 @@
 # src/quackcore/fs/operations/read_ops.py
 """
 File reading operations for the filesystem operations.
+
+This module provides internal operations for reading both text and binary
+data from files with proper error handling and result formatting.
 """
 
 from pathlib import Path
+from typing import TypeVar
 
 from quackcore.fs.results import ReadResult
 from quackcore.logging import get_logger
@@ -11,12 +15,32 @@ from quackcore.logging import get_logger
 # Set up logger
 logger = get_logger(__name__)
 
+# Define generic type for ReadResult
+T = TypeVar("T")
+
 
 class ReadOperationsMixin:
-    """File reading operations mixin class."""
+    """
+    File reading operations mixin class.
+
+    Provides internal methods for reading text and binary data from files
+    with consistent error handling and return types.
+    """
 
     def _resolve_path(self, path: str | Path) -> Path:
-        """Resolve a path relative to the base directory."""
+        """
+        Resolve a path relative to the base directory.
+
+        Args:
+            path: Path to resolve
+
+        Returns:
+            Path: Resolved Path object
+
+        Note:
+            Internal helper method implemented in the main class.
+            Not meant for external consumption.
+        """
         # This method is implemented in the main class
         # It's defined here for type checking
         raise NotImplementedError("This method should be overridden")
@@ -27,10 +51,19 @@ class ReadOperationsMixin:
 
         Args:
             path: Path to the file
-            encoding: Text encoding
+            encoding: Text encoding (default: utf-8)
 
         Returns:
-            ReadResult with the file content as text
+            ReadResult[str]: Result object containing:
+                - success: Whether the operation was successful
+                - path: The resolved file path
+                - content: The file content as text (empty string on error)
+                - encoding: The encoding used
+                - error: Error message if operation failed
+
+        Note:
+            Internal helper method not meant for external consumption.
+            Used by public-facing methods in the service layer.
         """
         resolved_path = self._resolve_path(path)
         logger.debug(f"Reading text from: {resolved_path} with encoding: {encoding}")
@@ -85,7 +118,15 @@ class ReadOperationsMixin:
             path: Path to the file
 
         Returns:
-            ReadResult with the file content as bytes
+            ReadResult[bytes]: Result object containing:
+                - success: Whether the operation was successful
+                - path: The resolved file path
+                - content: The file content as bytes (empty bytes on error)
+                - error: Error message if operation failed
+
+        Note:
+            Internal helper method not meant for external consumption.
+            Used by public-facing methods in the service layer.
         """
         resolved_path = self._resolve_path(path)
         logger.debug(f"Reading binary data from: {resolved_path}")
