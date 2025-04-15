@@ -10,7 +10,7 @@ from unittest.mock import patch
 import pytest
 
 from quackcore.errors import QuackFileNotFoundError
-from quackcore.paths.resolver import PathResolver
+from quackcore.paths import PathResolver
 
 
 class TestPathResolver:
