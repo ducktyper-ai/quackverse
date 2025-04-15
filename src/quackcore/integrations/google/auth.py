@@ -235,9 +235,9 @@ class GoogleAuthProvider(BaseAuthProvider):
             self.logger.warning("No credentials file specified, cannot save")
             return False
 
-        parent_dir = fs.split_path(self.credentials_file)[:-1]
+        parent_dir = fs._split_path(self.credentials_file)[:-1]
         if parent_dir:
-            directory_path = fs.join_path(*parent_dir)
+            directory_path = fs._join_path(*parent_dir)
             result = fs.create_directory(directory_path, exist_ok=True)
             if not result.success:
                 self.logger.error(

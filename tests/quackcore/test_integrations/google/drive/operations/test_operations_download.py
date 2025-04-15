@@ -33,7 +33,7 @@ class TestDriveOperationsDownload:
                 "quackcore.integrations.google.drive.operations.download.fs"
             ) as mock_fs,
             patch(
-                "quackcore.integrations.google.drive.utils.api.execute_api_request"
+                "quackcore.integrations.google.drive.api.api.execute_api_request"
             ) as mock_execute,
         ):
             # Configure fs module mocks
@@ -165,7 +165,7 @@ class TestDriveOperationsDownload:
 
         # Mock execute_api_request to raise QuackApiError
         with patch(
-            "quackcore.integrations.google.drive.utils.api.execute_api_request"
+            "quackcore.integrations.google.drive.api.api.execute_api_request"
         ) as mock_execute:
             mock_execute.side_effect = QuackApiError(
                 "Failed to get file metadata",
@@ -196,7 +196,7 @@ class TestDriveOperationsDownload:
             ) as mock_fs,
             patch("quackcore.paths.resolver.resolve_project_path") as mock_resolve,
             patch(
-                "quackcore.integrations.google.drive.utils.api.execute_api_request"
+                "quackcore.integrations.google.drive.api.api.execute_api_request"
             ) as mock_execute,
         ):
             # Configure mocks

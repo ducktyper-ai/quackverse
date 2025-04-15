@@ -4,7 +4,6 @@ Tests for the CLI logging module.
 """
 
 import logging
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from quackcore.cli.logging import (
@@ -83,7 +82,7 @@ class TestAddFileHandler:
         for handler in root_logger.handlers[:]:
             root_logger.removeHandler(handler)
 
-        config = QuackConfig(logging={"file": Path("/path/to/logfile.log")})
+        config = QuackConfig(logging={"file": "/path/to/logfile.log"})
 
         # Mock the fs service by patching the import where it's used
         with patch("quackcore.fs.service.create_directory") as mock_create_dir:
@@ -99,12 +98,10 @@ class TestAddFileHandler:
                 _add_file_handler(root_logger, config, logging.INFO)
 
                 # Verify the directory was created with the correct path
-                mock_create_dir.assert_called_once_with(Path("/path/to"), exist_ok=True)
+                mock_create_dir.assert_called_once_with("/path/to", exist_ok=True)
 
                 # Verify a file handler was created
-                mock_file_handler.assert_called_once_with(
-                    str(Path("/path/to/logfile.log"))
-                )
+                mock_file_handler.assert_called_once_with("/path/to/logfile.log")
 
                 # Verify it was added to the logger
                 mock_handler.setLevel.assert_called_once_with(logging.INFO)
@@ -117,7 +114,7 @@ class TestAddFileHandler:
         for handler in root_logger.handlers[:]:
             root_logger.removeHandler(handler)
 
-        config = QuackConfig(logging={"file": Path("/path/to/logfile.log")})
+        config = QuackConfig(logging={"file": "/path/to/logfile.log"})
 
         # Mock directory creation failure
         with patch("quackcore.fs.service.create_directory") as mock_create_dir:
@@ -148,7 +145,7 @@ class TestAddFileHandler:
     def test_with_file_handler_exception(self) -> None:
         """Test handling exception when creating file handler."""
         root_logger = logging.getLogger("test_file_handler_exception")
-        config = QuackConfig(logging={"file": Path("/path/to/logfile.log")})
+        config = QuackConfig(logging={"file": "/path/to/logfile.log"})
 
         with patch("quackcore.fs.service.create_directory") as mock_create_dir:
             # Set up a successful result
@@ -197,7 +194,7 @@ class TestSetupLogging:
     def test_with_config(self) -> None:
         """Test setup with configuration."""
         config = QuackConfig(
-            logging={"level": "CRITICAL", "file": Path("/path/to/logfile.log")}
+            logging={"level": "CRITICAL", "file": "/path/to/logfile.log"}
         )
 
         with patch("quackcore.cli.logging._add_file_handler") as mock_add_file:

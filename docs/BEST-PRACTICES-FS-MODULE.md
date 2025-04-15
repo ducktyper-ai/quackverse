@@ -111,12 +111,13 @@ else:
 Always check the `success` attribute before using the result.
 
 ### 3. Manual Path Manipulation
+
 ```python
 # Bad - manually joins paths
 file_path = base_dir + "/config/settings.yaml"
 
 # Good - uses path utilities
-file_path = fs.join_path(base_dir, "config", "settings.yaml")
+file_path = fs._join_path(base_dir, "config", "settings.yaml")
 ```
 
 Use the fs module's path utilities for path manipulation.
@@ -145,6 +146,7 @@ fs.write_text("international_data.txt", content, encoding="utf-8")
 Always specify encodings explicitly when working with non-ASCII text.
 
 ### 6. Mixing Different Path Styles
+
 ```python
 # Bad - mixes different path styles
 base_dir = "/projects/myapp"
@@ -153,8 +155,8 @@ logs_dir = Path(base_dir) / "logs"  # Path operator
 
 # Good - consistent path handling
 base_dir = Path("/projects/myapp")
-config_file = fs.join_path(base_dir, "config.yaml")
-logs_dir = fs.join_path(base_dir, "logs")
+config_file = fs._join_path(base_dir, "config.yaml")
+logs_dir = fs._join_path(base_dir, "logs")
 ```
 
 Be consistent in how you handle paths throughout your code.

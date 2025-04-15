@@ -1,4 +1,4 @@
-# src/quackcore/fs/utils/safe_ops.py
+# src/quackcore/fs/helpers/safe_ops.py
 """
 Utility functions for safe file operations (copy, move, delete).
 """
@@ -13,17 +13,18 @@ from quackcore.errors import (
     QuackPermissionError,
     wrap_io_errors,
 )
-from quackcore.logging import get_logger
 
 # Import from within package
-from .file_ops import ensure_directory
+from quackcore.logging import get_logger
+
+from .file_ops import _ensure_directory
 
 # Initialize module logger
 logger = get_logger(__name__)
 
 
 @wrap_io_errors
-def safe_copy(src: str | Path, dst: str | Path, overwrite: bool = False) -> Path:
+def _safe_copy(src: str | Path, dst: str | Path, overwrite: bool = False) -> Path:
     """
     Safely copy a file or directory.
 
@@ -75,7 +76,7 @@ def safe_copy(src: str | Path, dst: str | Path, overwrite: bool = False) -> Path
 
 
 @wrap_io_errors
-def safe_move(src: str | Path, dst: str | Path, overwrite: bool = False) -> Path:
+def _safe_move(src: str | Path, dst: str | Path, overwrite: bool = False) -> Path:
     """
     Safely move a file or directory.
 
@@ -127,7 +128,7 @@ def safe_move(src: str | Path, dst: str | Path, overwrite: bool = False) -> Path
 
 
 @wrap_io_errors
-def safe_delete(path: str | Path, missing_ok: bool = True) -> bool:
+def _safe_delete(path: str | Path, missing_ok: bool = True) -> bool:
     """
     Safely delete a file or directory.
 

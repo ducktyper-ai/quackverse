@@ -47,6 +47,28 @@ class LoggingConfig(BaseModel):
             return None
         return normalize_path(v)
 
+    def setup_logging(self) -> None:
+        """Set up logging based on configuration."""
+        from quackcore.logging import LOG_LEVELS, configure_logger
+
+        # Determine the log level
+        level_name = self.level.upper()
+        level = LOG_LEVELS.get(level_name, LOG_LEVELS["INFO"])
+
+        # Configure the logger
+        logger = configure_logger("quackcore", level=level, log_file=self.file)
+
+        # If console logging is disabled, remove console handlers
+        if not self.console:
+            for handler in logger.handlers[:]:
+                import logging
+
+                if (
+                    isinstance(handler, logging.StreamHandler)
+                    and handler.stream.name == "<stderr>"
+                ):
+                    logger.removeHandler(handler)
+
 
 class PathsConfig(BaseModel):
     """Configuration for file paths."""

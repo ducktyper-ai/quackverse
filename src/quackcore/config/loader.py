@@ -28,7 +28,7 @@ DEFAULT_CONFIG_VALUES: dict[str, Any] = {
         "file": "logs/quackcore.log",
     },
     "paths": {
-        "base_dir": fs.expand_user_vars(
+        "base_dir": fs._expand_user_vars(
             str(os.path.join(os.path.expanduser("~"), ".quackcore"))
         ),
     },
@@ -172,26 +172,26 @@ def find_config_file() -> str | None:
     """
     # Check environment variable first.
     if config_path := os.environ.get("QUACK_CONFIG"):
-        expanded = fs.expand_user_vars(config_path)
+        expanded = fs._expand_user_vars(config_path)
         if fs.get_file_info(expanded).success and fs.get_file_info(expanded).exists:
-            return expanded
+            return str(expanded)
 
     # Check default locations.
     for location in DEFAULT_CONFIG_LOCATIONS:
-        expanded = fs.expand_user_vars(location)
+        expanded = fs._expand_user_vars(location)
         if fs.get_file_info(expanded).success and fs.get_file_info(expanded).exists:
-            return expanded
+            return str(expanded)
 
     # Try to find project root and check for config there.
     try:
         root = resolver.get_project_root()
         for name in ["quack_config.yaml", "config/quack_config.yaml"]:
-            candidate = fs.join_path(str(root), name)
+            candidate = fs._join_path(str(root), name)
             if (
                 fs.get_file_info(candidate).success
                 and fs.get_file_info(candidate).exists
             ):
-                return candidate
+                return str(candidate)
     except Exception as e:
         logger.debug("Failed to find project root: %s", e)
 
@@ -220,7 +220,7 @@ def load_config(
     config_dict: dict[str, Any] = {}
 
     if config_path:
-        expanded = fs.expand_user_vars(str(config_path))
+        expanded = fs._expand_user_vars(str(config_path))
         if not (
             fs.get_file_info(expanded).success and fs.get_file_info(expanded).exists
         ):

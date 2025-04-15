@@ -97,7 +97,7 @@ def _convert_markdown_to_docx_once(
     )
 
     # Get the parent directory of the output file by splitting and joining parts
-    parent_dir = fs.join_path(*fs.split_path(output_path)[:-1])
+    parent_dir = fs._join_path(*fs._split_path(output_path)[:-1])
     dir_result = fs.create_directory(parent_dir, exist_ok=True)
     if not dir_result.success:
         raise QuackIntegrationError(
@@ -175,7 +175,7 @@ def convert_markdown_to_docx(
         IntegrationResult[tuple[str, ConversionDetails]]: Result of the conversion.
     """
     # Get file name from the input path using fs.split_path
-    filename: str = fs.split_path(markdown_path)[-1]
+    filename: str = fs._split_path(markdown_path)[-1]
 
     if metrics is None:
         metrics = ConversionMetrics()
@@ -328,7 +328,7 @@ def _check_docx_metadata(docx_path: str, source_path: str, check_links: bool) ->
             return
 
         doc = Document(docx_path)
-        source_filename = fs.split_path(source_path)[-1]
+        source_filename = fs._split_path(source_path)[-1]
         source_found = False
 
         if hasattr(doc, "core_properties"):

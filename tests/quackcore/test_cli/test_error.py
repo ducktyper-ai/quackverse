@@ -5,15 +5,10 @@ Tests for the CLI error handling module.
 
 import os
 from datetime import datetime
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from quackcore.cli.error import _get_current_datetime  # Import the helper function
-from quackcore.cli.error import (
-    _print_error,  # Import the imported print_error for easier mocking
-)
 from quackcore.cli.error import (
     ensure_single_instance,
     format_cli_error,
@@ -167,15 +162,22 @@ class TestEnsureSingleInstance:
             mock_socket_instance = MagicMock()
             mock_socket.return_value = mock_socket_instance
 
-            with patch("pathlib.Path.write_text") as mock_write:
-                with patch("atexit.register") as mock_register:
-                    result = ensure_single_instance("test_app")
+            with patch("os.path.join", return_value="/tmp/test_app.lock") as mock_join:
+                # Fix: Patch builtins.open instead of just "open"
+                with patch("builtins.open", create=True) as mock_open:
+                    mock_file = MagicMock()
+                    mock_open.return_value.__enter__.return_value = mock_file
 
-                    # Verify result and function calls
-                    assert result is True
-                    mock_socket_instance.bind.assert_called_once()
-                    mock_write.assert_called_once()
-                    mock_register.assert_called_once()
+                    with patch("atexit.register") as mock_register:
+                        result = ensure_single_instance("test_app")
+
+                        # Verify result and function calls
+                        assert result is True
+                        mock_socket_instance.bind.assert_called_once()
+                        mock_join.assert_called_once()
+                        mock_open.assert_called_once()
+                        mock_file.write.assert_called_once()
+                        mock_register.assert_called_once()
 
     def test_already_running(self) -> None:
         """Test when an instance is already running."""
@@ -198,23 +200,33 @@ class TestEnsureSingleInstance:
             mock_socket_instance = MagicMock()
             mock_socket.return_value = mock_socket_instance
 
-            with patch("pathlib.Path.write_text") as mock_write:
-                with patch("pathlib.Path.unlink") as mock_unlink:
-                    with patch("atexit.register") as mock_register:
-                        # Capture the cleanup function
-                        def capture_cleanup(func):
-                            capture_cleanup.func = func
+            with patch("os.path.join", return_value="/tmp/test_app.lock") as mock_join:
+                # Fix: Patch builtins.open instead of just "open"
+                with patch("builtins.open", create=True) as mock_open:
+                    mock_file = MagicMock()
+                    mock_open.return_value.__enter__.return_value = mock_file
 
-                        mock_register.side_effect = capture_cleanup
+                    with patch("os.remove") as mock_remove:
+                        with patch("atexit.register") as mock_register:
+                            # Create a container to hold the cleanup function
+                            class FuncCapture:
+                                cleanup_func = None
 
-                        ensure_single_instance("test_app")
+                            # Capture the cleanup function
+                            def capture_cleanup(func):
+                                FuncCapture.cleanup_func = func
+                                return None  # Return value for the register mock
 
-                        # Call the captured cleanup function
-                        capture_cleanup.func()
+                            mock_register.side_effect = capture_cleanup
 
-                        # Verify socket was closed and lock file was deleted
-                        mock_socket_instance.close.assert_called_once()
-                        mock_unlink.assert_called_once()
+                            ensure_single_instance("test_app")
+
+                            # Call the captured cleanup function
+                            FuncCapture.cleanup_func()
+
+                            # Verify socket was closed and lock file was deleted
+                            mock_socket_instance.close.assert_called_once()
+                            mock_remove.assert_called_once_with("/tmp/test_app.lock")
 
     def test_port_calculation(self) -> None:
         """Test that port is calculated from app name."""
@@ -231,16 +243,19 @@ class TestEnsureSingleInstance:
             mock_socket_instance.bind.side_effect = record_port
             mock_socket.return_value = mock_socket_instance
 
-            with patch("pathlib.Path.write_text"), patch("atexit.register"):
-                # Call with different app names
-                ensure_single_instance("app1")
-                ensure_single_instance("app2")
+            with patch("os.path.join", return_value="/tmp/test_app.lock"):
+                # Fix: Patch builtins.open instead of just "open"
+                with patch("builtins.open", create=True):
+                    with patch("atexit.register"):
+                        # Call with different app names
+                        ensure_single_instance("app1")
+                        ensure_single_instance("app2")
 
-                # Verify different ports were used
-                assert port_values[0] != port_values[1]
-                # Verify ports are in the expected range (10000-20000)
-                assert 10000 <= port_values[0] < 20000
-                assert 10000 <= port_values[1] < 20000
+                        # Verify different ports were used
+                        assert port_values[0] != port_values[1]
+                        # Verify ports are in the expected range (10000-20000)
+                        assert 10000 <= port_values[0] < 20000
+                        assert 10000 <= port_values[1] < 20000
 
 
 class TestGetCliInfo:
@@ -261,11 +276,9 @@ class TestGetCliInfo:
                     return_value=fixed_datetime,
                 ):
                     with patch("os.getpid", return_value=12345):
-                        with patch(
-                            "pathlib.Path.cwd", return_value=Path("/current/dir")
-                        ):
+                        with patch("os.getcwd", return_value="/current/dir"):
                             with patch(
-                                "quackcore.config.utils.get_env", return_value="test"
+                                "quackcore.config.api.get_env", return_value="test"
                             ):
                                 with patch(
                                     "quackcore.cli.terminal.get_terminal_size"
@@ -296,8 +309,8 @@ class TestGetCliInfo:
                     return_value=datetime(2023, 1, 1, 12, 0, 0),
                 ):
                     with patch("os.getpid"):
-                        with patch("pathlib.Path.cwd"):
-                            with patch("quackcore.config.utils.get_env"):
+                        with patch("os.getcwd"):
+                            with patch("quackcore.config.api.get_env"):
                                 with patch(
                                     "quackcore.cli.terminal.get_terminal_size"
                                 ) as mock_term_size:
@@ -321,8 +334,8 @@ class TestGetCliInfo:
                     return_value=datetime(2023, 1, 1, 12, 0, 0),
                 ):
                     with patch("os.getpid"):
-                        with patch("pathlib.Path.cwd"):
-                            with patch("quackcore.config.utils.get_env"):
+                        with patch("os.getcwd"):
+                            with patch("quackcore.config.api.get_env"):
                                 # Make sure get_terminal_size returns a valid tuple
                                 with patch(
                                     "quackcore.cli.terminal.get_terminal_size",

@@ -122,7 +122,7 @@ and more, for an overview, here is the full structure:
     │   │   │   ├── test_drive_service_upload.py
     │   │   │   ├── test_drive.py
     │   │   │   ├── test_protocols.py
-    │   │   │   └── utils
+    │   │   │   └── api
     │   │   │       ├── __init__.py
     │   │   │       ├── test_utils_api.py
     │   │   │       └── test_utils_query.py
@@ -136,7 +136,7 @@ and more, for an overview, here is the full structure:
     │   │   │   │   └── test_email.py
     │   │   │   ├── test_mail_service.py
     │   │   │   ├── test_mail.py
-    │   │   │   └── utils
+    │   │   │   └── api
     │   │   │       ├── __init__.py
     │   │   │       └── test_api.py
     │   │   ├── mocks.py

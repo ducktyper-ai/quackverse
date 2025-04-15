@@ -15,18 +15,18 @@ Core Components:
 
 Example:
     ```python
-    from quackster import xp, utils
+    from quackster import xp, api
     from quackster.core.models import XPEvent
 
     # Load user progress
-    user = utils.load_progress()
+    user = api.load_progress()
 
     # Add XP for completing a task
     event = XPEvent(id="used-ducktyper", label="Used DuckTyper", points=10)
     xp.add_xp(user, event)
 
     # Save updated progress
-    utils.save_progress(user)
+    api.save_progress(user)
 
     # Talk to Quackster NPC
     from quackster.npc import agent

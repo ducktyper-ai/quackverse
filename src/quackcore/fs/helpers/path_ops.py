@@ -1,4 +1,4 @@
-# src/quackcore/fs/utils/path_ops.py
+# src/quackcore/fs/helpers/path_ops.py
 """
 Utility functions for path operations.
 """
@@ -12,7 +12,7 @@ from quackcore.logging import get_logger
 logger = get_logger(__name__)
 
 
-def split_path(path: str | Path) -> list[str]:
+def _split_path(path: str | Path) -> list[str]:
     """
     Split a path into its components.
 
@@ -29,7 +29,7 @@ def split_path(path: str | Path) -> list[str]:
     return parts
 
 
-def join_path(*parts: str | Path) -> Path:
+def _join_path(*parts: str | Path) -> Path:
     """
     Join path components.
 
@@ -44,7 +44,7 @@ def join_path(*parts: str | Path) -> Path:
     return result
 
 
-def expand_user_vars(path: str | Path) -> Path:
+def _expand_user_vars(path: str | Path) -> Path:
     """
     Expand user variables and environment variables in a path.
 

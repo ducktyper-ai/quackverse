@@ -7,7 +7,6 @@ the QuackCore CLI components. Centralizing these mocks ensures consistency
 across all test modules and makes tests more maintainable.
 """
 
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from quackcore.config.models import QuackConfig
@@ -41,8 +40,8 @@ class MockConfig(QuackConfig):
         self.logging.file = None  # Avoid filesystem errors
         self.logging.console = True
 
-        self.paths.base_dir = Path("/mock/base/dir")
-        self.paths.output_dir = Path("/mock/output/dir")
+        self.paths.base_dir = "/mock/base/dir"
+        self.paths.output_dir = "/mock/output/dir"
 
 
 def create_mock_logger():

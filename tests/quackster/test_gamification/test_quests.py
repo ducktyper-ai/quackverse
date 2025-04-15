@@ -17,7 +17,7 @@ class TestGamificationServiceQuests:
     @patch("quackster.core.gamification_service.quests")
     @patch("quackster.core.gamification_service.xp")
     @patch("quackster.core.gamification_service.badges")
-    @patch("quackster.core.gamification_service.utils.save_progress")
+    @patch("quackster.core.gamification_service.api.save_progress")
     @patch("quackster.core.gamification_service.logger")
     def test_complete_quest(
         self, mock_logger, mock_save, mock_badges, mock_xp, mock_quests

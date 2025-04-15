@@ -1,9 +1,8 @@
-# src/quackcore/fs/utils/file_info.py
+# src/quackcore/fs/helpers/file_info.py
 """
 Utility functions for getting file information.
 """
 
-import os
 import platform
 from pathlib import Path
 
@@ -14,7 +13,7 @@ from quackcore.logging import get_logger
 logger = get_logger(__name__)
 
 
-def get_file_size_str(size_bytes: int) -> str:
+def _get_file_size_str(size_bytes: int) -> str:
     """
     Convert file size in bytes to human-readable string.
 
@@ -33,7 +32,7 @@ def get_file_size_str(size_bytes: int) -> str:
 
 
 @wrap_io_errors
-def get_file_timestamp(path: str | Path) -> float:
+def _get_file_timestamp(path: str | Path) -> float:
     """
     Get the latest timestamp (modification time) for a file.
 
@@ -54,7 +53,7 @@ def get_file_timestamp(path: str | Path) -> float:
     return path_obj.stat().st_mtime
 
 
-def get_mime_type(path: str | Path) -> str | None:
+def _get_mime_type(path: str | Path) -> str | None:
     """
     Get the MIME type of the file.
 
@@ -74,7 +73,7 @@ def get_mime_type(path: str | Path) -> str | None:
     return mime_type
 
 
-def is_file_locked(path: str | Path) -> bool:
+def _is_file_locked(path: str | Path) -> bool:
     """
     Check if a file is locked by another process.
 
@@ -111,7 +110,7 @@ def is_file_locked(path: str | Path) -> bool:
         return False
 
 
-def get_file_type(path: str | Path) -> str:
+def _get_file_type(path: str | Path) -> str:
     """
     Get the type of the file.
 

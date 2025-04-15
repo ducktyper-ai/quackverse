@@ -1,6 +1,6 @@
 # tests/quackcore/test_integrations/google/drive/utils/test_utils_api.py
 """
-Tests for Google Drive utils api module.
+Tests for Google Drive api api module.
 """
 
 from unittest.mock import MagicMock, patch
@@ -17,7 +17,7 @@ from tests.quackcore.test_integrations.google.drive.mocks import (
 
 
 class TestDriveUtilsApi:
-    """Tests for Google Drive utils api functions."""
+    """Tests for Google Drive api api functions."""
 
     def test_execute_api_request_success(self) -> None:
         """Test successful execution of an API request."""

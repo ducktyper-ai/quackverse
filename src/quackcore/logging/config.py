@@ -93,7 +93,7 @@ def configure_logger(
             from quackcore.fs import service as fs
 
             # Resolve parent directory for the log file.
-            parent_dir = fs.join_path(*fs.split_path(log_file)[:-1])
+            parent_dir = fs._join_path(*fs._split_path(log_file)[:-1])
             fs.create_directory(parent_dir, exist_ok=True)
             file_handler = logging.FileHandler(log_file)
             file_handler.setFormatter(TeachingAwareFormatter(color_enabled=False))

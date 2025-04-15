@@ -30,7 +30,7 @@ def get_user_data_dir() -> str:
     # Use fs.expand_user_vars to process shell shortcuts (e.g., '~').
     data_dir = os.environ.get("QUACK_DATA_DIR", DEFAULT_DATA_DIR)
     # Expand the user variables.
-    expanded = fs.expand_user_vars(data_dir)
+    expanded = fs._expand_user_vars(data_dir)
     # Create the directory if it does not exist.
     fs.create_directory(expanded, exist_ok=True)
     return expanded
@@ -45,7 +45,7 @@ def get_progress_file_path() -> str:
     """
     data_dir = get_user_data_dir()
     file_name = os.environ.get("QUACK_PROGRESS_FILE", DEFAULT_PROGRESS_FILE)
-    return fs.join_path(data_dir, file_name)
+    return fs._join_path(data_dir, file_name)
 
 
 def get_github_username() -> str:
@@ -209,7 +209,7 @@ def backup_progress(backup_name: str = None) -> bool:
         backup_name = f"ducktyper_user_{timestamp}.json"
 
     data_dir = get_user_data_dir()
-    backup_path = fs.join_path(data_dir, backup_name)
+    backup_path = fs._join_path(data_dir, backup_name)
     result = fs.copy(file_path, backup_path)
     if not result.success:
         logger.error(f"Failed to create backup: {result.error}")

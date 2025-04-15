@@ -1,4 +1,4 @@
-# src/quackcore/fs/utils/checksums.py
+# src/quackcore/fs/helpers/checksums.py
 """
 Utility functions for file checksums.
 """
@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 
 
 @wrap_io_errors
-def compute_checksum(path: str | Path, algorithm: str = "sha256") -> str:
+def _compute_checksum(path: str | Path, algorithm: str = "sha256") -> str:
     """
     Compute checksum of a file.
 

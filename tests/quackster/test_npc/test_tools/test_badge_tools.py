@@ -50,7 +50,7 @@ class TestBadgeTools:
     def test_list_badges(self, mocker, mock_user, user_memory):
         """Test the list_badges function."""
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.badge_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.badge_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_badges = mocker.patch("quackster.npc.tools.badge_tools.badges")
@@ -135,7 +135,7 @@ class TestBadgeTools:
         )
 
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.badge_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.badge_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_badges = mocker.patch("quackster.npc.tools.badge_tools.badges")
@@ -171,7 +171,7 @@ class TestBadgeTools:
     def test_get_badge_details(self, mocker, mock_user, mock_badge):
         """Test the get_badge_details function."""
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.badge_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.badge_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_badges = mocker.patch("quackster.npc.tools.badge_tools.badges")
@@ -227,7 +227,7 @@ class TestBadgeTools:
     def test_get_badge_details_nonexistent_badge(self, mocker, mock_user):
         """Test get_badge_details with a nonexistent badge."""
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.badge_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.badge_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_badges = mocker.patch("quackster.npc.tools.badge_tools.badges")
@@ -272,7 +272,7 @@ class TestBadgeTools:
         mock_user.has_earned_badge.return_value = True
 
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.badge_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.badge_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_badges = mocker.patch("quackster.npc.tools.badge_tools.badges")
@@ -316,7 +316,7 @@ class TestBadgeTools:
     def test_get_badge_details_render_failure(self, mocker, mock_user, mock_badge):
         """Test get_badge_details when template rendering fails."""
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.badge_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.badge_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_badges = mocker.patch("quackster.npc.tools.badge_tools.badges")

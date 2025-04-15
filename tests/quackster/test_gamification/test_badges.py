@@ -15,7 +15,7 @@ class TestGamificationServiceBadges:
     """Tests for badge-related functionality in the gamification service."""
 
     @patch("quackster.core.gamification_service.badges")
-    @patch("quackster.core.gamification_service.utils.save_progress")
+    @patch("quackster.core.gamification_service.api.save_progress")
     def test_award_badge(self, mock_save, mock_badges):
         """Test awarding a badge."""
         # Setup

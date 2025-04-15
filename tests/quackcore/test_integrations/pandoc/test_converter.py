@@ -106,9 +106,9 @@ class TestDocumentConverter:
                 ) as mock_service_get_info:
                     mock_service_get_info.return_value = file_info
 
-                # Also patch the operations.utils.get_file_info
+                # Also patch the operations.api.get_file_info
                 with patch(
-                    "quackcore.integrations.pandoc.operations.utils.get_file_info"
+                    "quackcore.integrations.pandoc.operations.api.get_file_info"
                 ) as mock_get_info:
                     # Return a proper FileInfo object
                     mock_get_info.return_value = FileInfo(
@@ -175,9 +175,9 @@ class TestDocumentConverter:
                 ) as mock_service_get_info:
                     mock_service_get_info.return_value = file_info
 
-                # Mock the operations.utils.get_file_info function
+                # Mock the operations.api.get_file_info function
                 with patch(
-                    "quackcore.integrations.pandoc.operations.utils.get_file_info"
+                    "quackcore.integrations.pandoc.operations.api.get_file_info"
                 ) as mock_get_info:
                     # Return a proper FileInfo object
                     mock_get_info.return_value = FileInfo(
@@ -235,9 +235,9 @@ class TestDocumentConverter:
                 ) as mock_service_get_info:
                     mock_service_get_info.return_value = file_info
 
-                # Mock the operations.utils.get_file_info function
+                # Mock the operations.api.get_file_info function
                 with patch(
-                    "quackcore.integrations.pandoc.operations.utils.get_file_info"
+                    "quackcore.integrations.pandoc.operations.api.get_file_info"
                 ) as mock_get_info:
                     # Return a proper FileInfo object
                     mock_get_info.return_value = FileInfo(
@@ -292,9 +292,9 @@ class TestDocumentConverter:
                 ) as mock_service_get_info:
                     mock_service_get_info.return_value = file_info
 
-                # Mock the operations.utils.get_file_info function
+                # Mock the operations.api.get_file_info function
                 with patch(
-                    "quackcore.integrations.pandoc.operations.utils.get_file_info"
+                    "quackcore.integrations.pandoc.operations.api.get_file_info"
                 ) as mock_get_info:
                     # Return a proper FileInfo object
                     mock_get_info.return_value = FileInfo(
@@ -344,9 +344,9 @@ class TestDocumentConverter:
                 ) as mock_service_get_info:
                     mock_service_get_info.return_value = file_info
 
-                # Mock the operations.utils.get_file_info function to raise an error
+                # Mock the operations.api.get_file_info function to raise an error
                 with patch(
-                    "quackcore.integrations.pandoc.operations.utils.get_file_info"
+                    "quackcore.integrations.pandoc.operations.api.get_file_info"
                 ) as mock_get_info:
                     mock_get_info.side_effect = QuackIntegrationError("File not found")
 
@@ -511,7 +511,7 @@ class TestDocumentConverter:
 
                     # Mock validate_docx_structure
                     with patch(
-                        "quackcore.integrations.pandoc.operations.utils.validate_docx_structure"
+                        "quackcore.integrations.pandoc.operations.api.validate_docx_structure"
                     ) as mock_validate_docx:
                         mock_validate_docx.return_value = (True, [])
 

@@ -133,20 +133,20 @@ def handle_attachment(
         clean_name = clean_filename(filename)
 
         # Use the FS service's join_path to create a file path string
-        file_path = fs.join_path(storage_path, clean_name)  # file_path is now a string
+        file_path = fs._join_path(storage_path, clean_name)  # file_path is now a string
 
         # Handle filename collisions: if the file already exists, append a counter
         counter = 1
         file_info = fs.get_file_info(file_path)
         while file_info.success and file_info.exists:
             # Split file_path into directory and filename components using fs.split_path
-            path_parts = fs.split_path(file_path)
+            path_parts = fs._split_path(file_path)
             # Get last part (the filename) and separate base and extension
             filename_parts = path_parts[-1].rsplit(".", 1)
             base_name = filename_parts[0]
             ext = f".{filename_parts[1]}" if len(filename_parts) > 1 else ""
             new_filename = f"{base_name}-{counter}{ext}"
-            file_path = fs.join_path(storage_path, new_filename)
+            file_path = fs._join_path(storage_path, new_filename)
             file_info = fs.get_file_info(file_path)
             counter += 1
 

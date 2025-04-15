@@ -24,7 +24,7 @@ class TestGamificationServiceBase:
         assert service.progress == mock_progress
         assert service._changed is False
 
-    @patch("quackster.core.gamification_service.utils.load_progress")
+    @patch("quackster.core.gamification_service.api.load_progress")
     def test_init_default(self, mock_load_progress):
         """Test initializing the service with default progress."""
         # Setup
@@ -38,7 +38,7 @@ class TestGamificationServiceBase:
         assert service.progress == mock_progress
         mock_load_progress.assert_called_once()
 
-    @patch("quackster.core.gamification_service.utils.save_progress")
+    @patch("quackster.core.gamification_service.api.save_progress")
     def test_save(self, mock_save):
         """Test saving changes."""
         # Setup
@@ -53,7 +53,7 @@ class TestGamificationServiceBase:
         mock_save.assert_called_with(user)
         assert service._changed is False
 
-    @patch("quackster.core.gamification_service.utils.save_progress")
+    @patch("quackster.core.gamification_service.api.save_progress")
     def test_save_no_changes(self, mock_save):
         """Test saving when no changes have been made."""
         # Setup

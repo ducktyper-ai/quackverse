@@ -240,7 +240,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
                 f"Conversion size change: {input_size} → {output_size} bytes ({size_change_percentage:.1f}%)"
             )
 
-            ext = fs.get_extension(output_path)
+            ext = fs._get_extension(output_path)
             if ext in ("md", "markdown"):
                 try:
                     read_result = fs.read_text(output_path, encoding="utf-8")

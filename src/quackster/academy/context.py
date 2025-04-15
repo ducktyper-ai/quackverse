@@ -150,7 +150,7 @@ class TeachingContext:
         if os.path.isabs(path_value):
             return path_value
         # Otherwise, join with self.base_dir using fs.join_path.
-        return fs.join_path(self.base_dir, path_value)
+        return fs._join_path(self.base_dir, path_value)
 
     def ensure_directories(self) -> None:
         """Ensure all required directories exist."""

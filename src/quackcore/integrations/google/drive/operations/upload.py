@@ -77,9 +77,9 @@ def resolve_file_details(
     if remote_path and not remote_path.startswith("/"):
         filename = remote_path
     else:
-        parts = fs.split_path(resolved_path)
+        parts = fs._split_path(resolved_path)
         filename = parts[-1]
-    mime_type = fs.get_mime_type(resolved_path) or "application/octet-stream"
+    mime_type = fs._get_mime_type(resolved_path) or "application/octet-stream"
     return resolved_path, filename, parent_folder_id, mime_type
 
 

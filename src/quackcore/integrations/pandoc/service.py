@@ -162,7 +162,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                 config = getattr(self.converter, "config", None)
                 if isinstance(config, PandocConfig):
                     stem = os.path.splitext(os.path.basename(html_path))[0]
-                    output_path = fs.join_path(config.output_dir, f"{stem}.md")
+                    output_path = fs._join_path(config.output_dir, f"{stem}.md")
                 else:
                     return cast(
                         IntegrationResult[str],
@@ -222,7 +222,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                 config = getattr(self.converter, "config", None)
                 if isinstance(config, PandocConfig):
                     stem = os.path.splitext(os.path.basename(markdown_path))[0]
-                    output_path = fs.join_path(config.output_dir, f"{stem}.docx")
+                    output_path = fs._join_path(config.output_dir, f"{stem}.docx")
                 else:
                     return cast(
                         IntegrationResult[str],
@@ -420,9 +420,9 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                 file_info: FileInfo = get_file_info(file_path, source_format)
                 stem = os.path.splitext(os.path.basename(file_path))[0]
                 if output_format == "markdown":
-                    output_file = fs.join_path(output_dir, f"{stem}.md")
+                    output_file = fs._join_path(output_dir, f"{stem}.md")
                 else:
-                    output_file = fs.join_path(output_dir, f"{stem}.docx")
+                    output_file = fs._join_path(output_dir, f"{stem}.docx")
                 task = ConversionTask(
                     source=file_info,
                     target_format=output_format,

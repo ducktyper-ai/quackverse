@@ -223,8 +223,8 @@ class TestStudent:
         student = Student.create(github_username="student1", name="Student One")
 
         # Mock core_utils.load_progress and save_progress
-        with patch("quackster.core.utils.load_progress") as mock_load_progress:
-            with patch("quackster.core.utils.save_progress") as mock_save_progress:
+        with patch("quackster.core.api.load_progress") as mock_load_progress:
+            with patch("quackster.core.api.save_progress") as mock_save_progress:
                 # Mock progress with different GitHub username
                 mock_progress = MagicMock()
                 mock_progress.github_username = "old-username"
@@ -242,8 +242,8 @@ class TestStudent:
         student = Student.create(github_username="student1", name="Student One")
 
         # Mock core_utils.load_progress and save_progress
-        with patch("quackster.core.utils.load_progress") as mock_load_progress:
-            with patch("quackster.core.utils.save_progress") as mock_save_progress:
+        with patch("quackster.core.api.load_progress") as mock_load_progress:
+            with patch("quackster.core.api.save_progress") as mock_save_progress:
                 # Mock progress with same GitHub username
                 mock_progress = MagicMock()
                 mock_progress.github_username = "student1"
@@ -260,7 +260,7 @@ class TestStudent:
         student = Student.create(github_username="student1", name="Student One")
 
         # Mock core_utils.load_progress to raise an exception
-        with patch("quackster.core.utils.load_progress") as mock_load_progress:
+        with patch("quackster.core.api.load_progress") as mock_load_progress:
             mock_load_progress.side_effect = Exception("Progress error")
 
             # Should not raise an exception

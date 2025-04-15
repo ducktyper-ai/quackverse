@@ -20,7 +20,7 @@ class TestGamificationServiceEvents:
     @patch("quackster.core.gamification_service.xp.add_xp")
     @patch("quackster.core.gamification_service.quests.apply_completed_quests")
     @patch("quackster.core.gamification_service.xp._check_xp_badges")
-    @patch("quackster.core.gamification_service.utils.save_progress")
+    @patch("quackster.core.gamification_service.api.save_progress")
     def test_handle_event_new(
         self, mock_save, mock_check_badges, mock_apply_quests, mock_add_xp
     ):
@@ -64,7 +64,7 @@ class TestGamificationServiceEvents:
     @patch("quackster.core.gamification_service.xp.add_xp")
     @patch("quackster.core.gamification_service.quests.apply_completed_quests")
     @patch("quackster.core.gamification_service.xp._check_xp_badges")
-    @patch("quackster.core.gamification_service.utils.save_progress")
+    @patch("quackster.core.gamification_service.api.save_progress")
     def test_handle_event_level_up(
         self, mock_save, mock_check_badges, mock_apply_quests, mock_add_xp
     ):
@@ -118,7 +118,7 @@ class TestGamificationServiceEvents:
         assert not result.earned_badges
         assert result.message is None
 
-    @patch("quackster.core.gamification_service.utils.save_progress")
+    @patch("quackster.core.gamification_service.api.save_progress")
     def test_handle_events(self, mock_save):
         """Test handling multiple events."""
         # Setup

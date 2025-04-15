@@ -4,7 +4,6 @@ Tests for the CLI config module.
 """
 
 import os
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -28,16 +27,16 @@ class TestFindProjectRoot:
         with patch(
             "quackcore.cli.config.path_resolver.get_project_root"
         ) as mock_get_root:
-            # Set up mock to return a specific path
-            mock_get_root.return_value = Path("/project/root")
+            # Set up mock to return a specific path string
+            mock_get_root.return_value = "/project/root"
 
-            # Mock Path.cwd() to avoid fallback issues
-            with patch.object(Path, "cwd", return_value=Path("/some/other/path")):
+            # Mock os.getcwd() to avoid fallback issues
+            with patch("os.getcwd", return_value="/some/other/path"):
                 # Call the function under test
                 result = find_project_root()
 
                 # Verify the result
-                assert result == Path("/project/root")
+                assert result == "/project/root"
                 mock_get_root.assert_called_once()
 
     def test_with_exception(self):
@@ -56,13 +55,13 @@ class TestFindProjectRoot:
             ) as mock_get_root:
                 mock_get_root.side_effect = exception
 
-                # Mock Path.cwd() for deterministic test results
-                with patch.object(Path, "cwd", return_value=Path("/fallback/path")):
+                # Mock os.getcwd() for deterministic test results
+                with patch("os.getcwd", return_value="/fallback/path"):
                     # Call the function under test
                     result = find_project_root()
 
                     # Should fall back to cwd
-                    assert result == Path("/fallback/path")
+                    assert result == "/fallback/path"
 
         # Special handling for QuackFileNotFoundError
         with patch(
@@ -72,13 +71,13 @@ class TestFindProjectRoot:
                 "unknown", "File not found"
             )
 
-            # Mock Path.cwd() for deterministic test results
-            with patch.object(Path, "cwd", return_value=Path("/fallback/path")):
+            # Mock os.getcwd() for deterministic test results
+            with patch("os.getcwd", return_value="/fallback/path"):
                 # Call the function under test
                 result = find_project_root()
 
                 # Should fall back to cwd
-                assert result == Path("/fallback/path")
+                assert result == "/fallback/path"
 
 
 class TestLoadConfig:
@@ -235,7 +234,7 @@ class TestMergeCliOverrides:
         }
 
         # Mock dependencies
-        with patch("quackcore.config.utils.get_config_value") as mock_get_value:
+        with patch("quackcore.config.api.get_config_value") as mock_get_value:
             with patch("quackcore.config.loader.merge_configs") as mock_merge:
                 # Mock to return current values
                 mock_get_value.side_effect = lambda cfg, path, default: None
@@ -276,7 +275,7 @@ class TestMergeCliOverrides:
         }
 
         # Mock dependencies
-        with patch("quackcore.config.utils.get_config_value") as mock_get_value:
+        with patch("quackcore.config.api.get_config_value") as mock_get_value:
             with patch("quackcore.config.loader.merge_configs") as mock_merge:
                 # Mock to return current values
                 mock_get_value.side_effect = lambda cfg, path, default: None
@@ -321,7 +320,7 @@ class TestMergeCliOverrides:
         }
 
         # Mock dependencies
-        with patch("quackcore.config.utils.get_config_value") as mock_get_value:
+        with patch("quackcore.config.api.get_config_value") as mock_get_value:
             with patch("quackcore.config.loader.merge_configs") as mock_merge:
                 # Mock to return current values
                 mock_get_value.side_effect = lambda cfg, path, default: None

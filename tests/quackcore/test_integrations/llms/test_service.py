@@ -88,7 +88,7 @@ class TestLLMService:
             mock_file_info.return_value = file_info_result
 
             # Also patch normalize_path to handle the config path
-            with patch("quackcore.fs.utils.normalize_path") as mock_normalize_path:
+            with patch("quackcore.fs.api.normalize_path") as mock_normalize_path:
                 # Create a mock Path object instead of using absolute()
                 mock_path = "/Users/rodrivera/config.yaml"
                 mock_normalize_path.return_value = mock_path

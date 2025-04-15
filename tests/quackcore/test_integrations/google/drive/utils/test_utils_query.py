@@ -1,13 +1,13 @@
 # tests/quackcore/test_integrations/google/drive/utils/test_utils_query.py
 """
-Tests for Google Drive utils query module.
+Tests for Google Drive api query module.
 """
 
 from quackcore.integrations.google.drive.utils import query
 
 
 class TestDriveUtilsQuery:
-    """Tests for Google Drive utils query functions."""
+    """Tests for Google Drive api query functions."""
 
     def test_build_query_with_folder_id(self) -> None:
         """Test building a query string with folder ID."""

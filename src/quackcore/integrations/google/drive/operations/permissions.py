@@ -13,7 +13,7 @@ from quackcore.errors import QuackApiError
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.google.drive.protocols import DriveService
 
-# Import the utils.api module itself, not just the function
+# Import the api.api module itself, not just the function
 from quackcore.integrations.google.drive.utils import api
 
 

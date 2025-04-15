@@ -1,4 +1,4 @@
-# src/quackcore/fs/utils/file_ops.py
+# src/quackcore/fs/helpers/file_ops.py
 """
 Utility functions for file operations.
 """
@@ -22,7 +22,7 @@ logger = get_logger(__name__)
 
 
 @wrap_io_errors
-def get_unique_filename(
+def _get_unique_filename(
     directory: str | Path, filename: str, raise_if_exists: bool = False
 ) -> Path:
     """
@@ -72,7 +72,7 @@ def get_unique_filename(
 
 
 @wrap_io_errors
-def ensure_directory(path: str | Path, exist_ok: bool = True) -> Path:
+def _ensure_directory(path: str | Path, exist_ok: bool = True) -> Path:
     """
     Ensure a directory exists, creating it if necessary.
 
@@ -109,7 +109,7 @@ def ensure_directory(path: str | Path, exist_ok: bool = True) -> Path:
 
 
 @wrap_io_errors
-def atomic_write(path: str | Path, content: str | bytes) -> Path:
+def _atomic_write(path: str | Path, content: str | bytes) -> Path:
     """
     Write content to a file atomically using a temporary file.
 
@@ -125,7 +125,7 @@ def atomic_write(path: str | Path, content: str | bytes) -> Path:
         QuackIOError: For other IO related issues
     """
     path_obj = Path(path)
-    ensure_directory(path_obj.parent)
+    _ensure_directory(path_obj.parent)
 
     temp_dir = path_obj.parent
     temp_file = None
@@ -158,7 +158,7 @@ def atomic_write(path: str | Path, content: str | bytes) -> Path:
 
 
 @wrap_io_errors
-def find_files_by_content(
+def _find_files_by_content(
     directory: str | Path, text_pattern: str, recursive: bool = True
 ) -> list[Path]:
     """

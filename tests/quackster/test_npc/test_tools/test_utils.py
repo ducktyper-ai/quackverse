@@ -1,6 +1,6 @@
 # tests/quackster/test_npc/test_tools/test_utils.py
 """
-Tests for the utility functions in quackster.npc.tools.utils.
+Tests for the utility functions in quackster.npc.tools.api.
 
 This module tests the helper functions for tool operations,
 including tool discovery and invocation.
@@ -145,7 +145,7 @@ class TestToolUtils:
         )
 
         # Mock the tool registry
-        mock_registry = mocker.patch("quackster.npc.tools.utils.TOOL_REGISTRY")
+        mock_registry = mocker.patch("quackster.npc.tools.api.TOOL_REGISTRY")
         mock_registry.get.side_effect = lambda name: {
             "tool1": mock_tool1,
             "tool2": mock_tool2,
@@ -182,10 +182,10 @@ class TestToolUtils:
         )
 
         # Mock the tool registry and logger
-        mock_registry = mocker.patch("quackster.npc.tools.utils.TOOL_REGISTRY")
+        mock_registry = mocker.patch("quackster.npc.tools.api.TOOL_REGISTRY")
         mock_registry.get.side_effect = lambda name: {"valid_tool": mock_tool}.get(name)
 
-        mock_logger = mocker.patch("quackster.npc.tools.utils.logger")
+        mock_logger = mocker.patch("quackster.npc.tools.api.logger")
 
         # Create triggers with one valid and one missing tool
         triggers = [
@@ -212,10 +212,10 @@ class TestToolUtils:
         mock_tool.side_effect = Exception("Tool error")
 
         # Mock the tool registry and logger
-        mock_registry = mocker.patch("quackster.npc.tools.utils.TOOL_REGISTRY")
+        mock_registry = mocker.patch("quackster.npc.tools.api.TOOL_REGISTRY")
         mock_registry.get.return_value = mock_tool
 
-        mock_logger = mocker.patch("quackster.npc.tools.utils.logger")
+        mock_logger = mocker.patch("quackster.npc.tools.api.logger")
 
         # Create a trigger
         triggers = [("error_tool", {"arg": "value"})]
@@ -235,10 +235,10 @@ class TestToolUtils:
         mock_tool.return_value = "Not a ToolOutput"
 
         # Mock the tool registry and logger
-        mock_registry = mocker.patch("quackster.npc.tools.utils.TOOL_REGISTRY")
+        mock_registry = mocker.patch("quackster.npc.tools.api.TOOL_REGISTRY")
         mock_registry.get.return_value = mock_tool
 
-        mock_logger = mocker.patch("quackster.npc.tools.utils.logger")
+        mock_logger = mocker.patch("quackster.npc.tools.api.logger")
 
         # Create a trigger
         triggers = [("invalid_tool", {"arg": "value"})]

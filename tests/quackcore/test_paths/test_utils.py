@@ -87,7 +87,7 @@ class TestPathUtils:
 
         # Test resolving without explicit project root
         with patch(
-            "quackcore.paths.utils.find_project_root",
+            "quackcore.paths.api.find_project_root",
             return_value=mock_project_structure,
         ):
             resolved = resolve_relative_to_project("src/file.txt")
@@ -95,7 +95,7 @@ class TestPathUtils:
 
         # Test when project root cannot be found
         with patch(
-            "quackcore.paths.utils.find_project_root",
+            "quackcore.paths.api.find_project_root",
             side_effect=QuackFileNotFoundError(""),
         ):
             # Should default to current directory
@@ -106,7 +106,7 @@ class TestPathUtils:
     def test_normalize_path(self) -> None:
         """Test normalizing paths."""
         # Mock the actual path resolution to avoid filesystem access
-        with patch("quackcore.paths.utils.normalize_path_with_info") as mock_normalize:
+        with patch("quackcore.paths.api.normalize_path_with_info") as mock_normalize:
             # Set up the mock to return a result with an absolute path
             mock_normalize.return_value = MagicMock(
                 success=True,
@@ -120,7 +120,7 @@ class TestPathUtils:
             mock_normalize.assert_called_once_with("./test/../file.txt")
 
         # Test with empty path
-        with patch("quackcore.paths.utils.normalize_path_with_info") as mock_normalize:
+        with patch("quackcore.paths.api.normalize_path_with_info") as mock_normalize:
             mock_normalize.return_value = MagicMock(
                 success=True,
                 path=Path("/current/working/directory"),
@@ -131,7 +131,7 @@ class TestPathUtils:
             mock_normalize.assert_called_once_with("")
 
         # Test with absolute path
-        with patch("quackcore.paths.utils.normalize_path_with_info") as mock_normalize:
+        with patch("quackcore.paths.api.normalize_path_with_info") as mock_normalize:
             mock_normalize.return_value = MagicMock(
                 success=True,
                 path=Path("/some/absolute/path"),
@@ -199,7 +199,7 @@ class TestPathUtils:
 
         # Test inferring from a file with a relative path
         with patch(
-            "quackcore.paths.utils.find_project_root",
+            "quackcore.paths.api.find_project_root",
             return_value=mock_project_structure,
         ):
             module_name = infer_module_from_path(
@@ -209,7 +209,7 @@ class TestPathUtils:
 
         # Test inferring when src directory cannot be found
         with patch(
-            "quackcore.paths.utils.find_nearest_directory",
+            "quackcore.paths.api.find_nearest_directory",
             side_effect=QuackFileNotFoundError(""),
         ):
             # Should use file's directory as fallback
@@ -218,7 +218,7 @@ class TestPathUtils:
 
         # Test inferring when file is not in project
         with patch(
-            "quackcore.paths.utils.find_project_root",
+            "quackcore.paths.api.find_project_root",
             side_effect=QuackFileNotFoundError(""),
         ):
             module_name = infer_module_from_path("/outside/project/file.py")

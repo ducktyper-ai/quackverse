@@ -10,7 +10,7 @@ from typing import TypeVar
 
 # Import utility functions directly into this namespace for backward compatibility
 # This will make patching work correctly in tests
-from quackcore.fs.utils import (
+from quackcore.fs.api import (
     atomic_write,
     compute_checksum,
     ensure_directory,

@@ -302,7 +302,7 @@ class TestNPCMemory:
         assert "pull requests" in updated_memory.custom_data["stuck_points"]
 
     @patch("quackster.npc.memory._load_persistent_memory")
-    @patch("quackster.npc.memory.utils.load_progress")
+    @patch("quackster.npc.memory.api.load_progress")
     @patch("quackster.npc.memory.quests")
     @patch("quackster.npc.memory.badges")
     def test_get_user_memory_new(

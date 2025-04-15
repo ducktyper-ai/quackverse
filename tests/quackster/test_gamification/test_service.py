@@ -14,7 +14,7 @@ from quackster.core.models import UserProgress, XPEvent
 class TestGamificationServiceIntegration:
     """Tests for integration features of the gamification service."""
 
-    @patch("quackster.core.gamification_service.utils.save_progress")
+    @patch("quackster.core.gamification_service.api.save_progress")
     def test_handle_github_pr_submission(self, mock_save):
         """Test handling a GitHub pull request submission."""
         # Setup
@@ -44,7 +44,7 @@ class TestGamificationServiceIntegration:
             assert event_arg.metadata["repo"] == "quackverse/test-repo"
             assert event_arg.metadata["pr_number"] == 42
 
-    @patch("quackster.core.gamification_service.utils.save_progress")
+    @patch("quackster.core.gamification_service.api.save_progress")
     def test_handle_github_pr_submission_with_open_pr_quest(self, mock_save):
         """Test handling a PR submission that completes the open-pr quest."""
         # Setup
@@ -87,7 +87,7 @@ class TestGamificationServiceIntegration:
                     assert "open-pr" in result.completed_quests
                     assert "duck-contributor" in result.earned_badges
 
-    @patch("quackster.core.gamification_service.utils.save_progress")
+    @patch("quackster.core.gamification_service.api.save_progress")
     def test_handle_github_pr_merged(self, mock_save):
         """Test handling a GitHub pull request being merged."""
         # Setup
@@ -117,7 +117,7 @@ class TestGamificationServiceIntegration:
             assert event_arg.metadata["repo"] == "quackverse/test-repo"
             assert event_arg.metadata["pr_number"] == 42
 
-    @patch("quackster.core.gamification_service.utils.save_progress")
+    @patch("quackster.core.gamification_service.api.save_progress")
     def test_handle_github_pr_merged_with_merged_pr_quest(self, mock_save):
         """Test handling a merged PR that completes the merged-pr quest."""
         # Setup
@@ -158,7 +158,7 @@ class TestGamificationServiceIntegration:
                     assert "merged-pr" in result.completed_quests
                     assert "duck-team-player" in result.earned_badges
 
-    @patch("quackster.core.gamification_service.utils.save_progress")
+    @patch("quackster.core.gamification_service.api.save_progress")
     def test_handle_github_star(self, mock_save):
         """Test handling a GitHub repository star."""
         # Setup
@@ -187,7 +187,7 @@ class TestGamificationServiceIntegration:
             assert event_arg.points == 10
             assert event_arg.metadata["repo"] == "quackverse/test-repo"
 
-    @patch("quackster.core.gamification_service.utils.save_progress")
+    @patch("quackster.core.gamification_service.api.save_progress")
     def test_handle_github_star_quackcore(self, mock_save):
         """Test handling a star on the QuackCore repository."""
         # Setup
@@ -228,7 +228,7 @@ class TestGamificationServiceIntegration:
                     assert "star-quackcore" in result.completed_quests
                     assert "github-collaborator" in result.earned_badges
 
-    @patch("quackster.core.gamification_service.utils.save_progress")
+    @patch("quackster.core.gamification_service.api.save_progress")
     def test_handle_module_completion(self, mock_save):
         """Test handling completion of an Academy/LMS module."""
         # Setup
@@ -262,7 +262,7 @@ class TestGamificationServiceIntegration:
             assert event_arg.metadata["module_id"] == "module-1"
             assert event_arg.metadata["module_name"] == "Introduction Module"
 
-    @patch("quackster.core.gamification_service.utils.save_progress")
+    @patch("quackster.core.gamification_service.api.save_progress")
     def test_handle_module_completion_tutorial(self, mock_save):
         """Test handling completion of a tutorial module."""
         # Setup
@@ -305,7 +305,7 @@ class TestGamificationServiceIntegration:
                     assert "complete-tutorial" in result.completed_quests
                     assert "duck-explorer" in result.earned_badges
 
-    @patch("quackster.core.gamification_service.utils.save_progress")
+    @patch("quackster.core.gamification_service.api.save_progress")
     def test_handle_course_completion(self, mock_save):
         """Test handling completion of an Academy/LMS course."""
         # Setup
@@ -355,7 +355,7 @@ class TestGamificationServiceIntegration:
                     assert "Earned badge" in result.message
                     assert "duck-graduate" in result.earned_badges
 
-    @patch("quackster.core.gamification_service.utils.save_progress")
+    @patch("quackster.core.gamification_service.api.save_progress")
     def test_handle_assignment_completion(self, mock_save):
         """Test handling completion of an Academy/LMS assignment."""
         # Setup
@@ -391,7 +391,7 @@ class TestGamificationServiceIntegration:
             assert event_arg.metadata["max_score"] == 100.0
             assert event_arg.metadata["percentage"] == 0.85
 
-    @patch("quackster.core.gamification_service.utils.save_progress")
+    @patch("quackster.core.gamification_service.api.save_progress")
     def test_handle_feedback_submission(self, mock_save):
         """Test handling submission of feedback."""
         # Setup
@@ -422,7 +422,7 @@ class TestGamificationServiceIntegration:
             assert event_arg.metadata["feedback_id"] == "feedback-1"
             assert event_arg.metadata["context"] == "Assignment Feedback"
 
-    @patch("quackster.core.gamification_service.utils.save_progress")
+    @patch("quackster.core.gamification_service.api.save_progress")
     def test_handle_tool_usage(self, mock_save):
         """Test handling tool usage."""
         # Setup
@@ -452,7 +452,7 @@ class TestGamificationServiceIntegration:
             assert event_arg.metadata["action"] == "analyze"
             assert "date" in event_arg.metadata  # Should have today's date
 
-    @patch("quackster.core.gamification_service.utils.save_progress")
+    @patch("quackster.core.gamification_service.api.save_progress")
     @patch("quackster.core.gamification_service.datetime")
     def test_handle_ducktyper_run_first_time(self, mock_datetime, mock_save):
         """Test handling first run of DuckTyper."""

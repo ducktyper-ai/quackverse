@@ -70,7 +70,7 @@ class TestCertificateTools:
     ):
         """Test get_certificate_info with no earned certificates."""
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.certificate_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.certificate_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_certificates = mocker.patch(
@@ -122,7 +122,7 @@ class TestCertificateTools:
     ):
         """Test get_certificate_info with earned certificates."""
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.certificate_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.certificate_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_certificates = mocker.patch(
@@ -177,7 +177,7 @@ class TestCertificateTools:
     ):
         """Test get_certificate_info with all certificates earned."""
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.certificate_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.certificate_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_certificates = mocker.patch(
@@ -227,7 +227,7 @@ class TestCertificateTools:
     ):
         """Test that certificate progress is calculated correctly."""
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.certificate_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.certificate_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_certificates = mocker.patch(

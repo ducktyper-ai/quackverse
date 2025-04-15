@@ -3,13 +3,11 @@
 Tests for the CLI options module.
 """
 
-from pathlib import Path
-
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from quackcore.cli.options import CliOptions, LogLevel, resolve_cli_args
+from quackcore.cli.options import CliOptions, resolve_cli_args
 
 
 class TestCliOptions:
@@ -31,23 +29,23 @@ class TestCliOptions:
     def test_init_with_custom_values(self) -> None:
         """Test initializing with custom values."""
         options = CliOptions(
-            config_path=Path("/path/to/config.yaml"),
+            config_path="/path/to/config.yaml",  # String instead of Path
             log_level="DEBUG",
             debug=True,
             verbose=True,
             quiet=False,
             environment="test",
-            base_dir=Path("/base/dir"),
+            base_dir="/base/dir",  # String instead of Path
             no_color=True,
         )
 
-        assert options.config_path == Path("/path/to/config.yaml")
+        assert options.config_path == "/path/to/config.yaml"
         assert options.log_level == "DEBUG"
         assert options.debug is True
         assert options.verbose is True
         assert options.quiet is False
         assert options.environment == "test"
-        assert options.base_dir == Path("/base/dir")
+        assert options.base_dir == "/base/dir"
         assert options.no_color is True
 
     def test_frozen_model(self) -> None:

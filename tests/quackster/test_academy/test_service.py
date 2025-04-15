@@ -48,13 +48,13 @@ class TestTeachingService:
     def test_initialize_expand_user_vars(self, mock_fs):
         """Test that user variables are expanded in config_path."""
         service = TeachingService()
-        mock_fs.expand_user_vars.return_value = "/expanded/path"
+        mock_fs._expand_user_vars.return_value = "/expanded/path"
 
         with patch("quackster.academy.context.TeachingContext.from_config"):
             service.initialize("~/config.yaml")
 
             # Verify expand_user_vars was called
-            mock_fs.expand_user_vars.assert_called_once_with("~/config.yaml")
+            mock_fs._expand_user_vars.assert_called_once_with("~/config.yaml")
 
     def test_initialize_relative_base_dir(self, mock_fs, mock_resolver):
         """Test initialization with relative base_dir."""

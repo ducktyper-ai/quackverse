@@ -1,4 +1,4 @@
-# src/quackcore/fs/utils/common.py
+# src/quackcore/fs/helpers/common.py
 """
 Common utility functions for filesystem operations.
 """
@@ -12,7 +12,7 @@ from quackcore.logging import get_logger
 logger = get_logger(__name__)
 
 
-def get_extension(path: str | Path) -> str:
+def _get_extension(path: str | Path) -> str:
     """
     Get the file extension from a path.
 
@@ -33,7 +33,7 @@ def get_extension(path: str | Path) -> str:
 
 
 @wrap_io_errors
-def normalize_path(path: str | Path) -> Path:
+def _normalize_path(path: str | Path) -> Path:
     """
     Normalize a path for cross-platform compatibility.
 

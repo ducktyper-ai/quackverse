@@ -3,6 +3,7 @@
 Shared fixtures for QuackCore tests.
 """
 
+import os
 import shutil
 import tempfile
 from collections.abc import Generator  # Changed from typing to collections.abc
@@ -48,6 +49,12 @@ def test_binary_file(
 @pytest.fixture
 def sample_config(temp_dir: Path) -> QuackConfig:  # Using temp_dir fixture for security
     """Create a sample configuration."""
+    # We use string paths instead of Path objects here
+    temp_dir_str = str(temp_dir)
+    base_dir = temp_dir_str
+    output_dir = os.path.join(temp_dir_str, "output")
+
+    # Using strings for paths in the configuration
     return QuackConfig(
         general={
             "project_name": "TestProject",
@@ -55,14 +62,34 @@ def sample_config(temp_dir: Path) -> QuackConfig:  # Using temp_dir fixture for 
             "debug": True,
         },
         paths={
-            "base_dir": str(temp_dir),  # Using temp_dir instead of hardcoded path
-            "output_dir": str(
-                temp_dir / "output"
-            ),  # Using temp_dir instead of hardcoded path
+            "base_dir": base_dir,
+            "output_dir": output_dir,
+            "assets_dir": "./assets",
+            "data_dir": "./data",
+            "temp_dir": "./temp",
         },
         logging={
             "level": "DEBUG",
+            "file": None,
             "console": True,
+        },
+        integrations={
+            "google": {
+                "client_secrets_file": None,
+                "credentials_file": None,
+                "shared_folder_id": None,
+                "gmail_labels": [],
+                "gmail_days_back": 1,
+            },
+            "notion": {
+                "api_key": None,
+                "database_ids": {},
+            },
+        },
+        plugins={
+            "enabled": [],
+            "disabled": [],
+            "paths": [],
         },
     )
 

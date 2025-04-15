@@ -90,7 +90,7 @@ class TestTeachingPlugin:
         plugin = TeachingPlugin()
 
         # Mock expand_user_vars
-        mock_fs.expand_user_vars.return_value = "/expanded/path/config.yaml"
+        mock_fs._expand_user_vars.return_value = "/expanded/path/config.yaml"
 
         # Mock _service.initialize
         plugin._service.initialize = MagicMock(
@@ -101,7 +101,7 @@ class TestTeachingPlugin:
         plugin.initialize({"config_path": "~/config.yaml"})
 
         # Verify expand_user_vars was called
-        mock_fs.expand_user_vars.assert_called_once_with("~/config.yaml")
+        mock_fs._expand_user_vars.assert_called_once_with("~/config.yaml")
 
         # Verify _service.initialize was called with expanded path
         plugin._service.initialize.assert_called_once_with(

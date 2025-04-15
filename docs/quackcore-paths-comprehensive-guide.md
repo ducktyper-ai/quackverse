@@ -248,9 +248,9 @@ The module can infer Python module names from file paths:
 from quackcore.paths import infer_module_from_path
 
 # Infer module name from file path
-file_path = "/path/to/project/src/quackcore/paths/utils.py"
+file_path = "/path/to/project/src/quackcore/paths/api.py"
 module_name = infer_module_from_path(file_path)
-print(f"Module name: {module_name}")  # Output: quackcore.paths.utils
+print(f"Module name: {module_name}")  # Output: quackcore.paths.api
 ```
 
 This is especially useful for tooling that needs to import or reference modules dynamically.
@@ -409,23 +409,24 @@ from quackcore.fs import service as fs
 from pathlib import Path
 import os
 
+
 def find_config_file(config_name="config", file_types=None):
     """Find a configuration file in standard locations."""
     if file_types is None:
         file_types = [".yaml", ".yml", ".json", ".toml"]
-    
+
     # Check environment variable first
     env_var = f"QUACK_{config_name.upper()}_CONFIG"
     if env_var in os.environ:
-        config_path = fs.expand_user_vars(os.environ[env_var])
+        config_path = fs._expand_user_vars(os.environ[env_var])
         info = fs.get_file_info(config_path)
         if info.success and info.exists:
             return Path(config_path)
-    
+
     # Try to find project root
     try:
         project_context = resolver.detect_project_context()
-        
+
         # Try config directory first
         config_dir = project_context.get_config_dir()
         if config_dir:
@@ -434,24 +435,24 @@ def find_config_file(config_name="config", file_types=None):
                 info = fs.get_file_info(config_path)
                 if info.success and info.exists:
                     return config_path
-        
+
         # Check project root
         for ext in file_types:
             config_path = project_context.root_dir / f"{config_name}{ext}"
             info = fs.get_file_info(config_path)
             if info.success and info.exists:
                 return config_path
-            
+
         # Check for config directory in project root
         for ext in file_types:
             config_path = project_context.root_dir / "config" / f"{config_name}{ext}"
             info = fs.get_file_info(config_path)
             if info.success and info.exists:
                 return config_path
-    
+
     except Exception:
         pass  # Fall through to user directory
-    
+
     # Try user config directory
     home_dir = Path.home()
     config_home = home_dir / ".config" / "quack"
@@ -460,7 +461,7 @@ def find_config_file(config_name="config", file_types=None):
         info = fs.get_file_info(config_path)
         if info.success and info.exists:
             return config_path
-    
+
     # Not found
     return None
 ```

@@ -94,7 +94,7 @@ class FileCheckCriterion(GradingCriterion):
         Returns:
             The instance with all file paths expanded.
         """
-        self.files = [fs.expand_user_vars(f) for f in self.files]
+        self.files = [fs._expand_user_vars(f) for f in self.files]
         return self
 
     @classmethod
@@ -154,7 +154,7 @@ class PatternCheckCriterion(GradingCriterion):
         Returns:
             The instance with file patterns expanded.
         """
-        self.file_patterns = [fs.expand_user_vars(fp) for fp in self.file_patterns]
+        self.file_patterns = [fs._expand_user_vars(fp) for fp in self.file_patterns]
         return self
 
     @classmethod

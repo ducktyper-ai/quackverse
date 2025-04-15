@@ -2,7 +2,7 @@
 """
 Tests for the quackster utilities module.
 
-This module tests the utility functions in quackster.core.utils.
+This module tests the utility functions in quackster.core.api.
 """
 
 from pathlib import Path
@@ -15,10 +15,10 @@ from quackster.core.models import UserProgress
 class TestTeachingUtils:
     """Tests for quackster utility functions."""
 
-    @patch("quackster.core.utils.os.environ.get")
-    @patch("quackster.core.utils.fs.expand_user_vars")
-    @patch("quackster.core.utils.Path")
-    @patch("quackster.core.utils.fs.create_directory")
+    @patch("quackster.core.api.os.environ.get")
+    @patch("quackster.core.api.fs.expand_user_vars")
+    @patch("quackster.core.api.Path")
+    @patch("quackster.core.api.fs.create_directory")
     def test_get_user_data_dir_default(
         self, mock_create_dir, mock_path, mock_expand, mock_env_get
     ):
@@ -39,10 +39,10 @@ class TestTeachingUtils:
         mock_create_dir.assert_called_with(mock_path_instance, exist_ok=True)
         assert result == mock_path_instance
 
-    @patch("quackster.core.utils.os.environ.get")
-    @patch("quackster.core.utils.fs.expand_user_vars")
-    @patch("quackster.core.utils.Path")
-    @patch("quackster.core.utils.fs.create_directory")
+    @patch("quackster.core.api.os.environ.get")
+    @patch("quackster.core.api.fs.expand_user_vars")
+    @patch("quackster.core.api.Path")
+    @patch("quackster.core.api.fs.create_directory")
     def test_get_user_data_dir_custom(
         self, mock_create_dir, mock_path, mock_expand, mock_env_get
     ):
@@ -72,10 +72,10 @@ class TestTeachingUtils:
 
         # Mock the get_user_data_dir function
         with patch(
-            "quackster.core.utils.get_user_data_dir",
+            "quackster.core.api.get_user_data_dir",
             return_value=mock_data_dir,
         ):
-            with patch("quackster.core.utils.os.environ.get", return_value=None):
+            with patch("quackster.core.api.os.environ.get", return_value=None):
                 # Act
                 result = utils.get_progress_file_path()
 
@@ -85,7 +85,7 @@ class TestTeachingUtils:
                 )
                 assert result == expected_file_path
 
-    @patch("quackster.core.utils.os.environ.get")
+    @patch("quackster.core.api.os.environ.get")
     def test_get_github_username_from_env(self, mock_env_get):
         """Test getting GitHub username from environment variable."""
         # Setup
@@ -98,8 +98,8 @@ class TestTeachingUtils:
         mock_env_get.assert_called_with("GITHUB_USERNAME")
         assert result == "test-user"
 
-    @patch("quackster.core.utils.os.environ.get")
-    @patch("quackster.core.utils.subprocess.run")
+    @patch("quackster.core.api.os.environ.get")
+    @patch("quackster.core.api.subprocess.run")
     def test_get_github_username_from_git_config(self, mock_run, mock_env_get):
         """Test getting GitHub username from git config."""
         # Setup
@@ -116,8 +116,8 @@ class TestTeachingUtils:
         )
         assert result == "test-user"
 
-    @patch("quackster.core.utils.os.environ.get")
-    @patch("quackster.core.utils.subprocess.run")
+    @patch("quackster.core.api.os.environ.get")
+    @patch("quackster.core.api.subprocess.run")
     @patch("builtins.input")
     def test_get_github_username_from_input(self, mock_input, mock_run, mock_env_get):
         """Test getting GitHub username from user input."""
@@ -137,10 +137,10 @@ class TestTeachingUtils:
         mock_input.assert_called_with("Enter your GitHub username: ")
         assert result == "test-user"
 
-    @patch("quackster.core.utils.os.environ.get")
-    @patch("quackster.core.utils.subprocess.run")
+    @patch("quackster.core.api.os.environ.get")
+    @patch("quackster.core.api.subprocess.run")
     @patch("builtins.input")
-    @patch("quackster.core.utils.getpass.getuser")
+    @patch("quackster.core.api.getpass.getuser")
     def test_get_github_username_fallback(
         self, mock_getuser, mock_input, mock_run, mock_env_get
     ):
@@ -163,9 +163,9 @@ class TestTeachingUtils:
         mock_getuser.assert_called_once()
         assert result == "system-user"
 
-    @patch("quackster.core.utils.get_progress_file_path")
-    @patch("quackster.core.utils.fs.get_file_info")
-    @patch("quackster.core.utils.create_new_progress")
+    @patch("quackster.core.api.get_progress_file_path")
+    @patch("quackster.core.api.fs.get_file_info")
+    @patch("quackster.core.api.create_new_progress")
     def test_load_progress_file_not_found(
         self, mock_create_new, mock_get_file_info, mock_get_path
     ):
@@ -188,11 +188,11 @@ class TestTeachingUtils:
         mock_create_new.assert_called_once()
         assert result == expected_progress
 
-    @patch("quackster.core.utils.get_progress_file_path")
-    @patch("quackster.core.utils.fs.get_file_info")
-    @patch("quackster.core.utils.fs.read_json")
-    @patch("quackster.core.utils.UserProgress.model_validate")
-    @patch("quackster.core.utils.logger")
+    @patch("quackster.core.api.get_progress_file_path")
+    @patch("quackster.core.api.fs.get_file_info")
+    @patch("quackster.core.api.fs.read_json")
+    @patch("quackster.core.api.UserProgress.model_validate")
+    @patch("quackster.core.api.logger")
     def test_load_progress_success(
         self,
         mock_logger,
@@ -234,11 +234,11 @@ class TestTeachingUtils:
         mock_logger.debug.assert_called()
         assert result == expected_progress
 
-    @patch("quackster.core.utils.get_progress_file_path")
-    @patch("quackster.core.utils.fs.get_file_info")
-    @patch("quackster.core.utils.fs.read_json")
-    @patch("quackster.core.utils.create_new_progress")
-    @patch("quackster.core.utils.logger")
+    @patch("quackster.core.api.get_progress_file_path")
+    @patch("quackster.core.api.fs.get_file_info")
+    @patch("quackster.core.api.fs.read_json")
+    @patch("quackster.core.api.create_new_progress")
+    @patch("quackster.core.api.logger")
     def test_load_progress_read_error(
         self,
         mock_logger,
@@ -268,9 +268,9 @@ class TestTeachingUtils:
         mock_create_new.assert_called_once()
         assert result == expected_progress
 
-    @patch("quackster.core.utils.get_progress_file_path")
-    @patch("quackster.core.utils.fs.write_json")
-    @patch("quackster.core.utils.logger")
+    @patch("quackster.core.api.get_progress_file_path")
+    @patch("quackster.core.api.fs.write_json")
+    @patch("quackster.core.api.logger")
     def test_save_progress_error(self, mock_logger, mock_write_json, mock_get_path):
         """Test handling errors when saving progress."""
         # Setup
@@ -288,10 +288,10 @@ class TestTeachingUtils:
         mock_logger.error.assert_called()
         assert result is False
 
-    @patch("quackster.core.utils.get_progress_file_path")
-    @patch("quackster.core.utils.fs.get_file_info")
-    @patch("quackster.core.utils.fs.delete")
-    @patch("quackster.core.utils.logger")
+    @patch("quackster.core.api.get_progress_file_path")
+    @patch("quackster.core.api.fs.get_file_info")
+    @patch("quackster.core.api.fs.delete")
+    @patch("quackster.core.api.logger")
     def test_reset_progress_success(
         self, mock_logger, mock_delete, mock_get_file_info, mock_get_path
     ):
@@ -312,9 +312,9 @@ class TestTeachingUtils:
         mock_logger.info.assert_called()
         assert result is True
 
-    @patch("quackster.core.utils.get_progress_file_path")
-    @patch("quackster.core.utils.fs.get_file_info")
-    @patch("quackster.core.utils.logger")
+    @patch("quackster.core.api.get_progress_file_path")
+    @patch("quackster.core.api.fs.get_file_info")
+    @patch("quackster.core.api.logger")
     def test_reset_progress_no_file(
         self, mock_logger, mock_get_file_info, mock_get_path
     ):
@@ -332,10 +332,10 @@ class TestTeachingUtils:
         mock_logger.debug.assert_called()
         assert result is True
 
-    @patch("quackster.core.utils.get_progress_file_path")
-    @patch("quackster.core.utils.fs.get_file_info")
-    @patch("quackster.core.utils.fs.delete")
-    @patch("quackster.core.utils.logger")
+    @patch("quackster.core.api.get_progress_file_path")
+    @patch("quackster.core.api.fs.get_file_info")
+    @patch("quackster.core.api.fs.delete")
+    @patch("quackster.core.api.logger")
     def test_reset_progress_error(
         self, mock_logger, mock_delete, mock_get_file_info, mock_get_path
     ):
@@ -354,12 +354,12 @@ class TestTeachingUtils:
         mock_logger.error.assert_called()
         assert result is False
 
-    @patch("quackster.core.utils.get_user_data_dir")
-    @patch("quackster.core.utils.get_progress_file_path")
-    @patch("quackster.core.utils.fs.get_file_info")
-    @patch("quackster.core.utils.fs.copy")
-    @patch("quackster.core.utils.logger")
-    @patch("quackster.core.utils.datetime")
+    @patch("quackster.core.api.get_user_data_dir")
+    @patch("quackster.core.api.get_progress_file_path")
+    @patch("quackster.core.api.fs.get_file_info")
+    @patch("quackster.core.api.fs.copy")
+    @patch("quackster.core.api.logger")
+    @patch("quackster.core.api.datetime")
     def test_backup_progress_success(
         self,
         mock_datetime,
@@ -403,9 +403,9 @@ class TestTeachingUtils:
         mock_logger.info.assert_called()
         assert result is True
 
-    @patch("quackster.core.utils.get_progress_file_path")
-    @patch("quackster.core.utils.fs.get_file_info")
-    @patch("quackster.core.utils.logger")
+    @patch("quackster.core.api.get_progress_file_path")
+    @patch("quackster.core.api.fs.get_file_info")
+    @patch("quackster.core.api.logger")
     def test_backup_progress_no_file(
         self, mock_logger, mock_get_file_info, mock_get_path
     ):
@@ -423,11 +423,11 @@ class TestTeachingUtils:
         mock_logger.debug.assert_called()
         assert result is False
 
-    @patch("quackster.core.utils.get_user_data_dir")
-    @patch("quackster.core.utils.get_progress_file_path")
-    @patch("quackster.core.utils.fs.get_file_info")
-    @patch("quackster.core.utils.fs.copy")
-    @patch("quackster.core.utils.logger")
+    @patch("quackster.core.api.get_user_data_dir")
+    @patch("quackster.core.api.get_progress_file_path")
+    @patch("quackster.core.api.fs.get_file_info")
+    @patch("quackster.core.api.fs.copy")
+    @patch("quackster.core.api.logger")
     def test_backup_progress_custom_name(
         self,
         mock_logger,
@@ -460,11 +460,11 @@ class TestTeachingUtils:
         mock_logger.info.assert_called()
         assert result is True
 
-    @patch("quackster.core.utils.get_user_data_dir")
-    @patch("quackster.core.utils.get_progress_file_path")
-    @patch("quackster.core.utils.fs.get_file_info")
-    @patch("quackster.core.utils.fs.copy")
-    @patch("quackster.core.utils.logger")
+    @patch("quackster.core.api.get_user_data_dir")
+    @patch("quackster.core.api.get_progress_file_path")
+    @patch("quackster.core.api.fs.get_file_info")
+    @patch("quackster.core.api.fs.copy")
+    @patch("quackster.core.api.logger")
     def test_backup_progress_error(
         self,
         mock_logger,
@@ -494,11 +494,11 @@ class TestTeachingUtils:
         mock_logger.error.assert_called()
         assert result is False
 
-    @patch("quackster.core.utils.get_progress_file_path")
-    @patch("quackster.core.utils.fs.get_file_info")
-    @patch("quackster.core.utils.fs.read_json")
-    @patch("quackster.core.utils.UserProgress.model_validate")
-    @patch("quackster.core.utils.logger")
+    @patch("quackster.core.api.get_progress_file_path")
+    @patch("quackster.core.api.fs.get_file_info")
+    @patch("quackster.core.api.fs.read_json")
+    @patch("quackster.core.api.UserProgress.model_validate")
+    @patch("quackster.core.api.logger")
     def test_load_progress_success(
         self,
         mock_logger,
@@ -540,11 +540,11 @@ class TestTeachingUtils:
         mock_logger.debug.assert_called()
         assert result == expected_progress
 
-    @patch("quackster.core.utils.get_progress_file_path")
-    @patch("quackster.core.utils.fs.get_file_info")
-    @patch("quackster.core.utils.fs.read_json")
-    @patch("quackster.core.utils.create_new_progress")
-    @patch("quackster.core.utils.logger")
+    @patch("quackster.core.api.get_progress_file_path")
+    @patch("quackster.core.api.fs.get_file_info")
+    @patch("quackster.core.api.fs.read_json")
+    @patch("quackster.core.api.create_new_progress")
+    @patch("quackster.core.api.logger")
     def test_load_progress_read_error(
         self,
         mock_logger,
@@ -574,8 +574,8 @@ class TestTeachingUtils:
         mock_create_new.assert_called_once()
         assert result == expected_progress
 
-    @patch("quackster.core.utils.get_github_username")
-    @patch("quackster.core.utils.save_progress")
+    @patch("quackster.core.api.get_github_username")
+    @patch("quackster.core.api.save_progress")
     def test_create_new_progress(self, mock_save, mock_get_username):
         """Test creating new user progress."""
         # Setup
@@ -593,9 +593,9 @@ class TestTeachingUtils:
         assert result.completed_quest_ids == []
         assert result.earned_badge_ids == []
 
-    @patch("quackster.core.utils.get_progress_file_path")
-    @patch("quackster.core.utils.fs.write_json")
-    @patch("quackster.core.utils.logger")
+    @patch("quackster.core.api.get_progress_file_path")
+    @patch("quackster.core.api.fs.write_json")
+    @patch("quackster.core.api.logger")
     def test_save_progress_success(self, mock_logger, mock_write_json, mock_get_path):
         """Test successfully saving progress to file."""
         # Setup

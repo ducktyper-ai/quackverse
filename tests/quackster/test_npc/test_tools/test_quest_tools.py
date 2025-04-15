@@ -96,7 +96,7 @@ class TestQuestTools:
     def test_list_quests_basic(self, mocker, mock_user, mock_quests, user_memory_basic):
         """Test the list_quests function with basic UserMemory."""
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_quests_module = mocker.patch("quackster.npc.tools.quest_tools.quests")
@@ -145,7 +145,7 @@ class TestQuestTools:
     ):
         """Test list_quests with suggested quests in user_memory."""
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_quests_module = mocker.patch("quackster.npc.tools.quest_tools.quests")
@@ -195,7 +195,7 @@ class TestQuestTools:
     ):
         """Test list_quests with learning style in user_memory."""
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_quests_module = mocker.patch("quackster.npc.tools.quest_tools.quests")
@@ -241,7 +241,7 @@ class TestQuestTools:
     def test_get_quest_details(self, mocker, mock_user, mock_quests):
         """Test the get_quest_details function."""
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_quests_module = mocker.patch("quackster.npc.tools.quest_tools.quests")
@@ -296,7 +296,7 @@ class TestQuestTools:
     def test_get_quest_details_nonexistent_quest(self, mocker, mock_user):
         """Test get_quest_details with a nonexistent quest."""
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_quests_module = mocker.patch("quackster.npc.tools.quest_tools.quests")
@@ -341,7 +341,7 @@ class TestQuestTools:
         mock_user.has_completed_quest.return_value = True
 
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_quests_module = mocker.patch("quackster.npc.tools.quest_tools.quests")
@@ -382,7 +382,7 @@ class TestQuestTools:
     def test_get_quest_details_render_failure(self, mocker, mock_user, mock_quests):
         """Test get_quest_details when template rendering fails."""
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_quests_module = mocker.patch("quackster.npc.tools.quest_tools.quests")
@@ -424,7 +424,7 @@ class TestQuestTools:
     ):
         """Test suggest_next_quest using quests from user_memory."""
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_quests_module = mocker.patch("quackster.npc.tools.quest_tools.quests")
@@ -479,7 +479,7 @@ class TestQuestTools:
     ):
         """Test suggest_next_quest using quests from quests module."""
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_quests_module = mocker.patch("quackster.npc.tools.quest_tools.quests")
@@ -527,7 +527,7 @@ class TestQuestTools:
     ):
         """Test suggest_next_quest with no available suggestions."""
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_quests_module = mocker.patch("quackster.npc.tools.quest_tools.quests")
@@ -567,7 +567,7 @@ class TestQuestTools:
     ):
         """Test verify_quest_completion with no newly completed quests."""
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_quests_module = mocker.patch("quackster.npc.tools.quest_tools.quests")
@@ -607,7 +607,7 @@ class TestQuestTools:
     ):
         """Test verify_quest_completion with newly completed quests."""
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_quests_module = mocker.patch("quackster.npc.tools.quest_tools.quests")
@@ -677,7 +677,7 @@ class TestQuestTools:
         )
 
         # Mock dependencies
-        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.utils")
+        mock_utils = mocker.patch("quackster.npc.tools.quest_tools.api")
         mock_utils.load_progress.return_value = mock_user
 
         mock_quests_module = mocker.patch("quackster.npc.tools.quest_tools.quests")

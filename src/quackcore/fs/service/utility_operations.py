@@ -6,8 +6,7 @@ Utility operations for the FileSystemService.
 from pathlib import Path
 
 from quackcore.errors import wrap_io_errors
-from quackcore.fs.operations import FileSystemOperations
-from quackcore.fs.utils import (
+from quackcore.fs.api.public import (
     atomic_write,
     compute_checksum,
     create_temp_directory,
@@ -23,6 +22,7 @@ from quackcore.fs.utils import (
     is_file_locked,
     is_path_writeable,
 )
+from quackcore.fs.operations import FileSystemOperations
 
 
 class UtilityOperationsMixin:

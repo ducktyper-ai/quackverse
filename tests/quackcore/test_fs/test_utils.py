@@ -20,7 +20,7 @@ from quackcore.errors import (
     QuackIOError,
     QuackPermissionError,
 )
-from quackcore.fs.utils import (
+from quackcore.fs.api import (
     atomic_write,
     compute_checksum,
     create_temp_directory,

@@ -4,7 +4,6 @@ Tests for the CLI bootstrap module.
 """
 
 import os
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -29,7 +28,7 @@ class TestInitCliEnv:
     ):
         """Test successful initialization of CLI environment."""
         # Customize mocks for this test
-        mock_find_root.return_value = Path("/project/root")
+        mock_find_root.return_value = "/project/root"
 
         # Create a mock config that will respond to attribute changes
         mock_config = MockConfig()
@@ -68,7 +67,7 @@ class TestInitCliEnv:
     ):
         """Test initialization with explicit parameters."""
         # Customize mocks for this test
-        mock_find_root.return_value = Path("/custom/base/dir")
+        mock_find_root.return_value = "/custom/base/dir"
 
         # Create a mock config manually rather than using the decorator
         mock_config = MockConfig()
@@ -206,13 +205,13 @@ class TestFromCliOptions:
 
         # Create options
         options = CliOptions(
-            config_path=Path("/path/to/config.yaml"),
+            config_path="/path/to/config.yaml",
             log_level="DEBUG",
             debug=True,
             verbose=True,
             quiet=False,
             environment="test",
-            base_dir=Path("/custom/base/dir"),
+            base_dir="/custom/base/dir",
             no_color=True,
         )
 
@@ -221,13 +220,13 @@ class TestFromCliOptions:
 
         # Verify init_cli_env was called with the right parameters
         mock_init_cli_env.assert_called_once_with(
-            config_path=Path("/path/to/config.yaml"),
+            config_path="/path/to/config.yaml",
             log_level="DEBUG",
             debug=True,
             verbose=True,
             quiet=False,
             environment="test",
-            base_dir=Path("/custom/base/dir"),
+            base_dir="/custom/base/dir",
             cli_args={"key": "value"},
             app_name="test_app",
         )

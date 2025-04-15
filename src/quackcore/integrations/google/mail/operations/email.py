@@ -172,7 +172,7 @@ def download_email(
         clean_sender_name = clean_filename(sender)
         filename = f"{timestamp}-{clean_sender_name}.html"
         # Use fs.join_path to join storage path and filename (returns a string)
-        filepath = str(fs.join_path(storage_path, filename))
+        filepath = str(fs._join_path(storage_path, filename))
         html_content, attachments = process_message_parts(
             gmail_service, user_id, [payload], msg_id, storage_path, logger
         )
@@ -388,17 +388,17 @@ def handle_attachment(
             return None
 
         clean_name = clean_filename(filename)
-        file_path = str(fs.join_path(storage_path, clean_name))
+        file_path = str(fs._join_path(storage_path, clean_name))
         counter = 1
         file_info = fs.get_file_info(file_path)
         while file_info.success and file_info.exists:
             # Split the file name using fs.split_path
-            path_parts = fs.split_path(file_path)
+            path_parts = fs._split_path(file_path)
             filename_parts = path_parts[-1].rsplit(".", 1)
             base_name = filename_parts[0]
             ext = f".{filename_parts[1]}" if len(filename_parts) > 1 else ""
             new_filename = f"{base_name}-{counter}{ext}"
-            file_path = str(fs.join_path(storage_path, new_filename))
+            file_path = str(fs._join_path(storage_path, new_filename))
             file_info = fs.get_file_info(file_path)
             counter += 1
 

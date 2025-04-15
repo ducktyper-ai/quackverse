@@ -203,10 +203,10 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
         filename = (
             remote_path
             if remote_path and not remote_path.startswith("/")
-            else fs.split_path(path_obj)[-1]
+            else fs._split_path(path_obj)[-1]
         )
         folder_id = parent_folder_id or self.shared_folder_id
-        mime_type = fs.get_mime_type(path_obj) or "application/octet-stream"
+        mime_type = fs._get_mime_type(path_obj) or "application/octet-stream"
         return path_obj, filename, folder_id, mime_type
 
     def _resolve_download_path(
@@ -226,9 +226,9 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
 
         if local_path is None:
             # Create a temp directory using fs.create_temp_directory
-            temp_dir = fs.create_temp_directory(prefix="quackcore_gdrive_")
+            temp_dir = fs._create_temp_directory(prefix="quackcore_gdrive_")
             # Use fs.join_path for path joining
-            return str(fs.join_path(temp_dir, file_name))
+            return str(fs._join_path(temp_dir, file_name))
 
         # Resolve the local path
         local_path_obj = resolver.resolve_project_path(local_path)
@@ -238,7 +238,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             # Handle different cases depending on whether local_path is a directory or file
             if file_info.is_dir:
                 # If it's a directory, join the file name to it
-                joined_path = fs.join_path(local_path_obj, file_name)
+                joined_path = fs._join_path(local_path_obj, file_name)
                 return str(joined_path)
             else:
                 # If it's a file, use the path as is
@@ -431,7 +431,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             download_path = self._resolve_download_path(file_metadata, local_path)
 
             # Ensure parent directory exists
-            parent_dir = fs.join_path(download_path).parent
+            parent_dir = fs._join_path(download_path).parent
             parent_result = fs.create_directory(parent_dir, exist_ok=True)
             if not parent_result.success:
                 return IntegrationResult.error_result(

@@ -85,7 +85,7 @@ class TestLLMIntegrationComprehensive:
             mock_file_info.return_value = file_info_result
 
             # Also patch normalize_path
-            with patch("quackcore.fs.utils.normalize_path") as mock_normalize_path:
+            with patch("quackcore.fs.api.normalize_path") as mock_normalize_path:
                 # Create a mock path string directly
                 mock_path = "/Users/rodrivera/custom_config.yaml"
                 mock_normalize_path.return_value = mock_path

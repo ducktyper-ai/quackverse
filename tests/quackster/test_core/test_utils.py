@@ -1,6 +1,6 @@
 # tests/quackster/test_core/test_utils.py
 """
-Tests for the QuackCore quackster core utils module.
+Tests for the QuackCore quackster core api module.
 """
 
 from pathlib import Path
@@ -25,7 +25,7 @@ class TestGetUserDataDir:
     def test_default_directory(self, mock_fs):
         """Test getting the default user data directory."""
         # Setup mock for fs.expand_user_vars and fs.create_directory
-        mock_fs.expand_user_vars.return_value = "/home/user/.quack"
+        mock_fs._expand_user_vars.return_value = "/home/user/.quack"
         mock_fs.create_directory.return_value = MagicMock(success=True)
 
         # Call the function
@@ -33,7 +33,7 @@ class TestGetUserDataDir:
 
         # Check the result and mock calls
         assert result == Path("/home/user/.quack")
-        mock_fs.expand_user_vars.assert_called_once_with("~/.quack")
+        mock_fs._expand_user_vars.assert_called_once_with("~/.quack")
         mock_fs.create_directory.assert_called_once_with(
             Path("/home/user/.quack"), exist_ok=True
         )
@@ -44,7 +44,7 @@ class TestGetUserDataDir:
         monkeypatch.setenv("QUACK_DATA_DIR", "~/custom_data")
 
         # Setup mock for fs.expand_user_vars and fs.create_directory
-        mock_fs.expand_user_vars.return_value = "/home/user/custom_data"
+        mock_fs._expand_user_vars.return_value = "/home/user/custom_data"
         mock_fs.create_directory.return_value = MagicMock(success=True)
 
         # Call the function
@@ -52,7 +52,7 @@ class TestGetUserDataDir:
 
         # Check the result and mock calls
         assert result == Path("/home/user/custom_data")
-        mock_fs.expand_user_vars.assert_called_once_with("~/custom_data")
+        mock_fs._expand_user_vars.assert_called_once_with("~/custom_data")
         mock_fs.create_directory.assert_called_once_with(
             Path("/home/user/custom_data"), exist_ok=True
         )
@@ -64,7 +64,7 @@ class TestGetProgressFilePath:
     def test_default_file_path(self, mock_fs):
         """Test getting the default progress file path."""
         # Setup mock for get_user_data_dir
-        with patch("quackster.core.utils.get_user_data_dir") as mock_get_dir:
+        with patch("quackster.core.api.get_user_data_dir") as mock_get_dir:
             mock_get_dir.return_value = Path("/home/user/.quack")
 
             # Call the function
@@ -79,7 +79,7 @@ class TestGetProgressFilePath:
         monkeypatch.setenv("QUACK_PROGRESS_FILE", "custom_progress.json")
 
         # Setup mock for get_user_data_dir
-        with patch("quackster.core.utils.get_user_data_dir") as mock_get_dir:
+        with patch("quackster.core.api.get_user_data_dir") as mock_get_dir:
             mock_get_dir.return_value = Path("/home/user/.quack")
 
             # Call the function
@@ -193,7 +193,7 @@ class TestLoadProgress:
     def test_load_existing_progress(self, mock_fs, mock_logger):
         """Test loading progress from an existing file."""
         # Setup mocks
-        with patch("quackster.core.utils.get_progress_file_path") as mock_get_path:
+        with patch("quackster.core.api.get_progress_file_path") as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
@@ -248,7 +248,7 @@ class TestLoadProgress:
     def test_load_nonexistent_file(self, mock_fs, mock_logger):
         """Test loading progress when the file doesn't exist."""
         # Setup mocks
-        with patch("quackster.core.utils.get_progress_file_path") as mock_get_path:
+        with patch("quackster.core.api.get_progress_file_path") as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file doesn't exist
@@ -256,7 +256,7 @@ class TestLoadProgress:
 
             # Mock create_new_progress
             with patch(
-                "quackster.core.utils.create_new_progress"
+                "quackster.core.api.create_new_progress"
             ) as mock_create_progress:
                 mock_progress = UserProgress(github_username="new-user")
                 mock_create_progress.return_value = mock_progress
@@ -282,7 +282,7 @@ class TestLoadProgress:
     def test_load_invalid_file(self, mock_fs, mock_logger):
         """Test loading progress when the file has invalid format."""
         # Setup mocks
-        with patch("quackster.core.utils.get_progress_file_path") as mock_get_path:
+        with patch("quackster.core.api.get_progress_file_path") as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
@@ -295,7 +295,7 @@ class TestLoadProgress:
 
             # Mock create_new_progress
             with patch(
-                "quackster.core.utils.create_new_progress"
+                "quackster.core.api.create_new_progress"
             ) as mock_create_progress:
                 mock_progress = UserProgress(github_username="new-user")
                 mock_create_progress.return_value = mock_progress
@@ -324,7 +324,7 @@ class TestLoadProgress:
     def test_load_validation_error(self, mock_fs, mock_logger):
         """Test loading progress when the file content is invalid."""
         # Setup mocks
-        with patch("quackster.core.utils.get_progress_file_path") as mock_get_path:
+        with patch("quackster.core.api.get_progress_file_path") as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
@@ -336,7 +336,7 @@ class TestLoadProgress:
 
             # Mock create_new_progress
             with patch(
-                "quackster.core.utils.create_new_progress"
+                "quackster.core.api.create_new_progress"
             ) as mock_create_progress:
                 mock_progress = UserProgress(github_username="new-user")
                 mock_create_progress.return_value = mock_progress
@@ -378,7 +378,7 @@ class TestSaveProgress:
         )
 
         # Setup mocks
-        with patch("quackster.core.utils.get_progress_file_path") as mock_get_path:
+        with patch("quackster.core.api.get_progress_file_path") as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.write_json to succeed
@@ -407,7 +407,7 @@ class TestSaveProgress:
         progress = UserProgress(github_username="test-user")
 
         # Setup mocks
-        with patch("quackster.core.utils.get_progress_file_path") as mock_get_path:
+        with patch("quackster.core.api.get_progress_file_path") as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.write_json to fail
@@ -438,7 +438,7 @@ class TestSaveProgress:
         progress = UserProgress(github_username="test-user")
 
         # Setup mocks
-        with patch("quackster.core.utils.get_progress_file_path") as mock_get_path:
+        with patch("quackster.core.api.get_progress_file_path") as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.write_json to raise exception
@@ -468,11 +468,11 @@ class TestCreateNewProgress:
     def test_create_new_progress(self):
         """Test creating new progress."""
         # Setup mocks
-        with patch("quackster.core.utils.get_github_username") as mock_get_username:
+        with patch("quackster.core.api.get_github_username") as mock_get_username:
             mock_get_username.return_value = "test-user"
 
             # Mock save_progress
-            with patch("quackster.core.utils.save_progress") as mock_save:
+            with patch("quackster.core.api.save_progress") as mock_save:
                 mock_save.return_value = True
 
                 # Call the function
@@ -496,7 +496,7 @@ class TestResetProgress:
     def test_reset_existing_progress(self, mock_fs, mock_logger):
         """Test resetting existing progress."""
         # Setup mocks
-        with patch("quackster.core.utils.get_progress_file_path") as mock_get_path:
+        with patch("quackster.core.api.get_progress_file_path") as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
@@ -528,7 +528,7 @@ class TestResetProgress:
     def test_reset_nonexistent_progress(self, mock_fs, mock_logger):
         """Test resetting when progress file doesn't exist."""
         # Setup mocks
-        with patch("quackster.core.utils.get_progress_file_path") as mock_get_path:
+        with patch("quackster.core.api.get_progress_file_path") as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file doesn't exist
@@ -555,7 +555,7 @@ class TestResetProgress:
     def test_reset_progress_failure(self, mock_fs, mock_logger):
         """Test handling reset failure."""
         # Setup mocks
-        with patch("quackster.core.utils.get_progress_file_path") as mock_get_path:
+        with patch("quackster.core.api.get_progress_file_path") as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
@@ -591,14 +591,14 @@ class TestBackupProgress:
     def test_backup_with_default_name(self, mock_fs, mock_logger):
         """Test backing up progress with default name."""
         # Setup mocks
-        with patch("quackster.core.utils.get_progress_file_path") as mock_get_path:
+        with patch("quackster.core.api.get_progress_file_path") as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
             mock_fs.get_file_info.return_value = MagicMock(success=True, exists=True)
 
             # Mock get_user_data_dir
-            with patch("quackster.core.utils.get_user_data_dir") as mock_get_dir:
+            with patch("quackster.core.api.get_user_data_dir") as mock_get_dir:
                 mock_get_dir.return_value = Path("/home/user/.quack")
 
                 # Mock fs.copy to succeed
@@ -634,14 +634,14 @@ class TestBackupProgress:
     def test_backup_with_custom_name(self, mock_fs, mock_logger):
         """Test backing up progress with custom name."""
         # Setup mocks
-        with patch("quackster.core.utils.get_progress_file_path") as mock_get_path:
+        with patch("quackster.core.api.get_progress_file_path") as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
             mock_fs.get_file_info.return_value = MagicMock(success=True, exists=True)
 
             # Mock get_user_data_dir
-            with patch("quackster.core.utils.get_user_data_dir") as mock_get_dir:
+            with patch("quackster.core.api.get_user_data_dir") as mock_get_dir:
                 mock_get_dir.return_value = Path("/home/user/.quack")
 
                 # Mock fs.copy to succeed
@@ -671,7 +671,7 @@ class TestBackupProgress:
     def test_backup_nonexistent_file(self, mock_fs, mock_logger):
         """Test backing up when progress file doesn't exist."""
         # Setup mocks
-        with patch("quackster.core.utils.get_progress_file_path") as mock_get_path:
+        with patch("quackster.core.api.get_progress_file_path") as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file doesn't exist
@@ -698,14 +698,14 @@ class TestBackupProgress:
     def test_backup_failure(self, mock_fs, mock_logger):
         """Test handling backup failure."""
         # Setup mocks
-        with patch("quackster.core.utils.get_progress_file_path") as mock_get_path:
+        with patch("quackster.core.api.get_progress_file_path") as mock_get_path:
             mock_get_path.return_value = Path("/home/user/.quack/ducktyper_user.json")
 
             # Mock fs.get_file_info to indicate file exists
             mock_fs.get_file_info.return_value = MagicMock(success=True, exists=True)
 
             # Mock get_user_data_dir
-            with patch("quackster.core.utils.get_user_data_dir") as mock_get_dir:
+            with patch("quackster.core.api.get_user_data_dir") as mock_get_dir:
                 mock_get_dir.return_value = Path("/home/user/.quack")
 
                 # Mock fs.copy to fail

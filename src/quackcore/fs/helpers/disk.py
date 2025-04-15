@@ -1,4 +1,4 @@
-# src/quackcore/fs/utils/disk.py
+# src/quackcore/fs/helpers/disk.py
 """
 Utility functions for disk operations.
 """
@@ -11,13 +11,12 @@ from quackcore.errors import QuackIOError
 from quackcore.logging import get_logger
 
 # Import from within package
-from .file_ops import ensure_directory
 
 # Initialize module logger
 logger = get_logger(__name__)
 
 
-def get_disk_usage(path: str | Path) -> dict[str, int]:
+def _get_disk_usage(path: str | Path) -> dict[str, int]:
     """
     Get disk usage information for the given path.
 
@@ -41,7 +40,7 @@ def get_disk_usage(path: str | Path) -> dict[str, int]:
         ) from e
 
 
-def is_path_writeable(path: str | Path) -> bool:
+def _is_path_writeable(path: str | Path) -> bool:
     """
     Check if a path is writeable.
 

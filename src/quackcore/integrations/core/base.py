@@ -68,7 +68,7 @@ class BaseAuthProvider(ABC, AuthProviderProtocol):
             # Import the global service instance as recommended in best practices
             from quackcore.fs import service as fs
 
-            normalized_path = fs.normalize_path(file_path)
+            normalized_path = fs._normalize_path(file_path)
             return str(normalized_path)
 
     @property
@@ -375,7 +375,7 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
                 self.config_path = str(resolver.resolve_project_path(config_path))
             except Exception as e:
                 self.logger.warning(f"Could not resolve config path: {e}")
-                self.config_path = str(fs.normalize_path(config_path))
+                self.config_path = str(fs._normalize_path(config_path))
         else:
             self.config_path = None
 

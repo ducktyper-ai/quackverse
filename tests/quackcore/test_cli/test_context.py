@@ -4,7 +4,7 @@ Tests for the CLI context module.
 """
 
 import logging
-from pathlib import Path
+import os
 from unittest.mock import MagicMock
 
 import pytest
@@ -22,7 +22,7 @@ class TestQuackContext:
         # Create basic dependencies
         config = QuackConfig()
         logger = logging.getLogger("test_quack_context")
-        base_dir = Path("/test/base_dir")
+        base_dir = "/test/base_dir"
 
         # Test with required parameters
         context = QuackContext(
@@ -38,11 +38,11 @@ class TestQuackContext:
         assert context.environment == "development"
         assert context.debug is False  # Default
         assert context.verbose is False  # Default
-        assert context.working_dir == Path.cwd()  # Default
+        assert context.working_dir == os.getcwd()  # Default - Changed from Path.cwd()
         assert context.extra == {}  # Default
 
         # Test with all parameters
-        working_dir = Path("/test/working_dir")
+        working_dir = "/test/working_dir"
         extra = {"key": "value"}
 
         context = QuackContext(
@@ -72,7 +72,7 @@ class TestQuackContext:
             QuackContext(
                 config=config,
                 logger="not_a_logger",  # type: ignore
-                base_dir=Path("/test"),
+                base_dir="/test",
                 environment="development",
             )
 
@@ -81,7 +81,7 @@ class TestQuackContext:
             QuackContext(
                 config=config,
                 logger=logger,
-                base_dir=Path("/test"),
+                base_dir="/test",
                 environment=123,  # type: ignore
             )
 
@@ -93,7 +93,7 @@ class TestQuackContext:
         context = QuackContext(
             config=config,
             logger=logger,
-            base_dir=Path("/test"),
+            base_dir="/test",
             environment="development",
         )
 
@@ -116,7 +116,7 @@ class TestQuackContext:
         context = QuackContext(
             config=config,
             logger=logger,
-            base_dir=Path("/test"),
+            base_dir="/test",
             environment="development",
         )
 
@@ -130,7 +130,7 @@ class TestQuackContext:
         context = QuackContext(
             config=config,
             logger=logger,
-            base_dir=Path("/test"),
+            base_dir="/test",
             environment="development",
             extra={"existing": "value"},
         )

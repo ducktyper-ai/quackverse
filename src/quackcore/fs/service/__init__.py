@@ -24,54 +24,11 @@ from quackcore.fs.service.factory import create_service
 from quackcore.fs.service.full_class import FileSystemService
 from quackcore.fs.service.path_validation import PathInfo
 
-# Import utility functions directly
-from quackcore.fs.utils import (
-    atomic_write,
-    compute_checksum,
-    create_temp_directory,
-    create_temp_file,
-    ensure_directory,
-    expand_user_vars,
-    find_files_by_content,
-    get_disk_usage,
-    get_extension,
-    get_file_size_str,
-    get_file_timestamp,
-    get_file_type,
-    get_mime_type,
-    get_unique_filename,
-    is_file_locked,
-    is_path_writeable,
-    is_same_file,
-    is_subdirectory,
-    join_path,
-)
-from quackcore.fs.utils import normalize_path as utils_normalize_path
-from quackcore.fs.utils import (
-    split_path,
-)
-
 # Create a global instance for convenience
 service = create_service()
 
 
 # Define standalone functions at the module level to avoid circular imports
-
-
-# This is the function that's being mocked in the test - make sure it can be properly patched
-def normalize_path(path: str | Path) -> Path:
-    """
-    Normalize a path for cross-platform compatibility.
-
-    This is a direct wrapper over the utility function to allow for proper mocking in tests.
-
-    Args:
-        path: Path to normalize
-
-    Returns:
-        Normalized Path object
-    """
-    return utils_normalize_path(path)
 
 
 def create_directory(path: str | Path, exist_ok: bool = True) -> OperationResult:
@@ -437,31 +394,9 @@ __all__ = [
     "copy",
     "move",
     "delete",
-    "normalize_path",
     "normalize_path_with_info",
     "get_path_info",
     "is_valid_path",
-    # Utility functions
-    "is_same_file",
-    "is_subdirectory",
-    "get_file_size_str",
-    "get_unique_filename",
-    "create_temp_directory",
-    "create_temp_file",
-    "get_file_timestamp",
-    "is_path_writeable",
-    "get_mime_type",
-    "get_disk_usage",
-    "is_file_locked",
-    "get_file_type",
-    "find_files_by_content",
-    "split_path",
-    "join_path",
-    "expand_user_vars",
-    "get_extension",
-    "ensure_directory",
-    "compute_checksum",
-    "atomic_write",
     # Result classes for type hints
     "OperationResult",
     "ReadResult",

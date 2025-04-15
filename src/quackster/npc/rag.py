@@ -43,7 +43,7 @@ def get_doc_directories() -> list[str]:
     # Check for an override via the environment variable.
     custom_path = os.environ.get("QUACK_TUTORIAL_PATH")
     if custom_path:
-        expanded = fs.expand_user_vars(custom_path)
+        expanded = fs._expand_user_vars(custom_path)
         return [expanded]
 
     # Attempt to detect a content context for tutorials.
@@ -56,7 +56,7 @@ def get_doc_directories() -> list[str]:
     # Fall back to default paths.
     paths: list[str] = []
     for path_str in DEFAULT_DOC_PATHS:
-        expanded = fs.expand_user_vars(path_str)
+        expanded = fs._expand_user_vars(path_str)
         info = fs.get_file_info(expanded)
         if info.success and info.exists and info.is_dir:
             paths.append(expanded)

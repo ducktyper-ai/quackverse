@@ -493,8 +493,8 @@ class TestPandocService:
                 ]
                 mock_fs.find_files.return_value = find_result
 
-                # Setup default behavior for path utils
-                with patch("quackcore.paths.utils.normalize_path") as mock_normalize:
+                # Setup default behavior for path api
+                with patch("quackcore.paths.api.normalize_path") as mock_normalize:
                     # Important: Make sure normalized paths are absolute and don't refer to actual filesystem
                     mock_normalize.return_value = Path("/absolute/normalized/path")
 

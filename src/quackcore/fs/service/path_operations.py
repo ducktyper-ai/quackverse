@@ -10,16 +10,16 @@ import tempfile
 from pathlib import Path
 
 from quackcore.errors import wrap_io_errors
-from quackcore.fs.operations import FileSystemOperations
-from quackcore.fs.utils import (
+from quackcore.fs.api.public import (
     expand_user_vars,
     is_same_file,
     is_subdirectory,
 )
-from quackcore.fs.utils import normalize_path as utils_normalize_path
-from quackcore.fs.utils import (
+from quackcore.fs.api.public import normalize_path as utils_normalize_path
+from quackcore.fs.api.public import (
     split_path,
 )
+from quackcore.fs.operations import FileSystemOperations
 
 
 class PathOperationsMixin:

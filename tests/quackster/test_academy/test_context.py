@@ -86,12 +86,12 @@ class TestTeachingContext:
         context = TeachingContext(teaching_config, temp_dir)
         relative_path = "relative/path"
 
-        mock_fs.join_path.return_value = os.path.join(str(temp_dir), relative_path)
+        mock_fs._join_path.return_value = os.path.join(str(temp_dir), relative_path)
         resolved = context._resolve_path(relative_path)
 
         # Relative paths should be joined with base_dir
         assert resolved == Path(os.path.join(str(temp_dir), relative_path))
-        mock_fs.join_path.assert_called_once_with(str(temp_dir), relative_path)
+        mock_fs._join_path.assert_called_once_with(str(temp_dir), relative_path)
 
     def test_ensure_directories(self, teaching_context, mock_fs):
         """Test ensure_directories creates necessary directories."""
@@ -155,7 +155,7 @@ class TestTeachingContext:
         config_path = "/path/to/config.yaml"
 
         # Mock loading the config
-        mock_fs.expand_user_vars.side_effect = lambda x: x
+        mock_fs._expand_user_vars.side_effect = lambda x: x
 
         with patch("quackcore.config.loader.load_yaml_config") as mock_load_config:
             mock_load_config.return_value = teaching_config.model_dump()
