@@ -308,7 +308,7 @@ class TestTeachingPlugin:
 
 def test_create_plugin():
     """Test create_plugin function."""
-    from quackcore.teaching.academy.plugin import create_plugin
+    from quackster.academy.plugin import create_plugin
 
     plugin = create_plugin()
 

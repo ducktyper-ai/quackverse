@@ -193,12 +193,12 @@ class GitHubAuthProvider(BaseAuthProvider):
             logger.debug("No credentials file specified")
             return None
 
-        file_info = fs._get_file_info(self.credentials_file)
+        file_info = fs.get_file_info(self.credentials_file)
         if not file_info.success or not file_info.exists:
             logger.debug(f"Credentials file does not exist: {self.credentials_file}")
             return None
 
-        result = fs._read_json(self.credentials_file)
+        result = fs.read_json(self.credentials_file)
         if not result.success:
             logger.warning(f"Failed to read credentials file: {result.error}")
             return None
@@ -228,5 +228,5 @@ class GitHubAuthProvider(BaseAuthProvider):
             credentials["user_info"] = self._user_info
 
         # Write credentials to file
-        result = fs._write_json(self.credentials_file, credentials, atomic=True)
+        result = fs.write_json(self.credentials_file, credentials, atomic=True)
         return result.success

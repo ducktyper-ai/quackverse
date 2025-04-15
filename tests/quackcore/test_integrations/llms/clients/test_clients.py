@@ -7,17 +7,11 @@ ensuring they work correctly and match the expected behavior.
 """
 
 import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
-from quackcore.errors import QuackApiError, QuackIntegrationError
-from quackcore.integrations.llms.clients import (
-    LLMClient,
-    MockLLMClient,
-    OpenAIClient,
-)
-from quackcore.integrations.llms.models import ChatMessage, LLMOptions, RoleType
+from quackcore.integrations.llms.clients import OpenAIClient
 
 
 class TestClientImports:

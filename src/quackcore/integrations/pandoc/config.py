@@ -228,7 +228,7 @@ class PandocConfigProvider(BaseConfigProvider):
                 else:
                     # For keys that represent paths, ensure we use string paths.
                     if config_key == "output_dir" or config_key.endswith("_path"):
-                        normalized = fs._normalize_path(value)
+                        normalized = fs.normalize_path(value)
                         if normalized.success:
                             config[config_key] = normalized.path
                         else:

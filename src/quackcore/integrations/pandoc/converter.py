@@ -78,9 +78,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             input_info = get_file_info(input_path)
             # Create output directory from the output_path (using os.path.dirname)
             output_dir = os.path.dirname(output_path)
-            dir_result: OperationResult = fs._create_directory(
-                output_dir, exist_ok=True
-            )
+            dir_result: OperationResult = fs.create_directory(output_dir, exist_ok=True)
             if not dir_result.success:
                 return IntegrationResult.error_result(
                     f"Failed to create output directory: {dir_result.error}"
@@ -140,7 +138,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
         output_directory: str = (
             output_dir if output_dir is not None else self.config.output_dir
         )
-        dir_result: OperationResult = fs._create_directory(
+        dir_result: OperationResult = fs.create_directory(
             output_directory, exist_ok=True
         )
         if not dir_result.success:
@@ -224,8 +222,8 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             True if validation passes, otherwise False.
         """
         try:
-            output_info = fs._get_file_info(output_path)
-            input_info = fs._get_file_info(input_path)
+            output_info = fs.get_file_info(output_path)
+            input_info = fs.get_file_info(input_path)
             if not output_info.success or not output_info.exists:
                 logger.error(f"Output file does not exist: {output_path}")
                 return False
@@ -242,10 +240,10 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
                 f"Conversion size change: {input_size} → {output_size} bytes ({size_change_percentage:.1f}%)"
             )
 
-            ext = fs._get_extension(output_path)
+            ext = fs.get_extension(output_path)
             if ext in ("md", "markdown"):
                 try:
-                    read_result = fs._read_text(output_path, encoding="utf-8")
+                    read_result = fs.read_text(output_path, encoding="utf-8")
                     if not read_result.success:
                         logger.error(
                             f"Failed to read markdown file: {read_result.error}"

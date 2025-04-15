@@ -208,8 +208,8 @@ def track_metrics(
             "converted": converted_size_int,
             "ratio": ratio,
         }
-        original_size_str = fs._get_file_size_str(original_size_int)
-        converted_size_str = fs._get_file_size_str(converted_size_int)
+        original_size_str = fs.get_file_size_str(original_size_int)
+        converted_size_str = fs.get_file_size_str(converted_size_int)
         logger.info(
             f"File size change for {filename}: {original_size_str} -> {converted_size_str}"
         )
@@ -229,7 +229,7 @@ def get_file_info(path: str, format_hint: str | None = None) -> FileInfo:
     Raises:
         QuackIntegrationError: If the file does not exist.
     """
-    file_info = fs._get_file_info(path)
+    file_info = fs.get_file_info(path)
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(f"File not found: {path}")
     try:
@@ -243,7 +243,7 @@ def get_file_info(path: str, format_hint: str | None = None) -> FileInfo:
     if format_hint:
         format_name = format_hint
     else:
-        extension = fs._get_extension(path)
+        extension = fs.get_extension(path)
         mapping: dict[str, str] = {
             "md": "markdown",
             "markdown": "markdown",
@@ -283,8 +283,8 @@ def check_file_size(
         int(validation_min_size) if validation_min_size is not None else 0
     )
     if validation_min_size_int > 0 and converted_size_int < validation_min_size_int:
-        converted_size_str = fs._get_file_size_str(converted_size_int)
-        min_size_str = fs._get_file_size_str(validation_min_size_int)
+        converted_size_str = fs.get_file_size_str(converted_size_int)
+        min_size_str = fs.get_file_size_str(validation_min_size_int)
         errors.append(
             f"Converted file size ({converted_size_str}) is below the minimum threshold ({min_size_str})"
         )
@@ -313,8 +313,8 @@ def check_conversion_ratio(
     if original_size_int > 0:
         conversion_ratio = converted_size_int / original_size_int
         if conversion_ratio < threshold_float:
-            converted_size_str = fs._get_file_size_str(converted_size_int)
-            original_size_str = fs._get_file_size_str(original_size_int)
+            converted_size_str = fs.get_file_size_str(converted_size_int)
+            original_size_str = fs.get_file_size_str(original_size_int)
             errors.append(
                 f"Conversion error: Converted file size ({converted_size_str}) is less than "
                 f"{threshold_float * 100:.0f}% of the original file size ({original_size_str}) (ratio: {conversion_ratio:.2f})."

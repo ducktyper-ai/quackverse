@@ -334,7 +334,7 @@ class AssignmentManager:
             FileNotFoundError: If the file doesn't exist.
             ValueError: If the file format is invalid.
         """
-        result = fs._read_yaml(file_path)
+        result = fs.read_yaml(file_path)
         if not result.success:
             raise FileNotFoundError(
                 f"Could not read assignments from {file_path}: {result.error}"
@@ -371,7 +371,7 @@ class AssignmentManager:
             ]
         }
 
-        result = fs._write_yaml(file_path, data)
+        result = fs.write_yaml(file_path, data)
         if not result.success:
             logger.error(f"Error saving assignments to {file_path}: {result.error}")
             return False

@@ -285,12 +285,12 @@ Tags: {", ".join(s.tags)}
         try:
             # Ensure parent directory exists using quackcore.fs.
             # Compute parent directory by splitting the path and joining all parts except the last.
-            parent_dir = fs._join_path(*fs._split_path(path)[:-1])
-            fs._create_directory(parent_dir, exist_ok=True)
+            parent_dir = fs.join_path(*fs.split_path(path)[:-1])
+            fs.create_directory(parent_dir, exist_ok=True)
 
             # Determine output format based on file extension.
             if str(path).lower().endswith(".json"):
-                result = fs._write_json(path, export_data, indent=2)
+                result = fs.write_json(path, export_data, indent=2)
                 if not result.success:
                     raise IOError(f"Failed to export prompt: {result.error}")
             else:
@@ -306,14 +306,14 @@ Tags: {", ".join(s.tags)}
                     ) as temp_file:
                         temp_path = temp_file.name
 
-                    json_result = fs._write_json(
+                    json_result = fs.write_json(
                         temp_path, export_data["metadata"], indent=2
                     )
                     if json_result.success:
-                        read_result = fs._read_text(temp_path)
+                        read_result = fs.read_text(temp_path)
                         if read_result.success:
                             content += f"{read_result.content}\n\n"
-                            fs._delete(temp_path, missing_ok=True)
+                            fs.delete(temp_path, missing_ok=True)
                         else:
                             raise ValueError("Failed to read temporary JSON file")
                     else:
@@ -326,7 +326,7 @@ Tags: {", ".join(s.tags)}
 
                 content += f"# Explanation\n\n{export_data['explanation']}\n"
 
-                result = fs._write_text(path, content)
+                result = fs.write_text(path, content)
                 if not result.success:
                     raise IOError(f"Failed to export prompt: {result.error}")
 

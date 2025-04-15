@@ -9,8 +9,6 @@ metrics, and file information in the Pandoc integration.
 from datetime import datetime
 from pathlib import Path
 
-import pytest
-
 from quackcore.integrations.pandoc.models import (
     ConversionDetails,
     ConversionMetrics,

@@ -20,32 +20,34 @@ from quackcore.errors import (
     QuackIOError,
     QuackPermissionError,
 )
-from quackcore.fs.api import (
-    atomic_write,
-    compute_checksum,
-    create_temp_directory,
-    create_temp_file,
-    ensure_directory,
-    expand_user_vars,
-    find_files_by_content,
-    get_disk_usage,
-    get_extension,
-    get_file_size_str,
-    get_file_timestamp,
-    get_file_type,
-    get_mime_type,
-    get_unique_filename,
-    is_file_locked,
-    is_path_writeable,
-    is_same_file,
-    is_subdirectory,
-    join_path,
-    normalize_path,
-    safe_copy,
-    safe_delete,
-    safe_move,
-    split_path,
+from quackcore.fs.helpers import (
+    _compute_checksum,
+    _create_temp_directory,
+    _create_temp_file,
+    _find_files_by_content,
+    _get_disk_usage,
+    _get_extension,
+    _get_file_size_str,
+    _get_file_timestamp,
+    _get_file_type,
+    _get_mime_type,
+    _get_unique_filename,
+    _is_file_locked,
+    _is_path_writeable,
+    _is_same_file,
+    _is_subdirectory,
+    _normalize_path,
+    _safe_copy,
+    _safe_delete,
+    _safe_move,
 )
+from quackcore.fs.helpers.file_ops import (
+    _atomic_write,
+    _ensure_directory,
+    _find_files_by_content,
+    _get_unique_filename,
+)
+from quackcore.fs.helpers.path_ops import _expand_user_vars, _join_path, _split_path
 
 
 class TestPathUtilities:
@@ -53,27 +55,27 @@ class TestPathUtilities:
 
     def test_get_extension(self) -> None:
         """Test getting file extensions."""
-        assert get_extension("file.txt") == "txt"
-        assert get_extension("file.tar.gz") == "gz"
-        assert get_extension("file") == ""
-        assert get_extension(Path("/path/to/file.png")) == "png"
-        assert get_extension(".hidden") == "hidden"  # Special case for dot files
+        assert _get_extension("file.txt") == "txt"
+        assert _get_extension("file.tar.gz") == "gz"
+        assert _get_extension("file") == ""
+        assert _get_extension(Path("/path/to/file.png")) == "png"
+        assert _get_extension(".hidden") == "hidden"  # Special case for dot files
 
     def test_normalize_path(self) -> None:
         """Test normalizing paths."""
         # Test relative path
-        normalized = normalize_path("./test/../test_file.txt")
+        normalized = _normalize_path("./test/../test_file.txt")
         assert normalized.name == "test_file.txt"
         assert normalized.is_absolute()
 
         # Test absolute path
         abs_path = Path("/absolute/path/file.txt")
-        normalized = normalize_path(abs_path)
+        normalized = _normalize_path(abs_path)
         assert normalized == abs_path
 
         # Test user home
         home_path = "~/Documents/file.txt"
-        normalized = normalize_path(home_path)
+        normalized = _normalize_path(home_path)
         assert normalized.is_absolute()
         assert str(normalized).startswith(str(Path.home()))
 
@@ -84,26 +86,26 @@ class TestPathUtilities:
         file_path.touch()
 
         # Test with identical paths
-        assert is_same_file(file_path, file_path)
+        assert _is_same_file(file_path, file_path)
 
         # Test with resolved paths
-        assert is_same_file(file_path, temp_dir / "./same_test.txt")
+        assert _is_same_file(file_path, temp_dir / "./same_test.txt")
 
         # Test with different files
         other_file = temp_dir / "other_file.txt"
         other_file.touch()
-        assert not is_same_file(file_path, other_file)
+        assert not _is_same_file(file_path, other_file)
 
         # Test with non-existent file (should compare paths)
         nonexistent = temp_dir / "nonexistent.txt"
-        assert not is_same_file(file_path, nonexistent)
-        assert is_same_file(nonexistent, nonexistent)
+        assert not _is_same_file(file_path, nonexistent)
+        assert _is_same_file(nonexistent, nonexistent)
 
         # Test with symlink if not on Windows
         if platform.system() != "Windows":
             link_path = temp_dir / "link_to_same.txt"
             os.symlink(file_path, link_path)
-            assert is_same_file(file_path, link_path)
+            assert _is_same_file(file_path, link_path)
 
     def test_is_subdirectory(self, temp_dir: Path) -> None:
         """Test checking if a path is a subdirectory of another path."""
@@ -116,53 +118,53 @@ class TestPathUtilities:
         sibling.mkdir()
 
         # Test direct child
-        assert is_subdirectory(child, parent)
+        assert _is_subdirectory(child, parent)
 
         # Test grandchild
-        assert is_subdirectory(grandchild, parent)
+        assert _is_subdirectory(grandchild, parent)
 
         # Test with itself (should return False)
-        assert not is_subdirectory(parent, parent)
+        assert not _is_subdirectory(parent, parent)
 
         # Test non-subdirectory
-        assert not is_subdirectory(sibling, child)
-        assert not is_subdirectory(parent, child)
+        assert not _is_subdirectory(sibling, child)
+        assert not _is_subdirectory(parent, child)
 
         # Test with relative paths
         os.chdir(temp_dir)
-        assert is_subdirectory("subdir", "")
-        assert is_subdirectory(Path("subdir/subsubdir"), "")
+        assert _is_subdirectory("subdir", "")
+        assert _is_subdirectory(Path("subdir/subsubdir"), "")
 
     def test_join_path(self) -> None:
         """Test joining path components."""
         # Test with string paths
-        joined = join_path("dir1", "dir2", "file.txt")
+        joined = _join_path("dir1", "dir2", "file.txt")
         assert joined == Path("dir1/dir2/file.txt")
 
         # Test with Path objects
-        joined = join_path(Path("/dir1"), Path("dir2"), "file.txt")
+        joined = _join_path(Path("/dir1"), Path("dir2"), "file.txt")
         assert joined == Path("/dir1/dir2/file.txt")
 
         # Test with absolute path in the middle (should take precedence)
-        joined = join_path("dir1", "/absolute", "file.txt")
+        joined = _join_path("dir1", "/absolute", "file.txt")
         assert joined == Path("/absolute/file.txt")
 
     def test_split_path(self) -> None:
         """Test splitting a path into components."""
         # Test absolute path
-        parts = split_path("/dir1/dir2/file.txt")
+        parts = _split_path("/dir1/dir2/file.txt")
         assert parts[0] == "/"
         assert parts[-1] == "file.txt"
         assert "dir1" in parts
         assert "dir2" in parts
 
         # Test relative path
-        parts = split_path("dir1/dir2/file.txt")
+        parts = _split_path("dir1/dir2/file.txt")
         assert parts[0] == "dir1"
         assert parts[-1] == "file.txt"
 
         # Test path with dot at start
-        parts = split_path("./dir/file.txt")
+        parts = _split_path("./dir/file.txt")
         assert parts[0] == "."
         assert "dir" in parts
         assert parts[-1] == "file.txt"
@@ -173,17 +175,17 @@ class TestPathUtilities:
         # Set up a test environment variable
         with patch.dict(os.environ, {"TEST_VAR": "test_value"}):
             # Test user home expansion
-            expanded = expand_user_vars("~/Documents")
+            expanded = _expand_user_vars("~/Documents")
             assert str(expanded).startswith(str(Path.home()))
             assert expanded.name == "Documents"
 
             # Test environment variable expansion
-            expanded = expand_user_vars("$TEST_VAR/file.txt")
+            expanded = _expand_user_vars("$TEST_VAR/file.txt")
             assert expanded.parts[0] == "test_value"
             assert expanded.name == "file.txt"
 
             # Test both together
-            expanded = expand_user_vars("~/$TEST_VAR/file.txt")
+            expanded = _expand_user_vars("~/$TEST_VAR/file.txt")
             assert str(expanded).startswith(str(Path.home()))
             assert "test_value" in expanded.parts
             assert expanded.name == "file.txt"
@@ -194,49 +196,49 @@ class TestFileUtilities:
 
     def test_get_file_size_str(self) -> None:
         """Test human-readable file size formatting."""
-        assert get_file_size_str(0) == "0 B"
-        assert get_file_size_str(1023) == "1023 B"
-        assert get_file_size_str(1024) == "1.00 KB"
-        assert get_file_size_str(1024 * 1024) == "1.00 MB"
-        assert get_file_size_str(1024 * 1024 * 1024) == "1.00 GB"
-        assert get_file_size_str(1024 * 1024 * 1024 * 1024) == "1.00 TB"
+        assert _get_file_size_str(0) == "0 B"
+        assert _get_file_size_str(1023) == "1023 B"
+        assert _get_file_size_str(1024) == "1.00 KB"
+        assert _get_file_size_str(1024 * 1024) == "1.00 MB"
+        assert _get_file_size_str(1024 * 1024 * 1024) == "1.00 GB"
+        assert _get_file_size_str(1024 * 1024 * 1024 * 1024) == "1.00 TB"
 
     def test_get_unique_filename(self, temp_dir: Path) -> None:
         """Test generating unique filenames."""
         # Test with non-existent filename
-        unique = get_unique_filename(temp_dir, "unique.txt")
+        unique = _get_unique_filename(temp_dir, "unique.txt")
         assert unique == temp_dir / "unique.txt"
 
         # Create the file and test again
         unique.touch()
-        unique2 = get_unique_filename(temp_dir, "unique.txt")
+        unique2 = _get_unique_filename(temp_dir, "unique.txt")
         assert unique2 != unique
         assert unique2.name.startswith("unique_")
         assert unique2.name.endswith(".txt")
 
         # Test with multiple existing files
         unique2.touch()
-        unique3 = get_unique_filename(temp_dir, "unique.txt")
+        unique3 = _get_unique_filename(temp_dir, "unique.txt")
         assert unique3 != unique and unique3 != unique2
         assert unique3.name.startswith("unique_")
         assert unique3.name.endswith(".txt")
 
         # Test with raise_if_exists=True
         with pytest.raises(QuackFileExistsError):
-            get_unique_filename(temp_dir, "unique.txt", raise_if_exists=True)
+            _get_unique_filename(temp_dir, "unique.txt", raise_if_exists=True)
 
         # Test with non-existent directory
         with pytest.raises(QuackFileNotFoundError):
-            get_unique_filename(temp_dir / "nonexistent", "file.txt")
+            _get_unique_filename(temp_dir / "nonexistent", "file.txt")
 
         # Test with empty filename
         with pytest.raises(QuackIOError):
-            get_unique_filename(temp_dir, "")
+            _get_unique_filename(temp_dir, "")
 
     def test_create_temp_directory(self) -> None:
         """Test creating a temporary directory."""
         # Test with default parameters
-        created_dir = create_temp_directory()
+        created_dir = _create_temp_directory()
         try:
             assert created_dir.exists()
             assert created_dir.is_dir()
@@ -246,7 +248,7 @@ class TestFileUtilities:
             created_dir.rmdir()
 
         # Test with custom prefix and suffix
-        created_dir = create_temp_directory(prefix="testprefix_", suffix="_testsuffix")
+        created_dir = _create_temp_directory(prefix="testprefix_", suffix="_testsuffix")
         try:
             assert created_dir.exists()
             assert created_dir.is_dir()
@@ -259,7 +261,7 @@ class TestFileUtilities:
     def test_create_temp_file(self) -> None:
         """Test creating a temporary file."""
         # Test with default parameters
-        temp_file = create_temp_file()
+        temp_file = _create_temp_file()
         try:
             assert temp_file.exists()
             assert temp_file.is_file()
@@ -270,7 +272,7 @@ class TestFileUtilities:
             temp_file.unlink()
 
         # Test with custom parameters
-        temp_file = create_temp_file(suffix=".log", prefix="testfile_")
+        temp_file = _create_temp_file(suffix=".log", prefix="testfile_")
         try:
             assert temp_file.exists()
             assert temp_file.is_file()
@@ -283,7 +285,7 @@ class TestFileUtilities:
         # Test with custom directory
         with tempfile.TemporaryDirectory() as tmp_dir:
             dir_path = Path(tmp_dir)
-            temp_file = create_temp_file(directory=dir_path)
+            temp_file = _create_temp_file(directory=dir_path)
             assert temp_file.exists()
             assert temp_file.parent == dir_path
 
@@ -293,34 +295,34 @@ class TestFileUtilities:
         file_path.write_text("test content")
 
         # Test getting timestamp of existing file
-        timestamp = get_file_timestamp(file_path)
+        timestamp = _get_file_timestamp(file_path)
         assert isinstance(timestamp, float)
         assert timestamp > 0
 
         # Test with non-existent file
         with pytest.raises(QuackFileNotFoundError):
-            get_file_timestamp(temp_dir / "nonexistent.txt")
+            _get_file_timestamp(temp_dir / "nonexistent.txt")
 
     def test_is_path_writeable(self, temp_dir: Path) -> None:
         """Test checking if a path is writeable."""
         # Test with existing directory
-        assert is_path_writeable(temp_dir)
+        assert _is_path_writeable(temp_dir)
 
         # Test with existing file
         file_path = temp_dir / "writable_test.txt"
         file_path.write_text("test content")
-        assert is_path_writeable(file_path)
+        assert _is_path_writeable(file_path)
 
         # Test with non-existent path (should check parent directory)
-        assert is_path_writeable(temp_dir / "nonexistent.txt")
+        assert _is_path_writeable(temp_dir / "nonexistent.txt")
 
         # Test with non-writeable path (mock permission denied)
         with patch("os.access", return_value=False):
-            assert not is_path_writeable(file_path)
+            assert not _is_path_writeable(file_path)
 
         # Test with directory creation failure
         with patch("pathlib.Path.mkdir", side_effect=PermissionError):
-            assert not is_path_writeable(temp_dir / "new_dir")
+            assert not _is_path_writeable(temp_dir / "new_dir")
 
     def test_get_mime_type(self, temp_dir: Path) -> None:
         """Test getting MIME types for files."""
@@ -332,22 +334,22 @@ class TestFileUtilities:
         html_file.write_text("<html><body>test</body></html>")
 
         # Test text file
-        mime = get_mime_type(txt_file)
+        mime = _get_mime_type(txt_file)
         assert mime is not None
         assert "text" in mime
 
         # Test HTML file
-        mime = get_mime_type(html_file)
+        mime = _get_mime_type(html_file)
         assert mime is not None
         assert "html" in mime
 
         # Test with non-existent file (should still guess based on extension)
-        mime = get_mime_type(temp_dir / "nonexistent.pdf")
+        mime = _get_mime_type(temp_dir / "nonexistent.pdf")
         assert mime is not None
         assert "pdf" in mime
 
         # Test with no extension
-        mime = get_mime_type(temp_dir / "no_extension")
+        mime = _get_mime_type(temp_dir / "no_extension")
         assert mime is None or mime == "application/octet-stream"
 
     def test_get_file_type(self, temp_dir: Path) -> None:
@@ -369,31 +371,31 @@ class TestFileUtilities:
             os.symlink(text_file, symlink_path)
 
         # Test text file
-        assert get_file_type(text_file) == "text"
+        assert _get_file_type(text_file) == "text"
 
         # Test binary file
-        assert get_file_type(binary_file) == "binary"
+        assert _get_file_type(binary_file) == "binary"
 
         # Test directory
-        assert get_file_type(dir_path) == "directory"
+        assert _get_file_type(dir_path) == "directory"
 
         # Test symlink if available
         if symlink_path:
-            assert get_file_type(symlink_path) == "symlink"
+            assert _get_file_type(symlink_path) == "symlink"
 
         # Test non-existent file
-        assert get_file_type(temp_dir / "nonexistent.txt") == "nonexistent"
+        assert _get_file_type(temp_dir / "nonexistent.txt") == "nonexistent"
 
         # Test error case
         with patch("builtins.open", side_effect=OSError):
-            assert get_file_type(text_file) == "unknown"
+            assert _get_file_type(text_file) == "unknown"
 
     @pytest.mark.skipif(
         "CI" in os.environ, reason="Disk usage may vary in CI environments"
     )
     def test_get_disk_usage(self, temp_dir: Path) -> None:
         """Test getting disk usage information."""
-        usage = get_disk_usage(temp_dir)
+        usage = _get_disk_usage(temp_dir)
 
         assert "total" in usage
         assert "used" in usage
@@ -405,7 +407,7 @@ class TestFileUtilities:
 
         # Test with non-existent path
         with pytest.raises(QuackIOError):
-            get_disk_usage(temp_dir / "nonexistent")
+            _get_disk_usage(temp_dir / "nonexistent")
 
     def test_find_files_by_content(self, temp_dir: Path) -> None:
         """Test finding files containing specific text."""
@@ -422,58 +424,58 @@ class TestFileUtilities:
         file3.write_text("Another file with target text in subdirectory")
 
         # Test finding with exact match
-        results = find_files_by_content(temp_dir, "target text")
+        results = _find_files_by_content(temp_dir, "target text")
         assert len(results) == 2
         assert file1 in results
         assert file3 in results
         assert file2 not in results
 
         # Test finding with regex
-        results = find_files_by_content(temp_dir, "target.*?find")
+        results = _find_files_by_content(temp_dir, "target.*?find")
         assert len(results) == 1
         assert file1 in results
 
         # Test with non-recursive search
-        results = find_files_by_content(temp_dir, "target text", recursive=False)
+        results = _find_files_by_content(temp_dir, "target text", recursive=False)
         assert len(results) == 1
         assert file1 in results
         assert file3 not in results
 
         # Test with invalid regex
         with pytest.raises(QuackIOError):
-            find_files_by_content(temp_dir, "[invalid regex")
+            _find_files_by_content(temp_dir, "[invalid regex")
 
         # Test with non-existent directory
-        results = find_files_by_content(temp_dir / "nonexistent", "text")
+        results = _find_files_by_content(temp_dir / "nonexistent", "text")
         assert len(results) == 0
 
     def test_ensure_directory(self, temp_dir: Path) -> None:
         """Test ensuring a directory exists."""
         # Test with non-existent directory
         new_dir = temp_dir / "new_dir"
-        result = ensure_directory(new_dir)
+        result = _ensure_directory(new_dir)
         assert result.exists()
         assert result.is_dir()
 
         # Test with existing directory
-        result = ensure_directory(new_dir)
+        result = _ensure_directory(new_dir)
         assert result.exists()
         assert result.is_dir()
 
         # Test with nested directory
         nested_dir = new_dir / "subdir1" / "subdir2"
-        result = ensure_directory(nested_dir)
+        result = _ensure_directory(nested_dir)
         assert result.exists()
         assert result.is_dir()
 
         # Test with exist_ok=False
         with pytest.raises(QuackFileExistsError):
-            ensure_directory(new_dir, exist_ok=False)
+            _ensure_directory(new_dir, exist_ok=False)
 
         # Test with permission denied
         with patch("pathlib.Path.mkdir", side_effect=PermissionError):
             with pytest.raises(QuackPermissionError):
-                ensure_directory(temp_dir / "permission_denied")
+                _ensure_directory(temp_dir / "permission_denied")
 
     def test_compute_checksum(self, temp_dir: Path) -> None:
         """Test computing file checksums."""
@@ -486,16 +488,16 @@ class TestFileUtilities:
         expected = sha256(content.encode()).hexdigest()
 
         # Test with default algorithm (sha256)
-        checksum = compute_checksum(file_path)
+        checksum = _compute_checksum(file_path)
         assert checksum == expected
 
         # Test with non-existent file
         with pytest.raises(QuackFileNotFoundError):
-            compute_checksum(temp_dir / "nonexistent.txt")
+            _compute_checksum(temp_dir / "nonexistent.txt")
 
         # Test with directory (should fail)
         with pytest.raises(QuackIOError):
-            compute_checksum(temp_dir)
+            _compute_checksum(temp_dir)
 
     def test_atomic_write(self, temp_dir: Path) -> None:
         """Test atomic file writing."""
@@ -503,20 +505,20 @@ class TestFileUtilities:
 
         # Test writing text content
         content = "test content for atomic write"
-        result = atomic_write(file_path, content)
+        result = _atomic_write(file_path, content)
         assert result == file_path
         assert file_path.read_text() == content
 
         # Test writing binary content
         binary_content = b"\x00\x01\x02\x03"
-        result = atomic_write(file_path, binary_content)
+        result = _atomic_write(file_path, binary_content)
         assert result == file_path
         assert file_path.read_bytes() == binary_content
 
         # Test with error during write
         with patch("os.replace", side_effect=OSError("Test error")):
             with pytest.raises(QuackIOError):
-                atomic_write(file_path, "failure content")
+                _atomic_write(file_path, "failure content")
 
     def test_safe_copy(self, temp_dir: Path) -> None:
         """Test safe file copying."""
@@ -526,24 +528,24 @@ class TestFileUtilities:
 
         # Test copying to non-existent destination
         dst_path = temp_dir / "safe_copy_dst.txt"
-        result = safe_copy(src_path, dst_path)
+        result = _safe_copy(src_path, dst_path)
         assert result == dst_path
         assert dst_path.exists()
         assert dst_path.read_text() == "safe copy content"
 
         # Test copying to existing destination (should fail without overwrite)
         with pytest.raises(QuackFileExistsError):
-            safe_copy(src_path, dst_path)
+            _safe_copy(src_path, dst_path)
 
         # Test copying with overwrite
         src_path.write_text("updated content")
-        result = safe_copy(src_path, dst_path, overwrite=True)
+        result = _safe_copy(src_path, dst_path, overwrite=True)
         assert result == dst_path
         assert dst_path.read_text() == "updated content"
 
         # Test copying non-existent source
         with pytest.raises(QuackFileNotFoundError):
-            safe_copy(temp_dir / "nonexistent.txt", dst_path)
+            _safe_copy(temp_dir / "nonexistent.txt", dst_path)
 
         # Test copying directories
         src_dir = temp_dir / "src_dir"
@@ -551,7 +553,7 @@ class TestFileUtilities:
         (src_dir / "file.txt").write_text("dir file content")
 
         dst_dir = temp_dir / "dst_dir"
-        result = safe_copy(src_dir, dst_dir)
+        result = _safe_copy(src_dir, dst_dir)
         assert result == dst_dir
         assert dst_dir.is_dir()
         assert (dst_dir / "file.txt").exists()
@@ -565,7 +567,7 @@ class TestFileUtilities:
 
         # Test moving to non-existent destination
         dst_path = temp_dir / "safe_move_dst.txt"
-        result = safe_move(src_path, dst_path)
+        result = _safe_move(src_path, dst_path)
         assert result == dst_path
         assert dst_path.exists()
         assert not src_path.exists()
@@ -576,17 +578,17 @@ class TestFileUtilities:
 
         # Test moving to existing destination (should fail without overwrite)
         with pytest.raises(QuackFileExistsError):
-            safe_move(src_path, dst_path)
+            _safe_move(src_path, dst_path)
 
         # Test moving with overwrite
-        result = safe_move(src_path, dst_path, overwrite=True)
+        result = _safe_move(src_path, dst_path, overwrite=True)
         assert result == dst_path
         assert not src_path.exists()
         assert dst_path.read_text() == "new safe move content"
 
         # Test moving non-existent source
         with pytest.raises(QuackFileNotFoundError):
-            safe_move(temp_dir / "nonexistent.txt", dst_path)
+            _safe_move(temp_dir / "nonexistent.txt", dst_path)
 
         # Test moving directories
         src_dir = temp_dir / "move_src_dir"
@@ -594,7 +596,7 @@ class TestFileUtilities:
         (src_dir / "file.txt").write_text("dir file content for move")
 
         dst_dir = temp_dir / "move_dst_dir"
-        result = safe_move(src_dir, dst_dir)
+        result = _safe_move(src_dir, dst_dir)
         assert result == dst_dir
         assert dst_dir.is_dir()
         assert not src_dir.exists()
@@ -608,24 +610,24 @@ class TestFileUtilities:
         file_path.write_text("delete me safely")
 
         # Test deleting existing file
-        result = safe_delete(file_path)
+        result = _safe_delete(file_path)
         assert result is True
         assert not file_path.exists()
 
         # Test deleting non-existent file with missing_ok=True
-        result = safe_delete(file_path)
+        result = _safe_delete(file_path)
         assert result is False
 
         # Test deleting non-existent file with missing_ok=False
         with pytest.raises(QuackFileNotFoundError):
-            safe_delete(file_path, missing_ok=False)
+            _safe_delete(file_path, missing_ok=False)
 
         # Test deleting directory
         dir_path = temp_dir / "delete_dir"
         dir_path.mkdir()
         (dir_path / "file.txt").write_text("delete me too")
 
-        result = safe_delete(dir_path)
+        result = _safe_delete(dir_path)
         assert result is True
         assert not dir_path.exists()
 
@@ -640,10 +642,10 @@ class TestFileUtilities:
         file_path.write_text("test locking")
 
         # File should not be locked
-        assert not is_file_locked(file_path)
+        assert not _is_file_locked(file_path)
 
         # Test with non-existent file
-        assert not is_file_locked(temp_dir / "nonexistent.txt")
+        assert not _is_file_locked(temp_dir / "nonexistent.txt")
 
     @given(st.text(min_size=1, max_size=100))
     def test_hypothetical_path_operations(self, text: str) -> None:
@@ -672,10 +674,10 @@ class TestFileUtilities:
 
         # Test extension extraction (this should be safe)
         with_extension = f"{valid_filename}.txt"
-        assert get_extension(with_extension) == "txt"
+        assert _get_extension(with_extension) == "txt"
 
         # Test path joining with the filename
-        joined = join_path("dir1", valid_filename)
+        joined = _join_path("dir1", valid_filename)
 
         # For special paths like "." we need to check differently
         if valid_filename == ".":
@@ -694,7 +696,7 @@ class TestFileUtilities:
                 # Only try to create the file if it's a safe filename
                 try:
                     test_path.touch()  # Create the file if possible
-                    normalized = normalize_path(test_path)
+                    normalized = _normalize_path(test_path)
                     assert normalized.is_absolute()
                 except (OSError, UnicodeEncodeError):
                     # If we can't create the file, just verify path construction

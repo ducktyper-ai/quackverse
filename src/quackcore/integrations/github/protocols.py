@@ -1,7 +1,7 @@
 # src/quackcore/integrations/github/protocols.py
 """Protocols for GitHub integration."""
 
-from typing import Any, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from quackcore.integrations.core import IntegrationProtocol, IntegrationResult
 

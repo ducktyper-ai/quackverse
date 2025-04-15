@@ -31,7 +31,7 @@ def _get_memory_file_path() -> str:
         The absolute path to the user memory file as a string.
     """
     data_dir = get_user_data_dir()  # Expecting a string.
-    return fs._join_path(data_dir, MEMORY_FILE_NAME)
+    return fs.join_path(data_dir, MEMORY_FILE_NAME)
 
 
 def _load_persistent_memory(github_username: str | None) -> dict[str, Any] | None:
@@ -47,14 +47,14 @@ def _load_persistent_memory(github_username: str | None) -> dict[str, Any] | Non
     file_path = _get_memory_file_path()
 
     # Check if memory file exists
-    result = fs._get_file_info(file_path)
+    result = fs.get_file_info(file_path)
     if not result.success or not result.exists:
         logger.debug(f"No memory file found at {file_path}")
         return None
 
     try:
         # Read memory file
-        read_result = fs._read_json(file_path)
+        read_result = fs.read_json(file_path)
         if not read_result.success:
             logger.warning(f"Failed to read memory file: {read_result.error}")
             return None
@@ -99,7 +99,7 @@ def _save_persistent_memory(memory: UserMemory) -> bool:
 
     try:
         memory_dict = memory.model_dump()
-        result = fs._write_json(file_path, memory_dict)
+        result = fs.write_json(file_path, memory_dict)
         if not result.success:
             logger.warning(f"Failed to save memory: {result.error}")
             return False

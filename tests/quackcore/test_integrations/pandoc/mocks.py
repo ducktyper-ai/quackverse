@@ -12,7 +12,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.fs.results import FileInfoResult, OperationResult
+from quackcore.fs.results import FileInfoResult
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.converter import DocumentConverter

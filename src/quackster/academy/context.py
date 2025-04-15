@@ -150,7 +150,7 @@ class TeachingContext:
         if os.path.isabs(path_value):
             return path_value
         # Otherwise, join with self.base_dir using fs.join_path.
-        return fs._join_path(self.base_dir, path_value)
+        return fs.join_path(self.base_dir, path_value)
 
     def ensure_directories(self) -> None:
         """Ensure all required directories exist."""
@@ -160,7 +160,7 @@ class TeachingContext:
             self.grading_dir,
             self.submissions_dir,
         ]:
-            fs._create_directory(directory, exist_ok=True)
+            fs.create_directory(directory, exist_ok=True)
         logger.debug(f"Ensured quackster directories exist in {self.base_dir}")
 
     @property

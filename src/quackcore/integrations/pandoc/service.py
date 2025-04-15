@@ -117,7 +117,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             self.converter = DocumentConverter(conversion_config)
 
             # Ensure output directory exists by delegating to fs; all paths are strings.
-            result = fs._create_directory(conversion_config.output_dir, exist_ok=True)
+            result = fs.create_directory(conversion_config.output_dir, exist_ok=True)
             if not result.success:
                 return IntegrationResult.error_result(
                     f"Failed to create output directory: {result.error}"
@@ -162,7 +162,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                 config = getattr(self.converter, "config", None)
                 if isinstance(config, PandocConfig):
                     stem = os.path.splitext(os.path.basename(html_path))[0]
-                    output_path = fs._join_path(config.output_dir, f"{stem}.md")
+                    output_path = fs.join_path(config.output_dir, f"{stem}.md")
                 else:
                     return cast(
                         IntegrationResult[str],
@@ -222,7 +222,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                 config = getattr(self.converter, "config", None)
                 if isinstance(config, PandocConfig):
                     stem = os.path.splitext(os.path.basename(markdown_path))[0]
-                    output_path = fs._join_path(config.output_dir, f"{stem}.docx")
+                    output_path = fs.join_path(config.output_dir, f"{stem}.docx")
                 else:
                     return cast(
                         IntegrationResult[str],
@@ -285,7 +285,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
 
         try:
             input_dir = resolver.resolve_project_path(input_dir)
-            input_dir_info = fs._get_file_info(input_dir)
+            input_dir_info = fs.get_file_info(input_dir)
             if (
                 not input_dir_info.success
                 or not input_dir_info.exists
@@ -319,7 +319,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                     IntegrationResult.error_result("Converter not initialized"),
                 )
 
-            dir_result = fs._create_directory(output_dir, exist_ok=True)
+            dir_result = fs.create_directory(output_dir, exist_ok=True)
             if not dir_result.success:
                 return cast(
                     IntegrationResult[list[str]],
@@ -338,7 +338,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                 )
             source_format, extension_pattern = params
 
-            find_result = fs._find_files(input_dir, extension_pattern, recursive)
+            find_result = fs.find_files(input_dir, extension_pattern, recursive)
             if not find_result.success or not find_result.files:
                 msg = (
                     f"No matching files found in {input_dir}"
@@ -420,9 +420,9 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                 file_info: FileInfo = get_file_info(file_path, source_format)
                 stem = os.path.splitext(os.path.basename(file_path))[0]
                 if output_format == "markdown":
-                    output_file = fs._join_path(output_dir, f"{stem}.md")
+                    output_file = fs.join_path(output_dir, f"{stem}.md")
                 else:
-                    output_file = fs._join_path(output_dir, f"{stem}.docx")
+                    output_file = fs.join_path(output_dir, f"{stem}.docx")
                 task = ConversionTask(
                     source=file_info,
                     target_format=output_format,

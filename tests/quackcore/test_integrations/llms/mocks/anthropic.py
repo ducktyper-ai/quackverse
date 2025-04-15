@@ -3,7 +3,7 @@
 Mock Anthropic classes for LLM testing.
 """
 
-from typing import Any, Dict, Iterator, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 from unittest.mock import MagicMock
 
 from tests.quackcore.test_integrations.llms.mocks.base import (

@@ -6,7 +6,6 @@ This module tests the integration discovery functionality of the registry,
 including entry point discovery and dynamic loading.
 """
 
-import os
 import sys
 from importlib.metadata import EntryPoint
 from unittest.mock import MagicMock, patch
@@ -14,7 +13,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from quackcore.errors import QuackError
-from quackcore.integrations.core.protocols import IntegrationProtocol
 from quackcore.integrations.core.registry import (
     IntegrationRegistry,
     PluginLoaderProtocol,

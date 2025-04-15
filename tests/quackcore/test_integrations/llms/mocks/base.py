@@ -3,7 +3,7 @@
 Base mock classes for LLM testing.
 """
 
-from typing import Any, Dict, Generator, Iterator, List, Optional, Union
+from typing import Any, Dict, Generator, Iterator, Optional
 from unittest.mock import MagicMock
 
 

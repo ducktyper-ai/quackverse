@@ -44,7 +44,7 @@ def normalize_path_with_info(path: str) -> PathInfo:
     try:
         # Delegate normalization to the fs layer; fs.normalize_path returns a Path,
         # so we convert it to string.
-        normalized = str(fs._normalize_path(path))
+        normalized = str(fs.normalize_path(path))
         return PathInfo(success=True, path=normalized, error=None)
     except Exception as e:
         # Fallback: use os.path.abspath as a backup

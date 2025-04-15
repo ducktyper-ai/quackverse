@@ -196,17 +196,17 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             QuackIntegrationError: If the file does not exist.
         """
         path_obj = resolver.resolve_project_path(file_path)
-        file_info = fs._get_file_info(path_obj)
+        file_info = fs.get_file_info(path_obj)
         if not file_info.success or not file_info.exists:
             raise QuackIntegrationError(f"File not found: {file_path}")
 
         filename = (
             remote_path
             if remote_path and not remote_path.startswith("/")
-            else fs._split_path(path_obj)[-1]
+            else fs.split_path(path_obj)[-1]
         )
         folder_id = parent_folder_id or self.shared_folder_id
-        mime_type = fs._get_mime_type(path_obj) or "application/octet-stream"
+        mime_type = fs.get_mime_type(path_obj) or "application/octet-stream"
         return path_obj, filename, folder_id, mime_type
 
     def _resolve_download_path(
@@ -226,19 +226,19 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
 
         if local_path is None:
             # Create a temp directory using fs.create_temp_directory
-            temp_dir = fs._create_temp_directory(prefix="quackcore_gdrive_")
+            temp_dir = fs.create_temp_directory(prefix="quackcore_gdrive_")
             # Use fs.join_path for path joining
-            return str(fs._join_path(temp_dir, file_name))
+            return str(fs.join_path(temp_dir, file_name))
 
         # Resolve the local path
         local_path_obj = resolver.resolve_project_path(local_path)
-        file_info = fs._get_file_info(local_path_obj)
+        file_info = fs.get_file_info(local_path_obj)
 
         if file_info.success and file_info.exists:
             # Handle different cases depending on whether local_path is a directory or file
             if file_info.is_dir:
                 # If it's a directory, join the file name to it
-                joined_path = fs._join_path(local_path_obj, file_name)
+                joined_path = fs.join_path(local_path_obj, file_name)
                 return str(joined_path)
             else:
                 # If it's a file, use the path as is
@@ -352,7 +352,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             if folder_id:
                 file_metadata["parents"] = [folder_id]
 
-            media_content = fs._read_binary(path_obj)
+            media_content = fs.read_binary(path_obj)
             if not media_content.success:
                 return IntegrationResult.error_result(
                     f"Failed to read file: {media_content.error}"
@@ -431,8 +431,8 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             download_path = self._resolve_download_path(file_metadata, local_path)
 
             # Ensure parent directory exists
-            parent_dir = fs._join_path(download_path).parent
-            parent_result = fs._create_directory(parent_dir, exist_ok=True)
+            parent_dir = fs.join_path(download_path).parent
+            parent_result = fs.create_directory(parent_dir, exist_ok=True)
             if not parent_result.success:
                 return IntegrationResult.error_result(
                     f"Failed to create directory: {parent_result.error}"
@@ -463,7 +463,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             file_content = fh.read()
 
             # Write file to disk using fs module
-            write_result = fs._write_binary(download_path, file_content)
+            write_result = fs.write_binary(download_path, file_content)
             if not write_result.success:
                 return IntegrationResult.error_result(
                     f"Failed to write file: {write_result.error}"
@@ -722,7 +722,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
         try:
             try:
                 if permanent:
-                    self.drive_service.files()._delete(fileId=file_id).execute()
+                    self.drive_service.files().delete(fileId=file_id).execute()
                 else:
                     self.drive_service.files().update(
                         fileId=file_id, body={"trashed": True}

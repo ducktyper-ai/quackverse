@@ -246,3 +246,21 @@ class PathValidationMixin:
                 is_valid=False,
                 error=f"Path normalization failed: {e}",
             )
+
+    def resolve_path_strict(self, path: str | Path) -> PathResult:
+        resolved = self.operations._resolve_path(path)
+        if not resolved.exists():
+            return PathResult(
+                success=False,
+                path=resolved,
+                is_valid=False,
+                exists=False,
+                error="Resolved path does not exist",
+            )
+        return PathResult(
+            success=True,
+            path=resolved,
+            is_valid=True,
+            exists=True,
+            message="Successfully resolved existing path",
+        )

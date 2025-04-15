@@ -108,14 +108,14 @@ def delete_file(
         if permanent:
             # Permanently delete
             execute_api_request(
-                drive_service.files().delete(fileId=file_id),
+                drive_service.files().delete(file_id=file_id),
                 "Failed to delete file from Google Drive",
                 "files.delete",
             )
         else:
             # Move to trash
             execute_api_request(
-                drive_service.files().update(fileId=file_id, body={"trashed": True}),
+                drive_service.files().update(file_id=file_id, body={"trashed": True}),
                 "Failed to trash file in Google Drive",
                 "files.update",
             )

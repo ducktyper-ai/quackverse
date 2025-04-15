@@ -11,7 +11,7 @@ import sys
 import time
 from collections.abc import Iterable, Iterator
 from io import TextIOBase
-from typing import Protocol, TypeVar, cast
+from typing import Protocol, TypeVar
 
 from quackcore.cli.terminal import get_terminal_size
 

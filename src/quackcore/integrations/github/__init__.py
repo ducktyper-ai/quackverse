@@ -17,8 +17,8 @@ from .service import GitHubIntegration
 
 # For type checkers only, import the quackster-related classes so they appear defined.
 if TYPE_CHECKING:
-    from quackcore.teaching.github.grading import GitHubGrader
-    from quackcore.teaching.github.teaching_adapter import GitHubTeachingAdapter
+    from quackster.github.grading import GitHubGrader
+    from quackster.github.teaching_adapter import GitHubTeachingAdapter
 
 __all__ = [
     # Main classes
@@ -62,11 +62,11 @@ def __getattr__(name: str) -> Any:
         AttributeError: If the requested attribute doesn't exist
     """
     if name == "GitHubGrader":
-        from quackcore.teaching.github.grading import GitHubGrader
+        from quackster.github.grading import GitHubGrader
 
         return GitHubGrader
     elif name == "GitHubTeachingAdapter":
-        from quackcore.teaching.github.teaching_adapter import GitHubTeachingAdapter
+        from quackster.github.teaching_adapter import GitHubTeachingAdapter
 
         return GitHubTeachingAdapter
     else:

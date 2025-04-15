@@ -172,7 +172,7 @@ def download_email(
         clean_sender_name = clean_filename(sender)
         filename = f"{timestamp}-{clean_sender_name}.html"
         # Use fs.join_path to join storage path and filename (returns a string)
-        filepath = str(fs._join_path(storage_path, filename))
+        filepath = str(fs.join_path(storage_path, filename))
         html_content, attachments = process_message_parts(
             gmail_service, user_id, [payload], msg_id, storage_path, logger
         )
@@ -189,7 +189,7 @@ def download_email(
             header_parts.append(f"<h2>From: {sender}</h2>")
         if header_parts:
             content = f"{''.join(header_parts)}<hr/>{content}"
-        write_result = fs._write_text(filepath, content, encoding="utf-8")
+        write_result = fs.write_text(filepath, content, encoding="utf-8")
         if not write_result.success:
             logger.error(f"Failed to write email content: {write_result.error}")
             return IntegrationResult.error_result(
@@ -388,28 +388,28 @@ def handle_attachment(
             return None
 
         clean_name = clean_filename(filename)
-        file_path = str(fs._join_path(storage_path, clean_name))
+        file_path = str(fs.join_path(storage_path, clean_name))
         counter = 1
-        file_info = fs._get_file_info(file_path)
+        file_info = fs.get_file_info(file_path)
         while file_info.success and file_info.exists:
             # Split the file name using fs.split_path
-            path_parts = fs._split_path(file_path)
+            path_parts = fs.split_path(file_path)
             filename_parts = path_parts[-1].rsplit(".", 1)
             base_name = filename_parts[0]
             ext = f".{filename_parts[1]}" if len(filename_parts) > 1 else ""
             new_filename = f"{base_name}-{counter}{ext}"
-            file_path = str(fs._join_path(storage_path, new_filename))
-            file_info = fs._get_file_info(file_path)
+            file_path = str(fs.join_path(storage_path, new_filename))
+            file_info = fs.get_file_info(file_path)
             counter += 1
 
         # Ensure the directory exists using os.path.dirname to get the directory string.
         dir_path = os.path.dirname(file_path)
-        dir_result = fs._create_directory(dir_path, exist_ok=True)
+        dir_result = fs.create_directory(dir_path, exist_ok=True)
         if not (dir_result.success if hasattr(dir_result, "success") else False):
             logger.error(f"Failed to create directory for attachment: {file_path}")
             return None
 
-        write_result = fs._write_binary(file_path, content)
+        write_result = fs.write_binary(file_path, content)
         if not (write_result.success if hasattr(write_result, "success") else False):
             logger.error(f"Failed to write attachment: {write_result.error}")
             return None

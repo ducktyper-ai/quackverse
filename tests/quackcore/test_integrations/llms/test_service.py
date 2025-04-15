@@ -6,7 +6,6 @@ This module tests the main service class for LLM integration, including
 initialization, configuration, and client communication.
 """
 
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest

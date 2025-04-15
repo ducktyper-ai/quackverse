@@ -200,3 +200,35 @@ class PathOperationsMixin:
                 error=str(e),
                 message="Failed to extract file extension",
             )
+
+    def resolve_path(self, path: str | Path) -> DataResult[str]:
+        """
+        Resolve a path relative to the service's base_dir and return as a string.
+
+        This is a public, safe wrapper around _resolve_path that conforms to
+        the DataResult structure used throughout QuackCore.
+
+        Args:
+            path: Input path (absolute or relative)
+
+        Returns:
+            DataResult with the fully resolved, absolute path as a string.
+        """
+        try:
+            resolved = self.operations._resolve_path(path)
+            return DataResult(
+                success=True,
+                path=resolved,
+                data=str(resolved),
+                format="path",
+                message=f"Resolved path to: {resolved}",
+            )
+        except Exception as e:
+            return DataResult(
+                success=False,
+                path=Path(path),
+                data="",
+                format="path",
+                error=str(e),
+                message="Failed to resolve path",
+            )

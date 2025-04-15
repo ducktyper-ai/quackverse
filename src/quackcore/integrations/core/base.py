@@ -68,7 +68,7 @@ class BaseAuthProvider(ABC, AuthProviderProtocol):
             # Import the global service instance as recommended in best practices
             from quackcore.fs import service as fs
 
-            normalized_path = fs._normalize_path(file_path)
+            normalized_path = fs.normalize_path(file_path)
             return str(normalized_path)
 
     @property
@@ -133,11 +133,11 @@ class BaseAuthProvider(ABC, AuthProviderProtocol):
             return False
 
         try:
-            from quackcore.fs.service import create_directory, join_path, split_path
+            from quackcore.fs import service as fs
 
-            parent_path = split_path(self.credentials_file)[:-1]
-            parent_dir = join_path(*parent_path)
-            result = create_directory(parent_dir, exist_ok=True)
+            parent_path = fs.split_path(self.credentials_file)[:-1]
+            parent_dir = fs.join_path(*parent_path)
+            result = fs.create_directory(parent_dir, exist_ok=True)
             return result.success
         except Exception as e:
             self.logger.error(f"Unexpected error creating credentials directory: {e}")
@@ -253,11 +253,11 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         env_var = f"QUACK_{self.name.upper()}_CONFIG"
         if config_path := os.environ.get(env_var):
             # Import these specifically at runtime to match the patching in tests
-            from quackcore.fs.service import expand_user_vars, get_file_info
+            from quackcore.fs import service as fs
 
-            expanded_path = expand_user_vars(config_path)
+            expanded_path = fs.expand_user_vars(config_path)
             # Convert Path to string to match test expectation
-            file_info = get_file_info(str(expanded_path))
+            file_info = fs.get_file_info(str(expanded_path))
             if file_info.success and file_info.exists:
                 return str(expanded_path)
 
@@ -273,26 +273,26 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
             )
 
         # Import these here to match patching in tests
-        from quackcore.fs.service import expand_user_vars, get_file_info, join_path
+        from quackcore.fs import service as fs
 
         # Check default locations.
         for location in self.DEFAULT_CONFIG_LOCATIONS:
-            expanded_location = expand_user_vars(location)
+            expanded_location = fs.expand_user_vars(location)
             # If the expanded location is relative
             # and we have a project root, join them.
             if not os.path.isabs(str(expanded_location)) and project_root:
-                expanded_location = join_path(project_root, expanded_location)
+                expanded_location = fs.join_path(project_root, expanded_location)
             # Convert Path to string for consistency with tests
-            file_info = get_file_info(str(expanded_location))
+            file_info = fs.get_file_info(str(expanded_location))
             if file_info.success and file_info.exists:
                 return str(expanded_location)
 
         # Fallback: try candidate in project root.
         if project_root:
-            candidate = join_path(project_root, "quack_config.yaml")
-            candidate = expand_user_vars(candidate)
+            candidate = fs.join_path(project_root, "quack_config.yaml")
+            candidate = fs.expand_user_vars(candidate)
             # Convert Path to string for consistency with tests
-            file_info = get_file_info(str(candidate))
+            file_info = fs.get_file_info(str(candidate))
             if file_info.success and file_info.exists:
                 return str(candidate)
 
@@ -314,9 +314,9 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         except Exception as e:
             self.logger.warning(f"Could not resolve project path: {e}")
             # Import normalize_path at runtime.
-            from quackcore.fs.service import normalize_path
+            from quackcore.fs import service as fs
 
-            normalized_path = normalize_path(file_path)
+            normalized_path = fs.normalize_path(file_path)
             return str(normalized_path)
 
     @abstractmethod
@@ -375,7 +375,7 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
                 self.config_path = str(resolver.resolve_project_path(config_path))
             except Exception as e:
                 self.logger.warning(f"Could not resolve config path: {e}")
-                self.config_path = str(fs._normalize_path(config_path))
+                self.config_path = str(fs.normalize_path(config_path))
         else:
             self.config_path = None
 

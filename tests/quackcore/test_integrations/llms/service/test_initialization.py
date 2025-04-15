@@ -10,7 +10,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from quackcore.integrations.core.results import IntegrationResult
-from quackcore.integrations.llms import MockLLMClient, get_llm_client
 from quackcore.integrations.llms.fallback import FallbackConfig
 from quackcore.integrations.llms.service.initialization import (
     initialize_single_provider,

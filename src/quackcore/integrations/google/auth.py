@@ -45,7 +45,7 @@ class GoogleAuthProvider(BaseAuthProvider):
         return "GoogleAuth"
 
     def _verify_client_secrets_file(self) -> None:
-        file_info = fs._get_file_info(self.client_secrets_file)
+        file_info = fs.get_file_info(self.client_secrets_file)
         if not file_info.success or not file_info.exists:
             raise QuackIntegrationError(
                 f"Client secrets file not found: {self.client_secrets_file}",
@@ -128,7 +128,7 @@ class GoogleAuthProvider(BaseAuthProvider):
             str | None: The redirect URI or None if it couldn't be extracted
         """
         try:
-            json_result = fs._read_json(self.client_secrets_file)
+            json_result = fs.read_json(self.client_secrets_file)
             if not json_result.success:
                 self.logger.warning(
                     f"Failed to read client secrets: {json_result.error}"
@@ -161,11 +161,11 @@ class GoogleAuthProvider(BaseAuthProvider):
         if not self.credentials_file:
             return None
 
-        file_info = fs._get_file_info(self.credentials_file)
+        file_info = fs.get_file_info(self.credentials_file)
         if not file_info.exists:
             return None
 
-        json_result = fs._read_json(self.credentials_file)
+        json_result = fs.read_json(self.credentials_file)
         if not json_result.success:
             self.logger.warning(f"Failed to load credentials: {json_result.error}")
             return None
@@ -235,10 +235,10 @@ class GoogleAuthProvider(BaseAuthProvider):
             self.logger.warning("No credentials file specified, cannot save")
             return False
 
-        parent_dir = fs._split_path(self.credentials_file)[:-1]
+        parent_dir = fs.split_path(self.credentials_file)[:-1]
         if parent_dir:
-            directory_path = fs._join_path(*parent_dir)
-            result = fs._create_directory(directory_path, exist_ok=True)
+            directory_path = fs.join_path(*parent_dir)
+            result = fs.create_directory(directory_path, exist_ok=True)
             if not result.success:
                 self.logger.error(
                     f"Failed to create credentials directory: {result.error}"
@@ -247,7 +247,7 @@ class GoogleAuthProvider(BaseAuthProvider):
 
         try:
             data = serialize_credentials(credentials)
-            result = fs._write_json(self.credentials_file, data)
+            result = fs.write_json(self.credentials_file, data)
             if not result.success:
                 self.logger.error(f"Failed to write credentials: {result.error}")
                 return False

@@ -6,8 +6,7 @@ This module tests the GoogleConfigProvider class, including configuration loadin
 validation, and format handling.
 """
 
-import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from pydantic import ValidationError

@@ -620,9 +620,7 @@ class TestPluginRegistry:
 
     def test_reload_plugin(self) -> None:
         """Test reloading a plugin."""
-        import sys
-        import types
-        from unittest.mock import MagicMock, patch
+        from unittest.mock import patch
 
         # Since we can't easily mock importlib.reload properly,
         # we'll mock the entire reload_plugin method
@@ -684,7 +682,7 @@ class TestPluginRegistry:
     def test_plugin_metadata_validation(self) -> None:
         """Test validation of plugin metadata."""
         from typing import cast
-        from unittest.mock import MagicMock, patch
+        from unittest.mock import patch
 
         from quackcore.plugins.discovery import PluginLoader
 

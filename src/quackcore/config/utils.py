@@ -55,14 +55,14 @@ def load_env_config(config: QuackConfig, config_dir: str | None = None) -> Quack
 
         # Use common candidate directories (all as strings) for configuration files.
         candidates: list[str] = [
-            fs._join_path(".", "config"),
-            fs._join_path(".", "configs"),
-            fs._join_path(config.paths.base_dir, "config"),
-            fs._join_path(config.paths.base_dir, "configs"),
+            fs.join_path(".", "config"),
+            fs.join_path(".", "configs"),
+            fs.join_path(config.paths.base_dir, "config"),
+            fs.join_path(config.paths.base_dir, "configs"),
         ]
 
         for candidate in candidates:
-            info = fs._get_file_info(candidate)
+            info = fs.get_file_info(candidate)
             if info.success and info.exists and info.is_dir:
                 config_dir = candidate
                 break
@@ -72,12 +72,12 @@ def load_env_config(config: QuackConfig, config_dir: str | None = None) -> Quack
             return config
 
     # Build the environment-specific config file path using fs.join_path.
-    env_file: str = fs._join_path(config_dir, f"{env}.yaml")
-    file_info = fs._get_file_info(env_file)
+    env_file: str = fs.join_path(config_dir, f"{env}.yaml")
+    file_info = fs.get_file_info(env_file)
     if not (file_info.success and file_info.exists):
         # Try with .yml extension if .yaml is not found.
-        env_file = fs._join_path(config_dir, f"{env}.yml")
-        file_info = fs._get_file_info(env_file)
+        env_file = fs.join_path(config_dir, f"{env}.yml")
+        file_info = fs.get_file_info(env_file)
         if not (file_info.success and file_info.exists):
             # No environment-specific config was found; return the original configuration.
             return config

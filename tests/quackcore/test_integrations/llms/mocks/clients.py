@@ -4,13 +4,12 @@ Mock client implementations for LLM testing.
 """
 
 import logging
-from collections.abc import Callable, Sequence
-from typing import Any, Dict, List, Optional, Type, Union
+from collections.abc import Callable
+from typing import Any, List, Optional, Type
 
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.llms.clients.base import LLMClient
-from quackcore.integrations.llms.models import ChatMessage, LLMOptions, RoleType
-from quackcore.integrations.llms.protocols import LLMProviderProtocol
+from quackcore.integrations.llms.models import ChatMessage, LLMOptions
 
 
 class MockClient(LLMClient):

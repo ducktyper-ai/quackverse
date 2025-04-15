@@ -51,7 +51,7 @@ def set_file_permissions(
         request = (
             drive_service.files()
             .permissions()
-            .create(fileId=file_id, body=permission, fields="id")
+            .create(file_id=file_id, body=permission, fields="id")
         )
 
         # Use the module import to call the function - this should make patching work
@@ -97,7 +97,7 @@ def get_sharing_link(
         # Get file metadata with link information
         file_metadata = api.execute_api_request(
             drive_service.files().get(
-                fileId=file_id, fields="webViewLink, webContentLink"
+                file_id=file_id, fields="webViewLink, webContentLink"
             ),
             "Failed to get file metadata from Google Drive",
             "files.get",
