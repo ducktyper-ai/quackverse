@@ -222,7 +222,7 @@ def load_config(
     if config_path:
         expanded = fs._expand_user_vars(str(config_path))
         if not (
-                fs._get_file_info(expanded).success and fs._get_file_info(expanded).exists
+            fs._get_file_info(expanded).success and fs._get_file_info(expanded).exists
         ):
             raise QuackConfigurationError(
                 f"Configuration file not found: {expanded}", expanded

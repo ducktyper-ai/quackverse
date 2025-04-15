@@ -91,11 +91,12 @@ def normalize_path(path: str | Path) -> DataResult[str]:
         DataResult with normalized path as string
     """
     try:
-        normalized_path = _normalize_path(path)
+        path_obj = Path(path)  # Normalize early
+        normalized_path = _normalize_path(path_obj)
 
         return DataResult(
             success=True,
-            path=Path(path),
+            path=path_obj,
             data=str(normalized_path),
             format="path",
             message="Successfully normalized path",

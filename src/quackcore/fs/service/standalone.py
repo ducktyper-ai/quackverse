@@ -15,15 +15,13 @@ from quackcore.fs.results import (
     FileInfoResult,
     FindResult,
     OperationResult,
+    PathResult,
     ReadResult,
     WriteResult,
 )
 
 # Import the complete FileSystemService with all mixins
 from quackcore.fs.service.full_class import FileSystemService
-
-# Import PathInfo directly from its module
-from quackcore.fs.service.path_validation import PathInfo
 
 T = TypeVar("T")  # Generic type for flexible typing
 
@@ -314,7 +312,7 @@ def delete(path: str | Path, missing_ok: bool = True) -> OperationResult:
     return _service.delete(path, missing_ok)
 
 
-def split_path(path: str | Path) -> list[str]:
+def split_path(path: str | Path) -> DataResult[list[str]]:
     """
     Split a path into its components.
 
@@ -340,26 +338,24 @@ def join_path(*parts: str | Path) -> Path:
     return _service.join_path(*parts)
 
 
-# NEW: Path utility function for checking existence
+# Updated functions from standalone.py that work with PathValidationMixin
 
 
-def path_exists(path: str | Path) -> bool:
+def path_exists(path: str | Path) -> DataResult[bool]:
     """
     Check if a path exists using the FileSystemService.
 
-    This function delegates directly to the underlying service instance,
-    ensuring consistency with all other filesystem operations.
-
     Args:
-        path: The file or directory path to check.
+        path: The file or directory path to check
 
     Returns:
-        bool: True if the path exists, False otherwise.
+        DataResult with boolean indicating if path exists
     """
-    return _service.path_exists(path)
+    path_obj = Path(path)  # Normalize early
+    return _service.path_exists(path_obj)
 
 
-def normalize_path_with_info(path: str | Path) -> PathInfo:
+def normalize_path_with_info(path: str | Path) -> PathResult:
     """
     Normalize a path and return detailed information.
 
@@ -367,25 +363,25 @@ def normalize_path_with_info(path: str | Path) -> PathInfo:
         path: The path to normalize.
 
     Returns:
-        PathInfo object with the normalized path and status information.
+        PathResult containing the normalized path and status information.
     """
     return _service.normalize_path_with_info(path)
 
 
-def get_path_info(path: str | Path) -> PathInfo:
+def get_path_info(path: str | Path) -> PathResult:
     """
-    Get information about a path’s validity and format.
+    Get information about a path's validity and format.
 
     Args:
         path: The path to check.
 
     Returns:
-        PathInfo object with validation results.
+        PathResult containing validation results.
     """
     return _service.get_path_info(path)
 
 
-def is_valid_path(path: str | Path) -> bool:
+def is_valid_path(path: str | Path) -> DataResult[bool]:
     """
     Check if a path has valid syntax.
 
@@ -393,6 +389,6 @@ def is_valid_path(path: str | Path) -> bool:
         path: The path to check.
 
     Returns:
-        True if the path has valid syntax.
+        DataResult with boolean indicating if the path has valid syntax.
     """
     return _service.is_valid_path(path)

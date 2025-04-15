@@ -101,18 +101,22 @@ class FileOperationsMixin:
         return self.operations.write_binary(path, content, atomic, calculate_checksum)
 
     @wrap_io_errors
-    def read_lines(self, path: str | Path, encoding: str = "utf-8") -> ReadResult:
+    def read_lines(
+        self, path: str | Path, encoding: str = "utf-8"
+    ) -> ReadResult[list[str]]:
         """
         Read lines from a text file.
 
         Args:
-            path: Path to the file.
-            encoding: Text encoding.
+            path: Path to the file
+            encoding: Text encoding
 
         Returns:
-            ReadResult with the file content as a list of lines.
+            ReadResult with the file content as a list of lines
         """
-        result = self.operations._read_text(path, encoding)
+        path_obj = Path(path)  # Normalize early
+        result = self.operations._read_text(path_obj, encoding)
+
         if result.success:
             lines = result.content.splitlines()
             return ReadResult(
@@ -122,12 +126,14 @@ class FileOperationsMixin:
                 encoding=encoding,
                 message=f"Successfully read {len(lines)} lines",
             )
+
         return ReadResult(
             success=False,
-            path=result.path,
+            path=path_obj,
             content=[],
             encoding=encoding,
             error=result.error,
+            message=f"Failed to read lines: {result.error}",
         )
 
     @wrap_io_errors

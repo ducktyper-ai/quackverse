@@ -271,6 +271,57 @@ class DataResult(OperationResult, Generic[T]):
     )
 
 
+class PathResult(OperationResult):
+    """
+    Result of a path validation or manipulation operation.
+
+    This specialized result type provides detailed information about path
+    validation, normalization, and checking operations.
+    """
+
+    def __init__(
+        self,
+        success: bool = True,
+        path: Path | None = None,
+        is_absolute: bool = False,
+        is_valid: bool = False,
+        exists: bool = False,
+        message: str | None = None,
+        error: str | None = None,
+    ):
+        """
+        Initialize a PathResult object.
+
+        Args:
+            success: Whether the operation was successful
+            path: The path that was validated or manipulated
+            is_absolute: Whether the path is absolute
+            is_valid: Whether the path has valid syntax
+            exists: Whether the path exists on the filesystem
+            message: Optional success message
+            error: Optional error message
+        """
+        super().__init__(success=success, path=path, message=message, error=error)
+        self.is_absolute = is_absolute
+        self.is_valid = is_valid
+        self.exists = exists
+
+    @property
+    def is_relative(self) -> bool:
+        """Whether the path is relative (not absolute)."""
+        return not self.is_absolute
+
+    def __repr__(self) -> str:
+        """String representation of the PathResult."""
+        status = "success" if self.success else "failure"
+        path_str = f"'{self.path}'" if self.path else "None"
+        return (
+            f"PathResult({status}, path={path_str}, "
+            f"exists={self.exists}, valid={self.is_valid}, "
+            f"absolute={self.is_absolute})"
+        )
+
+
 # Aliases for backward compatibility with quackcore.fs.types
 DirectoryListResult = DirectoryInfoResult
 FileFindResult = FindResult

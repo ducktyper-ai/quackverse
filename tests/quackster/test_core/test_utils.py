@@ -212,7 +212,9 @@ class TestLoadProgress:
                 "last_active_date": "2023-01-15",
                 "metadata": {"key": "value"},
             }
-            mock_fs._read_json.return_value = MagicMock(success=True, data=progress_data)
+            mock_fs._read_json.return_value = MagicMock(
+                success=True, data=progress_data
+            )
 
             # Call the function
             result = load_progress()

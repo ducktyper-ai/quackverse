@@ -6,7 +6,7 @@ Utility operations for the FileSystemService.
 from pathlib import Path
 
 from quackcore.errors import wrap_io_errors
-from quackcore.fs import OperationResult, DataResult, WriteResult
+from quackcore.fs import DataResult, OperationResult, WriteResult
 from quackcore.fs.api.public import (
     atomic_write,
     compute_checksum,
@@ -35,7 +35,9 @@ class UtilityOperationsMixin:
     # --- Advanced and Utility Operations ---
 
     @wrap_io_errors
-    def ensure_directory(self, path: str | Path, exist_ok: bool = True) -> OperationResult:
+    def ensure_directory(
+        self, path: str | Path, exist_ok: bool = True
+    ) -> OperationResult:
         """
         Ensure a directory exists, creating it if necessary.
 
@@ -44,12 +46,15 @@ class UtilityOperationsMixin:
             exist_ok: If False, raise an error when directory exists
 
         Returns:
-            Path object for the directory
+            OperationResult with operation status
         """
-        return ensure_directory(path, exist_ok)
+        path_obj = Path(path)  # Normalize early
+        return ensure_directory(path_obj, exist_ok)
 
     @wrap_io_errors
-    def get_unique_filename(self, directory: str | Path, filename: str) -> DataResult[str]:
+    def get_unique_filename(
+        self, directory: str | Path, filename: str
+    ) -> DataResult[str]:
         """
         Generate a unique filename in the given directory.
 
@@ -200,8 +205,9 @@ class UtilityOperationsMixin:
         """
         return get_file_timestamp(path)
 
-    def compute_checksum(self, path: str | Path, algorithm: str = "sha256") -> \
-    DataResult[str]:
+    def compute_checksum(
+        self, path: str | Path, algorithm: str = "sha256"
+    ) -> DataResult[str]:
         """
         Compute the checksum of a file.
 

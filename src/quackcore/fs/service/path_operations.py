@@ -30,7 +30,7 @@ class PathOperationsMixin:
     operations: FileSystemOperations
 
     @wrap_io_errors
-    def join_path(self, *parts: str | Path) -> Path:
+    def join_path(self, *parts: str | Path) -> DataResult[str]:
         """
         Join path components.
 
@@ -38,15 +38,33 @@ class PathOperationsMixin:
             *parts: Path parts to join
 
         Returns:
-            Joined Path object
+            DataResult with the joined path
         """
-        if not parts:
-            return Path()
+        try:
+            if not parts:
+                result_path = Path()
+            else:
+                base_path = Path(parts[0])
+                for part in parts[1:]:
+                    base_path = base_path / part
+                result_path = base_path
 
-        base_path = Path(parts[0])
-        for part in parts[1:]:
-            base_path = base_path / part
-        return base_path
+            return DataResult(
+                success=True,
+                path=result_path,
+                data=str(result_path),
+                format="path",
+                message=f"Successfully joined path parts",
+            )
+        except Exception as e:
+            return DataResult(
+                success=False,
+                path=Path() if not parts else Path(parts[0]),
+                data="",
+                format="path",
+                error=str(e),
+                message="Failed to join path parts",
+            )
 
     @wrap_io_errors
     def split_path(self, path: str | Path) -> DataResult[list[str]]:
@@ -101,8 +119,9 @@ class PathOperationsMixin:
         """
         return is_same_file(path1, path2)
 
-    def is_subdirectory(self, child: str | Path, parent: str | Path) -> DataResult[
-        bool]:
+    def is_subdirectory(
+        self, child: str | Path, parent: str | Path
+    ) -> DataResult[bool]:
         """
         Check if a path is a subdirectory of another path.
 
@@ -118,7 +137,7 @@ class PathOperationsMixin:
     @wrap_io_errors
     def create_temp_directory(
         self, prefix: str = "quackcore_", suffix: str = ""
-    ) -> Path:
+    ) -> DataResult[str]:
         """
         Create a temporary directory.
 
@@ -127,13 +146,29 @@ class PathOperationsMixin:
             suffix: Suffix for the temporary directory name
 
         Returns:
-            Path to the created temporary directory
+            DataResult with path to the created temporary directory
         """
-        temp_dir = Path(tempfile.mkdtemp(prefix=prefix, suffix=suffix))
-        return temp_dir
+        try:
+            temp_dir = Path(tempfile.mkdtemp(prefix=prefix, suffix=suffix))
+            return DataResult(
+                success=True,
+                path=temp_dir,
+                data=str(temp_dir),
+                format="path",
+                message=f"Created temporary directory: {temp_dir}",
+            )
+        except Exception as e:
+            return DataResult(
+                success=False,
+                path=None,
+                data="",
+                format="path",
+                error=str(e),
+                message="Failed to create temporary directory",
+            )
 
     @wrap_io_errors
-    def get_extension(self, path: str | Path) -> str:
+    def get_extension(self, path: str | Path) -> DataResult[str]:
         """
         Get the file extension from a path.
 
@@ -141,8 +176,27 @@ class PathOperationsMixin:
             path: Path to get extension from
 
         Returns:
-            File extension without the dot, or empty string if no extension
+            DataResult with file extension without the dot
         """
-        path_str = str(path)
-        _, ext = os.path.splitext(path_str)
-        return ext.lstrip(".").lower()
+        try:
+            path_obj = Path(path)
+            path_str = str(path_obj)
+            _, ext = os.path.splitext(path_str)
+            extension = ext.lstrip(".").lower()
+
+            return DataResult(
+                success=True,
+                path=path_obj,
+                data=extension,
+                format="extension",
+                message=f"Successfully extracted extension: {extension}",
+            )
+        except Exception as e:
+            return DataResult(
+                success=False,
+                path=Path(path) if isinstance(path, (str, Path)) else Path(),
+                data="",
+                format="extension",
+                error=str(e),
+                message="Failed to extract file extension",
+            )

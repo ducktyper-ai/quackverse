@@ -15,6 +15,7 @@ from quackcore.fs.results import (
     FileInfoResult,
     FindResult,
     OperationResult,
+    PathResult,
     ReadResult,
     WriteResult,
 )
@@ -22,7 +23,6 @@ from quackcore.fs.service.factory import create_service
 
 # Import the complete FileSystemService with all mixins
 from quackcore.fs.service.full_class import FileSystemService
-from quackcore.fs.service.path_validation import PathInfo
 
 # Create a global instance for convenience
 service = create_service()
@@ -313,7 +313,7 @@ def write_lines(
     return service.write_lines(path, lines, encoding, atomic, line_ending)
 
 
-def path_exists(path: str | Path) -> bool:
+def path_exists(path: str | Path) -> DataResult[bool]:
     """
     Check if a path exists using the FileSystemService.
 
@@ -324,12 +324,12 @@ def path_exists(path: str | Path) -> bool:
         path: The file or directory path to check.
 
     Returns:
-        bool: True if the path exists, False otherwise.
+        DataResult with boolean indicating if the path exists.
     """
     return service.path_exists(path)
 
 
-def normalize_path_with_info(path: str | Path) -> PathInfo:
+def normalize_path_with_info(path: str | Path) -> PathResult:
     """
     Normalize a path and return detailed information.
 
@@ -337,12 +337,12 @@ def normalize_path_with_info(path: str | Path) -> PathInfo:
         path: Path to normalize
 
     Returns:
-        PathInfo object with the normalized path and status information
+        PathResult containing the normalized path and status information
     """
     return service.normalize_path_with_info(path)
 
 
-def get_path_info(path: str | Path) -> PathInfo:
+def get_path_info(path: str | Path) -> PathResult:
     """
     Get information about a path's validity and format.
 
@@ -350,12 +350,12 @@ def get_path_info(path: str | Path) -> PathInfo:
         path: Path to check
 
     Returns:
-        PathInfo object with validation results
+        PathResult containing validation results
     """
     return service.get_path_info(path)
 
 
-def is_valid_path(path: str | Path) -> bool:
+def is_valid_path(path: str | Path) -> DataResult[bool]:
     """
     Check if a path has valid syntax.
 
@@ -363,7 +363,7 @@ def is_valid_path(path: str | Path) -> bool:
         path: Path to check
 
     Returns:
-        True if the path has valid syntax
+        DataResult with boolean indicating if the path has valid syntax
     """
     return service.is_valid_path(path)
 
@@ -405,7 +405,7 @@ __all__ = [
     "DirectoryInfoResult",
     "FindResult",
     "DataResult",
-    "PathInfo",
+    "PathResult",
     # Type variables
     "T",
 ]
