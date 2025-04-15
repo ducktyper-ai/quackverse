@@ -1,4 +1,4 @@
-# src/quackcore/integrations/google/mail/_operations/attachments.py
+# src/quackcore/integrations/google/mail/operations/attachments.py
 """
 Upload _operations for Google Mail attachments.
 

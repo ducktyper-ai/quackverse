@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/pandoc/_operations/test_md_to_docx.py
+# tests/quackcore/test_integrations/pandoc/operations/test_md_to_docx.py
 """
 Tests for Markdown to DOCX conversion _operations.
 """

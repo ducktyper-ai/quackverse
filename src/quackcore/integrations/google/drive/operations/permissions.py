@@ -1,4 +1,4 @@
-# src/quackcore/integrations/google/drive/_operations/permissions.py
+# src/quackcore/integrations/google/drive/operations/permissions.py
 """
 Permission _operations for Google Drive integration.
 

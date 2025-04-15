@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/pandoc/_operations/__init__.py
+# tests/quackcore/test_integrations/pandoc/operations/__init__.py
 """
 Tests for Pandoc conversion _operations.
 

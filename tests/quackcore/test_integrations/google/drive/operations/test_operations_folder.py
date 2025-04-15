@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/drive/_operations/test_operations_folder.py
+# tests/quackcore/test_integrations/google/drive/operations/test_operations_folder.py
 """
 Tests for Google Drive _operations folder module.
 """

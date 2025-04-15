@@ -1,4 +1,4 @@
-# src/quackcore/integrations/google/mail/_operations/auth.py
+# src/quackcore/integrations/google/mail/operations/auth.py
 """
 Authentication _operations for Google Mail integration.
 

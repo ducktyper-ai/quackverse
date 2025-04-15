@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/pandoc/_operations/test_html_to_md.py
+# tests/quackcore/test_integrations/pandoc/operations/test_html_to_md.py
 """
 Tests for HTML to Markdown conversion _operations.
 """

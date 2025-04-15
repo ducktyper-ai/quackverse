@@ -1,4 +1,4 @@
-# src/quackcore/integrations/google/drive/_operations/__init__.py
+# src/quackcore/integrations/google/drive/operations/__init__.py
 """
 Operations package for Google Drive integration.
 
