@@ -6,6 +6,7 @@ Utility operations for the FileSystemService.
 from pathlib import Path
 
 from quackcore.errors import wrap_io_errors
+from quackcore.fs import OperationResult, DataResult, WriteResult
 from quackcore.fs.api.public import (
     atomic_write,
     compute_checksum,
@@ -34,7 +35,7 @@ class UtilityOperationsMixin:
     # --- Advanced and Utility Operations ---
 
     @wrap_io_errors
-    def ensure_directory(self, path: str | Path, exist_ok: bool = True) -> Path:
+    def ensure_directory(self, path: str | Path, exist_ok: bool = True) -> OperationResult:
         """
         Ensure a directory exists, creating it if necessary.
 
@@ -48,7 +49,7 @@ class UtilityOperationsMixin:
         return ensure_directory(path, exist_ok)
 
     @wrap_io_errors
-    def get_unique_filename(self, directory: str | Path, filename: str) -> Path:
+    def get_unique_filename(self, directory: str | Path, filename: str) -> DataResult[str]:
         """
         Generate a unique filename in the given directory.
 
@@ -64,7 +65,7 @@ class UtilityOperationsMixin:
     @wrap_io_errors
     def create_temp_directory(
         self, prefix: str = "quackcore_", suffix: str = ""
-    ) -> Path:
+    ) -> DataResult[str]:
         """
         Create a temporary directory.
 
@@ -83,7 +84,7 @@ class UtilityOperationsMixin:
         suffix: str = ".txt",
         prefix: str = "quackcore_",
         directory: str | Path | None = None,
-    ) -> Path:
+    ) -> DataResult[str]:
         """
         Create a temporary file.
 
@@ -100,7 +101,7 @@ class UtilityOperationsMixin:
     @wrap_io_errors
     def find_files_by_content(
         self, directory: str | Path, text_pattern: str, recursive: bool = True
-    ) -> list[Path]:
+    ) -> DataResult[list[str]]:
         """
         Find files containing the given text pattern.
 
@@ -115,7 +116,7 @@ class UtilityOperationsMixin:
         return find_files_by_content(directory, text_pattern, recursive)
 
     @wrap_io_errors
-    def get_disk_usage(self, path: str | Path) -> dict[str, int]:
+    def get_disk_usage(self, path: str | Path) -> DataResult[dict[str, int]]:
         """
         Get disk usage information for the given path.
 
@@ -127,7 +128,7 @@ class UtilityOperationsMixin:
         """
         return get_disk_usage(path)
 
-    def get_file_type(self, path: str | Path) -> str:
+    def get_file_type(self, path: str | Path) -> DataResult[str]:
         """
         Get the type of a file.
 
@@ -139,7 +140,7 @@ class UtilityOperationsMixin:
         """
         return get_file_type(path)
 
-    def get_file_size_str(self, size_bytes: int) -> str:
+    def get_file_size_str(self, size_bytes: int) -> DataResult[str]:
         """
         Convert file size in bytes to a human-readable string.
 
@@ -151,7 +152,7 @@ class UtilityOperationsMixin:
         """
         return get_file_size_str(size_bytes)
 
-    def get_mime_type(self, path: str | Path) -> str | None:
+    def get_mime_type(self, path: str | Path) -> DataResult[str] | None:
         """
         Get the MIME type of a file.
 
@@ -163,7 +164,7 @@ class UtilityOperationsMixin:
         """
         return get_mime_type(path)
 
-    def is_path_writeable(self, path: str | Path) -> bool:
+    def is_path_writeable(self, path: str | Path) -> DataResult[bool]:
         """
         Check if a path is writeable.
 
@@ -175,7 +176,7 @@ class UtilityOperationsMixin:
         """
         return is_path_writeable(path)
 
-    def is_file_locked(self, path: str | Path) -> bool:
+    def is_file_locked(self, path: str | Path) -> DataResult[bool]:
         """
         Check if a file is locked by another process.
 
@@ -187,7 +188,7 @@ class UtilityOperationsMixin:
         """
         return is_file_locked(path)
 
-    def get_file_timestamp(self, path: str | Path) -> float:
+    def get_file_timestamp(self, path: str | Path) -> DataResult[float]:
         """
         Get the latest timestamp (modification time) for a file.
 
@@ -199,7 +200,8 @@ class UtilityOperationsMixin:
         """
         return get_file_timestamp(path)
 
-    def compute_checksum(self, path: str | Path, algorithm: str = "sha256") -> str:
+    def compute_checksum(self, path: str | Path, algorithm: str = "sha256") -> \
+    DataResult[str]:
         """
         Compute the checksum of a file.
 
@@ -212,7 +214,7 @@ class UtilityOperationsMixin:
         """
         return compute_checksum(path, algorithm)
 
-    def atomic_write(self, path: str | Path, content: str | bytes) -> Path:
+    def atomic_write(self, path: str | Path, content: str | bytes) -> WriteResult:
         """
         Write content to a file atomically using a temporary file.
 
