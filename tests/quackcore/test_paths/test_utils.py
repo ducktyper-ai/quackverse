@@ -10,6 +10,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from quackcore.errors import QuackFileNotFoundError
+from quackcore.paths import service as paths
+from quackcore.fs import service as fs
 
 
 class TestPathUtils:
@@ -18,33 +20,33 @@ class TestPathUtils:
     def test_find_project_root(self, mock_project_structure: Path) -> None:
         """Test finding a project root directory."""
         # Test finding from project root
-        root = find_project_root(mock_project_structure)
+        root = paths.find_project_root(mock_project_structure)
         assert root == mock_project_structure
 
         # Test finding from subdirectory
         subdir = mock_project_structure / "src"
-        root = find_project_root(subdir)
+        root = paths.find_project_root(subdir)
         assert root == mock_project_structure
 
         # Test with custom marker files
-        root = find_project_root(
+        root = paths.find_project_root(
             mock_project_structure, marker_files=["pyproject.toml"]
         )
         assert root == mock_project_structure
 
         # Test with custom marker directories
-        root = find_project_root(mock_project_structure, marker_dirs=["src", "tests"])
+        root = paths.find_project_root(mock_project_structure, marker_dirs=["src", "tests"])
         assert root == mock_project_structure
 
         # Test with non-existent path
         with pytest.raises(QuackFileNotFoundError):
-            find_project_root("/nonexistent/path")
+            paths.find_project_root("/nonexistent/path")
 
         # Test where no project root can be found
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             with pytest.raises(QuackFileNotFoundError):
-                find_project_root(tmp_path)
+                paths.find_project_root(tmp_path)
 
     def test_find_nearest_directory(self, mock_project_structure: Path) -> None:
         """Test finding the nearest directory with a given name."""
@@ -53,26 +55,26 @@ class TestPathUtils:
         nested.mkdir(parents=True)
 
         # Test finding from inside nested structure
-        found = find_nearest_directory("src", nested)
+        found = paths.find_nearest_directory("src", nested)
         assert found == mock_project_structure / "src"
 
         # Test finding non-existent directory
         with pytest.raises(QuackFileNotFoundError):
-            find_nearest_directory("nonexistent", mock_project_structure)
+            paths.find_nearest_directory("nonexistent", mock_project_structure)
 
         # Test with max_levels
         with pytest.raises(QuackFileNotFoundError):
-            find_nearest_directory("src", nested, max_levels=2)
+            paths.find_nearest_directory("src", nested, max_levels=2)
 
     def test_resolve_relative_to_project(self, mock_project_structure: Path) -> None:
         """Test resolving a path relative to the project root."""
         # Test resolving a relative path
-        resolved = resolve_relative_to_project("src/file.txt", mock_project_structure)
+        resolved = paths.resolve_relative_to_project("src/file.txt", mock_project_structure)
         assert resolved == mock_project_structure / "src" / "file.txt"
 
         # Test resolving an absolute path (should remain unchanged)
         abs_path = Path("/absolute/path/file.txt")
-        resolved = resolve_relative_to_project(abs_path, mock_project_structure)
+        resolved = paths.resolve_relative_to_project(abs_path, mock_project_structure)
         assert resolved == abs_path
 
         # Test resolving without explicit project root
@@ -80,7 +82,7 @@ class TestPathUtils:
             "quackcore.paths.api.find_project_root",
             return_value=mock_project_structure,
         ):
-            resolved = resolve_relative_to_project("src/file.txt")
+            resolved = paths.resolve_relative_to_project("src/file.txt")
             assert resolved == mock_project_structure / "src" / "file.txt"
 
         # Test when project root cannot be found
@@ -90,7 +92,7 @@ class TestPathUtils:
         ):
             # Should default to current directory
             with patch("pathlib.Path.cwd", return_value=Path("/current/dir")):
-                resolved = resolve_relative_to_project("file.txt")
+                resolved = paths.resolve_relative_to_project("file.txt")
                 assert resolved == Path("/current/dir") / "file.txt"
 
     def test_normalize_path(self) -> None:
@@ -104,7 +106,7 @@ class TestPathUtils:
             )
 
             # Test relative path normalization
-            normalized = normalize_path("./test/../file.txt")
+            normalized = fs.normalize_path("./test/../file.txt")
             assert normalized.name == "file.txt"
             assert normalized.is_absolute()
             mock_normalize.assert_called_once_with("./test/../file.txt")
@@ -116,7 +118,7 @@ class TestPathUtils:
                 path=Path("/current/working/directory"),
             )
 
-            normalized = normalize_path("")
+            normalized = fs.normalize_path("")
             assert normalized.is_absolute()
             mock_normalize.assert_called_once_with("")
 
@@ -127,52 +129,52 @@ class TestPathUtils:
                 path=Path("/some/absolute/path"),
             )
 
-            normalized = normalize_path("/some/absolute/path")
+            normalized = fs.normalize_path("/some/absolute/path")
             assert normalized.is_absolute()
             mock_normalize.assert_called_once_with("/some/absolute/path")
 
     def test_join_path(self) -> None:
         """Test joining path components."""
         # Test with string paths
-        joined = join_path("dir1", "dir2", "file.txt")
+        joined = fs.join_path("dir1", "dir2", "file.txt")
         assert joined == Path("dir1") / "dir2" / "file.txt"
 
         # Test with Path objects
-        joined = join_path(Path("/dir1"), Path("dir2"), "file.txt")
+        joined = fs.join_path(Path("/dir1"), Path("dir2"), "file.txt")
         assert joined == Path("/dir1") / "dir2" / "file.txt"
 
         # Test with mixed types
-        joined = join_path("/dir1", Path("dir2/dir3"), "file.txt")
+        joined = fs.join_path("/dir1", Path("dir2/dir3"), "file.txt")
         assert joined == Path("/dir1") / "dir2/dir3" / "file.txt"
 
     def test_split_path(self) -> None:
         """Test splitting a path into components."""
         # Test absolute path
-        parts = split_path("/dir1/dir2/file.txt")
+        parts = fs.split_path("/dir1/dir2/file.txt")
         assert parts[0] == "/"
         assert "dir1" in parts
         assert "dir2" in parts
         assert parts[-1] == "file.txt"
 
         # Test relative path
-        parts = split_path("dir1/dir2/file.txt")
+        parts = fs.split_path("dir1/dir2/file.txt")
         assert parts[0] == "dir1"
         assert parts[1] == "dir2"
         assert parts[2] == "file.txt"
 
         # Test dot path
-        parts = split_path("./dir/file.txt")
+        parts = fs.split_path("./dir/file.txt")
         assert parts[0] == "."
         assert "dir" in parts
         assert parts[-1] == "file.txt"
 
     def test_get_extension(self) -> None:
         """Test getting file extensions."""
-        assert get_extension("file.txt") == "txt"
-        assert get_extension("file.tar.gz") == "gz"
-        assert get_extension("file") == ""
-        assert get_extension(Path("/path/to/file.png")) == "png"
-        assert get_extension(".hidden") == "hidden"  # Special case for dot files
+        assert fs.get_extension("file.txt") == "txt"
+        assert fs.get_extension("file.tar.gz") == "gz"
+        assert fs.get_extension("file") == ""
+        assert fs.get_extension(Path("/path/to/file.png")) == "png"
+        assert fs.get_extension(".hidden") == "hidden"  # Special case for dot files
 
     def test_infer_module_from_path(self, mock_project_structure: Path) -> None:
         """Test inferring a Python module name from a file path."""
@@ -184,7 +186,7 @@ class TestPathUtils:
         module_file.touch()
 
         # Test inferring from a file within src directory
-        module_name = infer_module_from_path(module_file, mock_project_structure)
+        module_name = paths.infer_module_from_path(module_file, mock_project_structure)
         assert module_name == "test_module.submodule.test_file"
 
         # Test inferring from a file with a relative path
@@ -192,7 +194,7 @@ class TestPathUtils:
             "quackcore.paths.api.find_project_root",
             return_value=mock_project_structure,
         ):
-            module_name = infer_module_from_path(
+            module_name = paths.infer_module_from_path(
                 "src/test_module/submodule/test_file.py"
             )
             assert module_name == "test_module.submodule.test_file"
@@ -203,7 +205,7 @@ class TestPathUtils:
             side_effect=QuackFileNotFoundError(""),
         ):
             # Should use file's directory as fallback
-            module_name = infer_module_from_path(module_file, mock_project_structure)
+            module_name = paths.infer_module_from_path(module_file, mock_project_structure)
             assert "test_file" in module_name
 
         # Test inferring when file is not in project
@@ -211,5 +213,5 @@ class TestPathUtils:
             "quackcore.paths.api.find_project_root",
             side_effect=QuackFileNotFoundError(""),
         ):
-            module_name = infer_module_from_path("/outside/project/file.py")
+            module_name = paths.infer_module_from_path("/outside/project/file.py")
             assert module_name == "file"
