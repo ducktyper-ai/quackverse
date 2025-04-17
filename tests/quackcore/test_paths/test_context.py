@@ -114,7 +114,7 @@ class TestProjectContext:
         context = ProjectContext(root_dir=Path("/project"))
 
         # Add directory using the add_directory method
-        context._add_directory(name="src", path=Path("/project/src"), is_source=True)
+        context._add_directory(name="src", path="/project/src", is_source=True)
 
         # Verify the directory was added
         assert "src" in context.directories
@@ -124,14 +124,14 @@ class TestProjectContext:
 
         # Test adding with relative path calculation
         context._add_directory(
-            name="output", path=Path("/project/output"), is_output=True
+            name="output", path="/project/output", is_output=True
         )
         assert context.directories["output"].rel_path == Path("output")
 
         # Test adding path outside project root (rel_path should be None)
         context._add_directory(
             name="external",
-            path=Path("/external/path"),
+            path="/external/path",
         )
         assert context.directories["external"].rel_path is None
 
@@ -160,9 +160,9 @@ class TestContentContext:
 
         # Add directories
         context._add_directory(
-            name="assets", path=Path("/project/assets"), is_asset=True
+            name="assets", path="/project/assets", is_asset=True
         )
-        context._add_directory(name="temp", path=Path("/project/temp"), is_temp=True)
+        context._add_directory(name="temp", path="/project/temp", is_temp=True)
 
         # Test getting content-specific directories
         assert context._get_assets_dir() == Path("/project/assets")
@@ -179,10 +179,10 @@ class TestContentContext:
 
         # Add directories to project context
         project_context._add_directory(
-            name="src", path=Path("/project/src"), is_source=True
+            name="src", path="/project/src", is_source=True
         )
         project_context._add_directory(
-            name="assets", path=Path("/project/assets"), is_asset=True
+            name="assets", path="/project/assets", is_asset=True
         )
 
         # Create content context from project context

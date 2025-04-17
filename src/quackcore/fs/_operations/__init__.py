@@ -14,9 +14,8 @@ The _operations package follows this contract:
 - Comprehensive error handling and logging throughout
 """
 
-import os
 from pathlib import Path
-from typing import TypeVar
+from typing import Any, TypeVar
 
 # Import utility functions directly into this namespace for backward compatibility
 # This will make patching work correctly in tests
@@ -29,8 +28,6 @@ from quackcore.fs._helpers import (
     _safe_move,
 )
 from quackcore.logging import get_logger
-
-from .. import DataResult, OperationResult
 
 # Set up module-level logger
 logger = get_logger(__name__)
@@ -68,7 +65,7 @@ class FileSystemOperations(
     - All methods accept flexible input paths (str | Path)
     """
 
-    def __init__(self, base_dir: str | Path | None = None) -> None:
+    def __init__(self, base_dir: Any = None) -> None:
         """
         Initialize filesystem _operations.
 
@@ -82,9 +79,7 @@ class FileSystemOperations(
         logger.debug(f"Initialized FileSystemOperations with base_dir: {self.base_dir}")
         _initialize_mime_types()
 
-    def _resolve_path(
-        self, path: str | os.PathLike | DataResult | OperationResult
-    ) -> Path:
+    def _resolve_path(self, path: Any) -> Path:
         """
         Resolve a path relative to the base directory.
 
@@ -92,7 +87,7 @@ class FileSystemOperations(
         relative to the base directory set during initialization.
 
         Args:
-            path: Path to resolve (str, Path, DataResult, or OperationResult)
+            path: Path to resolve (str, Path, DataResult, OperationResult, or any object with 'data' attribute)
 
         Returns:
             Path: Resolved Path object
@@ -101,8 +96,7 @@ class FileSystemOperations(
             This is an internal helper method called by all other methods.
             It implements the abstract method defined in the mixins.
         """
-        resolved = _resolve_path(self.base_dir, path)
-        return Path(resolved)
+        return _resolve_path(self.base_dir, path)
 
 
 # Re-export the FileSystemOperations class and utility functions for backward compatibility

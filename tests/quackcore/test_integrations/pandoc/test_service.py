@@ -160,7 +160,7 @@ class TestPandocService:
         )
 
         # Test the method
-        result = service.html_to_markdown(Path("input.html"), Path("output.md"))
+        result = service.html_to_markdown("input.html", "output.md")
 
         # Assertions
         assert result.success is True
@@ -225,7 +225,7 @@ class TestPandocService:
 
                 # Test the method
                 result = service.convert_directory(
-                    Path("input_dir"), "markdown", output_dir_str, "*.html", True
+                    "input_dir", "markdown", output_dir_str, "*.html", True
                 )
 
                 # Assertions
@@ -240,7 +240,7 @@ class TestPandocService:
     def test_convert_directory_not_initialized(self):
         """Test directory conversion when service is not initialized."""
         service = PandocIntegration()
-        result = service.convert_directory(Path("input_dir"), "markdown")
+        result = service.convert_directory("input_dir", "markdown")
 
         assert result.success is False
         assert "not initialized" in result.error
@@ -255,7 +255,7 @@ class TestPandocService:
             service, "_determine_conversion_params", return_value=None
         ) as mock_determine:
             # Test with invalid format
-            result = service.convert_directory(Path("input_dir"), "invalid_format")
+            result = service.convert_directory("input_dir", "invalid_format")
 
             # Assertions
             assert result.success is False
@@ -358,7 +358,7 @@ class TestPandocService:
     def test_html_to_markdown_not_initialized(self):
         """Test HTML to Markdown conversion when service is not initialized."""
         service = PandocIntegration()
-        result = service.html_to_markdown(Path("input.html"))
+        result = service.html_to_markdown("input.html")
 
         assert result.success is False
         assert "not initialized" in result.error
@@ -380,7 +380,7 @@ class TestPandocService:
         service.converter.config = PandocConfig(output_dir=Path("/path/to/output"))
 
         # Test the method
-        result = service.html_to_markdown(Path("input.html"))
+        result = service.html_to_markdown("input.html")
 
         # Assertions
         assert result.success is True
@@ -401,7 +401,7 @@ class TestPandocService:
         )
 
         # Test the method
-        result = service.markdown_to_docx(Path("input.md"), Path("output.docx"))
+        result = service.markdown_to_docx("input.md", "output.docx")
 
         # Assertions
         assert result.success is True
@@ -411,7 +411,7 @@ class TestPandocService:
     def test_markdown_to_docx_not_initialized(self):
         """Test Markdown to DOCX conversion when service is not initialized."""
         service = PandocIntegration()
-        result = service.markdown_to_docx(Path("input.md"))
+        result = service.markdown_to_docx("input.md")
 
         assert result.success is False
         assert "not initialized" in result.error
@@ -433,7 +433,7 @@ class TestPandocService:
         service.converter.config = PandocConfig(output_dir=Path("/path/to/output"))
 
         # Test the method
-        result = service.markdown_to_docx(Path("input.md"))
+        result = service.markdown_to_docx("input.md")
 
         # Assertions
         assert result.success is True

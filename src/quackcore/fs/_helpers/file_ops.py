@@ -7,6 +7,7 @@ import os
 import re
 import tempfile
 from pathlib import Path
+from typing import Any
 
 from quackcore.errors import (
     QuackFileExistsError,
@@ -15,6 +16,9 @@ from quackcore.errors import (
     QuackPermissionError,
     wrap_io_errors,
 )
+
+# Import the path normalization helper
+from quackcore.fs._helpers.path_utils import _normalize_path_param
 from quackcore.logging import get_logger
 
 # Initialize module logger
@@ -23,7 +27,7 @@ logger = get_logger(__name__)
 
 @wrap_io_errors
 def _get_unique_filename(
-        directory: str | Path, filename: str, raise_if_exists: bool = False
+        directory: Any, filename: str, raise_if_exists: bool = False
 ) -> Path:
     """
     Generate a unique filename in the given directory.
@@ -34,15 +38,15 @@ def _get_unique_filename(
     Otherwise, if the filename exists, adds a numeric suffix.
 
     Args:
-        directory: Directory path (string or Path)
+        directory: Directory path (can be str, Path, or any object with 'data' attribute)
         filename: Base filename
         raise_if_exists: If True, raise an error when the file exists
 
     Returns:
         Unique Path object
     """
-    # Normalize directory to Path object
-    dir_path = Path(directory)
+    # Normalize directory to Path object using the dedicated helper
+    dir_path = _normalize_path_param(directory)
 
     if not dir_path.exists():
         logger.error(f"Directory does not exist: {directory}")
@@ -75,12 +79,12 @@ def _get_unique_filename(
 
 
 @wrap_io_errors
-def _ensure_directory(path: str | Path, exist_ok: bool = True) -> Path:
+def _ensure_directory(path: Any, exist_ok: bool = True) -> Path:
     """
     Ensure a directory exists, creating it if necessary.
 
     Args:
-        path: Directory path to ensure exists (string or Path)
+        path: Directory path to ensure exists (can be str, Path, or any object with 'data' attribute)
         exist_ok: If False, raise an error when directory exists
 
     Returns:
@@ -91,35 +95,35 @@ def _ensure_directory(path: str | Path, exist_ok: bool = True) -> Path:
         QuackPermissionError: If permission is denied
         QuackIOError: For other IO related issues
     """
-    # Normalize to Path object
-    path_obj = Path(path)
+    # Normalize to Path object using the dedicated helper
+    path_obj = _normalize_path_param(path)
 
     try:
         path_obj.mkdir(parents=True, exist_ok=exist_ok)
-        logger.debug(f"Ensured directory exists: {path}")
+        logger.debug(f"Ensured directory exists: {path_obj}")
         return path_obj
     except FileExistsError as e:
-        logger.error(f"Directory already exists and exist_ok is False: {path}")
-        raise QuackFileExistsError(str(path), original_error=e) from e
+        logger.error(f"Directory already exists and exist_ok is False: {path_obj}")
+        raise QuackFileExistsError(str(path_obj), original_error=e) from e
     except PermissionError as e:
-        logger.error(f"Permission denied when creating directory: {path}")
+        logger.error(f"Permission denied when creating directory: {path_obj}")
         raise QuackPermissionError(
-            str(path), "create directory", original_error=e
+            str(path_obj), "create directory", original_error=e
         ) from e
     except Exception as e:
-        logger.error(f"Failed to create directory: {path}, error: {e}")
+        logger.error(f"Failed to create directory: {path_obj}, error: {e}")
         raise QuackIOError(
-            f"Failed to create directory: {str(e)}", str(path), original_error=e
+            f"Failed to create directory: {str(e)}", str(path_obj), original_error=e
         ) from e
 
 
 @wrap_io_errors
-def _atomic_write(path: str | Path, content: str | bytes) -> Path:
+def _atomic_write(path: Any, content: str | bytes) -> Path:
     """
     Write content to a file atomically using a temporary file.
 
     Args:
-        path: Destination path (string or Path)
+        path: Destination path (can be str, Path, or any object with 'data' attribute)
         content: Content to write (string or bytes)
 
     Returns:
@@ -129,8 +133,8 @@ def _atomic_write(path: str | Path, content: str | bytes) -> Path:
         QuackPermissionError: If permission is denied
         QuackIOError: For other IO related issues
     """
-    # Normalize to Path object
-    path_obj = Path(path)
+    # Normalize to Path object using the dedicated helper
+    path_obj = _normalize_path_param(path)
 
     _ensure_directory(path_obj.parent)
 
@@ -147,10 +151,10 @@ def _atomic_write(path: str | Path, content: str | bytes) -> Path:
 
         # On Unix-like systems, rename is atomic
         os.replace(temp_path, path_obj)
-        logger.debug(f"Successfully wrote content to {path} atomically")
+        logger.debug(f"Successfully wrote content to {path_obj} atomically")
         return path_obj
     except Exception as e:
-        logger.error(f"Failed to write file {path} atomically: {e}")
+        logger.error(f"Failed to write file {path_obj} atomically: {e}")
         if temp_file and temp_file.exists():
             try:
                 temp_file.unlink()
@@ -160,19 +164,20 @@ def _atomic_write(path: str | Path, content: str | bytes) -> Path:
                     f"Failed to unlink temporary file {temp_file}: {unlink_error}"
                 )
         raise QuackIOError(
-            f"Failed to write file {path}: {str(e)}", str(path), original_error=e
+            f"Failed to write file {path_obj}: {str(e)}", str(path_obj),
+            original_error=e
         ) from e
 
 
 @wrap_io_errors
 def _find_files_by_content(
-        directory: str | Path, text_pattern: str, recursive: bool = True
+        directory: Any, text_pattern: str, recursive: bool = True
 ) -> list[Path]:
     """
     Find files containing the given text pattern.
 
     Args:
-        directory: Directory to search in (string or Path)
+        directory: Directory to search in (can be str, Path, or any object with 'data' attribute)
         text_pattern: Text pattern to search for
         recursive: Whether to search recursively
 
@@ -191,11 +196,12 @@ def _find_files_by_content(
             f"Invalid regex pattern: {e}", str(directory), original_error=e
         ) from e
 
-    # Normalize directory to Path object
-    directory_path = Path(directory)
+    # Normalize directory to Path object using the dedicated helper
+    directory_path = _normalize_path_param(directory)
 
     if not directory_path.exists() or not directory_path.is_dir():
-        logger.warning(f"Directory does not exist or is not a directory: {directory}")
+        logger.warning(
+            f"Directory does not exist or is not a directory: {directory_path}")
         return []
 
     matching_files = []

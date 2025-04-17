@@ -70,8 +70,8 @@ class TestDocumentConverter:
 
     def test_convert_file_html_to_markdown(self, converter):
         """Test converting an HTML file to Markdown."""
-        input_path = Path("/path/to/input.html")
-        output_path = Path("/path/to/output/output.md")
+        input_path = "/path/to/input.html"
+        output_path = "/path/to/output/output.md"
 
         # Mock fs paths to ensure they exist for the test
         with patch("quackcore.fs.service.path_exists", return_value=True):
@@ -139,8 +139,8 @@ class TestDocumentConverter:
 
     def test_convert_file_markdown_to_docx(self, converter):
         """Test converting a Markdown file to DOCX."""
-        input_path = Path("/path/to/input.md")
-        output_path = Path("/path/to/output/output.docx")
+        input_path = "/path/to/input.md"
+        output_path = "/path/to/output/output.docx"
 
         # Mock fs paths to ensure they exist for the test
         with patch("quackcore.fs.service.path_exists", return_value=True):
@@ -206,8 +206,8 @@ class TestDocumentConverter:
 
     def test_convert_file_unsupported_format(self, converter):
         """Test converting to an unsupported format."""
-        input_path = Path("/path/to/input.md")
-        output_path = Path("/path/to/output/output.pdf")
+        input_path = "/path/to/input.md"
+        output_path = "/path/to/output/output.pdf"
 
         # Mock fs paths to ensure they exist for the test
         with patch("quackcore.fs.service.path_exists", return_value=True):
@@ -256,8 +256,8 @@ class TestDocumentConverter:
 
     def test_convert_file_directory_creation_failure(self, converter):
         """Test conversion when directory creation fails."""
-        input_path = Path("/path/to/input.html")
-        output_path = Path("/path/to/output/output.md")
+        input_path = "/path/to/input.html"
+        output_path = "/path/to/output/output.md"
 
         # Mock fs paths to ensure they exist for the test
         with patch("quackcore.fs.service.path_exists", return_value=True):
@@ -310,13 +310,13 @@ class TestDocumentConverter:
                     assert result.success is False
                     assert "Failed to create output directory" in result.error
                     mock_fs.create_directory.assert_called_once_with(
-                        output_path.parent, exist_ok=True
+                        Path(output_path).parent, exist_ok=True
                     )
 
     def test_convert_file_integration_error(self, converter):
         """Test conversion when an integration error occurs."""
-        input_path = Path("/path/to/input.html")
-        output_path = Path("/path/to/output/output.md")
+        input_path = "/path/to/input.html"
+        output_path = "/path/to/output/output.md"
 
         # Mock fs paths to ensure they exist for the test
         with patch("quackcore.fs.service.path_exists", return_value=True):
@@ -424,8 +424,8 @@ class TestDocumentConverter:
         ):
             converter = DocumentConverter(PandocConfig())
 
-        output_path = Path("/path/to/output/file.md")
-        input_path = Path("/path/to/input.html")
+        output_path = "/path/to/output/file.md"
+        input_path = "/path/to/input.html"
 
         # Mock file system _operations to ensure paths exist
         with patch("quackcore.fs.service.path_exists", return_value=True):
@@ -481,8 +481,8 @@ class TestDocumentConverter:
         ):
             converter = DocumentConverter(PandocConfig())
 
-        output_path = Path("/path/to/output/file.docx")
-        input_path = Path("/path/to/input.md")
+        output_path = "/path/to/output/file.docx"
+        input_path = "/path/to/input.md"
 
         # Mock file system _operations to ensure paths exist
         with patch("quackcore.fs.service.path_exists", return_value=True):
@@ -536,8 +536,8 @@ class TestDocumentConverter:
         ):
             converter = DocumentConverter(PandocConfig())
 
-        output_path = Path("/path/to/output/file.md")
-        input_path = Path("/path/to/input.html")
+        output_path = "/path/to/output/file.md"
+        input_path = "/path/to/input.html"
 
         # Mock file system _operations at the service level
         with patch("quackcore.fs.service.path_exists") as mock_path_exists:
@@ -570,8 +570,8 @@ class TestDocumentConverter:
         ):
             converter = DocumentConverter(PandocConfig())
 
-        output_path = Path("/path/to/output/file.md")
-        input_path = Path("/path/to/input.html")
+        output_path = "/path/to/output/file.md"
+        input_path = "/path/to/input.html"
 
         # Mock file system _operations to control which files exist
         with patch("quackcore.fs.service.path_exists") as mock_path_exists:

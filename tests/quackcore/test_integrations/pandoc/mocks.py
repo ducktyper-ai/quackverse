@@ -162,7 +162,7 @@ class MockPandocConversionService(PandocConversionProtocol):
 
         # Simulate successful conversion
         if self.converter:
-            return self.converter.convert_file(html_path, output_path, "markdown")
+            return self.converter.convert_file(str(html_path), str(output_path), "markdown")
 
         return IntegrationResult.error_result("Converter not initialized")
 

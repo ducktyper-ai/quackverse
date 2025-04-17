@@ -5,23 +5,24 @@ Utility functions for disk _operations.
 
 import os
 import shutil
-from pathlib import Path
+from typing import Any
 
 from quackcore.errors import QuackIOError
-from quackcore.logging import get_logger
 
-# Import from within package
+# Import path normalization helper
+from quackcore.fs._helpers.path_utils import _normalize_path_param
+from quackcore.logging import get_logger
 
 # Initialize module logger
 logger = get_logger(__name__)
 
 
-def _get_disk_usage(path: str | Path) -> dict[str, int]:
+def _get_disk_usage(path: Any) -> dict[str, int]:
     """
     Get disk usage information for the given path.
 
     Args:
-        path: Path to get disk usage for (string or Path)
+        path: Path to get disk usage for (can be str, Path, or any object with 'data' attribute)
 
     Returns:
         Dictionary with total, used, and free space in bytes
@@ -29,32 +30,33 @@ def _get_disk_usage(path: str | Path) -> dict[str, int]:
     Raises:
         QuackIOError: If disk usage cannot be determined.
     """
-    # Normalize to Path object and convert to string for shutil.disk_usage
-    path_str = str(Path(path))
+    # Normalize to Path object using the dedicated helper
+    path_obj = _normalize_path_param(path)
 
     try:
-        total, used, free = shutil.disk_usage(path_str)
-        logger.debug(f"Disk usage for {path}: total={total}, used={used}, free={free}")
+        total, used, free = shutil.disk_usage(str(path_obj))
+        logger.debug(
+            f"Disk usage for {path_obj}: total={total}, used={used}, free={free}")
         return {"total": total, "used": used, "free": free}
     except Exception as e:
-        logger.error(f"Failed to get disk usage for {path}: {e}")
+        logger.error(f"Failed to get disk usage for {path_obj}: {e}")
         raise QuackIOError(
-            f"Error getting disk usage for {path}: {e}", path_str
+            f"Error getting disk usage for {path_obj}: {e}", str(path_obj)
         ) from e
 
 
-def _is_path_writeable(path: str | Path) -> bool:
+def _is_path_writeable(path: Any) -> bool:
     """
     Check if a path is writeable.
 
     Args:
-        path: Path to check (string or Path)
+        path: Path to check (can be str, Path, or any object with 'data' attribute)
 
     Returns:
         True if the path is writeable
     """
-    # Normalize to Path object early
-    path_obj = Path(path)
+    # Normalize to Path object using the dedicated helper
+    path_obj = _normalize_path_param(path)
 
     if not path_obj.exists():
         try:
@@ -65,15 +67,16 @@ def _is_path_writeable(path: str | Path) -> bool:
             else:
                 path_obj.mkdir(parents=True)
                 path_obj.rmdir()  # Clean up
-            logger.debug(f"Path {path} is writeable (created and removed test objects)")
+            logger.debug(
+                f"Path {path_obj} is writeable (created and removed test objects)")
             return True
         except Exception as e:
-            logger.debug(f"Path {path} is not writeable: {e}")
+            logger.debug(f"Path {path_obj} is not writeable: {e}")
             return False
 
     if path_obj.is_file():
         result = os.access(path_obj, os.W_OK)
-        logger.debug(f"File {path} writeable check result: {result}")
+        logger.debug(f"File {path_obj} writeable check result: {result}")
         return result
 
     if path_obj.is_dir():
@@ -83,11 +86,11 @@ def _is_path_writeable(path: str | Path) -> bool:
                 pass
             test_file.unlink()  # Clean up
             logger.debug(
-                f"Directory {path} is writeable (created and removed test file)"
+                f"Directory {path_obj} is writeable (created and removed test file)"
             )
             return True
         except Exception as e:
-            logger.debug(f"Directory {path} is not writeable: {e}")
+            logger.debug(f"Directory {path_obj} is not writeable: {e}")
             return False
 
     return False

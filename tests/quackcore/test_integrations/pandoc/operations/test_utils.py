@@ -94,7 +94,7 @@ class TestPandocUtilities:
         assert "--toc-depth=2" in args
 
     # Refactored get_file_info function
-    def get_file_info(path: Path, format_hint: str | None = None) -> FileInfo:
+    def get_file_info(self, path: Path, format_hint: str | None = None) -> FileInfo:
         """
         Get file information for conversion.
 
@@ -142,7 +142,7 @@ class TestPandocUtilities:
 
     # Refactored check_file_size function
     def check_file_size(
-        converted_size: int, validation_min_size: int
+        self, converted_size: int, validation_min_size: int
     ) -> tuple[bool, list[str]]:
         """
         Check if the converted file meets the minimum file size.
@@ -174,7 +174,7 @@ class TestPandocUtilities:
 
     # Refactored check_conversion_ratio function
     def check_conversion_ratio(
-        converted_size: int, original_size: int, threshold: float
+        self, converted_size: int, original_size: int, threshold: float
     ) -> tuple[bool, list[str]]:
         """
         Check if the converted file size is not drastically smaller than the original.
@@ -210,7 +210,7 @@ class TestPandocUtilities:
 
     # Refactored track_metrics function
     def track_metrics(
-        filename: str,
+        self, filename: str,
         start_time: float,
         original_size: int,
         converted_size: int,
@@ -256,7 +256,7 @@ class TestPandocUtilities:
 
     def test_get_file_info_file_not_found(self):
         """Test getting file information for a file that doesn't exist."""
-        path = Path("/path/to/nonexistent.md")
+        path = "/path/to/nonexistent.md"
 
         # Mock fs service to return file not found
         with patch("quackcore.fs.service.get_file_info") as mock_get_info:
@@ -321,7 +321,7 @@ class TestPandocUtilities:
         # Mock docx.Document to return our mock document
         with patch("docx.Document", return_value=mock_doc):
             # Test valid DOCX
-            docx_path = Path("/path/to/valid.docx")
+            docx_path = "/path/to/valid.docx"
             is_valid, errors = utils.validate_docx_structure(docx_path)
             assert is_valid is True
             assert len(errors) == 0
@@ -345,7 +345,7 @@ class TestPandocUtilities:
 
         # Test with ImportError (python-docx not installed)
         with patch("docx.Document", side_effect=ImportError("No module named 'docx'")):
-            docx_path = Path("/path/to/valid.docx")
+            docx_path = "/path/to/valid.docx"
             is_valid, errors = utils.validate_docx_structure(docx_path)
             assert (
                 is_valid is True
@@ -354,7 +354,7 @@ class TestPandocUtilities:
 
         # Test with other exceptions
         with patch("docx.Document", side_effect=Exception("DOCX error")):
-            docx_path = Path("/path/to/valid.docx")
+            docx_path = "/path/to/valid.docx"
             is_valid, errors = utils.validate_docx_structure(docx_path)
             assert is_valid is False
             assert len(errors) == 1

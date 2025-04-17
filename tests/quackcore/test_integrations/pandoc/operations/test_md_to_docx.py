@@ -90,7 +90,7 @@ class TestMarkdownToDocxOperations:
 
     def test_validate_markdown_input(self, mock_fs):
         """Test validating Markdown input file."""
-        markdown_path = Path("/path/to/file.md")
+        markdown_path = "/path/to/file.md"
 
         # Test with valid input
         original_size = _validate_markdown_input(markdown_path)
@@ -126,8 +126,8 @@ class TestMarkdownToDocxOperations:
 
     def test_convert_markdown_to_docx_once(self, config, mock_fs):
         """Test converting Markdown to DOCX in a single attempt."""
-        markdown_path = Path("/path/to/file.md")
-        output_path = Path("/path/to/output/file.docx")
+        markdown_path = "/path/to/file.md"
+        output_path = "/path/to/output/file.docx"
 
         # Test successful conversion
         with patch(
@@ -141,7 +141,7 @@ class TestMarkdownToDocxOperations:
                 _convert_markdown_to_docx_once(markdown_path, output_path, config)
 
                 mock_fs.create_directory.assert_called_with(
-                    output_path.parent, exist_ok=True
+                    Path(output_path).parent, exist_ok=True
                 )
                 mock_args.assert_called_with(
                     config, "markdown", "docx", config.md_to_docx_extra_args
@@ -181,7 +181,7 @@ class TestMarkdownToDocxOperations:
 
     def test_get_conversion_output(self, mock_fs):
         """Test retrieving conversion timing and output file size."""
-        output_path = Path("/path/to/output/file.docx")
+        output_path = "/path/to/output/file.docx"
         start_time = time.time() - 2  # 2 seconds ago
 
         # Test successful retrieval
@@ -213,8 +213,8 @@ class TestMarkdownToDocxOperations:
         metrics.successful_conversions = 0
         metrics.errors.clear()
 
-        markdown_path = Path("/path/to/file.md")
-        output_path = Path("/path/to/output/file.docx")
+        markdown_path = "/path/to/file.md"
+        output_path = "/path/to/output/file.docx"
 
         # Test successful conversion
         with patch(
@@ -418,8 +418,8 @@ class TestMarkdownToDocxOperations:
 
     def test_validate_conversion(self, mock_fs, config):
         """Test validating Markdown to DOCX conversion."""
-        output_path = Path("/path/to/output/file.docx")
-        input_path = Path("/path/to/file.md")
+        output_path = "/path/to/output/file.docx"
+        input_path = "/path/to/file.md"
         original_size = 512
 
         # Make sure validation.verify_structure is True for this test
@@ -568,8 +568,8 @@ class TestMarkdownToDocxOperations:
         """Test checking DOCX metadata for references to the source file."""
         import quackcore.integrations.pandoc.operations.md_to_docx as md_to_docx
 
-        output_path = Path("/path/to/output/file.docx")
-        source_path = Path("/path/to/input.md")
+        output_path = "/path/to/output/file.docx"
+        source_path = "/path/to/input.md"
         check_links = True
 
         # Test when python-docx is not available
@@ -625,5 +625,5 @@ class TestMarkdownToDocxOperations:
             with patch.object(md_to_docx.logger, "debug") as mock_debug:
                 md_to_docx._check_docx_metadata(output_path, source_path, check_links)
                 mock_debug.assert_called_once_with(
-                    f"Source file reference missing in document metadata: {source_path.name}"
+                    f"Source file reference missing in document metadata: {Path(source_path).name}"
                 )

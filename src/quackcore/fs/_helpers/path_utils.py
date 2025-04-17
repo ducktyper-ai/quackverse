@@ -1,3 +1,4 @@
+# src/quackcore/fs/_helpers/path_utils.py
 """
 Path utility functions that don't introduce circular dependencies.
 """
@@ -9,17 +10,16 @@ from quackcore.logging import get_logger
 
 logger = get_logger(__name__)
 
-
 def _normalize_path_param(path: Any) -> Path:
     """
     Normalize a path parameter to a Path object.
-
+    
     Helper function to consistently handle different path input types,
     including DataResult and OperationResult objects.
-
+    
     Args:
         path: Path parameter (string, Path, or any object with a 'data' attribute)
-
+        
     Returns:
         Normalized Path object
     """

@@ -6,12 +6,14 @@ Utility functions for temporary files and directories.
 import os
 import tempfile
 from pathlib import Path
+from typing import Any
 
 from quackcore.errors import QuackIOError, wrap_io_errors
-from quackcore.logging import get_logger
 
 # Import from within package
-from .file_ops import _ensure_directory
+from quackcore.fs._helpers.file_ops import _ensure_directory
+from quackcore.fs._helpers.path_utils import _normalize_path_param
+from quackcore.logging import get_logger
 
 # Initialize module logger
 logger = get_logger(__name__)
@@ -45,7 +47,7 @@ def _create_temp_directory(prefix: str = "quackcore_", suffix: str = "") -> Path
 def _create_temp_file(
         suffix: str = ".txt",
         prefix: str = "quackcore_",
-        directory: str | Path | None = None,
+        directory: Any = None,
 ) -> Path:
     """
     Create a temporary file.
@@ -53,7 +55,7 @@ def _create_temp_file(
     Args:
         suffix: File suffix (e.g., ".txt")
         prefix: File prefix
-        directory: Directory to create the file in (string, Path, or None for system temp dir)
+        directory: Directory to create the file in (can be str, Path, or any object with 'data' attribute, or None for system temp dir)
 
     Returns:
         Path to the created temporary file
@@ -62,7 +64,7 @@ def _create_temp_file(
         QuackIOError: For IO related issues
     """
     # Normalize directory to Path if provided
-    dir_path = Path(directory) if directory else None
+    dir_path = _normalize_path_param(directory) if directory is not None else None
 
     if dir_path:
         _ensure_directory(dir_path)

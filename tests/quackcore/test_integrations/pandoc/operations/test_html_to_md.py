@@ -91,7 +91,7 @@ class TestHtmlToMarkdownOperations:
 
     def test_validate_input_alternative(self, mock_fs):
         """Test validating HTML input file."""
-        html_path = Path("/path/to/file.html")
+        html_path = "/path/to/file.html"
         config = PandocConfig(
             validation={"verify_structure": False}
         )  # Disable validation
@@ -117,7 +117,7 @@ class TestHtmlToMarkdownOperations:
 
     def test_attempt_conversion(self, config):
         """Test attempting HTML to Markdown conversion."""
-        html_path = Path("/path/to/file.html")
+        html_path = "/path/to/file.html"
 
         # Mock pypandoc to return markdown
         with patch("pypandoc.convert_file") as mock_convert:
@@ -173,8 +173,8 @@ class TestHtmlToMarkdownOperations:
     def test_write_and_validate_output(self, mock_fs, config):
         """Test writing and validating Markdown output."""
         cleaned_markdown = "# Test\n\nContent"
-        output_path = Path("/path/to/output/file.md")
-        input_path = Path("/path/to/file.html")
+        output_path = "/path/to/output/file.md"
+        input_path = "/path/to/file.html"
         original_size = 1024
         attempt_start = time.time() - 1  # 1 second ago
 
@@ -211,7 +211,7 @@ class TestHtmlToMarkdownOperations:
             assert output_size == 100
             assert len(validation_errors) == 0
             mock_fs.create_directory.assert_called_with(
-                output_path.parent, exist_ok=True
+                Path(output_path).parent, exist_ok=True
             )
             mock_fs.write_text.assert_called_with(
                 output_path, cleaned_markdown, encoding="utf-8"
@@ -277,8 +277,8 @@ class TestHtmlToMarkdownOperations:
 
     def test_convert_html_to_markdown(self, config, metrics, mock_fs):
         """Test the main HTML to Markdown conversion function."""
-        html_path = Path("/path/to/file.html")
-        output_path = Path("/path/to/output/file.md")
+        html_path = "/path/to/file.html"
+        output_path = "/path/to/output/file.md"
 
         # Test successful conversion
         with patch(
@@ -319,7 +319,7 @@ class TestHtmlToMarkdownOperations:
                         mock_track.assert_called_once()
                         # Use ANY for the dynamic timestamp
                         mock_track.assert_called_once_with(
-                            html_path.name, ANY, 1024, 100, metrics, config
+                            Path(html_path).name, ANY, 1024, 100, metrics, config
                         )
 
         # Test with validation errors on first attempt but success on retry
@@ -361,7 +361,7 @@ class TestHtmlToMarkdownOperations:
                             mock_track.assert_called_once()
                             # Use ANY for timestamp which will be dynamic
                             mock_track.assert_called_once_with(
-                                html_path.name, ANY, 1024, 200, metrics, config
+                                Path(html_path).name, ANY, 1024, 200, metrics, config
                             )
 
         # Test with maximum retries exceeded
@@ -428,8 +428,8 @@ class TestHtmlToMarkdownOperations:
 
     def test_validate_conversion(self, mock_fs, config):
         """Test validating HTML to Markdown conversion."""
-        output_path = Path("/path/to/output/file.md")
-        input_path = Path("/path/to/file.html")
+        output_path = "/path/to/output/file.md"
+        input_path = "/path/to/file.html"
         original_size = 1024
 
         # Use comprehensive patching strategy

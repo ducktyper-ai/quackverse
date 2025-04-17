@@ -27,7 +27,7 @@ class TestPathResolver:
         resolver = PathResolver()
 
         # Test finding from project root
-        root = resolver._get_project_root(mock_project_structure)
+        root = resolver._get_project_root(str(mock_project_structure))
         assert root == mock_project_structure
 
         # Test finding from subdirectory

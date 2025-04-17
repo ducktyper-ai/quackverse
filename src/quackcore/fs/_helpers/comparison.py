@@ -4,31 +4,31 @@ Utility functions for comparing files and paths.
 """
 
 import os
-from pathlib import Path
-
-from quackcore.logging import get_logger
+from typing import Any
 
 # Import from within package
-from .common import _normalize_path
+from quackcore.fs._helpers.common import _normalize_path
+from quackcore.fs._helpers.path_utils import _normalize_path_param
+from quackcore.logging import get_logger
 
 # Initialize module logger
 logger = get_logger(__name__)
 
 
-def _is_same_file(path1: str | Path, path2: str | Path) -> bool:
+def _is_same_file(path1: Any, path2: Any) -> bool:
     """
     Check if two paths refer to the same file.
 
     Args:
-        path1: First path (string or Path)
-        path2: Second path (string or Path)
+        path1: First path (can be str, Path, or any object with 'data' attribute)
+        path2: Second path (can be str, Path, or any object with 'data' attribute)
 
     Returns:
         True if paths refer to the same file
     """
-    # Normalize inputs to Path objects
-    path1_obj = Path(path1)
-    path2_obj = Path(path2)
+    # Normalize inputs using the dedicated helper
+    path1_obj = _normalize_path_param(path1)
+    path2_obj = _normalize_path_param(path2)
 
     try:
         return os.path.samefile(str(path1_obj), str(path2_obj))
@@ -37,20 +37,20 @@ def _is_same_file(path1: str | Path, path2: str | Path) -> bool:
         return _normalize_path(path1_obj) == _normalize_path(path2_obj)
 
 
-def _is_subdirectory(child: str | Path, parent: str | Path) -> bool:
+def _is_subdirectory(child: Any, parent: Any) -> bool:
     """
     Check if a path is a subdirectory of another path.
 
     Args:
-        child: Potential child path (string or Path)
-        parent: Potential parent path (string or Path)
+        child: Potential child path (can be str, Path, or any object with 'data' attribute)
+        parent: Potential parent path (can be str, Path, or any object with 'data' attribute)
 
     Returns:
         True if child is a subdirectory of parent
     """
-    # Normalize inputs to Path objects
-    child_path = _normalize_path(Path(child))
-    parent_path = _normalize_path(Path(parent))
+    # Normalize inputs using the dedicated helper
+    child_path = _normalize_path(_normalize_path_param(child))
+    parent_path = _normalize_path(_normalize_path_param(parent))
 
     # A directory cannot be a subdirectory of itself
     if child_path == parent_path:

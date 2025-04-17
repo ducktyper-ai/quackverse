@@ -122,8 +122,7 @@ def get_file_timestamp(path: str | Path | DataResult | OperationResult) -> DataR
         )
 
 
-def get_mime_type(path: str | Path | DataResult | OperationResult) -> DataResult[
-    str | None]:
+def get_mime_type(path: str | Path | DataResult | OperationResult) -> DataResult[str | None]:
     """
     Get the MIME type of a file.
 

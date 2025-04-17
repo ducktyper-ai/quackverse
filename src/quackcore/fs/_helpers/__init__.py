@@ -34,5 +34,6 @@ from quackcore.fs._helpers.file_ops import (
     _get_unique_filename,
 )
 from quackcore.fs._helpers.path_ops import _expand_user_vars, _split_path
+from quackcore.fs._helpers.path_utils import _normalize_path_param
 from quackcore.fs._helpers.safe_ops import _safe_copy, _safe_delete, _safe_move
 from quackcore.fs._helpers.temp import _create_temp_directory, _create_temp_file
