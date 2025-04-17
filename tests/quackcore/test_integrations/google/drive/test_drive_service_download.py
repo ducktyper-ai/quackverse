@@ -20,10 +20,10 @@ class TestGoogleDriveServiceDownload:
     def drive_service(self) -> GoogleDriveService:
         """Set up a Google Drive service with mocked dependencies."""
         with patch(
-            "quackcore.integrations.google.drive.service.resolver"
-        ) as mock_resolver:
-            # Setup resolver mock to return predictable paths
-            mock_resolver.resolve_project_path.side_effect = lambda p, *args: Path(
+            "quackcore.integrations.google.drive.service.paths"
+        ) as mock_paths:
+            # Setup paths service mock to return predictable paths
+            mock_paths.resolve_project_path.side_effect = lambda p, *args: Path(
                 f"/fake/test/dir/{Path(p).name}"
             )
             with patch("quackcore.fs.service.get_file_info") as mock_file_info:

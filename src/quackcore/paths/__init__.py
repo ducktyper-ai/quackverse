@@ -11,7 +11,6 @@ NOTE: This module intentionally does NOT expose low-level path functions.
 Use `quackcore.fs` for join_path, split_path, etc. to avoid API duplication.
 """
 
-from quackcore.fs.service.standalone import get_extension
 from quackcore.paths._internal.context import (
     ContentContext,
     ProjectContext,

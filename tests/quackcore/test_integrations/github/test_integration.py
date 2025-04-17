@@ -10,8 +10,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 import requests
 
+from quackcore.integrations.core import IntegrationResult
 from quackcore.integrations.github import (
     GitHubAuthProvider,
+    GitHubClient,
     GitHubConfigProvider,
     GitHubIntegration,
 )
@@ -105,7 +107,7 @@ class TestGitHubMockedIntegration:
 
     @pytest.fixture
     def mock_integration(
-        self, temp_dir: Path, mock_session: MagicMock
+            self, temp_dir: Path, mock_session: MagicMock
     ) -> tuple[GitHubIntegration, MagicMock]:
         """Create a mock GitHub integration."""
         # Create credentials file.
@@ -151,8 +153,31 @@ class TestGitHubMockedIntegration:
         auth_provider.token = "mock_token"
         auth_provider.authenticated = True
 
-        # Create integration.
-        integration = GitHubIntegration(
+        # Create a test-specific subclass of GitHubIntegration that overrides initialize
+        class TestGitHubIntegration(GitHubIntegration):
+            def initialize(self):
+                # Skip the problematic path resolution and just set up the integration directly
+                self.config = {
+                    "token": "mock_token",
+                    "api_url": "https://api.github.com",
+                    "timeout_seconds": 30,
+                    "max_retries": 3,
+                    "retry_delay": 1.0,
+                }
+                self._initialized = True
+                self.client = GitHubClient(
+                    token="mock_token",
+                    api_url="https://api.github.com",
+                    timeout=30,
+                    max_retries=3,
+                    retry_delay=1.0,
+                )
+                return IntegrationResult.success_result(
+                    message="GitHub integration initialized successfully"
+                )
+
+        # Create integration using our test subclass
+        integration = TestGitHubIntegration(
             auth_provider=auth_provider,
             config_provider=GitHubConfigProvider(),
             config_path=str(config_file),

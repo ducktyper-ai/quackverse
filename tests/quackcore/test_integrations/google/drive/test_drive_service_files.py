@@ -21,10 +21,10 @@ class TestGoogleDriveServiceFiles:
         """Set up a Google Drive service with mocked dependencies."""
         # Mock the resolver instance directly since it's imported and used
         with patch(
-            "quackcore.integrations.google.drive.service.resolver"
-        ) as mock_resolver:
+            "quackcore.integrations.google.drive.service.paths"
+        ) as mock_paths:
             # Setup the resolver mock
-            mock_resolver.resolve_project_path.side_effect = lambda p, *args: Path(
+            mock_paths.resolve_project_path.side_effect = lambda p, *args: Path(
                 f"/fake/test/dir/{Path(p).name}"
             )
 
@@ -59,9 +59,9 @@ class TestGoogleDriveServiceFiles:
 
         # Test with relative path and parent folder
         with patch(
-            "quackcore.integrations.google.drive.service.resolver.resolve_project_path"
-        ) as mock_resolve:
-            mock_resolve.return_value = test_file
+            "quackcore.integrations.google.drive.service.paths.resolve_project_path"
+        ) as mock_paths:
+            mock_paths.return_value = test_file
 
             with patch("quackcore.integrations.google.drive.service.fs") as mock_fs:
                 mock_fs.get_file_info.return_value = FileInfoResult(
@@ -83,9 +83,9 @@ class TestGoogleDriveServiceFiles:
 
         # Test with remote path specified
         with patch(
-            "quackcore.integrations.google.drive.service.resolver"
-        ) as mock_resolver:
-            mock_resolver.resolve_project_path.return_value = test_file
+            "quackcore.integrations.google.drive.service.paths"
+        ) as mock_paths:
+            mock_paths.resolve_project_path.return_value = test_file
 
             with patch("quackcore.integrations.google.drive.service.fs") as mock_fs:
                 mock_fs.get_file_info.return_value = FileInfoResult(
@@ -106,9 +106,9 @@ class TestGoogleDriveServiceFiles:
 
         # Test with file not found
         with patch(
-            "quackcore.integrations.google.drive.service.resolver"
-        ) as mock_resolver:
-            mock_resolver.resolve_project_path.return_value = test_file
+            "quackcore.integrations.google.drive.service.paths"
+        ) as mock_paths:
+            mock_paths.resolve_project_path.return_value = test_file
 
             with patch("quackcore.integrations.google.drive.service.fs") as mock_fs:
                 # Configure the mock to raise QuackFileNotFoundError
