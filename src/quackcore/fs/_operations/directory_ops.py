@@ -48,7 +48,7 @@ class DirectoryOperationsMixin:
         raise NotImplementedError("This method should be overridden")
 
     def _list_directory(
-        self, path: str | Path, pattern: str | None = None, include_hidden: bool = False
+        self, path: str | Path | DataResult | OperationResult, pattern: str | None = None, include_hidden: bool = False
     ) -> DirectoryInfoResult:
         """
         List contents of a directory with optional pattern filtering.
@@ -58,7 +58,7 @@ class DirectoryOperationsMixin:
         a glob pattern and hidden files can be optionally included.
 
         Args:
-            path: Path to the directory to list
+            path: Path to the directory to list (str, Path, DataResult, or OperationResult)
             pattern: Optional glob pattern to match files and directories against
                      (e.g., "*.py", "data*", etc.)
             include_hidden: Whether to include hidden files/directories

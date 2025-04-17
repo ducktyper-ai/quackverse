@@ -88,8 +88,8 @@ class FileSystemOperations(
         """
         Resolve a path relative to the base directory.
 
-        This method is used internally by all operations to normalize
-        paths relative to the base directory set during initialization.
+        This method normalizes all path inputs to Path objects and resolves them
+        relative to the base directory set during initialization.
 
         Args:
             path: Path to resolve (str, Path, DataResult, or OperationResult)

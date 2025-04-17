@@ -48,7 +48,7 @@ class FindOperationsMixin:
 
     def _find_files(
         self,
-        path: str | Path,
+        path: str | Path | DataResult | OperationResult,
         pattern: str,
         recursive: bool = True,
         include_hidden: bool = False,
@@ -57,7 +57,7 @@ class FindOperationsMixin:
         Find files and directories matching a pattern.
 
         Args:
-            path: Directory to search
+            path: Directory to search (str, Path, DataResult, or OperationResult)
             pattern: Pattern to match files against (glob pattern)
             recursive: Whether to search recursively in subdirectories
             include_hidden: Whether to include hidden files/directories

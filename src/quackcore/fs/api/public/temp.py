@@ -8,7 +8,7 @@ file and directory _operations.
 
 from pathlib import Path
 
-from quackcore.fs._helpers.common import _normalize_path_param
+from quackcore.fs._helpers.path_utils import _normalize_path_param
 from quackcore.fs._helpers.temp import _create_temp_directory, _create_temp_file
 from quackcore.fs.results import DataResult, OperationResult
 from quackcore.logging import get_logger

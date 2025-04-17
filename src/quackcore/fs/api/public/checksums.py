@@ -8,7 +8,7 @@ This module provides safe, result-oriented wrappers around low-level checksum _o
 from pathlib import Path
 
 from quackcore.fs._helpers.checksums import _compute_checksum
-from quackcore.fs._helpers.common import _normalize_path_param
+from quackcore.fs._helpers.path_utils import _normalize_path_param
 from quackcore.fs.results import DataResult, OperationResult
 from quackcore.logging import get_logger
 

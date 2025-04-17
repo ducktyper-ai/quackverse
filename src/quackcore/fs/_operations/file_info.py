@@ -11,7 +11,7 @@ import mimetypes
 from pathlib import Path
 
 from quackcore.errors import QuackIOError, QuackPermissionError
-from quackcore.fs.results import DataResult, FileInfoResult, OperationResult, PathResult
+from quackcore.fs.results import DataResult, FileInfoResult, OperationResult
 from quackcore.logging import get_logger
 
 # Set up logger
@@ -44,15 +44,15 @@ class FileInfoOperationsMixin:
         # It's defined here for type checking
         raise NotImplementedError("This method should be overridden")
 
-    def _path_exists(self, path: str | Path) -> PathResult:
+    def _path_exists(self, path: str | Path | DataResult | OperationResult) -> bool:
         """
         Check if a path exists.
 
         Args:
-            path: Path to check
+            path: Path to check (str, Path, DataResult, or OperationResult)
 
         Returns:
-            PathResult with existence information
+            bool: True if the path exists, False otherwise
 
         Note:
             Internal helper method not meant for external consumption.
@@ -67,32 +67,12 @@ class FileInfoOperationsMixin:
                 f"Path {resolved_path} exists: {exists}, is absolute: {is_abs}"
             )
 
-            return PathResult(
-                success=True,
-                path=resolved_path,
-                exists=exists,
-                is_valid=True,
-                is_absolute=is_abs,
-                message=f"Path {'exists' if exists else 'does not exist'}: {resolved_path}",
-            )
+            return exists
         except Exception as e:
             logger.error(f"Error checking if path exists for {resolved_path}: {str(e)}")
-            # In case of exception, set a default value for is_absolute
-            try:
-                is_abs = resolved_path.is_absolute()
-            except Exception:
-                is_abs = False
+            return False
 
-            return PathResult(
-                success=False,
-                path=resolved_path,
-                exists=False,
-                is_valid=False,
-                is_absolute=is_abs,
-                error=f"Error checking path: {str(e)}",
-            )
-
-    def _get_file_info(self, path: str | Path) -> FileInfoResult:
+    def _get_file_info(self, path: str | Path | DataResult | OperationResult) -> FileInfoResult:
         """
         Get comprehensive information about a file or directory.
 
@@ -100,7 +80,7 @@ class FileInfoOperationsMixin:
         timestamps, ownership, permissions, and MIME type.
 
         Args:
-            path: Path to get information about
+            path: Path to get information about (str, Path, DataResult, or OperationResult)
 
         Returns:
             FileInfoResult with detailed file information
@@ -114,17 +94,8 @@ class FileInfoOperationsMixin:
 
         try:
             # Use our _path_exists method to check existence
-            exists_result = self._path_exists(resolved_path)
-            if not exists_result.success:
-                logger.error(f"Error checking path existence: {exists_result.error}")
-                return FileInfoResult(
-                    success=False,
-                    path=resolved_path,
-                    exists=False,
-                    error=f"Error checking path existence: {exists_result.error}",
-                )
-
-            if not exists_result.exists:
+            exists = self._path_exists(resolved_path)
+            if not exists:
                 logger.info(f"Path does not exist: {resolved_path}")
                 return FileInfoResult(
                     success=True,

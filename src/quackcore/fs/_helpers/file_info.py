@@ -37,7 +37,7 @@ def _get_file_timestamp(path: str | Path) -> float:
     Get the latest timestamp (modification time) for a file.
 
     Args:
-        path: Path to the file
+        path: Path to the file (string or Path)
 
     Returns:
         Timestamp as float
@@ -46,7 +46,9 @@ def _get_file_timestamp(path: str | Path) -> float:
         QuackFileNotFoundError: If the file doesn't exist
         QuackIOError: For other IO related issues
     """
+    # Normalize to Path object
     path_obj = Path(path)
+
     if not path_obj.exists():
         logger.error(f"File not found when getting timestamp: {path}")
         raise QuackFileNotFoundError(str(path))
@@ -58,14 +60,17 @@ def _get_mime_type(path: str | Path) -> str | None:
     Get the MIME type of the file.
 
     Args:
-        path: Path to the file
+        path: Path to the file (string or Path)
 
     Returns:
         MIME type string or None if not determinable
     """
     import mimetypes
 
-    mime_type, _ = mimetypes.guess_type(str(path))
+    # Normalize to string for mimetypes.guess_type
+    path_str = str(Path(path))
+
+    mime_type, _ = mimetypes.guess_type(path_str)
     if mime_type:
         logger.debug(f"Detected MIME type for {path}: {mime_type}")
     else:
@@ -78,12 +83,14 @@ def _is_file_locked(path: str | Path) -> bool:
     Check if a file is locked by another process.
 
     Args:
-        path: Path to the file
+        path: Path to the file (string or Path)
 
     Returns:
         True if the file is locked
     """
+    # Normalize to Path object
     path_obj = Path(path)
+
     if not path_obj.exists():
         return False
     try:
@@ -115,12 +122,14 @@ def _get_file_type(path: str | Path) -> str:
     Get the type of the file.
 
     Args:
-        path: Path to the file
+        path: Path to the file (string or Path)
 
     Returns:
         File type string (e.g., "text", "binary", "directory", "symlink")
     """
+    # Normalize to Path object
     path_obj = Path(path)
+
     if not path_obj.exists():
         return "nonexistent"
     if path_obj.is_dir():

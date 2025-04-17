@@ -61,12 +61,12 @@ class SerializationOperationsMixin:
         # It's defined here for type checking
         raise NotImplementedError("This method should be overridden")
 
-    def _read_text(self, path: str | Path, encoding: str = "utf-8") -> ReadResult[str]:
+    def _read_text(self, path: str | Path | DataResult | OperationResult, encoding: str = "utf-8") -> ReadResult[str]:
         """
         Read text from a file.
 
         Args:
-            path: Path to file
+            path: Path to file (str, Path, DataResult, or OperationResult)
             encoding: Text encoding
 
         Returns:
@@ -81,13 +81,13 @@ class SerializationOperationsMixin:
         raise NotImplementedError("This method should be overridden")
 
     def _write_text(
-        self, path: str | Path, content: str, encoding: str = "utf-8", **kwargs
+        self, path: str | Path | DataResult | OperationResult, content: str, encoding: str = "utf-8", **kwargs
     ) -> WriteResult:
         """
         Write text to a file.
 
         Args:
-            path: Path to file
+            path: Path to file (str, Path, DataResult, or OperationResult)
             content: Text content
             encoding: Text encoding
             **kwargs: Additional arguments
@@ -106,7 +106,7 @@ class SerializationOperationsMixin:
     # -------------------------------
     # YAML _operations
     # -------------------------------
-    def _read_yaml(self, path: str | Path) -> DataResult[dict[str, Any]]:
+    def _read_yaml(self, path: str | Path | DataResult | OperationResult) -> DataResult[dict[str, Any]]:
         """
         Read YAML file and parse its contents.
 
@@ -115,7 +115,7 @@ class SerializationOperationsMixin:
         empty dictionaries.
 
         Args:
-            path: Path to YAML file
+            path: Path to YAML file (str, Path, DataResult, or OperationResult)
 
         Returns:
             DataResult[dict[str, Any]]: Result object containing:
@@ -132,9 +132,10 @@ class SerializationOperationsMixin:
         if not YAML_AVAILABLE:
             error_msg = "PyYAML library not available. Cannot read YAML file."
             logger.error(error_msg)
+            resolved_path = self._resolve_path(path)
             return DataResult(
                 success=False,
-                path=self._resolve_path(path),
+                path=resolved_path,
                 data={},
                 format="yaml",
                 error=error_msg,
@@ -210,7 +211,7 @@ class SerializationOperationsMixin:
             )
 
     def _write_yaml(
-        self, path: str | Path, data: dict[str, Any], atomic: bool = True
+        self, path: str | Path | DataResult | OperationResult, data: dict[str, Any], atomic: bool = True
     ) -> WriteResult:
         """
         Write data to a YAML file.
@@ -219,7 +220,7 @@ class SerializationOperationsMixin:
         it to the specified file.
 
         Args:
-            path: Path to YAML file
+            path: Path to YAML file (str, Path, DataResult, or OperationResult)
             data: Dictionary data to write
             atomic: Whether to use atomic writing (safer but slower)
 
@@ -233,8 +234,9 @@ class SerializationOperationsMixin:
         if not YAML_AVAILABLE:
             error_msg = "PyYAML library not available. Cannot write YAML file."
             logger.error(error_msg)
+            resolved_path = self._resolve_path(path)
             return WriteResult(
-                success=False, path=self._resolve_path(path), error=error_msg
+                success=False, path=resolved_path, error=error_msg
             )
 
         resolved_path = self._resolve_path(path)
@@ -271,7 +273,7 @@ class SerializationOperationsMixin:
     # -------------------------------
     # JSON _operations
     # -------------------------------
-    def _read_json(self, path: str | Path) -> DataResult[dict[str, Any]]:
+    def _read_json(self, path: str | Path | DataResult | OperationResult) -> DataResult[dict[str, Any]]:
         """
         Read JSON file and parse its contents.
 
@@ -279,7 +281,7 @@ class SerializationOperationsMixin:
         it contains a dictionary (JSON object).
 
         Args:
-            path: Path to JSON file
+            path: Path to JSON file (str, Path, DataResult, or OperationResult)
 
         Returns:
             DataResult[dict[str, Any]]: Result object containing:
@@ -361,7 +363,7 @@ class SerializationOperationsMixin:
 
     def _write_json(
         self,
-        path: str | Path,
+        path: str | Path | DataResult | OperationResult,
         data: dict[str, Any],
         atomic: bool = True,
         indent: int = 2,
@@ -373,7 +375,7 @@ class SerializationOperationsMixin:
         it to the specified file with optional formatting options.
 
         Args:
-            path: Path to JSON file
+            path: Path to JSON file (str, Path, DataResult, or OperationResult)
             data: Dictionary data to write
             atomic: Whether to use atomic writing (safer but slower)
             indent: Number of spaces to indent (for readability)

@@ -23,7 +23,7 @@ logger = get_logger(__name__)
 
 @wrap_io_errors
 def _get_unique_filename(
-    directory: str | Path, filename: str, raise_if_exists: bool = False
+        directory: str | Path, filename: str, raise_if_exists: bool = False
 ) -> Path:
     """
     Generate a unique filename in the given directory.
@@ -34,14 +34,16 @@ def _get_unique_filename(
     Otherwise, if the filename exists, adds a numeric suffix.
 
     Args:
-        directory: Directory path
+        directory: Directory path (string or Path)
         filename: Base filename
         raise_if_exists: If True, raise an error when the file exists
 
     Returns:
         Unique Path object
     """
+    # Normalize directory to Path object
     dir_path = Path(directory)
+
     if not dir_path.exists():
         logger.error(f"Directory does not exist: {directory}")
         raise QuackFileNotFoundError(str(directory), message="Directory does not exist")
@@ -49,6 +51,7 @@ def _get_unique_filename(
         logger.error(f"Empty filename provided for directory: {directory}")
         raise QuackIOError("Filename cannot be empty", str(directory))
 
+    # Create the full file path
     base_name = Path(filename).stem
     extension = Path(filename).suffix
     path = dir_path / filename
@@ -77,7 +80,7 @@ def _ensure_directory(path: str | Path, exist_ok: bool = True) -> Path:
     Ensure a directory exists, creating it if necessary.
 
     Args:
-        path: Directory path to ensure exists
+        path: Directory path to ensure exists (string or Path)
         exist_ok: If False, raise an error when directory exists
 
     Returns:
@@ -88,7 +91,9 @@ def _ensure_directory(path: str | Path, exist_ok: bool = True) -> Path:
         QuackPermissionError: If permission is denied
         QuackIOError: For other IO related issues
     """
+    # Normalize to Path object
     path_obj = Path(path)
+
     try:
         path_obj.mkdir(parents=True, exist_ok=exist_ok)
         logger.debug(f"Ensured directory exists: {path}")
@@ -114,7 +119,7 @@ def _atomic_write(path: str | Path, content: str | bytes) -> Path:
     Write content to a file atomically using a temporary file.
 
     Args:
-        path: Destination path
+        path: Destination path (string or Path)
         content: Content to write (string or bytes)
 
     Returns:
@@ -124,7 +129,9 @@ def _atomic_write(path: str | Path, content: str | bytes) -> Path:
         QuackPermissionError: If permission is denied
         QuackIOError: For other IO related issues
     """
+    # Normalize to Path object
     path_obj = Path(path)
+
     _ensure_directory(path_obj.parent)
 
     temp_dir = path_obj.parent
@@ -159,13 +166,13 @@ def _atomic_write(path: str | Path, content: str | bytes) -> Path:
 
 @wrap_io_errors
 def _find_files_by_content(
-    directory: str | Path, text_pattern: str, recursive: bool = True
+        directory: str | Path, text_pattern: str, recursive: bool = True
 ) -> list[Path]:
     """
     Find files containing the given text pattern.
 
     Args:
-        directory: Directory to search in
+        directory: Directory to search in (string or Path)
         text_pattern: Text pattern to search for
         recursive: Whether to search recursively
 
@@ -184,7 +191,9 @@ def _find_files_by_content(
             f"Invalid regex pattern: {e}", str(directory), original_error=e
         ) from e
 
+    # Normalize directory to Path object
     directory_path = Path(directory)
+
     if not directory_path.exists() or not directory_path.is_dir():
         logger.warning(f"Directory does not exist or is not a directory: {directory}")
         return []

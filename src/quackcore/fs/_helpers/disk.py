@@ -21,7 +21,7 @@ def _get_disk_usage(path: str | Path) -> dict[str, int]:
     Get disk usage information for the given path.
 
     Args:
-        path: Path to get disk usage for
+        path: Path to get disk usage for (string or Path)
 
     Returns:
         Dictionary with total, used, and free space in bytes
@@ -29,14 +29,17 @@ def _get_disk_usage(path: str | Path) -> dict[str, int]:
     Raises:
         QuackIOError: If disk usage cannot be determined.
     """
+    # Normalize to Path object and convert to string for shutil.disk_usage
+    path_str = str(Path(path))
+
     try:
-        total, used, free = shutil.disk_usage(str(path))
+        total, used, free = shutil.disk_usage(path_str)
         logger.debug(f"Disk usage for {path}: total={total}, used={used}, free={free}")
         return {"total": total, "used": used, "free": free}
     except Exception as e:
         logger.error(f"Failed to get disk usage for {path}: {e}")
         raise QuackIOError(
-            f"Error getting disk usage for {path}: {e}", str(path)
+            f"Error getting disk usage for {path}: {e}", path_str
         ) from e
 
 
@@ -45,12 +48,14 @@ def _is_path_writeable(path: str | Path) -> bool:
     Check if a path is writeable.
 
     Args:
-        path: Path to check
+        path: Path to check (string or Path)
 
     Returns:
         True if the path is writeable
     """
+    # Normalize to Path object early
     path_obj = Path(path)
+
     if not path_obj.exists():
         try:
             if path_obj.suffix:

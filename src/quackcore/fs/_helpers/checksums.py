@@ -19,7 +19,7 @@ def _compute_checksum(path: str | Path, algorithm: str = "sha256") -> str:
     Compute checksum of a file.
 
     Args:
-        path: Path to the file
+        path: Path to the file (string or Path)
         algorithm: Hash algorithm to use
 
     Returns:
@@ -29,7 +29,9 @@ def _compute_checksum(path: str | Path, algorithm: str = "sha256") -> str:
         QuackFileNotFoundError: If file doesn't exist
         QuackIOError: For other IO related issues
     """
+    # Normalize to Path object
     path_obj = Path(path)
+
     if not path_obj.exists():
         logger.error(f"File not found when computing checksum: {path}")
         raise QuackFileNotFoundError(str(path))

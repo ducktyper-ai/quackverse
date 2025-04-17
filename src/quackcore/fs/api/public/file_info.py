@@ -7,7 +7,6 @@ This module provides safe, result-oriented wrappers around low-level file info _
 
 from pathlib import Path
 
-from quackcore.fs._helpers.common import _normalize_path_param
 from quackcore.fs._helpers.file_info import (
     _get_file_size_str,
     _get_file_timestamp,
@@ -15,6 +14,7 @@ from quackcore.fs._helpers.file_info import (
     _get_mime_type,
     _is_file_locked,
 )
+from quackcore.fs._helpers.path_utils import _normalize_path_param
 from quackcore.fs.results import DataResult, OperationResult
 from quackcore.logging import get_logger
 

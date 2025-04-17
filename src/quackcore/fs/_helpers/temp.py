@@ -43,9 +43,9 @@ def _create_temp_directory(prefix: str = "quackcore_", suffix: str = "") -> Path
 
 @wrap_io_errors
 def _create_temp_file(
-    suffix: str = ".txt",
-    prefix: str = "quackcore_",
-    directory: str | Path | None = None,
+        suffix: str = ".txt",
+        prefix: str = "quackcore_",
+        directory: str | Path | None = None,
 ) -> Path:
     """
     Create a temporary file.
@@ -53,7 +53,7 @@ def _create_temp_file(
     Args:
         suffix: File suffix (e.g., ".txt")
         prefix: File prefix
-        directory: Directory to create the file in (default: system temp dir)
+        directory: Directory to create the file in (string, Path, or None for system temp dir)
 
     Returns:
         Path to the created temporary file
@@ -61,7 +61,9 @@ def _create_temp_file(
     Raises:
         QuackIOError: For IO related issues
     """
+    # Normalize directory to Path if provided
     dir_path = Path(directory) if directory else None
+
     if dir_path:
         _ensure_directory(dir_path)
 

@@ -27,8 +27,8 @@ def _safe_copy(src: str | Path, dst: str | Path, overwrite: bool = False) -> Pat
     Safely copy a file or directory.
 
     Args:
-        src: Source path
-        dst: Destination path
+        src: Source path (string or Path)
+        dst: Destination path (string or Path)
         overwrite: If True, overwrite destination if it exists
 
     Returns:
@@ -40,6 +40,7 @@ def _safe_copy(src: str | Path, dst: str | Path, overwrite: bool = False) -> Pat
         QuackPermissionError: If permission is denied
         QuackIOError: For other IO related issues
     """
+    # Normalize inputs to Path objects
     src_path = Path(src)
     dst_path = Path(dst)
 
@@ -60,7 +61,9 @@ def _safe_copy(src: str | Path, dst: str | Path, overwrite: bool = False) -> Pat
             shutil.copytree(src_path, dst_path)
         else:
             logger.info(f"Copying file {src} to {dst}")
-            ensure_directory(dst_path.parent)
+            # Use a locally imported ensure_directory to avoid circular imports
+            from quackcore.fs._helpers.file_ops import _ensure_directory
+            _ensure_directory(dst_path.parent)
             shutil.copy2(src_path, dst_path)
         return dst_path
     except PermissionError as e:
@@ -79,8 +82,8 @@ def _safe_move(src: str | Path, dst: str | Path, overwrite: bool = False) -> Pat
     Safely move a file or directory.
 
     Args:
-        src: Source path
-        dst: Destination path
+        src: Source path (string or Path)
+        dst: Destination path (string or Path)
         overwrite: If True, overwrite destination if it exists
 
     Returns:
@@ -92,6 +95,7 @@ def _safe_move(src: str | Path, dst: str | Path, overwrite: bool = False) -> Pat
         QuackPermissionError: If permission is denied
         QuackIOError: For other IO related issues
     """
+    # Normalize inputs to Path objects
     src_path = Path(src)
     dst_path = Path(dst)
 
@@ -105,7 +109,10 @@ def _safe_move(src: str | Path, dst: str | Path, overwrite: bool = False) -> Pat
 
     try:
         logger.info(f"Moving {src} to {dst}")
-        ensure_directory(dst_path.parent)
+        # Use a locally imported ensure_directory to avoid circular imports
+        from quackcore.fs._helpers.file_ops import _ensure_directory
+        _ensure_directory(dst_path.parent)
+
         if dst_path.exists() and overwrite:
             if dst_path.is_dir():
                 logger.debug(f"Removing existing destination directory: {dst}")
@@ -131,7 +138,7 @@ def _safe_delete(path: str | Path, missing_ok: bool = True) -> bool:
     Safely delete a file or directory.
 
     Args:
-        path: Path to delete
+        path: Path to delete (string or Path)
         missing_ok: If True, don't raise error if path doesn't exist
 
     Returns:
@@ -143,6 +150,7 @@ def _safe_delete(path: str | Path, missing_ok: bool = True) -> bool:
         QuackPermissionError: If permission is denied
         QuackIOError: For other IO related issues
     """
+    # Normalize to Path object
     path_obj = Path(path)
 
     if not path_obj.exists():

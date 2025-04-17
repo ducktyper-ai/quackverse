@@ -19,13 +19,13 @@ logger = get_logger(__name__)
 
 
 def _resolve_path(
-    base_dir: str, path: str | os.PathLike | DataResult | OperationResult
+    base_dir: str | Path, path: str | os.PathLike | DataResult | OperationResult
 ) -> str:
     """
     Resolve a path relative to the base directory.
 
-    This function takes a path (string, Path object, or DataResult) and resolves it
-    relative to the provided base directory. If the path is absolute, it's
+    This function takes a path (string, Path object, DataResult, or OperationResult) and
+    resolves it relative to the provided base directory. If the path is absolute, it's
     returned as-is. Otherwise, it's joined with the base directory.
 
     Args:

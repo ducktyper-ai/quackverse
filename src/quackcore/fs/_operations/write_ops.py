@@ -48,7 +48,7 @@ class WriteOperationsMixin:
 
     def _write_text(
         self,
-        path: str | Path,
+        path: str | Path | DataResult | OperationResult,
         content: str,
         encoding: str = "utf-8",
         atomic: bool = True,
@@ -61,7 +61,7 @@ class WriteOperationsMixin:
         for safer file _operations. It can also calculate checksums for data integrity.
 
         Args:
-            path: Path to the file
+            path: Path to the file (str, Path, DataResult, or OperationResult)
             content: Text content to write
             encoding: Text encoding (default: utf-8)
             atomic: Whether to use atomic writing (safer but slower)
@@ -155,7 +155,7 @@ class WriteOperationsMixin:
 
     def _write_binary(
         self,
-        path: str | Path,
+        path: str | Path | DataResult | OperationResult,
         content: bytes,
         atomic: bool = True,
         calculate_checksum: bool = False,
@@ -167,7 +167,7 @@ class WriteOperationsMixin:
         writing and checksum calculation.
 
         Args:
-            path: Path to the file
+            path: Path to the file (str, Path, DataResult, or OperationResult)
             content: Binary content to write
             atomic: Whether to use atomic writing (safer but slower)
             calculate_checksum: Whether to calculate a checksum for verification
@@ -235,8 +235,8 @@ class WriteOperationsMixin:
 
     def _copy(
         self,
-        src: str | Path,
-        dst: str | Path,
+        src: str | Path | DataResult | OperationResult,
+        dst: str | Path | DataResult | OperationResult,
         overwrite: bool = False,
     ) -> WriteResult:
         """
@@ -246,8 +246,8 @@ class WriteOperationsMixin:
         optional overwriting of existing files.
 
         Args:
-            src: Source path
-            dst: Destination path
+            src: Source path (str, Path, DataResult, or OperationResult)
+            dst: Destination path (str, Path, DataResult, or OperationResult)
             overwrite: Whether to overwrite if destination exists
 
         Returns:
@@ -304,8 +304,8 @@ class WriteOperationsMixin:
 
     def _move(
         self,
-        src: str | Path,
-        dst: str | Path,
+        src: str | Path | DataResult | OperationResult,
+        dst: str | Path | DataResult | OperationResult,
         overwrite: bool = False,
     ) -> WriteResult:
         """
@@ -315,8 +315,8 @@ class WriteOperationsMixin:
         optional overwriting of existing files.
 
         Args:
-            src: Source path
-            dst: Destination path
+            src: Source path (str, Path, DataResult, or OperationResult)
+            dst: Destination path (str, Path, DataResult, or OperationResult)
             overwrite: Whether to overwrite if destination exists
 
         Returns:
@@ -377,7 +377,7 @@ class WriteOperationsMixin:
                 error=str(e),
             )
 
-    def _delete(self, path: str | Path, missing_ok: bool = True) -> OperationResult:
+    def _delete(self, path: str | Path | DataResult | OperationResult, missing_ok: bool = True) -> OperationResult:
         """
         Delete a file or directory.
 
@@ -385,7 +385,7 @@ class WriteOperationsMixin:
         behavior for handling missing files.
 
         Args:
-            path: Path to delete
+            path: Path to delete (str, Path, DataResult, or OperationResult)
             missing_ok: Whether to ignore if the path doesn't exist
 
         Returns:
@@ -436,7 +436,7 @@ class WriteOperationsMixin:
             )
 
     def _create_directory(
-        self, path: str | Path, exist_ok: bool = True
+        self, path: str | Path | DataResult | OperationResult, exist_ok: bool = True
     ) -> OperationResult:
         """
         Create a directory.
@@ -445,7 +445,7 @@ class WriteOperationsMixin:
         for handling existing directories.
 
         Args:
-            path: Path to create
+            path: Path to create (str, Path, DataResult, or OperationResult)
             exist_ok: Whether to ignore if the directory already exists
 
         Returns:

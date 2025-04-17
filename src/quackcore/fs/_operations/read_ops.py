@@ -45,12 +45,12 @@ class ReadOperationsMixin:
         # It's defined here for type checking
         raise NotImplementedError("This method should be overridden")
 
-    def _read_text(self, path: str | Path, encoding: str = "utf-8") -> ReadResult[str]:
+    def _read_text(self, path: str | Path | DataResult | OperationResult, encoding: str = "utf-8") -> ReadResult[str]:
         """
         Read text from a file.
 
         Args:
-            path: Path to the file
+            path: Path to the file (str, Path, DataResult, or OperationResult)
             encoding: Text encoding (default: utf-8)
 
         Returns:
@@ -110,12 +110,12 @@ class ReadOperationsMixin:
                 error=str(e),
             )
 
-    def _read_binary(self, path: str | Path) -> ReadResult[bytes]:
+    def _read_binary(self, path: str | Path | DataResult | OperationResult) -> ReadResult[bytes]:
         """
         Read binary data from a file.
 
         Args:
-            path: Path to the file
+            path: Path to the file (str, Path, DataResult, or OperationResult)
 
         Returns:
             ReadResult[bytes]: Result object containing:

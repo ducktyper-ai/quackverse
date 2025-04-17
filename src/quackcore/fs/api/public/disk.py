@@ -7,8 +7,8 @@ This module provides safe, result-oriented wrappers around low-level disk _opera
 
 from pathlib import Path
 
-from quackcore.fs._helpers.common import _normalize_path_param
 from quackcore.fs._helpers.disk import _get_disk_usage, _is_path_writeable
+from quackcore.fs._helpers.path_utils import _normalize_path_param
 from quackcore.fs.results import DataResult, OperationResult
 from quackcore.logging import get_logger
 

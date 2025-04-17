@@ -8,7 +8,7 @@ safe file _operations.
 
 from pathlib import Path
 
-from quackcore.fs._helpers.common import _normalize_path_param
+from quackcore.fs._helpers.path_utils import _normalize_path_param
 from quackcore.fs._helpers.safe_ops import _safe_copy, _safe_delete, _safe_move
 from quackcore.fs.results import DataResult, OperationResult, WriteResult
 from quackcore.logging import get_logger

@@ -7,13 +7,13 @@ This module provides safe, result-oriented wrappers around low-level file _opera
 
 from pathlib import Path
 
-from quackcore.fs._helpers.common import _normalize_path_param
 from quackcore.fs._helpers.file_ops import (
     _atomic_write,
     _ensure_directory,
     _find_files_by_content,
     _get_unique_filename,
 )
+from quackcore.fs._helpers.path_utils import _normalize_path_param
 from quackcore.fs.results import DataResult, OperationResult, WriteResult
 from quackcore.logging import get_logger
 
