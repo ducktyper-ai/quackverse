@@ -3,7 +3,7 @@
 Mock Anthropic classes for LLM testing.
 """
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 from unittest.mock import MagicMock
 
 from tests.quackcore.test_integrations.llms.mocks.base import (
@@ -20,13 +20,13 @@ class MockAnthropicResponse(MockLLMResponse):
         self,
         content: str = "This is a mock Anthropic response",
         model: str = "claude-3-opus-20240229",
-        usage: Optional[Dict[str, int]] = None,
+        usage: dict[str, int] | None = None,
         finish_reason: str = "end_turn",
-        error: Optional[Exception] = None,
+        error: Exception | None = None,
         id: str = "msg_123",
         type: str = "message",
-        stop_reason: Optional[str] = None,
-        stop_sequence: Optional[str] = None,
+        stop_reason: str | None = None,
+        stop_sequence: str | None = None,
     ):
         """
         Initialize a mock Anthropic response.
@@ -58,7 +58,7 @@ class MockAnthropicResponse(MockLLMResponse):
         # Create Anthropic-style structure
         self.content = [MagicMock(type="text", text=content)]
 
-    def to_anthropic_format(self) -> Dict[str, Any]:
+    def to_anthropic_format(self) -> dict[str, Any]:
         """Convert to Anthropic API format."""
         if self.error:
             raise self.error
@@ -217,10 +217,10 @@ class MockAnthropicClient(MockClient):
 
     def __init__(
         self,
-        responses: List[str] = None,
-        token_counts: List[int] = None,
+        responses: list[str] = None,
+        token_counts: list[int] = None,
         model: str = "claude-3-opus-20240229",
-        errors: List[Exception] = None,
+        errors: list[Exception] = None,
         **kwargs: Any,
     ):
         """

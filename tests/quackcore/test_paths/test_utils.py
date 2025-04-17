@@ -10,16 +10,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from quackcore.errors import QuackFileNotFoundError
-from quackcore.paths._internal.utils import (
-    _find_nearest_directory,
-    _find_project_root,
-    _get_extension,
-    _infer_module_from_path,
-    _join_path,
-    _normalize_path,
-    _resolve_relative_to_project,
-    _split_path,
-)
 
 
 class TestPathUtils:

@@ -14,7 +14,6 @@ from quackcore.fs import service as fs
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.google.drive.protocols import DriveService
 from quackcore.integrations.google.drive.utils.api import execute_api_request
-from quackcore.paths import resolver
 
 
 def resolve_download_path(

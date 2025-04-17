@@ -270,6 +270,17 @@ class DataResult(OperationResult, Generic[T]):
         description="Whether data passed schema validation",
     )
 
+    def __fspath__(self) -> str:
+        """
+        Make DataResult compatible with os.PathLike.
+
+        Returns:
+            str: String representation of path data
+        """
+        if self.data is None:
+            return ""
+        return str(self.data)
+
 
 class PathResult(OperationResult):
     """
@@ -325,6 +336,7 @@ class PathResult(OperationResult):
             f"exists={self.exists}, valid={self.is_valid}, "
             f"absolute={self.is_absolute})"
         )
+
 
 # Aliases for backward compatibility with quackcore.fs.types
 DirectoryListResult = DirectoryInfoResult

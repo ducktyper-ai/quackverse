@@ -345,7 +345,7 @@ def test_booster_export(sample_strategy, tmp_path):
     assert json_path.exists()
 
     # Read and validate JSON
-    with open(json_path, "r") as f:
+    with open(json_path) as f:
         data = json.load(f)
         assert "prompt" in data
         assert data["prompt"] == "Task: Export test"

@@ -8,7 +8,6 @@ import requests
 from quackcore.logging import get_logger
 
 from .models import GitHubRepo, GitHubUser, PullRequest
-from .operations import get_pull_request_files  # Added import
 from .operations import (
     add_issue_comment,
     check_repository_exists,
@@ -17,6 +16,7 @@ from .operations import (
     fork_repo,
     get_issue,
     get_pull_request,
+    get_pull_request_files,  # Added import
     get_repo,
     get_repository_file_content,
     get_user,

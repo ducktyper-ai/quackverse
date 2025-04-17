@@ -30,7 +30,7 @@ from quackcore.integrations.pandoc.operations import (
 )
 from quackcore.integrations.pandoc.protocols import PandocConversionProtocol
 from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
-from quackcore.paths import resolver
+from quackcore.paths import service as paths
 
 logger = get_logger(__name__)
 
@@ -156,7 +156,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
         try:
-            html_path = resolver._resolve_project_path(html_path)
+            html_path = paths.resolve_project_path(html_path)
 
             if output_path is None and self.converter:
                 config = getattr(self.converter, "config", None)
@@ -171,7 +171,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                         ),
                     )
             elif output_path:
-                output_path = resolver.resolve_project_path(output_path)
+                output_path = paths.resolve_project_path(output_path)
             else:
                 return cast(
                     IntegrationResult[str],
@@ -216,7 +216,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
         try:
-            markdown_path = resolver._resolve_project_path(markdown_path)
+            markdown_path = paths.resolve_project_path(markdown_path)
 
             if output_path is None and self.converter:
                 config = getattr(self.converter, "config", None)
@@ -231,7 +231,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                         ),
                     )
             elif output_path:
-                output_path = resolver._resolve_project_path(output_path)
+                output_path = paths.resolve_project_path(output_path)
             else:
                 return cast(
                     IntegrationResult[str],
@@ -284,7 +284,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
         try:
-            input_dir = resolver._resolve_project_path(input_dir)
+            input_dir = paths.resolve_project_path(input_dir)
             input_dir_info = fs.get_file_info(input_dir)
             if (
                 not input_dir_info.success
@@ -302,7 +302,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                 config = getattr(self.converter, "config", None)
                 if isinstance(config, PandocConfig):
                     output_dir = (
-                        resolver._resolve_project_path(output_dir)
+                        paths.resolve_project_path(output_dir)
                         if output_dir
                         else config.output_dir
                     )

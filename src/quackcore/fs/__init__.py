@@ -6,18 +6,6 @@ This package provides a robust filesystem abstraction with proper error handling
 standardized result objects, and comprehensive file operation capabilities.
 """
 
-# Import core result classes first since many modules depend on them
-from quackcore.fs.results import (
-    DataResult,
-    DirectoryInfoResult,
-    FileInfoResult,
-    FindResult,
-    OperationResult,
-    PathResult,
-    ReadResult,
-    WriteResult,
-)
-
 # Import utility functions directly to make them available at package level
 from quackcore.fs.api.public import (
     atomic_write,
@@ -44,11 +32,25 @@ from quackcore.fs.api.public import (
     split_path,
 )
 
+# Import core result classes first since many modules depend on them
+from quackcore.fs.results import (
+    DataResult,
+    DirectoryInfoResult,
+    FileInfoResult,
+    FindResult,
+    OperationResult,
+    PathResult,
+    ReadResult,
+    WriteResult,
+)
+
+
 # Define path validation functions for backward compatibility
 def get_path_info(path):
     """Get information about a path's validity and format."""
     # Import here to avoid circular imports
     from quackcore.fs.service import service
+
     return service.get_path_info(path)
 
 
@@ -56,6 +58,7 @@ def is_valid_path(path):
     """Check if a path has valid syntax."""
     # Import here to avoid circular imports
     from quackcore.fs.service import service
+
     return service.is_valid_path(path)
 
 
@@ -63,6 +66,7 @@ def normalize_path_with_info(path):
     """Normalize a path and return detailed information."""
     # Import here to avoid circular imports
     from quackcore.fs.service import service
+
     return service._normalize_path_with_info(path)
 
 
@@ -71,6 +75,7 @@ def _get_service():
     """Get the global filesystem service instance."""
     # Import here to avoid circular imports
     from quackcore.fs.service import service
+
     return service
 
 

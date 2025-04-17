@@ -6,7 +6,6 @@ This module provides a registry for LLM clients, allowing for
 dynamic loading and access to different LLM implementations.
 """
 
-from typing import Type
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.integrations.llms.clients.anthropic import AnthropicClient
@@ -17,7 +16,7 @@ from quackcore.integrations.llms.clients.openai import OpenAIClient
 from quackcore.logging import get_logger
 
 # Global registry of LLM clients
-_LLM_REGISTRY: dict[str, Type[LLMClient]] = {
+_LLM_REGISTRY: dict[str, type[LLMClient]] = {
     "openai": OpenAIClient,
     "anthropic": AnthropicClient,
     "ollama": OllamaClient,
@@ -27,7 +26,7 @@ _LLM_REGISTRY: dict[str, Type[LLMClient]] = {
 logger = get_logger(__name__)
 
 
-def register_llm_client(name: str, client_class: Type[LLMClient]) -> None:
+def register_llm_client(name: str, client_class: type[LLMClient]) -> None:
     """
     Register an LLM client implementation.
 

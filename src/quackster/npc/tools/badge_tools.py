@@ -113,7 +113,7 @@ def list_badges(user_memory: UserMemory) -> BadgeListOutput:
         else:
             intro = "You haven't earned any badges yet! Let's change that!"
     elif badge_count == 1:
-        intro = f"You've earned your first badge! A great start to your collection!"
+        intro = "You've earned your first badge! A great start to your collection!"
     else:
         if badge_interest:
             intro = f"You have earned {badge_count} badges - your collection is growing nicely! I know you enjoy collecting these!"
@@ -123,7 +123,7 @@ def list_badges(user_memory: UserMemory) -> BadgeListOutput:
     formatted_text = (
         f"{intro}\n\n"
         f"Earned Badges:\n" + "\n".join(badge_list or ["No badges earned yet"]) + "\n\n"
-        f"Next Badges:\n"
+        "Next Badges:\n"
         + "\n".join(
             [b["formatted"] for b in next_badge_list]
             if next_badge_list

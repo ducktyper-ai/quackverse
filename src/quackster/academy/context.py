@@ -20,7 +20,7 @@ from quackcore.integrations.core import registry
 from quackcore.logging import get_logger
 
 # Dogfood QuackCore Paths for project root detection and path resolution.
-from quackcore.paths import resolver
+from quackcore.paths import service as paths
 
 logger = get_logger(__name__)
 
@@ -112,7 +112,7 @@ class TeachingContext:
         # Determine the base directory either from the provided value or by detecting the project root.
         if base_dir is None:
             try:
-                self.base_dir = resolver._get_project_root()
+                self.base_dir = paths.get_project_root()
             except FileNotFoundError as err:
                 logger.warning(
                     f"Could not determine project root: {err}. Falling back to current working directory."

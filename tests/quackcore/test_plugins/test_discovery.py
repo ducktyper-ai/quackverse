@@ -89,7 +89,7 @@ class TestPluginLoader:
         import types
 
         mock_module = types.ModuleType("test.module")
-        setattr(mock_module, "MockPlugin", MockPlugin)
+        mock_module.MockPlugin = MockPlugin
         mock_module.MockPlugin.__module__ = "test.module"
         with patch.dict(sys.modules, {"test.module": mock_module}):
             with patch("importlib.import_module", return_value=mock_module):

@@ -3,7 +3,6 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
@@ -23,11 +22,11 @@ class GitHubUser(BaseModel):
 
     username: str = Field(description="GitHub username")
     url: HttpUrl = Field(description="GitHub profile URL")
-    name: Optional[str] = Field(
+    name: str | None = Field(
         default=None, description="User's full name if available"
     )
-    email: Optional[str] = Field(default=None, description="User's email if available")
-    avatar_url: Optional[HttpUrl] = Field(
+    email: str | None = Field(default=None, description="User's email if available")
+    avatar_url: HttpUrl | None = Field(
         default=None, description="URL to user's avatar"
     )
 
@@ -55,7 +54,7 @@ class GitHubRepo(BaseModel):
     url: HttpUrl = Field(description="Repository URL")
     clone_url: HttpUrl = Field(description="Git clone URL")
     default_branch: str = Field(default="main", description="Default branch")
-    description: Optional[str] = Field(
+    description: str | None = Field(
         default=None, description="Repository description"
     )
     fork: bool = Field(default=False, description="Whether this repo is a fork")
@@ -87,10 +86,10 @@ class PullRequest(BaseModel):
     url: HttpUrl = Field(description="Pull request URL")
     author: GitHubUser = Field(description="Pull request author")
     status: PullRequestStatus = Field(description="Pull request status")
-    body: Optional[str] = Field(default=None, description="Pull request body")
+    body: str | None = Field(default=None, description="Pull request body")
     created_at: datetime = Field(description="Pull request creation date")
     updated_at: datetime = Field(description="Last update date")
-    merged_at: Optional[datetime] = Field(
+    merged_at: datetime | None = Field(
         default=None, description="Merge date if merged"
     )
     base_repo: str = Field(description="Base repository full name")

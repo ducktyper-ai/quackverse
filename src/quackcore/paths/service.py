@@ -6,7 +6,6 @@ This module provides a high-level service for path operations in QuackCore proje
 """
 
 import os
-from typing import Optional
 
 from quackcore.logging import get_logger
 from quackcore.paths._internal.resolver import PathResolver
@@ -27,7 +26,7 @@ class PathService:
         self._resolver = PathResolver()
         self.logger = get_logger(__name__)
 
-    def get_project_root(self, start_dir: Optional[str] = None) -> PathResult:
+    def get_project_root(self, start_dir: str | None = None) -> PathResult:
         """
         Find the project root directory.
 
@@ -45,7 +44,7 @@ class PathService:
             return PathResult(success=False, error=str(e))
 
     def resolve_project_path(
-        self, path: str, project_root: Optional[str] = None
+        self, path: str, project_root: str | None = None
     ) -> PathResult:
         """
         Resolve a path relative to the project root.
@@ -64,7 +63,7 @@ class PathService:
             self.logger.error(f"Failed to resolve project path: {e}")
             return PathResult(success=False, error=str(e))
 
-    def detect_project_context(self, start_dir: Optional[str] = None) -> ContextResult:
+    def detect_project_context(self, start_dir: str | None = None) -> ContextResult:
         """
         Detect project context from a directory.
 
@@ -82,7 +81,7 @@ class PathService:
             return ContextResult(success=False, error=str(e))
 
     def detect_content_context(
-        self, start_dir: Optional[str] = None, content_type: Optional[str] = None
+        self, start_dir: str | None = None, content_type: str | None = None
     ) -> ContextResult:
         """
         Detect content context from a directory.
@@ -102,7 +101,7 @@ class PathService:
             return ContextResult(success=False, error=str(e))
 
     def get_known_directory(
-        self, name: str, start_dir: Optional[str] = None
+        self, name: str, start_dir: str | None = None
     ) -> PathResult:
         """
         Get a known directory by name.
@@ -131,7 +130,7 @@ class PathService:
             return PathResult(success=False, error=str(e))
 
     def get_module_path(
-        self, module: str, start_dir: Optional[str] = None
+        self, module: str, start_dir: str | None = None
     ) -> PathResult:
         """
         Get the file path for a Python module.
@@ -183,7 +182,7 @@ class PathService:
             return PathResult(success=False, error=str(e))
 
     def get_relative_path(
-        self, abs_path: str, start_dir: Optional[str] = None
+        self, abs_path: str, start_dir: str | None = None
     ) -> PathResult:
         """
         Get the path relative to the project root.
@@ -224,7 +223,7 @@ class PathService:
         self,
         content_type: str,
         content_name: str,
-        start_dir: Optional[str] = None,
+        start_dir: str | None = None,
     ) -> PathResult:
         """
         Get the directory for specific content.
@@ -267,7 +266,7 @@ class PathService:
             )
             return PathResult(success=False, error=str(e))
 
-    def list_known_directories(self, start_dir: Optional[str] = None) -> list[str]:
+    def list_known_directories(self, start_dir: str | None = None) -> list[str]:
         """
         List all known directories in the project.
 
@@ -288,7 +287,7 @@ class PathService:
             self.logger.error(f"Failed to list known directories: {e}")
             return []
 
-    def is_inside_project(self, path: str, start_dir: Optional[str] = None) -> bool:
+    def is_inside_project(self, path: str, start_dir: str | None = None) -> bool:
         """
         Check if a path is inside the project root.
 
@@ -319,7 +318,7 @@ class PathService:
             return False
 
     def resolve_content_module(
-        self, path: str, start_dir: Optional[str] = None
+        self, path: str, start_dir: str | None = None
     ) -> PathResult:
         """
         Get the module name for a content file path.
@@ -362,7 +361,7 @@ class PathService:
             return PathResult(success=False, error=str(e))
 
     def path_exists_in_known_dir(
-        self, dir_name: str, rel_path: str, start_dir: Optional[str] = None
+        self, dir_name: str, rel_path: str, start_dir: str | None = None
     ) -> bool:
         """
         Check if a relative path exists in a known directory.
@@ -392,7 +391,7 @@ class PathService:
             )
             return False
 
-    def find_source_directory(self, start_dir: Optional[str] = None) -> PathResult:
+    def find_source_directory(self, start_dir: str | None = None) -> PathResult:
         """
         Find the source directory of the project.
 
@@ -410,7 +409,7 @@ class PathService:
             return PathResult(success=False, error=str(e))
 
     def find_output_directory(
-        self, start_dir: Optional[str] = None, create: bool = False
+        self, start_dir: str | None = None, create: bool = False
     ) -> PathResult:
         """
         Find or create the output directory of the project.
@@ -429,7 +428,7 @@ class PathService:
             self.logger.error(f"Failed to find output directory: {e}")
             return PathResult(success=False, error=str(e))
 
-    def infer_current_content(self, start_dir: Optional[str] = None) -> dict[str, str]:
+    def infer_current_content(self, start_dir: str | None = None) -> dict[str, str]:
         """
         Infer current content type and name from the current directory.
 

@@ -15,7 +15,7 @@ from quackcore.errors import (
     QuackIOError,
     QuackPermissionError,
 )
-from quackcore.fs.results import OperationResult, WriteResult
+from quackcore.fs.results import DataResult, OperationResult, WriteResult
 from quackcore.logging import get_logger
 
 # Set up logger
@@ -30,12 +30,12 @@ class WriteOperationsMixin:
     files and directories with consistent error handling and return types.
     """
 
-    def _resolve_path(self, path: str | Path) -> Path:
+    def _resolve_path(self, path: str | Path | DataResult | OperationResult) -> Path:
         """
         Resolve a path relative to the base directory.
 
         Args:
-            path: The path to resolve
+            path: Path to resolve (str, Path, DataResult, or OperationResult)
 
         Returns:
             Path: Resolved Path object

@@ -2,7 +2,7 @@
 """GitHub pull request _operations."""
 
 from datetime import datetime
-from typing import Any, List, Literal
+from typing import Any, Literal
 
 import requests
 
@@ -118,7 +118,7 @@ def list_pull_requests(
     state: Literal["open", "closed", "all"] = "open",
     author: str | None = None,
     **request_kwargs: Any,
-) -> List[PullRequest]:
+) -> list[PullRequest]:
     """List pull requests for a repository.
 
     Args:
@@ -326,7 +326,7 @@ def get_pull_request_files(
     pull_number: int,
     api_url: str,
     **request_kwargs: Any,
-) -> List[dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get the files changed in a pull request.
 
     Args:
@@ -399,7 +399,7 @@ def get_pull_requests_by_user(
     api_url: str,
     state: Literal["open", "closed", "all"] = "open",
     **request_kwargs: Any,
-) -> List[PullRequest]:
+) -> list[PullRequest]:
     """
     Get pull requests created by a user within an organization.
 
@@ -451,7 +451,7 @@ def get_pull_requests_by_user(
         logger.error(msg)
         raise QuackError(msg, original_error=e)
 
-    pr_list: List[PullRequest] = []
+    pr_list: list[PullRequest] = []
     for item in search_results.get("items", []):
         try:
             pr_number = item.get("number")

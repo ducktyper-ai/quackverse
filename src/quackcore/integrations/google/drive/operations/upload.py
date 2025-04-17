@@ -22,7 +22,7 @@ from quackcore.integrations.google.drive.protocols import (
     GoogleCredentials,
 )
 from quackcore.integrations.google.drive.utils.api import execute_api_request
-from quackcore.paths import resolver  # Assumed to return string paths
+from quackcore.paths import service as paths
 
 
 def initialize_drive_service(credentials: GoogleCredentials) -> DriveService:
@@ -67,7 +67,7 @@ def resolve_file_details(
         QuackIntegrationError: If the file does not exist.
     """
     # Delegate to the resolver to convert the provided file path into a project path.
-    resolved_path = resolver._resolve_project_path(file_path)  # returns a string
+    resolved_path = paths.resolve_project_path(file_path)  # returns a string
     file_info = fs.get_file_info(resolved_path)
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(f"File not found: {file_path}")

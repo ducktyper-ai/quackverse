@@ -5,7 +5,6 @@ Path resolution result models.
 This module defines result models for path resolution operations.
 """
 
-from typing import Optional
 
 from pydantic import BaseModel
 
@@ -23,8 +22,8 @@ class PathResult(BaseModel):
     """
 
     success: bool
-    path: Optional[str] = None
-    error: Optional[str] = None
+    path: str | None = None
+    error: str | None = None
 
 
 class ContextResult(BaseModel):
@@ -38,5 +37,5 @@ class ContextResult(BaseModel):
     """
 
     success: bool
-    context: Optional[ProjectContext | ContentContext] = None
-    error: Optional[str] = None
+    context: ProjectContext | ContentContext | None = None
+    error: str | None = None

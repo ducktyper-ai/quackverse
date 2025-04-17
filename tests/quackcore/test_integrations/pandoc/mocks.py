@@ -235,13 +235,13 @@ class MockPandocConversionService(PandocConversionProtocol):
         # Create mock file paths
         if output_format == "markdown":
             mock_files = [
-                Path(f"/path/to/output/file1.md"),
-                Path(f"/path/to/output/file2.md"),
+                Path("/path/to/output/file1.md"),
+                Path("/path/to/output/file2.md"),
             ]
         else:  # docx
             mock_files = [
-                Path(f"/path/to/output/file1.docx"),
-                Path(f"/path/to/output/file2.docx"),
+                Path("/path/to/output/file1.docx"),
+                Path("/path/to/output/file2.docx"),
             ]
 
         return IntegrationResult.success_result(

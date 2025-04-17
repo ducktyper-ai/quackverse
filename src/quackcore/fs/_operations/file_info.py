@@ -11,7 +11,7 @@ import mimetypes
 from pathlib import Path
 
 from quackcore.errors import QuackIOError, QuackPermissionError
-from quackcore.fs.results import FileInfoResult, PathResult
+from quackcore.fs.results import DataResult, FileInfoResult, OperationResult, PathResult
 from quackcore.logging import get_logger
 
 # Set up logger
@@ -26,12 +26,12 @@ class FileInfoOperationsMixin:
     including existence checks, permissions, size, and MIME types.
     """
 
-    def _resolve_path(self, path: str | Path) -> Path:
+    def _resolve_path(self, path: str | Path | DataResult | OperationResult) -> Path:
         """
         Resolve a path relative to the base directory.
 
         Args:
-            path: Path to resolve, can be string or Path object
+            path: Path to resolve (str, Path, DataResult, or OperationResult)
 
         Returns:
             Path: Resolved Path object
@@ -64,7 +64,8 @@ class FileInfoOperationsMixin:
             exists = resolved_path.exists()
             is_abs = resolved_path.is_absolute()
             logger.debug(
-                f"Path {resolved_path} exists: {exists}, is absolute: {is_abs}")
+                f"Path {resolved_path} exists: {exists}, is absolute: {is_abs}"
+            )
 
             return PathResult(
                 success=True,

@@ -13,7 +13,7 @@ from quackcore.errors import (
     QuackIOError,
     QuackPermissionError,
 )
-from quackcore.fs.results import DirectoryInfoResult
+from quackcore.fs.results import DataResult, DirectoryInfoResult, OperationResult
 from quackcore.logging import get_logger
 
 # Set up logger
@@ -28,12 +28,12 @@ class DirectoryOperationsMixin:
     and filtering by patterns.
     """
 
-    def _resolve_path(self, path: str | Path) -> Path:
+    def _resolve_path(self, path: str | Path | DataResult | OperationResult) -> Path:
         """
         Resolve a path relative to the base directory.
 
         Args:
-            path: The path to resolve, can be string or Path object
+            path: Path to resolve (str, Path, DataResult, or OperationResult)
 
         Returns:
             Path: Resolved Path object

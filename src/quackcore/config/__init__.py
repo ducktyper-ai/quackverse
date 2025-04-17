@@ -31,7 +31,7 @@ from quackcore.config.utils import (
 )
 
 # Initialize _config as None to enable lazy loading
-_config: Optional[QuackConfig] = None
+_config: QuackConfig | None = None
 
 
 def get_config() -> QuackConfig:
@@ -47,11 +47,13 @@ def get_config() -> QuackConfig:
     if _config is None:
         # Import here to avoid circular imports during module initialization
         from quackcore.config.loader import load_config as _load_config
+
         _config = _load_config()
     return _config
 
 
 # Dynamically generated functions for both attribute and function access
+
 
 class ConfigProxy:
     """
@@ -76,9 +78,9 @@ config = ConfigProxy()
 
 # Functions to be imported from loader
 def load_config(
-        config_path: Optional[str] = None,
-        merge_env: bool = True,
-        merge_defaults: bool = True,
+    config_path: str | None = None,
+    merge_env: bool = True,
+    merge_defaults: bool = True,
 ) -> QuackConfig:
     """
     Load configuration from a file and merge with environment variables and defaults.
@@ -94,6 +96,7 @@ def load_config(
         A QuackConfig instance built from the merged configuration.
     """
     from quackcore.config.loader import load_config as _load_config
+
     return _load_config(config_path, merge_env, merge_defaults)
 
 
@@ -111,6 +114,7 @@ def merge_configs(base: QuackConfig, override: dict[str, Any]) -> QuackConfig:
         A merged QuackConfig instance.
     """
     from quackcore.config.loader import merge_configs as _merge_configs
+
     return _merge_configs(base, override)
 
 

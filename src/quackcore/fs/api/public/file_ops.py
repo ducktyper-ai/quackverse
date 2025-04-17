@@ -6,7 +6,6 @@ This module provides safe, result-oriented wrappers around low-level file _opera
 """
 
 from pathlib import Path
-from typing import Any
 
 from quackcore.fs._helpers.file_ops import (
     _atomic_write,

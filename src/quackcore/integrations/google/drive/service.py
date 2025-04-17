@@ -23,7 +23,7 @@ from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.google.auth import GoogleAuthProvider
 from quackcore.integrations.google.config import GoogleConfigProvider
 from quackcore.integrations.google.drive.models import DriveFile, DriveFolder
-from quackcore.paths import resolver
+from quackcore.paths import service as paths
 
 NoneType = type(None)
 T = TypeVar("T")  # Generic type for result content
@@ -195,7 +195,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
         Raises:
             QuackIntegrationError: If the file does not exist.
         """
-        path_obj = resolver._resolve_project_path(file_path)
+        path_obj = paths.resolve_project_path(file_path)
         file_info = fs.get_file_info(path_obj)
         if not file_info.success or not file_info.exists:
             raise QuackIntegrationError(f"File not found: {file_path}")
@@ -231,7 +231,7 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             return str(fs.join_path(temp_dir, file_name))
 
         # Resolve the local path
-        local_path_obj = resolver.resolve_project_path(local_path)
+        local_path_obj = paths.resolve_project_path(local_path)
         file_info = fs.get_file_info(local_path_obj)
 
         if file_info.success and file_info.exists:

@@ -8,7 +8,7 @@ retry logic, error handling, and message normalization.
 
 import logging
 import time
-from typing import List, cast
+from typing import cast
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -98,7 +98,7 @@ class TestLLMClient:
         assert mock_client.last_messages[1].content == "User message"
 
         # Test with invalid message type (update: check error result instead of exception)
-        invalid_messages = cast(List[dict], ["invalid message"])
+        invalid_messages = cast(list[dict], ["invalid message"])
         result = mock_client.chat(invalid_messages)
         assert result.success is False
         assert "Unsupported message type" in result.error
@@ -308,7 +308,7 @@ class TestLLMClient:
 
         # Test with invalid message
         # Using cast to tell type checker we're deliberately testing with invalid type
-        invalid_message = cast(List[dict], ["invalid"])
+        invalid_message = cast(list[dict], ["invalid"])
         with pytest.raises(ValueError):
             mock_client._normalize_messages(invalid_message)
 

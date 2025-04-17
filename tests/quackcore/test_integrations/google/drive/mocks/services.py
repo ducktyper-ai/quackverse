@@ -4,7 +4,7 @@ Mock service objects for Google Drive testing.
 """
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.google.drive.protocols import (

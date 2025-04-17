@@ -45,7 +45,7 @@ def load_yaml(name: str) -> dict[str, Any]:
     # Construct file path by joining the directory of this file with the filename.
     file_path = os.path.join(os.path.dirname(__file__), f"{name}.yaml")
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             return yaml.safe_load(f)
     except FileNotFoundError:
         logger.warning(f"Dialogue file not found: {file_path}")

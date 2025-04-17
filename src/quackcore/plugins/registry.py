@@ -369,7 +369,7 @@ class PluginRegistry:
 
         for plugin in self._plugins.values():
             if hasattr(plugin, "get_metadata") and callable(
-                getattr(plugin, "get_metadata")
+                plugin.get_metadata
             ):
                 try:
                     metadata = plugin.get_metadata()

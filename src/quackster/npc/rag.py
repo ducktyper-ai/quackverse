@@ -11,9 +11,8 @@ import re
 from functools import lru_cache
 from typing import Any
 
-from quackcore.fs import service as fs, expand_user_vars
+from quackcore.fs import service as fs
 from quackcore.logging import get_logger
-from quackcore.paths import resolver
 
 logger = get_logger(__name__)
 
@@ -40,14 +39,16 @@ def get_doc_directories() -> list[str]:
     Returns:
         A list of directory paths (as strings) containing tutorial documents.
     """
+    from quackcore.paths import service as paths
+
     # Check for an override via the environment variable.
     custom_path = os.environ.get("QUACK_TUTORIAL_PATH")
     if custom_path:
-        expanded = expand_user_vars(custom_path)
+        expanded = fs.expand_user_vars(custom_path)
         return [expanded]
 
     # Attempt to detect a content context for tutorials.
-    content_context = resolver._detect_content_context(content_type="tutorial")
+    content_context = paths.detect_content_context(content_type="tutorial")
     if content_context and content_context.content_dir:
         info = fs.get_file_info(content_context.content_dir)
         if info.success and info.exists and info.is_dir:
@@ -56,7 +57,7 @@ def get_doc_directories() -> list[str]:
     # Fall back to default paths.
     paths: list[str] = []
     for path_str in DEFAULT_DOC_PATHS:
-        expanded = expand_user_vars(path_str)
+        expanded = fs.expand_user_vars(path_str)
         info = fs.get_file_info(expanded)
         if info.success and info.exists and info.is_dir:
             paths.append(expanded)

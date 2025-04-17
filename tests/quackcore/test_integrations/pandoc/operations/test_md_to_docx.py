@@ -19,7 +19,6 @@ from quackcore.fs.results import (
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.models import ConversionDetails, ConversionMetrics
 from quackcore.integrations.pandoc.operations.md_to_docx import (
-    _check_docx_metadata,
     _convert_markdown_to_docx_once,
     _get_conversion_output,
     _validate_markdown_input,

@@ -5,7 +5,7 @@ Mock client implementations for LLM testing.
 
 import logging
 from collections.abc import Callable
-from typing import Any, List, Optional, Type
+from typing import Any
 
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.llms.clients.base import LLMClient
@@ -17,10 +17,10 @@ class MockClient(LLMClient):
 
     def __init__(
         self,
-        responses: List[str] = None,
-        token_counts: List[int] = None,
+        responses: list[str] = None,
+        token_counts: list[int] = None,
         model: str = "mock-model",
-        errors: List[Exception] = None,
+        errors: list[Exception] = None,
         log_level: int = logging.INFO,
         **kwargs: Any,
     ):
@@ -49,9 +49,9 @@ class MockClient(LLMClient):
 
     def _chat_with_provider(
         self,
-        messages: List[ChatMessage],
+        messages: list[ChatMessage],
         options: LLMOptions,
-        callback: Optional[Callable[[str], None]] = None,
+        callback: Callable[[str], None] | None = None,
     ) -> IntegrationResult[str]:
         """
         Mock implementation of chat method.
@@ -101,7 +101,7 @@ class MockClient(LLMClient):
             callback(word + " ")
 
     def _count_tokens_with_provider(
-        self, messages: List[ChatMessage]
+        self, messages: list[ChatMessage]
     ) -> IntegrationResult[int]:
         """
         Mock implementation of count_tokens method.
@@ -128,11 +128,11 @@ class MockClient(LLMClient):
 
 
 def create_mock_client(
-    client_type: Type[LLMClient] = MockClient,
-    responses: List[str] = None,
-    token_counts: List[int] = None,
+    client_type: type[LLMClient] = MockClient,
+    responses: list[str] = None,
+    token_counts: list[int] = None,
     model: str = "mock-model",
-    errors: List[Exception] = None,
+    errors: list[Exception] = None,
     **kwargs: Any,
 ) -> LLMClient:
     """

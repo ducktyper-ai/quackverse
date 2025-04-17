@@ -14,6 +14,7 @@ The _operations package follows this contract:
 - Comprehensive error handling and logging throughout
 """
 
+import os
 from pathlib import Path
 from typing import TypeVar
 
@@ -28,6 +29,8 @@ from quackcore.fs._helpers import (
     _safe_move,
 )
 from quackcore.logging import get_logger
+
+from .. import DataResult, OperationResult
 
 # Set up module-level logger
 logger = get_logger(__name__)
@@ -79,15 +82,17 @@ class FileSystemOperations(
         logger.debug(f"Initialized FileSystemOperations with base_dir: {self.base_dir}")
         _initialize_mime_types()
 
-    def _resolve_path(self, path: str | Path) -> Path:
+    def _resolve_path(
+        self, path: str | os.PathLike | DataResult | OperationResult
+    ) -> Path:
         """
         Resolve a path relative to the base directory.
 
-        This method is used internally by all _operations to normalize
+        This method is used internally by all operations to normalize
         paths relative to the base directory set during initialization.
 
         Args:
-            path: Path to resolve, can be string or Path object
+            path: Path to resolve (str, Path, DataResult, or OperationResult)
 
         Returns:
             Path: Resolved Path object
@@ -96,7 +101,8 @@ class FileSystemOperations(
             This is an internal helper method called by all other methods.
             It implements the abstract method defined in the mixins.
         """
-        return _resolve_path(self.base_dir, path)
+        resolved = _resolve_path(self.base_dir, path)
+        return Path(resolved)
 
 
 # Re-export the FileSystemOperations class and utility functions for backward compatibility

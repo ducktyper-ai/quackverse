@@ -12,7 +12,8 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from quackcore.errors import QuackConfigurationError, QuackFileNotFoundError
-from quackcore.fs import service as fs, expand_user_vars
+from quackcore.fs import expand_user_vars
+from quackcore.fs import service as fs
 from quackcore.integrations.core.protocols import (
     AuthProviderProtocol,
     ConfigProviderProtocol,
@@ -24,7 +25,7 @@ from quackcore.integrations.core.results import (
     IntegrationResult,
 )
 from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
-from quackcore.paths import resolver
+from quackcore.paths import service as paths
 
 
 class BaseAuthProvider(ABC, AuthProviderProtocol):
@@ -61,7 +62,7 @@ class BaseAuthProvider(ABC, AuthProviderProtocol):
             str: Resolved absolute path
         """
         try:
-            resolved_path = resolver._resolve_project_path(file_path)
+            resolved_path = paths.resolve_project_path(file_path)
             return str(resolved_path)
         except Exception as e:
             self.logger.warning(f"Could not resolve project path: {e}")
@@ -309,7 +310,7 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
             str: Resolved absolute path.
         """
         try:
-            resolved_path = resolver._resolve_project_path(file_path)
+            resolved_path = paths.resolve_project_path(file_path)
             return str(resolved_path)
         except Exception as e:
             self.logger.warning(f"Could not resolve project path: {e}")
@@ -372,7 +373,7 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
         # Use QuackCore's path resolver to normalize config path if provided
         if config_path:
             try:
-                self.config_path = str(resolver.resolve_project_path(config_path))
+                self.config_path = str(paths.resolve_project_path(config_path))
             except Exception as e:
                 self.logger.warning(f"Could not resolve config path: {e}")
                 self.config_path = str(fs.normalize_path(config_path))

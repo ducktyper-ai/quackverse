@@ -59,7 +59,7 @@ def load_yaml_config(path: str) -> dict[str, Any]:
     """
     try:
         # Use direct file operations to avoid circular imports with fs module
-        with open(os.path.expanduser(path), "r", encoding="utf-8") as f:
+        with open(os.path.expanduser(path), encoding="utf-8") as f:
             content = f.read()
 
         config = yaml.safe_load(content)
@@ -142,7 +142,7 @@ def _get_env_config() -> dict[str, Any]:
     config: dict[str, Any] = {}
     for key, value in os.environ.items():
         if key.startswith(ENV_PREFIX):
-            key_parts = key[len(ENV_PREFIX):].lower().split("__")
+            key_parts = key[len(ENV_PREFIX) :].lower().split("__")
             if len(key_parts) < 2:
                 continue
             typed_value = _convert_env_value(value)
@@ -192,9 +192,9 @@ def find_config_file() -> str | None:
 
 
 def load_config(
-        config_path: str | None = None,
-        merge_env: bool = True,
-        merge_defaults: bool = True,
+    config_path: str | None = None,
+    merge_env: bool = True,
+    merge_defaults: bool = True,
 ) -> QuackConfig:
     """
     Load configuration from a file and merge with environment variables and defaults.

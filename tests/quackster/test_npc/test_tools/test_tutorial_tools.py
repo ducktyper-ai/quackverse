@@ -186,7 +186,7 @@ class TestTutorialTools:
         args = mock_standardize.call_args[0]
         assert args[0] == "get_tutorial"
         assert args[1]["topic"] == "nonexistent"
-        assert args[1]["title"] == f"Tutorial on nonexistent"  # Default title
+        assert args[1]["title"] == "Tutorial on nonexistent"  # Default title
         assert args[1]["description"] == ""  # Default empty string
         assert "No tutorial content available" in args[1]["content"]  # Default message
 

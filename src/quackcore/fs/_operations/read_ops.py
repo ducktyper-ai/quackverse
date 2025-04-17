@@ -9,7 +9,7 @@ data from files with proper error handling and result formatting.
 from pathlib import Path
 from typing import TypeVar
 
-from quackcore.fs.results import ReadResult
+from quackcore.fs.results import DataResult, OperationResult, ReadResult
 from quackcore.logging import get_logger
 
 # Set up logger
@@ -27,12 +27,12 @@ class ReadOperationsMixin:
     with consistent error handling and return types.
     """
 
-    def _resolve_path(self, path: str | Path) -> Path:
+    def _resolve_path(self, path: str | Path | DataResult | OperationResult) -> Path:
         """
         Resolve a path relative to the base directory.
 
         Args:
-            path: Path to resolve
+            path: Path to resolve (str, Path, DataResult, or OperationResult)
 
         Returns:
             Path: Resolved Path object

@@ -19,7 +19,7 @@ from quackcore.fs import service as fs
 from quackcore.logging import get_logger
 
 # Use QuackCore Paths for project root discovery.
-from quackcore.paths import resolver
+from quackcore.paths import service as paths
 
 logger = get_logger(__name__)
 
@@ -515,7 +515,7 @@ class CourseManager:
         if os.path.isabs(file_path):
             return file_path
         try:
-            project_root = resolver._get_project_root()
+            project_root = paths.set_project_root()
             return fs.join_path(project_root, file_path)
         except FileNotFoundError as err:
             logger.warning(

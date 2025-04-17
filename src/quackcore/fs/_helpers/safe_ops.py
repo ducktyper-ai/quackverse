@@ -17,8 +17,6 @@ from quackcore.errors import (
 # Import from within package
 from quackcore.logging import get_logger
 
-from .file_ops import _ensure_directory
-
 # Initialize module logger
 logger = get_logger(__name__)
 

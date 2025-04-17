@@ -96,9 +96,7 @@ def load_env_config(config, config_dir: str | None = None):
         return config
 
 
-def get_config_value(
-        config, path: str, default: T | None = None
-) -> T | None:
+def get_config_value(config, path: str, default: T | None = None) -> T | None:
     """
     Get a configuration value by dot-separated path.
 
@@ -122,9 +120,7 @@ def get_config_value(
     return current
 
 
-def validate_required_config(
-        config, required_keys: list[str]
-) -> list[str]:
+def validate_required_config(config, required_keys: list[str]) -> list[str]:
     """
     Validate that the configuration contains all required keys.
 
@@ -183,9 +179,9 @@ def normalize_paths(config):
 
     # Normalize plugins paths.
     if (
-            "plugins" in config_dict
-            and isinstance(config_dict["plugins"], dict)
-            and "paths" in config_dict["plugins"]
+        "plugins" in config_dict
+        and isinstance(config_dict["plugins"], dict)
+        and "paths" in config_dict["plugins"]
     ):
         plugin_paths = config_dict["plugins"]["paths"]
         if plugin_paths and isinstance(plugin_paths, list):
@@ -195,9 +191,9 @@ def normalize_paths(config):
 
     # Normalize Google integration paths.
     if (
-            "integrations" in config_dict
-            and isinstance(config_dict["integrations"], dict)
-            and "google" in config_dict["integrations"]
+        "integrations" in config_dict
+        and isinstance(config_dict["integrations"], dict)
+        and "google" in config_dict["integrations"]
     ):
         google = config_dict["integrations"]["google"]
         for key in ["client_secrets_file", "credentials_file"]:
@@ -206,9 +202,9 @@ def normalize_paths(config):
 
     # Normalize logging file path.
     if (
-            "logging" in config_dict
-            and isinstance(config_dict["logging"], dict)
-            and config_dict["logging"].get("file")
+        "logging" in config_dict
+        and isinstance(config_dict["logging"], dict)
+        and config_dict["logging"].get("file")
     ):
         config_dict["logging"]["file"] = _normalize_path(
             config_dict["logging"]["file"], base_dir

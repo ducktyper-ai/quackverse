@@ -117,7 +117,7 @@ def list_quests(user_memory: UserMemory) -> QuestListOutput:
         f"Completed Quests:\n"
         + "\n".join(completed_list or ["No quests completed yet"])
         + "\n\n"
-        f"Suggested Quests:\n"
+        "Suggested Quests:\n"
         + "\n".join(
             [q["formatted"] for q in suggested_list]
             if suggested_list

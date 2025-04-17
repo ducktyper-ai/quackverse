@@ -3,7 +3,8 @@
 Base mock classes for LLM testing.
 """
 
-from typing import Any, Dict, Generator, Iterator, Optional
+from collections.abc import Generator, Iterator
+from typing import Any
 from unittest.mock import MagicMock
 
 
@@ -14,9 +15,9 @@ class MockLLMResponse:
         self,
         content: str = "This is a mock response",
         model: str = "mock-model",
-        usage: Optional[Dict[str, int]] = None,
+        usage: dict[str, int] | None = None,
         finish_reason: str = "stop",
-        error: Optional[Exception] = None,
+        error: Exception | None = None,
     ):
         """
         Initialize a mock LLM response.
@@ -60,7 +61,7 @@ class MockLLMResponse:
             raise self.error
         return self.content
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to a dictionary representation."""
         if self.error:
             raise self.error
@@ -75,7 +76,7 @@ class MockLLMResponse:
 class MockTokenResponse:
     """A mock token count response."""
 
-    def __init__(self, count: int = 30, error: Optional[Exception] = None):
+    def __init__(self, count: int = 30, error: Exception | None = None):
         """
         Initialize a mock token count response.
 
@@ -107,8 +108,8 @@ class MockStreamingGenerator:
         content: str = "This is a mock response",
         chunk_size: int = 5,
         model: str = "mock-model",
-        error: Optional[Exception] = None,
-        error_after: Optional[int] = None,
+        error: Exception | None = None,
+        error_after: int | None = None,
     ):
         """
         Initialize a mock streaming generator.
@@ -134,7 +135,7 @@ class MockStreamingGenerator:
         """Not implemented directly, use the provider-specific generators."""
         raise NotImplementedError("Use a provider-specific streaming generator")
 
-    def generate_chunks(self) -> Generator[str, None, None]:
+    def generate_chunks(self) -> Generator[str]:
         """
         Generate chunks of content for streaming.
 

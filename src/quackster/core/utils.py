@@ -3,14 +3,14 @@
 Utility functions for the QuackCore quackster module.
 
 This module provides functions for loading and saving user progress,
-getting usernames, and other utility _operations.
+getting usernames, and other utility operations.
 """
 
 import getpass
 import os
 
-from quackcore.fs import expand_user_vars
-from quackcore.fs.service.standalone import join_path, get_file_info, read_json, write_json, delete, copy, create_directory
+from quackcore.fs import service as fs
+from quackcore.fs.results import DataResult, OperationResult
 from quackcore.logging import get_logger
 from quackster.core.models import UserProgress
 
@@ -31,10 +31,22 @@ def get_user_data_dir() -> str:
     # Use fs.expand_user_vars to process shell shortcuts (e.g., '~').
     data_dir = os.environ.get("QUACK_DATA_DIR", DEFAULT_DATA_DIR)
     # Expand the user variables.
-    expanded = expand_user_vars(data_dir)
+    expanded = fs.expand_user_vars(data_dir)
+
+    # Handle the case where expanded might be a DataResult
+    if isinstance(expanded, (DataResult, OperationResult)) and hasattr(
+        expanded, "data"
+    ):
+        expanded_path = str(expanded.data)
+    else:
+        expanded_path = str(expanded)
+
     # Create the directory if it does not exist.
-    create_directory(expanded, exist_ok=True)
-    return expanded
+    result = fs.create_directory(expanded_path, exist_ok=True)
+
+    # Return the original expanded path, even if directory creation failed
+    # This maintains the original behavior while handling DataResult objects
+    return expanded_path
 
 
 def get_progress_file_path() -> str:
@@ -46,7 +58,12 @@ def get_progress_file_path() -> str:
     """
     data_dir = get_user_data_dir()
     file_name = os.environ.get("QUACK_PROGRESS_FILE", DEFAULT_PROGRESS_FILE)
-    return join_path(data_dir, file_name)
+
+    # Handle cases where join_path might return a DataResult
+    result = fs.join_path(data_dir, file_name)
+    if isinstance(result, (DataResult, OperationResult)) and hasattr(result, "data"):
+        return str(result.data)
+    return str(result)
 
 
 def get_github_username() -> str:
@@ -101,13 +118,20 @@ def load_progress() -> UserProgress:
     """
     file_path = get_progress_file_path()
 
-    result = get_file_info(file_path)
+    # Ensure file_path is a string
+    if isinstance(file_path, (DataResult, OperationResult)) and hasattr(
+        file_path, "data"
+    ):
+        file_path = str(file_path.data)
+
+    # Get file info handles the path correctly
+    result = fs.get_file_info(file_path)
     if not result.success or not result.exists:
         logger.debug(f"Progress file not found at {file_path}, creating new progress")
         return create_new_progress()
 
     try:
-        result = read_json(file_path)
+        result = fs.read_json(file_path)
         if not result.success:
             logger.warning(f"Failed to read progress file: {result.error}")
             return create_new_progress()
@@ -135,10 +159,17 @@ def save_progress(progress: UserProgress) -> bool:
         True if saved successfully; False otherwise.
     """
     file_path = get_progress_file_path()
+
+    # Ensure file_path is a string
+    if isinstance(file_path, (DataResult, OperationResult)) and hasattr(
+        file_path, "data"
+    ):
+        file_path = str(file_path.data)
+
     data = progress.model_dump()
 
     try:
-        result = write_json(file_path, data)
+        result = fs.write_json(file_path, data)
         if not result.success:
             logger.error(f"Failed to save progress file: {result.error}")
             return False
@@ -173,12 +204,19 @@ def reset_progress() -> bool:
         True if reset successfully; False otherwise.
     """
     file_path = get_progress_file_path()
-    result = get_file_info(file_path)
+
+    # Ensure file_path is a string
+    if isinstance(file_path, (DataResult, OperationResult)) and hasattr(
+        file_path, "data"
+    ):
+        file_path = str(file_path.data)
+
+    result = fs.get_file_info(file_path)
     if not result.success or not result.exists:
         logger.debug(f"No progress file to reset at {file_path}")
         return True
 
-    result = delete(file_path)
+    result = fs.delete(file_path)
     if not result.success:
         logger.error(f"Failed to delete progress file: {result.error}")
         return False
@@ -200,7 +238,14 @@ def backup_progress(backup_name: str = None) -> bool:
     import datetime
 
     file_path = get_progress_file_path()
-    result = get_file_info(file_path)
+
+    # Ensure file_path is a string
+    if isinstance(file_path, (DataResult, OperationResult)) and hasattr(
+        file_path, "data"
+    ):
+        file_path = str(file_path.data)
+
+    result = fs.get_file_info(file_path)
     if not result.success or not result.exists:
         logger.debug(f"No progress file to backup at {file_path}")
         return False
@@ -210,8 +255,17 @@ def backup_progress(backup_name: str = None) -> bool:
         backup_name = f"ducktyper_user_{timestamp}.json"
 
     data_dir = get_user_data_dir()
-    backup_path = join_path(data_dir, backup_name)
-    result = copy(file_path, backup_path)
+
+    # Handle the case where join_path might return a DataResult
+    backup_path_result = fs.join_path(data_dir, backup_name)
+    if isinstance(backup_path_result, (DataResult, OperationResult)) and hasattr(
+        backup_path_result, "data"
+    ):
+        backup_path = str(backup_path_result.data)
+    else:
+        backup_path = str(backup_path_result)
+
+    result = fs.copy(file_path, backup_path)
     if not result.success:
         logger.error(f"Failed to create backup: {result.error}")
         return False

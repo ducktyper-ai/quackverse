@@ -19,7 +19,7 @@ from quackcore.config.utils import load_env_config, normalize_paths
 from quackcore.errors import QuackConfigurationError
 
 # Import resolver at module level for better testability
-from quackcore.paths import resolver as path_resolver
+from quackcore.paths import service as paths
 
 # Detect test environment - make this a module variable so it can be patched in tests
 is_test = "pytest" in sys.modules or "unittest" in sys.modules
@@ -157,7 +157,7 @@ def find_project_root() -> str:
     """
     try:
         # Use the imported resolver.
-        root = path_resolver._get_project_root()
+        root = paths.get_project_root()
         return str(root)
     except Exception:
         # Catch all exceptions to ensure tests can run without a project root.

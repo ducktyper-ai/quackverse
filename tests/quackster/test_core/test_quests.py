@@ -397,7 +397,7 @@ class TestTeachingUtils:
             "%Y%m%d_%H%M%S"
         )
         mock_data_dir.__truediv__.assert_called_with(
-            f"ducktyper_user_20250410_123456.json"
+            "ducktyper_user_20250410_123456.json"
         )
         mock_copy.assert_called_with(mock_path, mock_backup_path)
         mock_logger.info.assert_called()

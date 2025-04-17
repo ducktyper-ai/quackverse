@@ -292,11 +292,11 @@ Tags: {", ".join(s.tags)}
             if str(path).lower().endswith(".json"):
                 result = fs.write_json(path, export_data, indent=2)
                 if not result.success:
-                    raise IOError(f"Failed to export prompt: {result.error}")
+                    raise OSError(f"Failed to export prompt: {result.error}")
             else:
                 # Format each section.
                 content = f"# Prompt\n\n{export_data['prompt']}\n\n"
-                content += f"# Metadata\n\n"
+                content += "# Metadata\n\n"
 
                 try:
                     import tempfile
@@ -328,10 +328,10 @@ Tags: {", ".join(s.tags)}
 
                 result = fs.write_text(path, content)
                 if not result.success:
-                    raise IOError(f"Failed to export prompt: {result.error}")
+                    raise OSError(f"Failed to export prompt: {result.error}")
 
             logger.info("Exported prompt to %s", path)
 
         except Exception as e:
             logger.error("Failed to export prompt: %s", str(e))
-            raise IOError(f"Failed to export prompt: {str(e)}") from e
+            raise OSError(f"Failed to export prompt: {str(e)}") from e

@@ -601,7 +601,7 @@ class TestGitHubIntegration:
         assert result.success is True
         assert result.content == pr
         assert (
-            f"Successfully retrieved pull request #123 from test_owner/test-repo"
+            "Successfully retrieved pull request #123 from test_owner/test-repo"
             in result.message
         )
         cast(MagicMock, mock_client.get_pull_request).assert_called_once_with(

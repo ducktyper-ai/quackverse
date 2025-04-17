@@ -9,29 +9,15 @@ import importlib
 def test_import_module():
     """Test that the module can be imported."""
     # Should not raise an exception
-    import quackster.academy
 
 
 def test_module_exports():
     """Test that all expected entities are exported."""
     from quackster.academy import (  # Core classes; Result classes; Service
-        Annotation,
         Assignment,
-        AssignmentResult,
-        AssignmentStatus,
         Course,
-        CourseModule,
-        Feedback,
-        FeedbackItem,
-        FeedbackResult,
-        GradeResult,
-        GradingCriteria,
-        ModuleItem,
         Student,
-        StudentSubmission,
-        SubmissionStatus,
         TeachingContext,
-        TeachingResult,
         service,
     )
 

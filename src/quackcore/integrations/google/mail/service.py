@@ -13,7 +13,7 @@ from quackcore.integrations.google.config import GoogleConfigProvider
 from quackcore.integrations.google.mail.config import GmailServiceConfig
 from quackcore.integrations.google.mail.operations import auth, email
 from quackcore.integrations.google.mail.protocols import GmailService, GoogleCredentials
-from quackcore.paths import resolver
+from quackcore.paths import service as paths
 
 
 class GoogleMailService(BaseIntegrationService):
@@ -179,7 +179,7 @@ class GoogleMailService(BaseIntegrationService):
                 )
 
             # Resolve the storage path
-            storage_path_obj = resolver._resolve_project_path(self.storage_path)
+            storage_path_obj = paths.resolve_project_path(self.storage_path)
             self.storage_path = str(storage_path_obj)
 
             create_result = fs.create_directory(storage_path_obj, exist_ok=True)

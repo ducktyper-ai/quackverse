@@ -61,7 +61,7 @@ class PluginLoader:
 
             # Validate the get_metadata method and its return value
             if not hasattr(plugin, "get_metadata") or not callable(
-                getattr(plugin, "get_metadata")
+                plugin.get_metadata
             ):
                 # For backward compatibility, create minimal metadata if get_metadata is not implemented
                 metadata = QuackPluginMetadata(

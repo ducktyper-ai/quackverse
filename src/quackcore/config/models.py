@@ -80,8 +80,8 @@ class LoggingConfig(BaseModel):
                 import logging
 
                 if (
-                        isinstance(handler, logging.StreamHandler)
-                        and handler.stream.name == "<stderr>"
+                    isinstance(handler, logging.StreamHandler)
+                    and handler.stream.name == "<stderr>"
                 ):
                     logger.removeHandler(handler)
 

@@ -9,9 +9,9 @@ serving as the main entry point for quackster _operations.
 import os
 
 from quackcore.errors import QuackError, QuackFileNotFoundError
-from quackcore.fs import service as fs, expand_user_vars
+from quackcore.fs import service as fs
 from quackcore.logging import get_logger
-from quackcore.paths import resolver
+from quackcore.paths import service as paths
 from quackster.academy.context import TeachingContext
 from quackster.academy.results import AssignmentResult, TeachingResult
 from quackster.core.gamification_service import GamificationService
@@ -48,11 +48,11 @@ class TeachingService:
         """
         try:
             if config_path is not None:
-                config_path = expand_user_vars(config_path)
+                config_path = fs.expand_user_vars(config_path)
             if base_dir is not None:
                 if not os.path.isabs(base_dir):
                     try:
-                        project_root = resolver._get_project_root()
+                        project_root = paths.get_project_root()
                         base_dir = fs.join_path(project_root, base_dir)
                     except QuackFileNotFoundError as err:
                         logger.warning(
@@ -92,7 +92,7 @@ class TeachingService:
         if base_dir is not None:
             if not os.path.isabs(base_dir):
                 try:
-                    base_dir = fs.join_path(resolver._get_project_root(), base_dir)
+                    base_dir = fs.join_path(paths.get_project_root(), base_dir)
                 except QuackFileNotFoundError as err:
                     logger.warning(
                         f"Project root not found: {err}. Falling back to os.path.abspath(base_dir)."
@@ -534,7 +534,7 @@ class TeachingService:
         if os.path.isabs(file_path):
             return file_path
         try:
-            project_root = resolver._get_project_root()
+            project_root = paths.get_project_root()
             return fs.join_path(project_root, file_path)
         except FileNotFoundError as err:
             logger.warning(

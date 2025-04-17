@@ -16,7 +16,7 @@ from quackcore.errors import (
     QuackIOError,
     QuackValidationError,
 )
-from quackcore.fs.results import DataResult, ReadResult, WriteResult
+from quackcore.fs.results import DataResult, OperationResult, ReadResult, WriteResult
 from quackcore.logging import get_logger
 
 # Set up logger
@@ -43,12 +43,12 @@ class SerializationOperationsMixin:
     data formats (JSON, YAML) with proper validation and error handling.
     """
 
-    def _resolve_path(self, path: str | Path) -> Path:
+    def _resolve_path(self, path: str | Path | DataResult | OperationResult) -> Path:
         """
         Resolve a path relative to the base directory.
 
         Args:
-            path: Path to resolve
+            path: Path to resolve (str, Path, DataResult, or OperationResult)
 
         Returns:
             Path: Resolved Path object

@@ -15,10 +15,8 @@ from quackcore.config import (  # Global config instance that merges env vars an
 from quackcore.config.utils import get_config_value
 
 # Import QuackCore FS and Config utilities
-from quackcore.fs import (
-    service as fs,
-    expand_user_vars,  # File _operations, path utilities, YAML reading, etc.
-)
+from quackcore.fs import service as fs
+from quackcore.fs.results import DataResult, OperationResult
 from quackster.npc.schema import QuacksterProfile
 
 # =============================================================================
@@ -75,19 +73,37 @@ def get_tutorial_path() -> str:
     # Check for an override via the environment variable.
     custom_path = os.environ.get(ENV_TUTORIAL_PATH)
     if custom_path:
-        expanded = expand_user_vars(custom_path)
-        return expanded
+        expanded = fs.expand_user_vars(custom_path)
+        # Extract the string path from the result
+        if isinstance(expanded, (DataResult, OperationResult)) and hasattr(
+            expanded, "data"
+        ):
+            return str(expanded.data)
+        return str(expanded)
 
     # Try each of the default paths.
     for path_str in DEFAULT_TUTORIAL_PATHS:
-        expanded_path = expand_user_vars(path_str)
+        expanded_result = fs.expand_user_vars(path_str)
+        # Extract the string path from the result
+        if isinstance(expanded_result, (DataResult, OperationResult)) and hasattr(
+            expanded_result, "data"
+        ):
+            expanded_path = str(expanded_result.data)
+        else:
+            expanded_path = str(expanded_result)
+
         info_result = fs.get_file_info(expanded_path)
         if info_result.success and info_result.exists and info_result.is_dir:
             return expanded_path
 
     # Fallback to the first default path (expanded).
-    fallback = expand_user_vars(DEFAULT_TUTORIAL_PATHS[0])
-    return fallback
+    fallback_result = fs.expand_user_vars(DEFAULT_TUTORIAL_PATHS[0])
+    # Extract the string path from the result
+    if isinstance(fallback_result, (DataResult, OperationResult)) and hasattr(
+        fallback_result, "data"
+    ):
+        return str(fallback_result.data)
+    return str(fallback_result)
 
 
 def get_npc_profile() -> QuacksterProfile:
@@ -109,7 +125,7 @@ def get_npc_profile() -> QuacksterProfile:
     custom_profile_path = os.environ.get(ENV_QUACKSTER_PROFILE)
     if custom_profile_path:
         try:
-            expanded_path = expand_user_vars(custom_profile_path)
+            expanded_path = fs.expand_user_vars(custom_profile_path)
             result = fs.read_yaml(expanded_path)
             if result.success:
                 # Merge custom profile data into the default profile.

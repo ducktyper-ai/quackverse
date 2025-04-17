@@ -34,35 +34,35 @@ class MockDownloadStatus:
     def __eq__(self, other) -> bool:
         if isinstance(other, (int, float)):
             return self._progress_value == other
-        if hasattr(other, "progress") and callable(getattr(other, "progress")):
+        if hasattr(other, "progress") and callable(other.progress):
             return self._progress_value == other.progress()
         return NotImplemented
 
     def __lt__(self, other) -> bool:
         if isinstance(other, (int, float)):
             return self._progress_value < other
-        if hasattr(other, "progress") and callable(getattr(other, "progress")):
+        if hasattr(other, "progress") and callable(other.progress):
             return self._progress_value < other.progress()
         return NotImplemented
 
     def __le__(self, other) -> bool:
         if isinstance(other, (int, float)):
             return self._progress_value <= other
-        if hasattr(other, "progress") and callable(getattr(other, "progress")):
+        if hasattr(other, "progress") and callable(other.progress):
             return self._progress_value <= other.progress()
         return NotImplemented
 
     def __gt__(self, other) -> bool:
         if isinstance(other, (int, float)):
             return self._progress_value > other
-        if hasattr(other, "progress") and callable(getattr(other, "progress")):
+        if hasattr(other, "progress") and callable(other.progress):
             return self._progress_value > other.progress()
         return NotImplemented
 
     def __ge__(self, other) -> bool:
         if isinstance(other, (int, float)):
             return self._progress_value >= other
-        if hasattr(other, "progress") and callable(getattr(other, "progress")):
+        if hasattr(other, "progress") and callable(other.progress):
             return self._progress_value >= other.progress()
         return NotImplemented
 

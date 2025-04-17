@@ -4,7 +4,7 @@ Mock classes for Google Drive download _operations.
 """
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.google.drive.protocols import DriveService
@@ -13,8 +13,8 @@ from quackcore.integrations.google.drive.protocols import DriveService
 def mock_download_file(
     drive_service: DriveService,
     remote_id: str,
-    local_path: Optional[str] = None,
-    logger: Optional[logging.Logger] = None,
+    local_path: str | None = None,
+    logger: logging.Logger | None = None,
 ) -> IntegrationResult[str]:
     """
     Mock implementation for download_file that matches the expected signature.
@@ -48,7 +48,7 @@ class MockDownloadOperations:
 
     @staticmethod
     def resolve_download_path(
-        file_metadata: dict[str, Any], local_path: Optional[str] = None
+        file_metadata: dict[str, Any], local_path: str | None = None
     ) -> str:
         """
         Mock implementation for resolve_download_path.

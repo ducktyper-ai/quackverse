@@ -401,7 +401,7 @@ class TestFeedback:
 
         # Verify GamificationService.handle_feedback_submission was called
         mock_gamification_service.return_value.handle_feedback_submission.assert_called_once_with(
-            feedback.id, f"Feedback for submission submission-1"
+            feedback.id, "Feedback for submission submission-1"
         )
 
     def test_update_gamification_error(self, mock_gamification_service, mock_logger):

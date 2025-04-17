@@ -16,11 +16,9 @@ from quackcore.fs.api.public import (
     expand_user_vars,
     is_same_file,
     is_subdirectory,
-)
-from quackcore.fs.api.public import normalize_path as utils_normalize_path
-from quackcore.fs.api.public import (
     split_path,
 )
+from quackcore.fs.api.public import normalize_path as utils_normalize_path
 
 
 class PathOperationsMixin:
@@ -54,7 +52,7 @@ class PathOperationsMixin:
                 path=result_path,
                 data=str(result_path),
                 format="path",
-                message=f"Successfully joined path parts",
+                message="Successfully joined path parts",
             )
         except Exception as e:
             return DataResult(

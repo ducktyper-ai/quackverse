@@ -3,7 +3,7 @@
 Mock OpenAI classes for LLM testing.
 """
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 from unittest.mock import MagicMock
 
 from tests.quackcore.test_integrations.llms.mocks.base import (
@@ -20,9 +20,9 @@ class MockOpenAIResponse(MockLLMResponse):
         self,
         content: str = "This is a mock OpenAI response",
         model: str = "gpt-4o",
-        usage: Optional[Dict[str, int]] = None,
+        usage: dict[str, int] | None = None,
         finish_reason: str = "stop",
-        error: Optional[Exception] = None,
+        error: Exception | None = None,
         object_type: str = "chat.completion",
         id: str = "chatcmpl-123",
         created: int = 1677858242,
@@ -52,7 +52,7 @@ class MockOpenAIResponse(MockLLMResponse):
         self.object = object_type
         self.created = created
 
-    def to_openai_format(self) -> Dict[str, Any]:
+    def to_openai_format(self) -> dict[str, Any]:
         """Convert to OpenAI API format."""
         if self.error:
             raise self.error
@@ -153,7 +153,7 @@ class MockOpenAIErrorResponse:
         message: str = "OpenAI API error",
         code: str = "rate_limit_exceeded",
         type: str = "server_error",
-        param: Optional[str] = None,
+        param: str | None = None,
         status_code: int = 429,
     ):
         """
@@ -205,10 +205,10 @@ class MockOpenAIClient(MockClient):
 
     def __init__(
         self,
-        responses: List[str] = None,
-        token_counts: List[int] = None,
+        responses: list[str] = None,
+        token_counts: list[int] = None,
         model: str = "gpt-4o",
-        errors: List[Exception] = None,
+        errors: list[Exception] = None,
         **kwargs: Any,
     ):
         """

@@ -10,9 +10,9 @@ import os
 from typing import Any
 
 from quackcore.errors import QuackFileNotFoundError  # Dogfood our errors
-from quackcore.fs import service as fs, expand_user_vars
+from quackcore.fs import service as fs
 from quackcore.logging import get_logger
-from quackcore.paths import resolver
+from quackcore.paths import service as paths
 from quackcore.plugins.discovery import PluginInfo
 from quackster.academy.context import TeachingContext
 from quackster.academy.results import TeachingResult
@@ -75,14 +75,14 @@ class TeachingPlugin(QuackPlugin):
         config_path = options.get("config_path")
         if config_path:
             # Expand user variables (e.g., '~') in the provided config path.
-            config_path = expand_user_vars(config_path)
+            config_path = fs.expand_user_vars(config_path)
 
         base_dir = options.get("base_dir")
         if base_dir:
             if not os.path.isabs(base_dir):
                 try:
                     # Use the project root if available.
-                    base_dir = fs.join_path(resolver._get_project_root(), base_dir)
+                    base_dir = fs.join_path(paths.get_project_root(), base_dir)
                 except QuackFileNotFoundError as err:
                     logger.warning(
                         f"Project root not found: {err}. Falling back to os.path.abspath(base_dir)."
@@ -112,7 +112,7 @@ class TeachingPlugin(QuackPlugin):
         # Optionally, resolve the base_dir if provided.
         if base_dir and not os.path.isabs(base_dir):
             try:
-                base_dir = fs.join_path(resolver._get_project_root(), base_dir)
+                base_dir = fs.join_path(paths.get_project_root(), base_dir)
             except QuackFileNotFoundError as err:
                 logger.warning(
                     f"Project root not found: {err}. Falling back to os.path.abspath(base_dir)."
