@@ -6,6 +6,7 @@ Common utility functions for filesystem _operations.
 from pathlib import Path
 
 from quackcore.errors import wrap_io_errors
+from quackcore.fs import DataResult, OperationResult
 from quackcore.logging import get_logger
 
 # Initialize module logger
@@ -61,3 +62,26 @@ def _normalize_path(path: str | Path) -> Path:
         # just return the path as is, with a warning
         logger.warning(f"Could not normalize path '{path}': {str(e)}")
         return path_obj
+
+
+def _normalize_path_param(path: str | Path | DataResult | OperationResult) -> Path:
+    """
+    Normalize a path parameter to a Path object.
+
+    Helper function to consistently handle different path input types.
+
+    Args:
+        path: Path parameter (string, Path, DataResult, or OperationResult)
+
+    Returns:
+        Normalized Path object
+    """
+    if isinstance(path, (DataResult, OperationResult)) and hasattr(path, "data"):
+        path_content = path.data
+    else:
+        path_content = path
+
+    try:
+        return Path(path_content)
+    except TypeError:
+        return Path(str(path_content))

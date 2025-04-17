@@ -8,6 +8,7 @@ This provides the core functionality and initialization for the service.
 from pathlib import Path
 
 from quackcore.fs._operations import FileSystemOperations
+from quackcore.fs.results import DataResult, OperationResult
 from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
 
 
@@ -20,9 +21,9 @@ class FileSystemService:
     """
 
     def __init__(
-        self,
-        base_dir: str | Path | None = None,
-        log_level: int = LOG_LEVELS[LogLevel.INFO],
+            self,
+            base_dir: str | Path | None = None,
+            log_level: int = LOG_LEVELS[LogLevel.INFO],
     ) -> None:
         """
         Initialize the filesystem service.
@@ -38,3 +39,27 @@ class FileSystemService:
         # Initialize _operations with base directory
         self.base_dir = Path(base_dir) if base_dir else Path.cwd()
         self.operations = FileSystemOperations(self.base_dir)
+
+    def _normalize_input_path(self,
+                              path: str | Path | DataResult | OperationResult) -> Path:
+        """
+        Normalize an input path to a Path object.
+
+        This method handles various input types (str, Path, DataResult, OperationResult)
+        and converts them to a standard Path object for internal use.
+
+        Args:
+            path: Input path, which can be a string, Path, DataResult, or OperationResult
+
+        Returns:
+            A normalized Path object
+        """
+        if isinstance(path, (DataResult, OperationResult)) and hasattr(path, "data"):
+            path_content = path.data
+        else:
+            path_content = path
+
+        try:
+            return Path(path_content)
+        except TypeError:
+            return Path(str(path_content))

@@ -53,12 +53,12 @@ service = property(get_service)
 # These are wrappers around the service functions that lazily initialize the service
 
 
-def create_directory(path: str | Path, exist_ok: bool = True) -> OperationResult:
+def create_directory(path: str | Path | DataResult | OperationResult, exist_ok: bool = True) -> OperationResult:
     """
     Create a directory if it doesn't exist.
 
     Args:
-        path: Directory path to create.
+        path: Directory path to create (string, Path, DataResult, or OperationResult)
         exist_ok: If False, raise an error when the directory exists.
 
     Returns:
@@ -68,12 +68,12 @@ def create_directory(path: str | Path, exist_ok: bool = True) -> OperationResult
     return get_service().create_directory(path, exist_ok)
 
 
-def read_yaml(path: str | Path) -> DataResult[dict]:
+def read_yaml(path: str | Path | DataResult | OperationResult) -> DataResult[dict]:
     """
     Read a YAML file and parse its contents using the FileSystemService.
 
     Args:
-        path: Path to the YAML file.
+        path: Path to the YAML file (string, Path, DataResult, or OperationResult)
 
     Returns:
         A DataResult containing the parsed YAML data.
@@ -81,12 +81,12 @@ def read_yaml(path: str | Path) -> DataResult[dict]:
     return get_service().read_yaml(path)
 
 
-def get_file_info(path: str | Path) -> FileInfoResult:
+def get_file_info(path: str | Path | DataResult | OperationResult) -> FileInfoResult:
     """
     Get information about a file or directory.
 
     Args:
-        path: Path to get information about
+        path: Path to get information about (string, Path, DataResult, or OperationResult)
 
     Returns:
         FileInfoResult with file information
@@ -94,12 +94,12 @@ def get_file_info(path: str | Path) -> FileInfoResult:
     return get_service().get_file_info(path)
 
 
-def read_text(path: str | Path, encoding: str = "utf-8") -> ReadResult[str]:
+def read_text(path: str | Path | DataResult | OperationResult, encoding: str = "utf-8") -> ReadResult[str]:
     """
     Read text from a file.
 
     Args:
-        path: Path to the file
+        path: Path to the file (string, Path, DataResult, or OperationResult)
         encoding: Text encoding
 
     Returns:
@@ -109,7 +109,7 @@ def read_text(path: str | Path, encoding: str = "utf-8") -> ReadResult[str]:
 
 
 def write_text(
-    path: str | Path,
+    path: str | Path | DataResult | OperationResult,
     content: str,
     encoding: str = "utf-8",
     atomic: bool = True,
@@ -118,7 +118,7 @@ def write_text(
     Write text to a file.
 
     Args:
-        path: Path to the file
+        path: Path to the file (string, Path, DataResult, or OperationResult)
         content: Content to write
         encoding: Text encoding
         atomic: Whether to use atomic writing
@@ -129,12 +129,12 @@ def write_text(
     return get_service().write_text(path, content, encoding, atomic)
 
 
-def read_binary(path: str | Path) -> ReadResult[bytes]:
+def read_binary(path: str | Path | DataResult | OperationResult) -> ReadResult[bytes]:
     """
     Read binary data from a file.
 
     Args:
-        path: Path to the file
+        path: Path to the file (string, Path, DataResult, or OperationResult)
 
     Returns:
         ReadResult with the file content as bytes
@@ -143,7 +143,7 @@ def read_binary(path: str | Path) -> ReadResult[bytes]:
 
 
 def write_binary(
-    path: str | Path,
+    path: str | Path | DataResult | OperationResult,
     content: bytes,
     atomic: bool = True,
 ) -> WriteResult:
@@ -151,7 +151,7 @@ def write_binary(
     Write binary data to a file.
 
     Args:
-        path: Path to the file
+        path: Path to the file (string, Path, DataResult, or OperationResult)
         content: Content to write
         atomic: Whether to use atomic writing
 
@@ -162,7 +162,7 @@ def write_binary(
 
 
 def write_yaml(
-    path: str | Path,
+    path: str | Path | DataResult | OperationResult,
     data: dict,
     atomic: bool = True,
 ) -> WriteResult:
@@ -170,7 +170,7 @@ def write_yaml(
     Write data to a YAML file.
 
     Args:
-        path: Path to YAML file
+        path: Path to YAML file (string, Path, DataResult, or OperationResult)
         data: Data to write
         atomic: Whether to use atomic writing
 
@@ -180,12 +180,12 @@ def write_yaml(
     return get_service().write_yaml(path, data, atomic)
 
 
-def read_json(path: str | Path) -> DataResult[dict]:
+def read_json(path: str | Path | DataResult | OperationResult) -> DataResult[dict]:
     """
     Read a JSON file and parse its contents.
 
     Args:
-        path: Path to JSON file
+        path: Path to JSON file (string, Path, DataResult, or OperationResult)
 
     Returns:
         DataResult with parsed JSON data
@@ -194,7 +194,7 @@ def read_json(path: str | Path) -> DataResult[dict]:
 
 
 def write_json(
-    path: str | Path,
+    path: str | Path | DataResult | OperationResult,
     data: dict,
     atomic: bool = True,
     indent: int = 2,
@@ -203,7 +203,7 @@ def write_json(
     Write data to a JSON file.
 
     Args:
-        path: Path to JSON file
+        path: Path to JSON file (string, Path, DataResult, or OperationResult)
         data: Data to write
         atomic: Whether to use atomic writing
         indent: Number of spaces to indent
@@ -215,7 +215,7 @@ def write_json(
 
 
 def list_directory(
-    path: str | Path,
+    path: str | Path | DataResult | OperationResult,
     pattern: str | None = None,
     include_hidden: bool = False,
 ) -> DirectoryInfoResult:
@@ -223,7 +223,7 @@ def list_directory(
     List contents of a directory.
 
     Args:
-        path: Path to list
+        path: Path to list (string, Path, DataResult, or OperationResult)
         pattern: Pattern to match files against
         include_hidden: Whether to include hidden files
 
@@ -234,7 +234,7 @@ def list_directory(
 
 
 def find_files(
-    path: str | Path,
+    path: str | Path | DataResult | OperationResult,
     pattern: str,
     recursive: bool = True,
     include_hidden: bool = False,
@@ -243,7 +243,7 @@ def find_files(
     Find files matching a pattern.
 
     Args:
-        path: Directory to search
+        path: Directory to search (string, Path, DataResult, or OperationResult)
         pattern: Pattern to match files against
         recursive: Whether to search recursively
         include_hidden: Whether to include hidden files
@@ -254,13 +254,13 @@ def find_files(
     return get_service().find_files(path, pattern, recursive, include_hidden)
 
 
-def copy(src: str | Path, dst: str | Path, overwrite: bool = False) -> WriteResult:
+def copy(src: str | Path | DataResult | OperationResult, dst: str | Path | DataResult | OperationResult, overwrite: bool = False) -> WriteResult:
     """
     Copy a file or directory.
 
     Args:
-        src: Source path
-        dst: Destination path
+        src: Source path (string, Path, DataResult, or OperationResult)
+        dst: Destination path (string, Path, DataResult, or OperationResult)
         overwrite: Whether to overwrite if destination exists
 
     Returns:
@@ -269,13 +269,13 @@ def copy(src: str | Path, dst: str | Path, overwrite: bool = False) -> WriteResu
     return get_service().copy(src, dst, overwrite)
 
 
-def move(src: str | Path, dst: str | Path, overwrite: bool = False) -> WriteResult:
+def move(src: str | Path | DataResult | OperationResult, dst: str | Path | DataResult | OperationResult, overwrite: bool = False) -> WriteResult:
     """
     Move a file or directory.
 
     Args:
-        src: Source path
-        dst: Destination path
+        src: Source path (string, Path, DataResult, or OperationResult)
+        dst: Destination path (string, Path, DataResult, or OperationResult)
         overwrite: Whether to overwrite if destination exists
 
     Returns:
@@ -284,12 +284,12 @@ def move(src: str | Path, dst: str | Path, overwrite: bool = False) -> WriteResu
     return get_service().move(src, dst, overwrite)
 
 
-def delete(path: str | Path, missing_ok: bool = True) -> OperationResult:
+def delete(path: str | Path | DataResult | OperationResult, missing_ok: bool = True) -> OperationResult:
     """
     Delete a file or directory.
 
     Args:
-        path: Path to delete
+        path: Path to delete (string, Path, DataResult, or OperationResult)
         missing_ok: Whether to ignore if the path doesn't exist
 
     Returns:
@@ -298,12 +298,12 @@ def delete(path: str | Path, missing_ok: bool = True) -> OperationResult:
     return get_service().delete(path, missing_ok)
 
 
-def read_lines(path: str | Path, encoding: str = "utf-8") -> ReadResult:
+def read_lines(path: str | Path | DataResult | OperationResult, encoding: str = "utf-8") -> ReadResult:
     """
     Read lines from a text file.
 
     Args:
-        path: Path to the file
+        path: Path to the file (string, Path, DataResult, or OperationResult)
         encoding: Text encoding
 
     Returns:
@@ -313,7 +313,7 @@ def read_lines(path: str | Path, encoding: str = "utf-8") -> ReadResult:
 
 
 def write_lines(
-    path: str | Path,
+    path: str | Path | DataResult | OperationResult,
     lines: list[str],
     encoding: str = "utf-8",
     atomic: bool = True,
@@ -323,7 +323,7 @@ def write_lines(
     Write lines to a text file.
 
     Args:
-        path: Path to the file
+        path: Path to the file (string, Path, DataResult, or OperationResult)
         lines: Lines to write
         encoding: Text encoding
         atomic: Whether to write the file atomically
@@ -335,7 +335,7 @@ def write_lines(
     return get_service().write_lines(path, lines, encoding, atomic, line_ending)
 
 
-def path_exists(path: str | Path) -> DataResult[bool]:
+def path_exists(path: str | Path | DataResult | OperationResult) -> DataResult[bool]:
     """
     Check if a path exists using the FileSystemService.
 
@@ -343,7 +343,7 @@ def path_exists(path: str | Path) -> DataResult[bool]:
     ensuring consistency with all other filesystem _operations.
 
     Args:
-        path: The file or directory path to check.
+        path: The file or directory path to check (string, Path, DataResult, or OperationResult)
 
     Returns:
         DataResult with boolean indicating if the path exists.
@@ -351,12 +351,12 @@ def path_exists(path: str | Path) -> DataResult[bool]:
     return get_service().path_exists(path)
 
 
-def normalize_path_with_info(path: str | Path) -> PathResult:
+def normalize_path_with_info(path: str | Path | DataResult | OperationResult) -> PathResult:
     """
     Normalize a path and return detailed information.
 
     Args:
-        path: Path to normalize
+        path: Path to normalize (string, Path, DataResult, or OperationResult)
 
     Returns:
         PathResult containing the normalized path and status information
@@ -364,12 +364,12 @@ def normalize_path_with_info(path: str | Path) -> PathResult:
     return get_service().normalize_path_with_info(path)
 
 
-def get_path_info(path: str | Path) -> PathResult:
+def get_path_info(path: str | Path | DataResult | OperationResult) -> PathResult:
     """
     Get information about a path's validity and format.
 
     Args:
-        path: Path to check
+        path: Path to check (string, Path, DataResult, or OperationResult)
 
     Returns:
         PathResult containing validation results
@@ -377,12 +377,12 @@ def get_path_info(path: str | Path) -> PathResult:
     return get_service().get_path_info(path)
 
 
-def is_valid_path(path: str | Path) -> DataResult[bool]:
+def is_valid_path(path: str | Path | DataResult | OperationResult) -> DataResult[bool]:
     """
     Check if a path has valid syntax.
 
     Args:
-        path: Path to check
+        path: Path to check (string, Path, DataResult, or OperationResult)
 
     Returns:
         DataResult with boolean indicating if the path has valid syntax

@@ -29,13 +29,13 @@ from quackcore.integrations.pandoc.operations.html_to_md import (
 
 
 class TestHtmlToMarkdownOperations:
-    """Tests for HTML to Markdown conversion _operations."""
+    """Tests for HTML to Markdown conversion operations."""
 
     @pytest.fixture
     def config(self):
         """Fixture to create a PandocConfig for testing."""
         return PandocConfig(
-            output_dir=Path("/path/to/output"),
+            output_dir="/path/to/output",  # Changed from Path to string
         )
 
     @pytest.fixture
@@ -47,7 +47,7 @@ class TestHtmlToMarkdownOperations:
     def mock_fs(self):
         """Fixture to mock fs module."""
         with patch(
-            "quackcore.integrations.pandoc._operations.html_to_md.fs"
+            "quackcore.integrations.pandoc.operations.html_to_md.fs"  # Changed from _operations to operations
         ) as mock_fs:
             # Setup default behavior for file info checks
             file_info = FileInfoResult(
@@ -57,7 +57,7 @@ class TestHtmlToMarkdownOperations:
                 is_file=True,
                 size=1024,
             )
-            mock_fs.service._get_file_info.return_value = file_info
+            mock_fs.get_file_info.return_value = file_info
 
             # Setup default behavior for directory creation
             dir_result = OperationResult(
@@ -74,7 +74,7 @@ class TestHtmlToMarkdownOperations:
                 content="<html><body><h1>Test</h1><p>Content</p></body></html>",
                 encoding="utf-8",
             )
-            mock_fs.service._read_text.return_value = read_result
+            mock_fs.read_text.return_value = read_result
 
             # Setup default behavior for write_text
             write_result = WriteResult(
@@ -105,7 +105,7 @@ class TestHtmlToMarkdownOperations:
 
         # Simply verify that the function doesn't crash with basic inputs
         # Don't try to mock the full implementation and dependencies
-        mock_fs.service._get_file_info.return_value = MockFileInfo()
+        mock_fs.get_file_info.return_value = MockFileInfo()
 
         try:
             # Just try to call the function - don't verify exact results

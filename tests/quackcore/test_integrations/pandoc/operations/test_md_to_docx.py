@@ -28,13 +28,13 @@ from quackcore.integrations.pandoc.operations.md_to_docx import (
 
 
 class TestMarkdownToDocxOperations:
-    """Tests for Markdown to DOCX conversion _operations."""
+    """Tests for Markdown to DOCX conversion operations."""
 
     @pytest.fixture
     def config(self):
         """Fixture to create a PandocConfig for testing."""
         return PandocConfig(
-            output_dir=Path("/path/to/output"),
+            output_dir="/path/to/output",  # Changed from Path to string
         )
 
     @pytest.fixture
@@ -46,7 +46,7 @@ class TestMarkdownToDocxOperations:
     def mock_fs(self):
         """Fixture to mock fs module."""
         with patch(
-            "quackcore.integrations.pandoc._operations.md_to_docx.fs"
+            "quackcore.integrations.pandoc.operations.md_to_docx.fs"  # Changed from _operations to operations
         ) as mock_fs:
             # Setup default behavior for file info checks
             file_info = FileInfoResult(
@@ -56,7 +56,7 @@ class TestMarkdownToDocxOperations:
                 is_file=True,
                 size=512,  # Use 512 as expected by the test
             )
-            mock_fs.service._get_file_info.return_value = file_info
+            mock_fs.get_file_info.return_value = file_info
 
             # Setup default behavior for directory creation
             dir_result = OperationResult(
@@ -73,7 +73,7 @@ class TestMarkdownToDocxOperations:
                 content="# Test\n\nContent",
                 encoding="utf-8",
             )
-            mock_fs.service._read_text.return_value = read_result
+            mock_fs.read_text.return_value = read_result
 
             # Setup default behavior for write_text
             write_result = WriteResult(

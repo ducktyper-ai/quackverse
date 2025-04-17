@@ -11,7 +11,7 @@ from pathlib import Path
 
 from quackcore.errors import wrap_io_errors
 from quackcore.fs._operations import FileSystemOperations
-from quackcore.fs.results import DataResult, PathResult
+from quackcore.fs.results import DataResult, OperationResult, PathResult
 from quackcore.logging import get_logger
 
 logger = get_logger(__name__)
@@ -28,57 +28,65 @@ class PathValidationMixin:
     # This ensures the mixin will only be used with classes that have an '_operations' attribute.
     operations: FileSystemOperations
 
-    def path_exists(self, path: str | Path) -> DataResult[bool]:
+    # This method is added in the base class
+    def _normalize_input_path(self,
+                              path: str | Path | DataResult | OperationResult) -> Path:
+        """Normalize an input path to a Path object."""
+        raise NotImplementedError("This method should be overridden")
+
+    def path_exists(self, path: str | Path | DataResult | OperationResult) -> \
+    DataResult[bool]:
         """
         Check if a path exists in the filesystem by leveraging the existing
         FileInfoOperationsMixin implementation via self._operations.
 
         Args:
-            path: Path to check for existence
+            path: Path to check for existence (string, Path, DataResult, or OperationResult)
 
         Returns:
             DataResult with boolean indicating if the path exists
         """
-        path_obj = Path(path)  # Normalize early
+        normalized_path = self._normalize_input_path(path)
         try:
             # Delegate to the file_info's path_exists implementation
-            exists = self.operations._path_exists(path_obj)
+            exists = self.operations._path_exists(normalized_path)
 
             return DataResult(
                 success=True,
-                path=path_obj,
+                path=normalized_path,
                 data=exists,
                 format="boolean",
-                message=f"Path {path_obj} {'exists' if exists else 'does not exist'}",
+                message=f"Path {normalized_path} {'exists' if exists else 'does not exist'}",
             )
         except Exception as exc:
             logger.error(f"Error checking if path exists using _operations: {exc}")
             # Fallback: use the standard pathlib.Path.exists() check
             try:
-                exists = path_obj.exists()
-                logger.debug(f"Fallback check for {path_obj} returned: {exists}")
+                exists = normalized_path.exists()
+                logger.debug(f"Fallback check for {normalized_path} returned: {exists}")
 
                 return DataResult(
                     success=True,
-                    path=path_obj,
+                    path=normalized_path,
                     data=exists,
                     format="boolean",
-                    message=f"Path {path_obj} {'exists' if exists else 'does not exist'} (fallback check)",
+                    message=f"Path {normalized_path} {'exists' if exists else 'does not exist'} (fallback check)",
                 )
             except Exception as fallback_exc:
                 logger.error(
-                    f"Fallback direct check failed for {path_obj}: {fallback_exc}"
+                    f"Fallback direct check failed for {normalized_path}: {fallback_exc}"
                 )
 
                 return DataResult(
                     success=False,
-                    path=path_obj,
+                    path=normalized_path,
                     data=False,
                     format="boolean",
                     error=f"Failed to check if path exists: {str(fallback_exc)}",
                 )
 
-    def get_path_info(self, path: str | Path) -> PathResult:
+    def get_path_info(self,
+                      path: str | Path | DataResult | OperationResult) -> PathResult:
         """
         Get information about a path's validity and format.
 
@@ -86,39 +94,45 @@ class PathValidationMixin:
         without requiring the path to exist.
 
         Args:
-            path: Path to check
+            path: Path to check (string, Path, DataResult, or OperationResult)
 
         Returns:
             PathResult with validation results
         """
         try:
-            path_obj = Path(path)  # Normalize early
-            is_absolute = path_obj.is_absolute()
+            normalized_path = self._normalize_input_path(path)
+            is_absolute = normalized_path.is_absolute()
 
             # Check if the path syntax is valid without requiring existence
-            is_valid = self._is_path_syntax_valid(str(path_obj))
+            is_valid = self._is_path_syntax_valid(str(normalized_path))
 
             # Check for existence (optional info)
-            exists_result = self.path_exists(path_obj)
+            exists_result = self.path_exists(normalized_path)
             exists = exists_result.data if exists_result.success else False
 
             return PathResult(
                 success=True,
-                path=path_obj,
+                path=normalized_path,
                 is_absolute=is_absolute,
                 is_valid=is_valid,
                 exists=exists,
                 message="Path validation successful",
             )
         except Exception as e:
+            try:
+                normalized_path = self._normalize_input_path(path)
+            except:
+                normalized_path = Path()
+
             return PathResult(
                 success=False,
-                path=Path(path) if isinstance(path, (str, Path)) else Path(),
+                path=normalized_path,
                 is_valid=False,
                 error=f"Path validation failed: {str(e)}",
             )
 
-    def is_valid_path(self, path: str | Path) -> DataResult[bool]:
+    def is_valid_path(self, path: str | Path | DataResult | OperationResult) -> \
+    DataResult[bool]:
         """
         Check if a path has valid syntax.
 
@@ -126,28 +140,28 @@ class PathValidationMixin:
         not whether it exists or is accessible.
 
         Args:
-            path: Path to check
+            path: Path to check (string, Path, DataResult, or OperationResult)
 
         Returns:
             DataResult with boolean indicating if the path has valid syntax
         """
-        path_obj = Path(path)  # Normalize early
+        normalized_path = self._normalize_input_path(path)
         try:
-            is_valid = self._is_path_syntax_valid(str(path_obj))
+            is_valid = self._is_path_syntax_valid(str(normalized_path))
 
             return DataResult(
                 success=True,
-                path=path_obj,
+                path=normalized_path,
                 data=is_valid,
                 format="boolean",
-                message=f"Path {path_obj} {'has valid' if is_valid else 'has invalid'} syntax",
+                message=f"Path {normalized_path} {'has valid' if is_valid else 'has invalid'} syntax",
             )
         except Exception as e:
-            logger.error(f"Error checking path validity for {path_obj}: {e}")
+            logger.error(f"Error checking path validity for {normalized_path}: {e}")
 
             return DataResult(
                 success=False,
-                path=path_obj,
+                path=normalized_path,
                 data=False,
                 format="boolean",
                 error=f"Failed to check path validity: {str(e)}",
@@ -205,7 +219,8 @@ class PathValidationMixin:
             return False
 
     @wrap_io_errors
-    def normalize_path_with_info(self, path: str | Path) -> PathResult:
+    def normalize_path_with_info(self,
+                                 path: str | Path | DataResult | OperationResult) -> PathResult:
         """
         Normalize a path and return detailed information.
 
@@ -213,42 +228,58 @@ class PathValidationMixin:
         with success status and additional information.
 
         Args:
-            path: Path to normalize
+            path: Path to normalize (string, Path, DataResult, or OperationResult)
 
         Returns:
             PathResult with the normalized path and status information
         """
         try:
-            path_obj = Path(path)  # Normalize early
-            if not path_obj.is_absolute():
+            normalized_path = self._normalize_input_path(path)
+            if not normalized_path.is_absolute():
                 try:
-                    path_obj = path_obj.resolve()
+                    normalized_path = normalized_path.resolve()
                 except FileNotFoundError:
                     # When resolution fails (for non-existent paths),
                     # fall back to the original path.
                     pass
 
-            exists_result = self.path_exists(path_obj)
+            exists_result = self.path_exists(normalized_path)
             exists = exists_result.data if exists_result.success else False
 
             return PathResult(
                 success=True,
-                path=path_obj,
-                is_absolute=path_obj.is_absolute(),
+                path=normalized_path,
+                is_absolute=normalized_path.is_absolute(),
                 is_valid=True,
                 exists=exists,
                 message="Path normalized successfully",
             )
         except Exception as e:
+            try:
+                normalized_path = self._normalize_input_path(path)
+            except:
+                normalized_path = Path()
+
             return PathResult(
                 success=False,
-                path=Path(path) if isinstance(path, (str, Path)) else Path(),
+                path=normalized_path,
                 is_valid=False,
                 error=f"Path normalization failed: {e}",
             )
 
-    def resolve_path_strict(self, path: str | Path) -> PathResult:
-        resolved = self.operations._resolve_path(path)
+    def resolve_path_strict(self,
+                            path: str | Path | DataResult | OperationResult) -> PathResult:
+        """
+        Resolve a path and verify it exists.
+
+        Args:
+            path: Path to resolve (string, Path, DataResult, or OperationResult)
+
+        Returns:
+            PathResult with the resolved path and validation information
+        """
+        normalized_path = self._normalize_input_path(path)
+        resolved = self.operations._resolve_path(normalized_path)
         if not resolved.exists():
             return PathResult(
                 success=False,

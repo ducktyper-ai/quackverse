@@ -7,6 +7,7 @@ This module provides safe, result-oriented wrappers around low-level file info _
 
 from pathlib import Path
 
+from quackcore.fs._helpers.common import _normalize_path_param
 from quackcore.fs._helpers.file_info import (
     _get_file_size_str,
     _get_file_timestamp,
@@ -14,37 +15,39 @@ from quackcore.fs._helpers.file_info import (
     _get_mime_type,
     _is_file_locked,
 )
-from quackcore.fs.results import DataResult
+from quackcore.fs.results import DataResult, OperationResult
 from quackcore.logging import get_logger
 
 logger = get_logger(__name__)
 
 
-def get_file_type(path: str | Path) -> DataResult[str]:
+def get_file_type(path: str | Path | DataResult | OperationResult) -> DataResult[str]:
     """
     Get the type of a file.
 
     Args:
-        path: Path to the file
+        path: Path to the file (string, Path, DataResult, or OperationResult)
 
     Returns:
         DataResult with file type string (e.g., "text", "binary", "directory", "symlink")
     """
     try:
-        file_type = _get_file_type(path)
+        normalized_path = _normalize_path_param(path)
+        file_type = _get_file_type(normalized_path)
 
         return DataResult(
             success=True,
-            path=Path(path),
+            path=normalized_path,
             data=file_type,
             format="file_type",
-            message=f"File {path} is of type: {file_type}",
+            message=f"File {normalized_path} is of type: {file_type}",
         )
     except Exception as e:
         logger.error(f"Failed to get file type for {path}: {e}")
+        normalized_path = _normalize_path_param(path)
         return DataResult(
             success=False,
-            path=Path(path),
+            path=normalized_path,
             data="unknown",
             format="file_type",
             error=str(e),
@@ -84,31 +87,34 @@ def get_file_size_str(size_bytes: int) -> DataResult[str]:
         )
 
 
-def get_file_timestamp(path: str | Path) -> DataResult[float]:
+def get_file_timestamp(path: str | Path | DataResult | OperationResult) -> DataResult[
+    float]:
     """
     Get the latest timestamp (modification time) for a file.
 
     Args:
-        path: Path to the file
+        path: Path to the file (string, Path, DataResult, or OperationResult)
 
     Returns:
         DataResult with timestamp as float
     """
     try:
-        timestamp = _get_file_timestamp(path)
+        normalized_path = _normalize_path_param(path)
+        timestamp = _get_file_timestamp(normalized_path)
 
         return DataResult(
             success=True,
-            path=Path(path),
+            path=normalized_path,
             data=timestamp,
             format="timestamp",
             message=f"Retrieved file timestamp: {timestamp}",
         )
     except Exception as e:
         logger.error(f"Failed to get file timestamp for {path}: {e}")
+        normalized_path = _normalize_path_param(path)
         return DataResult(
             success=False,
-            path=Path(path),
+            path=normalized_path,
             data=0.0,
             format="timestamp",
             error=str(e),
@@ -116,37 +122,40 @@ def get_file_timestamp(path: str | Path) -> DataResult[float]:
         )
 
 
-def get_mime_type(path: str | Path) -> DataResult[str | None]:
+def get_mime_type(path: str | Path | DataResult | OperationResult) -> DataResult[
+    str | None]:
     """
     Get the MIME type of a file.
 
     Args:
-        path: Path to the file
+        path: Path to the file (string, Path, DataResult, or OperationResult)
 
     Returns:
         DataResult with MIME type string or None if not determinable
     """
     try:
-        mime_type = _get_mime_type(path)
+        normalized_path = _normalize_path_param(path)
+        mime_type = _get_mime_type(normalized_path)
 
         message = (
-            f"MIME type for {path}: {mime_type}"
+            f"MIME type for {normalized_path}: {mime_type}"
             if mime_type
-            else f"Could not determine MIME type for {path}"
+            else f"Could not determine MIME type for {normalized_path}"
         )
 
         return DataResult(
             success=True,
-            path=Path(path),
+            path=normalized_path,
             data=mime_type,
             format="mime_type",
             message=message,
         )
     except Exception as e:
         logger.error(f"Failed to get MIME type for {path}: {e}")
+        normalized_path = _normalize_path_param(path)
         return DataResult(
             success=False,
-            path=Path(path),
+            path=normalized_path,
             data=None,
             format="mime_type",
             error=str(e),
@@ -154,31 +163,33 @@ def get_mime_type(path: str | Path) -> DataResult[str | None]:
         )
 
 
-def is_file_locked(path: str | Path) -> DataResult[bool]:
+def is_file_locked(path: str | Path | DataResult | OperationResult) -> DataResult[bool]:
     """
     Check if a file is locked by another process.
 
     Args:
-        path: Path to the file
+        path: Path to the file (string, Path, DataResult, or OperationResult)
 
     Returns:
         DataResult with boolean indicating if file is locked
     """
     try:
-        is_locked = _is_file_locked(path)
+        normalized_path = _normalize_path_param(path)
+        is_locked = _is_file_locked(normalized_path)
 
         return DataResult(
             success=True,
-            path=Path(path),
+            path=normalized_path,
             data=is_locked,
             format="boolean",
-            message=f"File {path} is {'locked' if is_locked else 'not locked'}",
+            message=f"File {normalized_path} is {'locked' if is_locked else 'not locked'}",
         )
     except Exception as e:
         logger.error(f"Failed to check if file is locked {path}: {e}")
+        normalized_path = _normalize_path_param(path)
         return DataResult(
             success=False,
-            path=Path(path),
+            path=normalized_path,
             data=False,
             format="boolean",
             error=str(e),

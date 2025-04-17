@@ -8,29 +8,33 @@ safe file _operations.
 
 from pathlib import Path
 
+from quackcore.fs._helpers.common import _normalize_path_param
 from quackcore.fs._helpers.safe_ops import _safe_copy, _safe_delete, _safe_move
-from quackcore.fs.results import OperationResult, WriteResult
+from quackcore.fs.results import DataResult, OperationResult, WriteResult
 from quackcore.logging import get_logger
 
 logger = get_logger(__name__)
 
 
 def copy_safely(
-    src: str | Path, dst: str | Path, overwrite: bool = False
+        src: str | Path | DataResult | OperationResult,
+        dst: str | Path | DataResult | OperationResult, overwrite: bool = False
 ) -> WriteResult:
     """
     Safely copy a file or directory.
 
     Args:
-        src: Source path
-        dst: Destination path
+        src: Source path (string, Path, DataResult, or OperationResult)
+        dst: Destination path (string, Path, DataResult, or OperationResult)
         overwrite: If True, overwrite destination if it exists
 
     Returns:
         WriteResult with operation status
     """
     try:
-        result_path = _safe_copy(src, dst, overwrite)
+        normalized_src = _normalize_path_param(src)
+        normalized_dst = _normalize_path_param(dst)
+        result_path = _safe_copy(normalized_src, normalized_dst, overwrite)
 
         # Get size if it's a file
         bytes_copied = 0
@@ -40,92 +44,103 @@ def copy_safely(
         return WriteResult(
             success=True,
             path=result_path,
-            original_path=Path(src),
+            original_path=normalized_src,
             bytes_written=bytes_copied,
-            message=f"Successfully copied {src} to {dst}",
+            message=f"Successfully copied {normalized_src} to {normalized_dst}",
         )
     except Exception as e:
         logger.error(f"Failed to copy {src} to {dst}: {e}")
+        normalized_src = _normalize_path_param(src)
+        normalized_dst = _normalize_path_param(dst)
         return WriteResult(
             success=False,
-            path=Path(dst),
-            original_path=Path(src),
+            path=normalized_dst,
+            original_path=normalized_src,
             error=str(e),
             message="Failed to copy file or directory",
         )
 
 
 def move_safely(
-    src: str | Path, dst: str | Path, overwrite: bool = False
+        src: str | Path | DataResult | OperationResult,
+        dst: str | Path | DataResult | OperationResult, overwrite: bool = False
 ) -> WriteResult:
     """
     Safely move a file or directory.
 
     Args:
-        src: Source path
-        dst: Destination path
+        src: Source path (string, Path, DataResult, or OperationResult)
+        dst: Destination path (string, Path, DataResult, or OperationResult)
         overwrite: If True, overwrite destination if it exists
 
     Returns:
         WriteResult with operation status
     """
     try:
+        normalized_src = _normalize_path_param(src)
+        normalized_dst = _normalize_path_param(dst)
+
         # Get size before moving if it's a file
         bytes_moved = 0
-        src_path = Path(src)
-        if src_path.is_file():
-            bytes_moved = src_path.stat().st_size
+        if normalized_src.is_file():
+            bytes_moved = normalized_src.stat().st_size
 
-        result_path = _safe_move(src, dst, overwrite)
+        result_path = _safe_move(normalized_src, normalized_dst, overwrite)
 
         return WriteResult(
             success=True,
             path=result_path,
-            original_path=src_path,
+            original_path=normalized_src,
             bytes_written=bytes_moved,
-            message=f"Successfully moved {src} to {dst}",
+            message=f"Successfully moved {normalized_src} to {normalized_dst}",
         )
     except Exception as e:
         logger.error(f"Failed to move {src} to {dst}: {e}")
+        normalized_src = _normalize_path_param(src)
+        normalized_dst = _normalize_path_param(dst)
         return WriteResult(
             success=False,
-            path=Path(dst),
-            original_path=Path(src),
+            path=normalized_dst,
+            original_path=normalized_src,
             error=str(e),
             message="Failed to move file or directory",
         )
 
 
-def delete_safely(path: str | Path, missing_ok: bool = True) -> OperationResult:
+def delete_safely(path: str | Path | DataResult | OperationResult,
+                  missing_ok: bool = True) -> OperationResult:
     """
     Safely delete a file or directory.
 
     Args:
-        path: Path to delete
+        path: Path to delete (string, Path, DataResult, or OperationResult)
         missing_ok: If True, don't raise error if path doesn't exist
 
     Returns:
         OperationResult with operation status
     """
     try:
-        result = _safe_delete(path, missing_ok)
+        normalized_path = _normalize_path_param(path)
+        result = _safe_delete(normalized_path, missing_ok)
 
         if result:
             return OperationResult(
-                success=True, path=Path(path), message=f"Successfully deleted {path}"
+                success=True, path=normalized_path,
+                message=f"Successfully deleted {normalized_path}"
             )
         else:
             # This branch is hit when the path doesn't exist and missing_ok is True
             return OperationResult(
                 success=True,
-                path=Path(path),
-                message=f"Path {path} does not exist, no action taken",
+                path=normalized_path,
+                message=f"Path {normalized_path} does not exist, no action taken",
             )
     except Exception as e:
         logger.error(f"Failed to delete {path}: {e}")
+        normalized_path = _normalize_path_param(path)
         return OperationResult(
             success=False,
-            path=Path(path),
+            path=normalized_path,
             error=str(e),
             message="Failed to delete file or directory",
         )

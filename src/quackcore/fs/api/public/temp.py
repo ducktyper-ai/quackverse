@@ -8,15 +8,16 @@ file and directory _operations.
 
 from pathlib import Path
 
+from quackcore.fs._helpers.common import _normalize_path_param
 from quackcore.fs._helpers.temp import _create_temp_directory, _create_temp_file
-from quackcore.fs.results import DataResult
+from quackcore.fs.results import DataResult, OperationResult
 from quackcore.logging import get_logger
 
 logger = get_logger(__name__)
 
 
 def create_temp_directory(
-    prefix: str = "quackcore_", suffix: str = ""
+        prefix: str = "quackcore_", suffix: str = ""
 ) -> DataResult[str]:
     """
     Create a temporary directory.
@@ -51,9 +52,9 @@ def create_temp_directory(
 
 
 def create_temp_file(
-    suffix: str = ".txt",
-    prefix: str = "quackcore_",
-    directory: str | Path | None = None,
+        suffix: str = ".txt",
+        prefix: str = "quackcore_",
+        directory: str | Path | DataResult | OperationResult | None = None,
 ) -> DataResult[str]:
     """
     Create a temporary file.
@@ -61,15 +62,19 @@ def create_temp_file(
     Args:
         suffix: File suffix (e.g., ".txt")
         prefix: File prefix
-        directory: Directory to create the file in (default: system temp dir)
+        directory: Directory to create the file in (string, Path, DataResult, or OperationResult, default: system temp dir)
 
     Returns:
         DataResult with path to the created temporary file
     """
     try:
-        temp_file = _create_temp_file(suffix, prefix, directory)
+        normalized_dir = None
+        if directory is not None:
+            normalized_dir = _normalize_path_param(directory)
 
-        dir_msg = f" in directory {directory}" if directory else ""
+        temp_file = _create_temp_file(suffix, prefix, normalized_dir)
+
+        dir_msg = f" in directory {normalized_dir}" if directory else ""
         return DataResult(
             success=True,
             path=temp_file,
@@ -79,11 +84,20 @@ def create_temp_file(
         )
     except Exception as e:
         logger.error(f"Failed to create temporary file: {e}")
+        normalized_dir = Path(directory) if directory else None
+        if directory is not None:
+            try:
+                normalized_dir = _normalize_path_param(directory)
+            except:
+                normalized_dir = None
+
         return DataResult(
             success=False,
-            path=Path(directory) if directory else None,
+            path=normalized_dir,
             data="",
             format="path",
             error=str(e),
             message="Failed to create temporary file",
         )
+
+

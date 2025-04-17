@@ -25,24 +25,30 @@ class FileOperationsMixin:
     # that is an instance of FileSystemOperations.
     operations: FileSystemOperations
 
+    # This method is added in the base class
+    def _normalize_input_path(self, path: str | Path | DataResult | OperationResult) -> Path:
+        """Normalize an input path to a Path object."""
+        raise NotImplementedError("This method should be overridden")
+
     @wrap_io_errors
-    def read_text(self, path: str | Path, encoding: str = "utf-8") -> ReadResult[str]:
+    def read_text(self, path: str | Path | DataResult | OperationResult, encoding: str = "utf-8") -> ReadResult[str]:
         """
         Read text content from a file.
 
         Args:
-            path: Path to the file.
+            path: Path to the file (string, Path, DataResult, or OperationResult)
             encoding: Text encoding to use (default: utf-8).
 
         Returns:
             ReadResult with the file content as text.
         """
-        return self.operations._read_text(path, encoding)
+        normalized_path = self._normalize_input_path(path)
+        return self.operations._read_text(normalized_path, encoding)
 
     @wrap_io_errors
     def write_text(
         self,
-        path: str | Path,
+        path: str | Path | DataResult | OperationResult,
         content: str,
         encoding: str = "utf-8",
         atomic: bool = False,
@@ -52,7 +58,7 @@ class FileOperationsMixin:
         Write text content to a file.
 
         Args:
-            path: Path to the file.
+            path: Path to the file (string, Path, DataResult, or OperationResult)
             content: Text content to write.
             encoding: Text encoding to use (default: utf-8).
             atomic: Whether to use atomic write (default: False).
@@ -61,27 +67,29 @@ class FileOperationsMixin:
         Returns:
             WriteResult with operation status.
         """
+        normalized_path = self._normalize_input_path(path)
         return self.operations._write_text(
-            path, content, encoding, atomic, calculate_checksum
+            normalized_path, content, encoding, atomic, calculate_checksum
         )
 
     @wrap_io_errors
-    def read_binary(self, path: str | Path) -> ReadResult[bytes]:
+    def read_binary(self, path: str | Path | DataResult | OperationResult) -> ReadResult[bytes]:
         """
         Read binary content from a file.
 
         Args:
-            path: Path to the file.
+            path: Path to the file (string, Path, DataResult, or OperationResult)
 
         Returns:
             ReadResult with the file content as bytes.
         """
-        return self.operations._read_binary(path)
+        normalized_path = self._normalize_input_path(path)
+        return self.operations._read_binary(normalized_path)
 
     @wrap_io_errors
     def write_binary(
         self,
-        path: str | Path,
+        path: str | Path | DataResult | OperationResult,
         content: bytes,
         atomic: bool = False,
         calculate_checksum: bool = False,
@@ -90,7 +98,7 @@ class FileOperationsMixin:
         Write binary content to a file.
 
         Args:
-            path: Path to the file.
+            path: Path to the file (string, Path, DataResult, or OperationResult)
             content: Binary content to write.
             atomic: Whether to use atomic write (default: False).
             calculate_checksum: Whether to calculate a checksum (default: False).
@@ -98,24 +106,25 @@ class FileOperationsMixin:
         Returns:
             WriteResult with operation status.
         """
-        return self.operations._write_binary(path, content, atomic, calculate_checksum)
+        normalized_path = self._normalize_input_path(path)
+        return self.operations._write_binary(normalized_path, content, atomic, calculate_checksum)
 
     @wrap_io_errors
     def read_lines(
-        self, path: str | Path, encoding: str = "utf-8"
+        self, path: str | Path | DataResult | OperationResult, encoding: str = "utf-8"
     ) -> ReadResult[list[str]]:
         """
         Read lines from a text file.
 
         Args:
-            path: Path to the file
+            path: Path to the file (string, Path, DataResult, or OperationResult)
             encoding: Text encoding
 
         Returns:
             ReadResult with the file content as a list of lines
         """
-        path_obj = Path(path)  # Normalize early
-        result = self.operations._read_text(path_obj, encoding)
+        normalized_path = self._normalize_input_path(path)
+        result = self.operations._read_text(normalized_path, encoding)
 
         if result.success:
             lines = result.content.splitlines()
@@ -129,7 +138,7 @@ class FileOperationsMixin:
 
         return ReadResult(
             success=False,
-            path=path_obj,
+            path=normalized_path,
             content=[],
             encoding=encoding,
             error=result.error,
@@ -139,7 +148,7 @@ class FileOperationsMixin:
     @wrap_io_errors
     def write_lines(
         self,
-        path: str | Path,
+        path: str | Path | DataResult | OperationResult,
         lines: list[str],
         encoding: str = "utf-8",
         atomic: bool = True,
@@ -153,7 +162,7 @@ class FileOperationsMixin:
         in binary mode to prevent any unwanted normalization.
 
         Args:
-            path: Path to the file.
+            path: Path to the file (string, Path, DataResult, or OperationResult)
             lines: Lines to write.
             encoding: Text encoding to use.
             atomic: Whether to write the file atomically.
@@ -162,27 +171,29 @@ class FileOperationsMixin:
         Returns:
             WriteResult indicating the outcome of the write operation.
         """
+        normalized_path = self._normalize_input_path(path)
         content = line_ending.join(lines)
         # For non-default line endings, encode and write in binary mode.
         if line_ending != "\n":
             bytes_content = content.encode(encoding)
-            return self.operations._write_binary(path, bytes_content, atomic)
+            return self.operations._write_binary(normalized_path, bytes_content, atomic)
         else:
-            return self.operations._write_text(path, content, encoding, atomic)
+            return self.operations._write_text(normalized_path, content, encoding, atomic)
 
     @wrap_io_errors
-    def read_yaml(self, path: str | Path) -> DataResult[dict]:
+    def read_yaml(self, path: str | Path | DataResult | OperationResult) -> DataResult[dict]:
         """
         Read and parse YAML content from a file.
 
         Args:
-            path: Path to the YAML file.
+            path: Path to the YAML file (string, Path, DataResult, or OperationResult)
 
         Returns:
             DataResult with parsed YAML data.
         """
         try:
-            result = self.read_text(path)
+            normalized_path = self._normalize_input_path(path)
+            result = self.read_text(normalized_path)
             if not result.success:
                 return DataResult(
                     success=False,
@@ -207,15 +218,16 @@ class FileOperationsMixin:
                 error_msg = f"Invalid YAML format: {str(e)}"
                 return DataResult(
                     success=False,
-                    path=Path(path),
+                    path=normalized_path,
                     data={},
                     format="yaml",
                     error=error_msg,
                 )
         except Exception as e:
+            normalized_path = self._normalize_input_path(path)
             return DataResult(
                 success=False,
-                path=Path(path),
+                path=normalized_path,
                 data={},
                 format="yaml",
                 error=f"Error reading YAML format: {str(e)}",
@@ -224,7 +236,7 @@ class FileOperationsMixin:
     @wrap_io_errors
     def write_yaml(
         self,
-        path: str | Path,
+        path: str | Path | DataResult | OperationResult,
         data: dict,
         atomic: bool = True,
     ) -> WriteResult:
@@ -232,7 +244,7 @@ class FileOperationsMixin:
         Write data to a YAML file.
 
         Args:
-            path: Path to the YAML file.
+            path: Path to the YAML file (string, Path, DataResult, or OperationResult)
             data: Data to write.
             atomic: Whether to use atomic writing.
 
@@ -240,28 +252,31 @@ class FileOperationsMixin:
             WriteResult with operation status.
         """
         try:
+            normalized_path = self._normalize_input_path(path)
             content = yaml.dump(data, default_flow_style=False, sort_keys=False)
-            return self.write_text(path, content, atomic=atomic)
+            return self.write_text(normalized_path, content, atomic=atomic)
         except Exception as e:
+            normalized_path = self._normalize_input_path(path)
             return WriteResult(
                 success=False,
-                path=Path(path),
+                path=normalized_path,
                 error=f"Failed to write YAML: {str(e)}",
             )
 
     @wrap_io_errors
-    def read_json(self, path: str | Path) -> DataResult[dict]:
+    def read_json(self, path: str | Path | DataResult | OperationResult) -> DataResult[dict]:
         """
         Read a JSON file and parse its contents.
 
         Args:
-            path: Path to the JSON file.
+            path: Path to the JSON file (string, Path, DataResult, or OperationResult)
 
         Returns:
             DataResult with parsed JSON data.
         """
         try:
-            result = self.read_text(path)
+            normalized_path = self._normalize_input_path(path)
+            result = self.read_text(normalized_path)
             if not result.success:
                 return DataResult(
                     success=False,
@@ -284,15 +299,16 @@ class FileOperationsMixin:
                 error_msg = f"Invalid JSON format: {str(e)}"
                 return DataResult(
                     success=False,
-                    path=Path(path),
+                    path=normalized_path,
                     data={},
                     format="json",
                     error=error_msg,
                 )
         except Exception as e:
+            normalized_path = self._normalize_input_path(path)
             return DataResult(
                 success=False,
-                path=Path(path),
+                path=normalized_path,
                 data={},
                 format="json",
                 error=f"Error reading JSON format: {str(e)}",
@@ -301,7 +317,7 @@ class FileOperationsMixin:
     @wrap_io_errors
     def write_json(
         self,
-        path: str | Path,
+        path: str | Path | DataResult | OperationResult,
         data: dict,
         atomic: bool = True,
         indent: int = 2,
@@ -310,7 +326,7 @@ class FileOperationsMixin:
         Write data to a JSON file.
 
         Args:
-            path: Path to the JSON file.
+            path: Path to the JSON file (string, Path, DataResult, or OperationResult)
             data: Data to write.
             atomic: Whether to use atomic writing.
             indent: Number of spaces to indent.
@@ -319,57 +335,64 @@ class FileOperationsMixin:
             WriteResult with operation status.
         """
         try:
+            normalized_path = self._normalize_input_path(path)
             content = json.dumps(data, indent=indent, ensure_ascii=False)
-            return self.write_text(path, content, atomic=atomic)
+            return self.write_text(normalized_path, content, atomic=atomic)
         except Exception as e:
+            normalized_path = self._normalize_input_path(path)
             return WriteResult(
                 success=False,
-                path=Path(path),
+                path=normalized_path,
                 error=f"Failed to write JSON: {str(e)}",
             )
 
     # File management _operations
     def copy(
-        self, src: str | Path, dst: str | Path, overwrite: bool = False
+        self, src: str | Path | DataResult | OperationResult, dst: str | Path | DataResult | OperationResult, overwrite: bool = False
     ) -> WriteResult:
         """
         Copy a file or directory.
 
         Args:
-            src: Source path
-            dst: Destination path
+            src: Source path (string, Path, DataResult, or OperationResult)
+            dst: Destination path (string, Path, DataResult, or OperationResult)
             overwrite: Whether to overwrite if destination exists
 
         Returns:
             WriteResult with operation status
         """
-        return self.operations._copy(src, dst, overwrite)
+        normalized_src = self._normalize_input_path(src)
+        normalized_dst = self._normalize_input_path(dst)
+        return self.operations._copy(normalized_src, normalized_dst, overwrite)
 
     def move(
-        self, src: str | Path, dst: str | Path, overwrite: bool = False
+        self, src: str | Path | DataResult | OperationResult, dst: str | Path | DataResult | OperationResult, overwrite: bool = False
     ) -> WriteResult:
         """
         Move a file or directory.
 
         Args:
-            src: Source path
-            dst: Destination path
+            src: Source path (string, Path, DataResult, or OperationResult)
+            dst: Destination path (string, Path, DataResult, or OperationResult)
             overwrite: Whether to overwrite if destination exists
 
         Returns:
             WriteResult with operation status
         """
-        return self.operations._move(src, dst, overwrite)
+        normalized_src = self._normalize_input_path(src)
+        normalized_dst = self._normalize_input_path(dst)
+        return self.operations._move(normalized_src, normalized_dst, overwrite)
 
-    def delete(self, path: str | Path, missing_ok: bool = True) -> OperationResult:
+    def delete(self, path: str | Path | DataResult | OperationResult, missing_ok: bool = True) -> OperationResult:
         """
         Delete a file or directory.
 
         Args:
-            path: Path to delete
+            path: Path to delete (string, Path, DataResult, or OperationResult)
             missing_ok: Whether to ignore if the path doesn't exist
 
         Returns:
             OperationResult with operation status
         """
-        return self.operations._delete(path, missing_ok)
+        normalized_path = self._normalize_input_path(path)
+        return self.operations._delete(normalized_path, missing_ok)
