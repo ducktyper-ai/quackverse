@@ -9,8 +9,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from quackcore.errors import QuackFileNotFoundError
+from quackcore.fs import DataResult
 from quackcore.fs.results import FileInfoResult
 from quackcore.integrations.google.drive.service import GoogleDriveService
+from quackcore.paths.api.public.results import PathResult
 
 
 class TestGoogleDriveServiceFiles:
@@ -19,13 +21,14 @@ class TestGoogleDriveServiceFiles:
     @pytest.fixture
     def drive_service(self):
         """Set up a Google Drive service with mocked dependencies."""
-        # Mock the resolver instance directly since it's imported and used
+        # Mock the paths service
         with patch(
             "quackcore.integrations.google.drive.service.paths"
         ) as mock_paths:
-            # Setup the resolver mock
-            mock_paths.resolve_project_path.side_effect = lambda p, *args: Path(
-                f"/fake/test/dir/{Path(p).name}"
+            # Setup the paths mock to return PathResult objects with string paths
+            mock_paths.resolve_project_path.return_value = PathResult(
+                success=True,
+                path=str(Path("/fake/test/dir/mock_path"))  # Convert Path to string
             )
 
             # Mock config initialization
@@ -60,14 +63,24 @@ class TestGoogleDriveServiceFiles:
         # Test with relative path and parent folder
         with patch(
             "quackcore.integrations.google.drive.service.paths.resolve_project_path"
-        ) as mock_paths:
-            mock_paths.return_value = test_file
+        ) as mock_resolve:
+            # Update to return PathResult with string path
+            mock_resolve.return_value = PathResult(
+                success=True,
+                path=str(test_file)
+            )
 
             with patch("quackcore.integrations.google.drive.service.fs") as mock_fs:
                 mock_fs.get_file_info.return_value = FileInfoResult(
                     success=True, path=str(test_file), exists=True, is_file=True
                 )
-                mock_fs.split_path.return_value = ["test_file.txt"]
+                mock_fs.split_path.return_value = DataResult(
+                    success=True,
+                    path=test_file,
+                    data=["test_file.txt"],
+                    format="list",
+                    message="Successfully split path"
+                )
                 mock_fs.get_mime_type.return_value = "text/plain"
 
                 path_obj, filename, folder_id, mime_type = (
@@ -83,9 +96,13 @@ class TestGoogleDriveServiceFiles:
 
         # Test with remote path specified
         with patch(
-            "quackcore.integrations.google.drive.service.paths"
-        ) as mock_paths:
-            mock_paths.resolve_project_path.return_value = test_file
+            "quackcore.integrations.google.drive.service.paths.resolve_project_path"
+        ) as mock_resolve:
+            # Update to return PathResult with string path
+            mock_resolve.return_value = PathResult(
+                success=True,
+                path=str(test_file)
+            )
 
             with patch("quackcore.integrations.google.drive.service.fs") as mock_fs:
                 mock_fs.get_file_info.return_value = FileInfoResult(
@@ -106,9 +123,13 @@ class TestGoogleDriveServiceFiles:
 
         # Test with file not found
         with patch(
-            "quackcore.integrations.google.drive.service.paths"
-        ) as mock_paths:
-            mock_paths.resolve_project_path.return_value = test_file
+            "quackcore.integrations.google.drive.service.paths.resolve_project_path"
+        ) as mock_resolve:
+            # Update to return PathResult with string path
+            mock_resolve.return_value = PathResult(
+                success=True,
+                path=str(test_file)
+            )
 
             with patch("quackcore.integrations.google.drive.service.fs") as mock_fs:
                 # Configure the mock to raise QuackFileNotFoundError
@@ -132,11 +153,23 @@ class TestGoogleDriveServiceFiles:
         # Test with no local path specified (should create temp dir)
         file_metadata = {"name": "test_file.txt"}
 
-        # Patch the fs module directly, not individual functions
+        # Patch the fs module directly
         with patch("quackcore.integrations.google.drive.service.fs") as mock_fs:
-            # Setup the mock to return a specific path
-            mock_fs.create_temp_directory.return_value = tmp_path / "temp_dir"
-            mock_fs.join_path.return_value = tmp_path / "temp_dir" / "test_file.txt"
+            # Setup the mock to return a DataResult for create_temp_directory and join_path
+            mock_fs.create_temp_directory.return_value = DataResult(
+                success=True,
+                path=tmp_path / "temp_dir",
+                data=str(tmp_path / "temp_dir"),
+                format="path",
+                message="Created temporary directory"
+            )
+            mock_fs.join_path.return_value = DataResult(
+                success=True,
+                path=Path(tmp_path / "temp_dir" / "test_file.txt"),
+                data=str(tmp_path / "temp_dir" / "test_file.txt"),
+                format="path",
+                message="Successfully joined path parts"
+            )
 
             # Call the function
             result = drive_service._resolve_download_path(file_metadata, None)
@@ -149,50 +182,65 @@ class TestGoogleDriveServiceFiles:
 
         # Test with local path to directory
         local_dir = tmp_path / "local_dir"
-
-        # We need to map how resolve_project_path behaves since it's mocked globally
-        # This makes the test more stable
         mapped_dir = Path(f"/fake/test/dir/{local_dir.name}")
 
-        with patch("quackcore.integrations.google.drive.service.fs") as mock_fs:
-            # Setup mock to return expected values for all called methods
-            mock_fs.get_file_info.return_value = FileInfoResult(
-                success=True, path=str(mapped_dir), exists=True, is_dir=True
+        with patch("quackcore.integrations.google.drive.service.paths.resolve_project_path") as mock_resolve:
+            # Update to return PathResult with string path
+            mock_resolve.return_value = PathResult(
+                success=True,
+                path=str(mapped_dir)
             )
-            mock_fs.join_path.return_value = mapped_dir / "test_file.txt"
 
-            # Call the function with temp directory
-            result = drive_service._resolve_download_path(file_metadata, str(local_dir))
+            with patch("quackcore.integrations.google.drive.service.fs") as mock_fs:
+                # Setup mock to return expected values for all called methods
+                mock_fs.get_file_info.return_value = FileInfoResult(
+                    success=True, path=str(mapped_dir), exists=True, is_dir=True
+                )
+                mock_fs.join_path.return_value = DataResult(
+                    success=True,
+                    path=mapped_dir / "test_file.txt",
+                    data=str(mapped_dir / "test_file.txt"),
+                    format="path",
+                    message="Successfully joined path parts"
+                )
 
-            # Verify we get the expected result
-            assert mock_fs.join_path.called, (
-                "join_path should be called for directories"
-            )
-            assert str(result) == str(mapped_dir / "test_file.txt")
+                # Call the function with temp directory
+                result = drive_service._resolve_download_path(file_metadata, str(local_dir))
+
+                # Verify we get the expected result
+                assert mock_fs.join_path.called, (
+                    "join_path should be called for directories"
+                )
+                assert str(result) == str(mapped_dir / "test_file.txt")
 
         # Test with local path as specific file
         local_file = tmp_path / "specific_file.txt"
-
-        # Map to how resolve_project_path is expected to handle this
         mapped_file = Path(f"/fake/test/dir/{local_file.name}")
 
-        with patch("quackcore.integrations.google.drive.service.fs") as mock_fs:
-            # Setup mock to return a file
-            mock_fs.get_file_info.return_value = FileInfoResult(
+        with patch("quackcore.integrations.google.drive.service.paths.resolve_project_path") as mock_resolve:
+            # Update to return PathResult with string path
+            mock_resolve.return_value = PathResult(
                 success=True,
-                path=str(mapped_file),
-                exists=True,
-                is_file=True,
-                is_dir=False,
+                path=str(mapped_file)
             )
 
-            # Call the function
-            result = drive_service._resolve_download_path(
-                file_metadata, str(local_file)
-            )
+            with patch("quackcore.integrations.google.drive.service.fs") as mock_fs:
+                # Setup mock to return a file
+                mock_fs.get_file_info.return_value = FileInfoResult(
+                    success=True,
+                    path=str(mapped_file),
+                    exists=True,
+                    is_file=True,
+                    is_dir=False,
+                )
 
-            # Test we get the expected result
-            assert str(result) == str(mapped_file)
+                # Call the function
+                result = drive_service._resolve_download_path(
+                    file_metadata, str(local_file)
+                )
+
+                # Test we get the expected result
+                assert str(result) == str(mapped_file)
 
     def test_build_query(self, drive_service) -> None:
         """Test building query string for listing files."""

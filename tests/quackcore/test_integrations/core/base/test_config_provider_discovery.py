@@ -178,7 +178,7 @@ class TestBaseConfigProviderDiscovery:
         ) as mock_resolve:
             mock_resolve.side_effect = Exception("Test error")
 
-            with patch("quackcore.fs.service.normalize_path") as mock_normalize:
+            with patch("quackcore.fs.service.fs.normalize_path") as mock_normalize:
                 mock_normalize.return_value = "/normalized/path"
 
                 result = provider._resolve_path("relative/path")
