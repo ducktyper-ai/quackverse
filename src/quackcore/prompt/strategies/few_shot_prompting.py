@@ -30,5 +30,33 @@ strategy = PromptStrategy(
     render_fn=render,
     tags=["few-shot", "demonstration"],
     origin="Prompt Engineering (Lee Boonstra, February 2025)",
+    example="""
+# Example Usage:
+
+# Inputs:
+task_description = "Classify these emails as SPAM or NOT SPAM."
+examples = [
+    "Email: 'You won a free cruise! Claim now.'\nLabel: SPAM",
+    "Email: 'Meeting at 3pm in the main conference room.'\nLabel: NOT SPAM",
+    "Email: 'Lowest prices on medicines, click here!'\nLabel: SPAM",
+]
+
+# Generated Prompt (rendered):
+Classify these emails as SPAM or NOT SPAM.
+
+Examples:
+Email: 'You won a free cruise! Claim now.'
+Label: SPAM
+
+Email: 'Meeting at 3pm in the main conference room.'
+Label: NOT SPAM
+
+Email: 'Lowest prices on medicines, click here!'
+Label: SPAM
+
+# Note:
+# - Include at least 3 examples covering both classes.
+# - Mixing classes prevents bias toward a fixed order.
+"""
 )
 register_prompt_strategy(strategy)

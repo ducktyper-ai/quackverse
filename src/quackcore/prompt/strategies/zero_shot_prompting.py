@@ -22,5 +22,18 @@ strategy = PromptStrategy(
     render_fn=render,
     tags=["zero-shot", "general-prompting"],
     origin="Prompt Engineering (Lee Boonstra, February 2025)",
+    example="""
+# Example Usage:
+
+# Inputs:
+task_description = "Translate the following English sentence into French: 'The weather is nice today.'"
+
+# Generated Prompt (rendered):
+Translate the following English sentence into French: 'The weather is nice today.'
+
+# Note:
+# - No examples are provided; the model must rely purely on the instruction.
+# - Use this when you want a direct transformation without demonstration.
+"""
 )
 register_prompt_strategy(strategy)

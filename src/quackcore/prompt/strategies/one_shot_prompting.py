@@ -25,5 +25,23 @@ strategy = PromptStrategy(
     render_fn=render,
     tags=["one-shot", "few-shot"],
     origin="Prompt Engineering (Lee Boonstra, February 2025)",
+    example="""
+# Example Usage:
+
+# Inputs:
+task_description = "Convert the following temperature from Celsius to Fahrenheit: 25°C."
+example = "Convert the following temperature from Celsius to Fahrenheit: 0°C.\nResult: 32°F."
+
+# Generated Prompt (rendered):
+Convert the following temperature from Celsius to Fahrenheit: 25°C.
+
+Example:
+Convert the following temperature from Celsius to Fahrenheit: 0°C.
+Result: 32°F.
+
+# Note:
+# - The example shows the format the model should follow.
+# - Only one demonstration is required to teach the pattern.
+"""
 )
 register_prompt_strategy(strategy)

@@ -24,5 +24,22 @@ strategy = PromptStrategy(
     render_fn=render,
     tags=["contextual-prompt", "background"],
     origin="Prompt Engineering (Lee Boonstra, February 2025)",
+    example="""
+# Example Usage:
+
+# Inputs:
+context = "You are writing for a blog about 80's retro arcade video games."
+task_description = "Suggest 3 topics to write an article about, each with a brief description of what the article should cover."
+
+# Generated Prompt (rendered):
+Context: You are writing for a blog about 80's retro arcade video games.
+
+Suggest 3 topics to write an article about, each with a brief description of what the article should cover.
+
+# Note:
+# - The 'Context:' line sets the background. 
+# - The next line is the task itself, clear and concise. 
+# - Use this structure to guide the model with additional context before the request.
+"""
 )
 register_prompt_strategy(strategy)

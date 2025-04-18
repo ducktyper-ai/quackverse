@@ -27,6 +27,7 @@ class PromptStrategy(BaseModel):
         render_fn: Function that renders the prompt given the input variables
         tags: List of tags for categorizing and searching strategies
         origin: Optional source of the strategy (paper, blog, etc.)
+        example: Optional detailed example demonstrating how to use the strategy
     """
 
     id: str = Field(..., description="Unique identifier for the strategy")
@@ -45,6 +46,10 @@ class PromptStrategy(BaseModel):
     )
     origin: str | None = Field(
         None, description="Source of the strategy (paper, blog, etc.)"
+    )
+    example: str | None = Field(
+        None,
+        description="An illustrative example showing how to use the strategy",
     )
 
     # New Pydantic configuration using ConfigDict (replaces class Config)
