@@ -52,5 +52,26 @@ class PromptStrategy(BaseModel):
         description="An illustrative example showing how to use the strategy",
     )
 
+    def help(self) -> str:
+        """
+        Return a nicely formatted help message for the strategy.
+        """
+        input_vars_str = ", ".join(self.input_vars)
+        tags_str = ", ".join(self.tags) or "No tags"
+        origin_str = self.origin or "Unknown"
+        example_str = self.example or "No example provided."
+
+        return f"""
+    🔍 Strategy: {self.label}
+    ID: {self.id}
+    Description: {self.description}
+    Input Variables: {input_vars_str}
+    Tags: {tags_str}
+    Origin: {origin_str}
+
+    📦 Example Usage:
+    {example_str}
+    """.strip()
+
     # New Pydantic configuration using ConfigDict (replaces class Config)
     model_config = ConfigDict(arbitrary_types_allowed=True)
