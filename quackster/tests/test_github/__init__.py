@@ -1,4 +1,4 @@
-# tests/quackster/test_github/__init__.py
+# quackster/tests/test_github/__init__.py
 """
 Tests for the QuackCore quackster GitHub integration.
 

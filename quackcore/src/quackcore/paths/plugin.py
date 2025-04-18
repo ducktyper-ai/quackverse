@@ -1,4 +1,4 @@
-# src/quackcore/paths/plugin.py
+# quackcore/src/quackcore/paths/plugin.py
 """
 Plugin interface for the paths module.
 

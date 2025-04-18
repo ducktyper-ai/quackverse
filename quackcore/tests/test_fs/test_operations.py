@@ -1,4 +1,4 @@
-# tests/quackcore/test_fs/test_operations.py
+# quackcore/tests/test_fs/test_operations.py
 """
 Tests for the FileSystemOperations class.
 """

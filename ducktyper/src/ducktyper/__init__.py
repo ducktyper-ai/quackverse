@@ -1,4 +1,4 @@
-# src/tests/__init__.py
+# ducktyper/src/ducktyper/__init__.py
 """
 DuckTyper: The unified CLI interface for the QuackVerse ecosystem.
 

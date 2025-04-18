@@ -1,4 +1,4 @@
-# src/quackcore/integrations/github/config.py
+# quackcore/src/quackcore/integrations/github/config.py
 """Configuration provider for GitHub integration."""
 
 import os

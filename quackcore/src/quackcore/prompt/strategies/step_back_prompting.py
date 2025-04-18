@@ -1,4 +1,4 @@
-# src/quackcore/prompt/strategies/step_back_prompting.py
+# quackcore/src/quackcore/prompt/strategies/step_back_prompting.py
 """
 Step-back Prompting strategy for the PromptBooster.
 

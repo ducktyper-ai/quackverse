@@ -1,4 +1,4 @@
-# src/quackster/core/certificates.py
+# quackster/src/quackster/core/certificates.py
 """
 Certificate generation and verification for completed courses.
 

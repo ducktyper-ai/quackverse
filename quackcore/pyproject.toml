@@ -69,6 +69,7 @@ drive = [
 ]
 pandoc = ["pypandoc", "beautifulsoup4"]
 llms = ["tiktoken", "openai", "anthropic"]
+github = ["requests"]
 all = [
     "google-api-python-client>=2.0.0",
     "google-auth-httplib2>=0.1.0",

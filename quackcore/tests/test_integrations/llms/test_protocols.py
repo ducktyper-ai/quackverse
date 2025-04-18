@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/llms/test_protocols.py
+# quackcore/tests/test_integrations/llms/test_protocols.py
 """
 Tests for LLM protocols.
 

@@ -1,4 +1,4 @@
-# tests/quackcore/test_integration/test_full_pipeline.py
+# quackcore/tests/test_integration/test_full_pipeline.py
 """
 Integration tests for QuackCore components working together.
 """

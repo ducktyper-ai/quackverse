@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/core/base/test_base.py
+# quackcore/tests/test_integrations/core/base/test_base.py
 """
 Main entry point for base integration tests.
 

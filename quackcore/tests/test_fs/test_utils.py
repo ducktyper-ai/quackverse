@@ -1,4 +1,4 @@
-# tests/quackcore/test_fs/test_utils.py
+# quackcore/tests/test_fs/test_utils.py
 """
 Tests for filesystem utility functions.
 """

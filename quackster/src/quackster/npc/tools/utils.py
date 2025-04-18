@@ -1,4 +1,4 @@
-# src/quackster/npc/tools/utils.py
+# quackster/src/quackster/npc/tools/utils.py
 """
 Utility functions for Quackster NPC tools.
 

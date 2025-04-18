@@ -1,4 +1,4 @@
-# src/quackcore/integrations/google/mail/config.py
+# quackcore/src/quackcore/integrations/google/mail/config.py
 """
 Configuration for Google Mail integration.
 

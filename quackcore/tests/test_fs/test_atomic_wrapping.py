@@ -1,4 +1,4 @@
-# tests/quackcore/test_fs/test_atomic_wrapping.py
+# quackcore/tests/test_fs/test_atomic_wrapping.py
 """
 Tests to ensure that the write_text and write_binary _operations wrap
 their return values correctly in a WriteResult object—even when using atomic writes.

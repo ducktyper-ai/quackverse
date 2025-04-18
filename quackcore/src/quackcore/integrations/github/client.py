@@ -1,4 +1,4 @@
-# src/quackcore/integrations/github/client.py
+# quackcore/src/quackcore/integrations/github/client.py
 """GitHub API client for QuackCore."""
 
 from typing import Any, Literal

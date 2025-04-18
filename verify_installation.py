@@ -1,0 +1,61 @@
+# verify_installation.py
+"""Verify that all packages are correctly installed."""
+
+import sys
+import importlib.util
+
+
+def check_package(package_name):
+    """Check if a package is properly installed and importable."""
+    try:
+        # Import the package
+        package = importlib.import_module(package_name)
+        package_path = package.__file__
+        print(f"✅ {package_name} is installed at: {package_path}")
+
+        # Check expected submodules
+        if package_name == 'quackcore':
+            submodules = ["config", "fs", "plugins"]
+            for submodule in submodules:
+                try:
+                    full_name = f"{package_name}.{submodule}"
+                    mod = importlib.import_module(full_name)
+                    print(f"  - Submodule {full_name} found at: {mod.__file__}")
+                except ImportError as e:
+                    print(f"  - ❌ Failed to import {full_name}: {e}")
+
+        return True
+    except ImportError as e:
+        print(f"❌ {package_name} could not be imported: {e}")
+        return False
+    except Exception as e:
+        print(f"❌ Unexpected error importing {package_name}: {e}")
+        return False
+
+
+def main():
+    """Check all packages in the monorepo."""
+    print(f"Python version: {sys.version}")
+    print(f"Python executable: {sys.executable}")
+    print("Python path:")
+    for path in sys.path:
+        print(f"  - {path}")
+
+    print("\nChecking packages...")
+    packages = ["quackcore", "ducktyper", "quackster"]
+    all_ok = True
+
+    for package in packages:
+        if not check_package(package):
+            all_ok = False
+
+    if all_ok:
+        print("\n✅ All packages are correctly installed!")
+        return 0
+    else:
+        print("\n❌ Some packages have installation issues.")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

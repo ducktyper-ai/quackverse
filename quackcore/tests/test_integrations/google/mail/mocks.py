@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/mail/mocks.py
+# quackcore/tests/test_integrations/google/mail/mocks.py
 """
 Mock objects for Gmail service testing.
 

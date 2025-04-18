@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/drive/test_drive_service_init.py
+# quackcore/tests/test_integrations/google/drive/test_drive_service_init.py
 """
 Tests for Google Drive service initialization.
 """

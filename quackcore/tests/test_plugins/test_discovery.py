@@ -1,4 +1,4 @@
-# tests/quackcore/test_plugins/test_discovery.py
+# quackcore/tests/test_plugins/test_discovery.py
 """
 Tests for plugin discovery functionality.
 """

@@ -1,4 +1,4 @@
-# src/quackster/core/utils.py
+# quackster/src/quackster/core/utils.py
 """
 Utility functions for the QuackCore quackster module.
 

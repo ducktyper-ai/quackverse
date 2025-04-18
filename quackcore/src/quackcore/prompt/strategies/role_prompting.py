@@ -1,4 +1,4 @@
-# src/quackcore/prompt/strategies/role_prompting.py
+# quackcore/src/quackcore/prompt/strategies/role_prompting.py
 """
 Role Prompting strategy for the PromptBooster.
 

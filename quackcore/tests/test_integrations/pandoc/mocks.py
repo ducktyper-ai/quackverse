@@ -1,1 +1,1 @@
-# tests/quackcore/test_integrations/pandoc/mocks.py
+# quackcore/tests/test_integrations/pandoc/mocks.py

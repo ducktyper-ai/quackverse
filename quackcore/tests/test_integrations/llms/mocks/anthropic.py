@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/llms/mocks/anthropic.py
+# quackcore/tests/test_integrations/llms/mocks/anthropic.py
 """
 Mock Anthropic classes for LLM testing.
 """

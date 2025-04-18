@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/core/test_protocol_inheritance.py
+# quackcore/tests/test_integrations/core/test_protocol_inheritance.py
 """
 Tests for protocol inheritance and runtime protocol checking.
 

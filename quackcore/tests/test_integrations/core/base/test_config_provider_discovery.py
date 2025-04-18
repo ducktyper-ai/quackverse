@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/core/base/test_config_provider_discovery.py
+# quackcore/tests/test_integrations/core/base/test_config_provider_discovery.py
 """
 Tests for the config discovery functionality in BaseConfigProvider.
 """

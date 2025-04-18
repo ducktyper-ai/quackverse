@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/drive/mocks/credentials.py
+# quackcore/tests/test_integrations/google/drive/mocks/credentials.py
 """
 Mock credential objects for Google Drive testing.
 """

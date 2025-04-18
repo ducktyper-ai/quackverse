@@ -1,4 +1,4 @@
-# src/tests/utils.py
+# ducktyper/src/ducktyper/utils.py
 """
 Utility functions for DuckTyper.
 
@@ -10,10 +10,9 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional, Tuple, Union
 
 
-def find_executable(name: str) -> Optional[str]:
+def find_executable(name: str) -> str | None:
     """
     Find the path to an executable on the system PATH.
 
@@ -26,7 +25,7 @@ def find_executable(name: str) -> Optional[str]:
     return shutil.which(name)
 
 
-def ensure_dir_exists(path: Union[str, Path]) -> Path:
+def ensure_dir_exists(path: str | Path) -> Path:
     """
     Ensure a directory exists, creating it if necessary.
 
@@ -64,7 +63,7 @@ def get_package_version() -> str:
     return __version__
 
 
-def get_editor_command() -> Tuple[str, list[str]]:
+def get_editor_command() -> tuple[str, list[str]]:
     """
     Get the user's preferred editor command.
 
@@ -96,7 +95,7 @@ def get_editor_command() -> Tuple[str, list[str]]:
         return "nano", []
 
 
-def run_editor(file_path: Union[str, Path]) -> bool:
+def run_editor(file_path: str | Path) -> bool:
     """
     Open a file in the user's preferred editor.
 
@@ -116,7 +115,7 @@ def run_editor(file_path: Union[str, Path]) -> bool:
         return False
 
 
-def parse_key_value(arg: str) -> Tuple[str, str]:
+def parse_key_value(arg: str) -> tuple[str, str]:
     """
     Parse a key=value argument.
 
@@ -136,7 +135,7 @@ def parse_key_value(arg: str) -> Tuple[str, str]:
     return key.strip(), value.strip()
 
 
-def truncate_path(path: Union[str, Path], max_length: int = 40) -> str:
+def truncate_path(path: str | Path, max_length: int = 40) -> str:
     """
     Truncate a path to a maximum length, preserving the filename.
 
@@ -169,7 +168,7 @@ def truncate_path(path: Union[str, Path], max_length: int = 40) -> str:
     return f"{dirname[:dir_length]}.../{filename}"
 
 
-def get_terminal_size() -> Tuple[int, int]:
+def get_terminal_size() -> tuple[int, int]:
     """
     Get the terminal size.
 
@@ -179,7 +178,7 @@ def get_terminal_size() -> Tuple[int, int]:
     return shutil.get_terminal_size((80, 24))
 
 
-def safe_import(module_name: str) -> Optional[object]:
+def safe_import(module_name: str) -> object | None:
     """
     Safely import a module, returning None if it doesn't exist.
 
@@ -261,8 +260,7 @@ def get_user_home_dir() -> Path:
     return Path.home()
 
 
-def find_quack_project_root(start_dir: Optional[Union[str, Path]] = None) -> Optional[
-    Path]:
+def find_quack_project_root(start_dir: str | Path | None = None) -> Path | None:
     """
     Find the root directory of a QuackVerse project by looking for markers.
 

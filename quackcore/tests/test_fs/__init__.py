@@ -1,1 +1,1 @@
-# tests/quackcore/test_fs/__init__.py
+# quackcore/tests/test_fs/__init__.py

@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/drive/mocks/requests.py
+# quackcore/tests/test_integrations/google/drive/mocks/requests.py
 """
 Mock request objects for Google Drive testing.
 """

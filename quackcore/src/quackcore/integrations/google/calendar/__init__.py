@@ -1,1 +1,1 @@
-# src/quackcore/integrations/google/calendar/__init__.py
+# quackcore/src/quackcore/integrations/google/calendar/__init__.py

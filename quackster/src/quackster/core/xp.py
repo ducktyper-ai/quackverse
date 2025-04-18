@@ -1,4 +1,4 @@
-# src/quackster/core/xp.py
+# quackster/src/quackster/core/xp.py
 """
 XP management module for QuackCore quackster.
 

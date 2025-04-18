@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/llms/mocks/clients.py
+# quackcore/tests/test_integrations/llms/mocks/clients.py
 """
 Mock client implementations for LLM testing.
 """

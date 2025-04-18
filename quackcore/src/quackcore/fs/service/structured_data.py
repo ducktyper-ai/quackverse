@@ -1,4 +1,4 @@
-# src/quackcore/fs/service/structured_data.py
+# quackcore/src/quackcore/fs/service/structured_data.py
 """
 Structured data _operations (JSON, YAML) for the FileSystemService.
 """

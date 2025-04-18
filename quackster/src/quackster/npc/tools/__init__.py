@@ -1,4 +1,4 @@
-# src/quackster/npc/tools/__init__.py
+# quackster/src/quackster/npc/tools/__init__.py
 """
 Tools for the Quackster quackster NPC.
 

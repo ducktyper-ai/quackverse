@@ -1,4 +1,4 @@
-# src/quackcore/integrations/llms/models.py
+# quackcore/src/quackcore/integrations/llms/models.py
 """
 Data models for LLM integration.
 

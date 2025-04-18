@@ -1,4 +1,4 @@
-# src/quackster/core/__init__.py
+# quackster/src/quackster/core/__init__.py
 """
 Quackster.
 

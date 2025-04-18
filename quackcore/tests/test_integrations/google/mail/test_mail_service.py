@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/mail/test_mail_service.py
+# quackcore/tests/test_integrations/google/mail/test_mail_service.py
 """
 Tests for Google Mail service.
 

@@ -1,4 +1,4 @@
-# src/quackcore/prompt/strategies/system_prompting.py
+# quackcore/src/quackcore/prompt/strategies/system_prompting.py
 """
 System Prompting strategy for the PromptBooster.
 

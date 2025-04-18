@@ -1,4 +1,4 @@
-# src/tests/commands/assistant.py
+# ducktyper/src/ducktyper/commands/assistant.py
 """
 Implementation of the 'assistant' command.
 
@@ -12,23 +12,16 @@ import shlex
 import subprocess
 import sys
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import typer
-from quackcore.cli import CliContext
-from quackcore.integrations.llms import (
-    ChatMessage,
-    LLMIntegration,
-    LLMOptions,
-    RoleType,
-)
-from quackcore.plugins.registry import list_plugins
 from rich.console import Console
 from rich.live import Live
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.prompt import Prompt
 
+from ducktyper.src.ducktyper.ui.mode import is_playful_mode
 from ducktyper.ui.branding import (
     COLOR_PALETTE,
     print_banner,
@@ -38,7 +31,14 @@ from ducktyper.ui.branding import (
     quack_say,
     retro_box,
 )
-from ducktyper.src.ducktyper.ui.mode import is_playful_mode
+from quackcore.cli import CliContext
+from quackcore.integrations.llms import (
+    ChatMessage,
+    LLMIntegration,
+    LLMOptions,
+    RoleType,
+)
+from quackcore.plugins.registry import list_plugins
 
 # Create Typer app for the assistant command
 app = typer.Typer(
@@ -62,13 +62,13 @@ class Assistant:
             cli_env: The CLI environment context
         """
         self.cli_env = cli_env
-        self.conversation: List[ChatMessage] = []
-        self.llm: Optional[LLMIntegration] = None
-        self.history: List[
-            Tuple[str, str]] = []  # Store (user_input, assistant_response) pairs
+        self.conversation: list[ChatMessage] = []
+        self.llm: LLMIntegration | None = None
+        self.history: list[
+            tuple[str, str]] = []  # Store (user_input, assistant_response) pairs
 
         # Commands that can be executed directly from the assistant
-        self.commands: Dict[str, Any] = {
+        self.commands: dict[str, Any] = {
             "!help": self.cmd_help,
             "!exit": self.cmd_exit,
             "!quit": self.cmd_exit,
@@ -290,7 +290,7 @@ Be concise but helpful, and use markdown formatting for code examples and explan
         else:
             print_error(f"Error getting response: {result.error}")
 
-    def cmd_help(self, args: List[str]) -> bool:
+    def cmd_help(self, args: list[str]) -> bool:
         """
         Show help information for assistant commands.
 
@@ -326,7 +326,7 @@ You can also just chat naturally with me about:
 
         return True
 
-    def cmd_exit(self, args: List[str]) -> bool:
+    def cmd_exit(self, args: list[str]) -> bool:
         """
         Exit the assistant.
 
@@ -343,7 +343,7 @@ You can also just chat naturally with me about:
 
         return False
 
-    def cmd_history(self, args: List[str]) -> bool:
+    def cmd_history(self, args: list[str]) -> bool:
         """
         Show conversation history.
 
@@ -381,7 +381,7 @@ You can also just chat naturally with me about:
 
         return True
 
-    def cmd_clear(self, args: List[str]) -> bool:
+    def cmd_clear(self, args: list[str]) -> bool:
         """
         Clear conversation history.
 
@@ -404,7 +404,7 @@ You can also just chat naturally with me about:
 
         return True
 
-    def cmd_run(self, args: List[str]) -> bool:
+    def cmd_run(self, args: list[str]) -> bool:
         """
         Run a QuackTool directly from the assistant.
 
@@ -442,7 +442,7 @@ You can also just chat naturally with me about:
 
         return True
 
-    def cmd_list(self, args: List[str]) -> bool:
+    def cmd_list(self, args: list[str]) -> bool:
         """
         List available QuackTools.
 
@@ -473,10 +473,10 @@ You can also just chat naturally with me about:
 @app.callback(invoke_without_command=True)
 def start_assistant(
         ctx: typer.Context,
-        model: Optional[str] = typer.Option(
+        model: str | None = typer.Option(
             None, "--model", "-m", help="LLM model to use"
         ),
-        provider: Optional[str] = typer.Option(
+        provider: str | None = typer.Option(
             None, "--provider", "-p", help="LLM provider to use"
         ),
 ) -> None:

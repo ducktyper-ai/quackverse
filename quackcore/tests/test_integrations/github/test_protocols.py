@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/github/test_protocols.py
+# quackcore/tests/test_integrations/github/test_protocols.py
 """Tests for GitHub integration protocols."""
 
 from unittest.mock import MagicMock

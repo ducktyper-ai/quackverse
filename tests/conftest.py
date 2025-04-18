@@ -1,4 +1,4 @@
-# conftest.py at the root level
+# tests/conftest.py
 """
 Root level test configuration for QuackVerse monorepo.
 This sets up the Python path for tests across the entire monorepo.

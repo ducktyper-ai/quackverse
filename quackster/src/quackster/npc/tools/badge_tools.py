@@ -1,4 +1,4 @@
-# src/quackster/npc/tools/badge_tools.py
+# quackster/src/quackster/npc/tools/badge_tools.py
 """
 Tools for badge-related information and management.
 

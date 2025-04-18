@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/llms/service/test_integration.py
+# quackcore/tests/test_integrations/llms/service/test_integration.py
 """
 Comprehensive tests for the LLM integration service class.
 

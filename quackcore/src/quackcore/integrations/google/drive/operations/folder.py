@@ -1,4 +1,4 @@
-# src/quackcore/integrations/google/drive/operations/folder.py
+# quackcore/src/quackcore/integrations/google/drive/operations/folder.py
 """
 Folder _operations for Google Drive integration.
 

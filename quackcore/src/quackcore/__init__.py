@@ -1,4 +1,4 @@
-# src/quackcore/__init__.py
+# quackcore/src/quackcore/__init__.py
 """
 QuackCore: Core infrastructure for the Quack ecosystem of media production tools.
 

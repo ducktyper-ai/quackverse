@@ -1,4 +1,4 @@
-# src/quackcore/fs/_helpers/comparison.py
+# quackcore/src/quackcore/fs/_helpers/comparison.py
 """
 Utility functions for comparing files and paths.
 """

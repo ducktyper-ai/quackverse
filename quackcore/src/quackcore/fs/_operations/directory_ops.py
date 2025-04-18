@@ -1,4 +1,4 @@
-# src/quackcore/fs/_operations/directory_ops.py
+# quackcore/src/quackcore/fs/_operations/directory_ops.py
 """
 Directory _operations.
 

@@ -1,4 +1,4 @@
-# src/quackcore/config/__init__.py
+# quackcore/src/quackcore/config/__init__.py
 """
 Configuration package for QuackCore.
 

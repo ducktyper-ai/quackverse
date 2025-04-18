@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/llms/clients/test_base.py
+# quackcore/tests/test_integrations/llms/clients/test_base.py
 """
 Tests for the base LLM client.
 

@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/github/test_service.py
+# quackcore/tests/test_integrations/github/test_service.py
 from __future__ import annotations
 
 from typing import cast

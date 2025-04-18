@@ -1,4 +1,4 @@
-# src/quackster/npc/tools/common.py
+# quackster/src/quackster/npc/tools/common.py
 """
 Common utilities for Quackster NPC tools.
 

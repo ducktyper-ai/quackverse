@@ -5,8 +5,9 @@ Shared fixtures for QuackSter tests.
 
 import sys
 from pathlib import Path
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 # Add the src directories to the Python path if they're not already there
 QUACKSTER_ROOT = Path(__file__).parent.parent

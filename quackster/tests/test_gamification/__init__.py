@@ -1,4 +1,4 @@
-# tests/quackster/test_gamification/__init__.py
+# quackster/tests/test_gamification/__init__.py
 """
 Tests for the QuackCore quackster gamification functionality.
 

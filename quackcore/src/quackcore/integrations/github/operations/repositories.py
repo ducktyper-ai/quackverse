@@ -1,4 +1,4 @@
-# src/quackcore/integrations/github/operations/repositories.py
+# quackcore/src/quackcore/integrations/github/operations/repositories.py
 """GitHub repository _operations."""
 
 import base64

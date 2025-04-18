@@ -1,1 +1,1 @@
-# tests/quackster/test_github/test_teaching_adapter.py
+# quackster/tests/test_github/test_teaching_adapter.py

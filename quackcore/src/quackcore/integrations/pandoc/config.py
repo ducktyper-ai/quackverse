@@ -1,4 +1,4 @@
-# src/quackcore/integrations/pandoc/config.py
+# quackcore/src/quackcore/integrations/pandoc/config.py
 """
 Configuration models for Pandoc integration.
 

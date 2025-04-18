@@ -1,4 +1,4 @@
-# src/quackcore/fs/_helpers/path_utils.py
+# quackcore/src/quackcore/fs/_helpers/path_utils.py
 """
 Path utility functions that don't introduce circular dependencies.
 """

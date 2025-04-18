@@ -1,1 +1,1 @@
-# tests/quackster/test_academy/conftest.py
+# quackster/tests/test_academy/conftest.py

@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/llms/test_config_provider.py
+# quackcore/tests/test_integrations/llms/test_config_provider.py
 """
 Tests for the LLM configuration provider.
 

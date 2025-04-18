@@ -1,4 +1,4 @@
-# tests/quackcore/test_cli/test_config.py
+# quackcore/tests/test_cli/test_config.py
 """
 Tests for the CLI config module.
 """

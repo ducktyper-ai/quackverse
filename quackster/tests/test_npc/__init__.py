@@ -1,4 +1,4 @@
-# tests/quackster/test_npc/__init__.py
+# quackster/tests/test_npc/__init__.py
 """
 Tests for the QuackCore quackster NPC (Non-Player Character) module.
 

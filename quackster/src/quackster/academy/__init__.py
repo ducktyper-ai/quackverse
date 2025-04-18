@@ -1,4 +1,4 @@
-# src/quackster/academy/__init__.py
+# quackster/src/quackster/academy/__init__.py
 """
 QuackCore Teaching LMS Module.
 

@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/mail/operations/test_auth.py
+# quackcore/tests/test_integrations/google/mail/operations/test_auth.py
 """
 Tests for Gmail authentication _operations.
 

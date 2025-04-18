@@ -1,4 +1,4 @@
-# src/quackcore/integrations/github/service.py
+# quackcore/src/quackcore/integrations/github/service.py
 """GitHub core integration service for QuackCore."""
 
 from quackcore.integrations.core import (

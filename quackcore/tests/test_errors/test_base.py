@@ -1,4 +1,4 @@
-# tests/quackcore/test_errors/test_base.py
+# quackcore/tests/test_errors/test_base.py
 """
 Tests for QuackCore error classes and decorators.
 """

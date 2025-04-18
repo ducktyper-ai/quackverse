@@ -1,4 +1,4 @@
-# tests/quackcore/test_prompt/test_registry.py
+# quackcore/tests/test_prompt/test_registry.py
 """
 Tests for the prompt strategy registry functionality.
 """

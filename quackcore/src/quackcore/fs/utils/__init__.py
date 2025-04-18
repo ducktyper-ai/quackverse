@@ -1,4 +1,4 @@
-# src/quackcore/fs/utils/__init__.py
+# quackcore/src/quackcore/fs/utils/__init__.py
 """
 Utility functions for the filesystem module.
 

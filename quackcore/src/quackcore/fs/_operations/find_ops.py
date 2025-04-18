@@ -1,4 +1,4 @@
-# src/quackcore/fs/_operations/find_ops.py
+# quackcore/src/quackcore/fs/_operations/find_ops.py
 """
 File finding _operations.
 

@@ -1,1 +1,1 @@
-# tests/quackster/test_academy/test_service.py
+# quackster/tests/test_academy/test_service.py

@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/core/test_protocols.py
+# quackcore/tests/test_integrations/core/test_protocols.py
 """
 Tests for integration protocol interfaces.
 """

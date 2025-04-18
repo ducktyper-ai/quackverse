@@ -1,14 +1,14 @@
-# src/tests/__main__.py
+# ducktyper/src/ducktyper/__main__.py
 """
 Entry point for the DuckTyper CLI when run as a module.
 """
 
 import sys
-from typing import NoReturn, Optional
+from typing import NoReturn
 
 from ducktyper.main import app
-from ducktyper.ui.branding import duck_dance, print_banner, print_error, print_info
 from ducktyper.src.ducktyper.ui.mode import is_playful_mode
+from ducktyper.ui.branding import duck_dance, print_banner, print_error, print_info
 
 
 def display_intro() -> None:
@@ -22,7 +22,7 @@ def display_intro() -> None:
         print_info("Type 'tests --help' to see available commands.")
 
 
-def main(args: Optional[list[str]] = None) -> NoReturn:
+def main(args: list[str] | None = None) -> NoReturn:
     """Main entry point for the CLI."""
     try:
         if args is None:

@@ -1,4 +1,4 @@
-# tests/quackcore/test_paths/test_utils.py
+# quackcore/tests/test_paths/test_utils.py
 """
 Tests for path utility functions.
 """

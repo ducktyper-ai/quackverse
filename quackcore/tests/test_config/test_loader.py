@@ -1,4 +1,4 @@
-# tests/quackcore/test_config/test_loader.py
+# quackcore/tests/test_config/test_loader.py
 """
 Tests for configuration loading utilities.
 """

@@ -1,4 +1,4 @@
-# src/quackster/__init__.py
+# quackster/src/quackster/__init__.py
 """
 QuackCore Teaching Module.
 

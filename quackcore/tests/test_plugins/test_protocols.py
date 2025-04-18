@@ -1,4 +1,4 @@
-# tests/quackcore/test_plugins/test_protocols.py
+# quackcore/tests/test_plugins/test_protocols.py
 """
 Tests for plugin protocol interfaces.
 """

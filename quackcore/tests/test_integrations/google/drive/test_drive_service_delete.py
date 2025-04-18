@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/drive/test_drive_service_delete.py
+# quackcore/tests/test_integrations/google/drive/test_drive_service_delete.py
 """
 Tests for Google Drive service deletion _operations.
 """

@@ -1,4 +1,4 @@
-# src/tests/commands/teach.py
+# ducktyper/src/ducktyper/commands/teach.py
 """
 Implementation of the 'teach' command.
 
@@ -6,22 +6,21 @@ The teach command launches an interactive tutorial for a QuackTool.
 """
 
 import sys
-from typing import Optional
 
 import typer
-from quackcore.cli import CliContext
 
-# Assume Quackster is properly installed and imported
-from quackster import TutorialManager
-from quackster.models import TutorialOptions
-
+from ducktyper.src.ducktyper.ui.mode import is_playful_mode
 from ducktyper.ui.branding import (
     print_banner,
     print_error,
     print_info,
     quack_say,
 )
-from ducktyper.src.ducktyper.ui.mode import is_playful_mode
+from quackcore.cli import CliContext
+
+# Assume Quackster is properly installed and imported
+from quackster import TutorialManager
+from quackster.models import TutorialOptions
 
 # Create Typer app for the teach command
 app = typer.Typer(
@@ -39,7 +38,7 @@ def teach_tool(
             "beginner", "--level", "-l",
             help="Tutorial level (beginner, intermediate, advanced)"
         ),
-        track: Optional[str] = typer.Option(
+        track: str | None = typer.Option(
             None, "--track", "-t",
             help="Learning track (e.g., 'data-science', 'prompt-engineering')"
         ),

@@ -1,4 +1,4 @@
-# src/quackcore/integrations/llms/clients/__init__.py
+# quackcore/src/quackcore/integrations/llms/clients/__init__.py
 """
 LLM client implementations.
 

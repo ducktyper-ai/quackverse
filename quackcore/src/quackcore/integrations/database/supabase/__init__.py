@@ -1,1 +1,1 @@
-# src/quackcore/integrations/database/supabase/__init__.py
+# quackcore/src/quackcore/integrations/database/supabase/__init__.py

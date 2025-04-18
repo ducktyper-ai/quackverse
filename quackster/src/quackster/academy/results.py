@@ -1,4 +1,4 @@
-# src/quackster/academy/results.py
+# quackster/src/quackster/academy/results.py
 """
 Result classes for quackster _operations.
 

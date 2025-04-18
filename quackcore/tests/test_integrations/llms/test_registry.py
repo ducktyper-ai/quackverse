@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/llms/test_registry.py
+# quackcore/tests/test_integrations/llms/test_registry.py
 """
 Tests for the LLM client registry.
 

@@ -1,4 +1,4 @@
-# src/quackster/npc/tools/quest_tools.py
+# quackster/src/quackster/npc/tools/quest_tools.py
 """
 Tools for quest-related information and management.
 

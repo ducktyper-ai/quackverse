@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/llms/mocks/base.py
+# quackcore/tests/test_integrations/llms/mocks/base.py
 """
 Base mock classes for LLM testing.
 """

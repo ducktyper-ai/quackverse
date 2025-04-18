@@ -1,4 +1,4 @@
-# tests/quackcore/test_cli/test_context.py
+# quackcore/tests/test_cli/test_context.py
 """
 Tests for the CLI context module.
 """

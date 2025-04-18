@@ -1,4 +1,4 @@
-# src/quackcore/integrations/llms/protocols.py
+# quackcore/src/quackcore/integrations/llms/protocols.py
 """
 Protocol definitions for LLM integration.
 

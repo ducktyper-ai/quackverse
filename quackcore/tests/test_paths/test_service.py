@@ -1,4 +1,4 @@
-# tests/quackcore/test_paths/test_service.py
+# quackcore/tests/test_paths/test_service.py
 """
 Tests for the QuackCore path service.
 """

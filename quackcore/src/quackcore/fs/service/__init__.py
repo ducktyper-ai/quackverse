@@ -1,4 +1,4 @@
-# src/quackcore/fs/service/__init__.py
+# quackcore/src/quackcore/fs/service/__init__.py
 """
 FileSystemService provides a high-level interface for filesystem _operations.
 

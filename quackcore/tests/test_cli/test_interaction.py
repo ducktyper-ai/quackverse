@@ -1,4 +1,4 @@
-# tests/quackcore/test_cli/test_interaction.py
+# quackcore/tests/test_cli/test_interaction.py
 """
 Tests for the CLI interaction module.
 """

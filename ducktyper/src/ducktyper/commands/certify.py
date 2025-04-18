@@ -1,4 +1,4 @@
-# src/tests/commands/certify.py
+# ducktyper/src/ducktyper/commands/certify.py
 """
 Implementation of the 'certify' command.
 
@@ -11,15 +11,14 @@ import sys
 import webbrowser
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional
 
 import typer
-from quackcore.cli import CliContext
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 
+from ducktyper.src.ducktyper.ui.mode import is_playful_mode
 from ducktyper.ui.branding import (
     COLOR_PALETTE,
     print_banner,
@@ -29,8 +28,8 @@ from ducktyper.ui.branding import (
     quack_say,
     retro_box,
 )
-from ducktyper.src.ducktyper.ui.mode import is_playful_mode
 from ducktyper.utils import ensure_dir_exists, get_cache_dir
+from quackcore.cli import CliContext
 
 # Create Typer app for the certify command
 app = typer.Typer(
@@ -43,7 +42,7 @@ app = typer.Typer(
 console = Console()
 
 
-def generate_certificate_hash(user_info: Dict) -> str:
+def generate_certificate_hash(user_info: dict) -> str:
     """
     Generate a unique hash for a certificate.
 
@@ -65,7 +64,7 @@ def generate_certificate_hash(user_info: Dict) -> str:
     return hashlib.sha256(info_str.encode()).hexdigest()[:12]
 
 
-def store_certificate_metadata(user_info: Dict, cert_hash: str) -> str:
+def store_certificate_metadata(user_info: dict, cert_hash: str) -> str:
     """
     Store certificate metadata in the cache directory.
 
@@ -94,7 +93,7 @@ def store_certificate_metadata(user_info: Dict, cert_hash: str) -> str:
     return str(cert_file)
 
 
-def render_certificate_ascii(user_info: Dict, cert_hash: str) -> str:
+def render_certificate_ascii(user_info: dict, cert_hash: str) -> str:
     """
     Render an ASCII art certificate.
 
@@ -142,7 +141,7 @@ def render_certificate_ascii(user_info: Dict, cert_hash: str) -> str:
     return certificate
 
 
-def render_certificate_markdown(user_info: Dict, cert_hash: str) -> str:
+def render_certificate_markdown(user_info: dict, cert_hash: str) -> str:
     """
     Render a Markdown certificate for sharing.
 
@@ -186,7 +185,7 @@ on {date}
     return markdown
 
 
-def render_certificate_svg(user_info: Dict, cert_hash: str) -> str:
+def render_certificate_svg(user_info: dict, cert_hash: str) -> str:
     """
     Render an SVG certificate for downloading.
 
@@ -277,16 +276,16 @@ def save_certificate(cert_format: str, content: str, cert_hash: str) -> str:
 @app.callback(invoke_without_command=True)
 def generate_certificate(
         ctx: typer.Context,
-        name: Optional[str] = typer.Option(
+        name: str | None = typer.Option(
             None, "--name", "-n", help="Your name"
         ),
-        github: Optional[str] = typer.Option(
+        github: str | None = typer.Option(
             None, "--github", "-g", help="Your GitHub handle"
         ),
         course: str = typer.Option(
             "QuackVerse Fundamentals", "--course", "-c", help="Course name"
         ),
-        date: Optional[str] = typer.Option(
+        date: str | None = typer.Option(
             None, "--date", "-d", help="Completion date (YYYY-MM-DD)"
         ),
         format: str = typer.Option(
@@ -428,7 +427,7 @@ To share your certificate, use one of these methods:
         sys.exit(1)
 
 
-def verify_github_contributions(user_info: Dict) -> bool:
+def verify_github_contributions(user_info: dict) -> bool:
     """
     Verify user's GitHub contributions for certification.
 

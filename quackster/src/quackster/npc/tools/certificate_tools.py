@@ -1,4 +1,4 @@
-# src/quackster/npc/tools/certificate_tools.py
+# quackster/src/quackster/npc/tools/certificate_tools.py
 """
 Tools for certificate-related information and management.
 

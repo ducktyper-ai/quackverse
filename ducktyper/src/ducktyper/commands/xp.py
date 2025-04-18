@@ -1,4 +1,4 @@
-# src/tests/commands/xp.py
+# ducktyper/src/ducktyper/commands/xp.py
 """
 Implementation of the 'xp' command.
 
@@ -10,12 +10,11 @@ import json
 import random
 import sys
 from datetime import datetime
-from typing import Dict
 
 import typer
-from quackcore.cli import CliContext
 from rich.console import Console
 
+from ducktyper.src.ducktyper.ui.mode import is_playful_mode
 from ducktyper.ui.branding import (
     duck_dance,
     get_retro_progress,
@@ -28,9 +27,9 @@ from ducktyper.ui.branding import (
     retro_box,
     retro_table,
 )
-from ducktyper.src.ducktyper.ui.mode import is_playful_mode
 from ducktyper.ui.styling import render_progress_bar
 from ducktyper.utils import get_cache_dir
+from quackcore.cli import CliContext
 
 # Create Typer app for the xp command
 app = typer.Typer(
@@ -43,7 +42,7 @@ app = typer.Typer(
 console = Console()
 
 
-def load_xp_data() -> Dict:
+def load_xp_data() -> dict:
     """
     Load XP data from the cache.
 
@@ -115,7 +114,7 @@ def load_xp_data() -> Dict:
 
     # Load existing data
     try:
-        with open(xp_file, "r") as f:
+        with open(xp_file) as f:
             return json.load(f)
     except (json.JSONDecodeError, OSError):
         print_error(f"Failed to load XP data from {xp_file}")

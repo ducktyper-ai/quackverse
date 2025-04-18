@@ -1,4 +1,4 @@
-# src/quackster/github/__init__.py
+# quackster/src/quackster/github/__init__.py
 """Teaching-specific GitHub integration for QuackCore."""
 
 from quackcore.integrations.core import registry

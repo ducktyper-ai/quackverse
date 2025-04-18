@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/llms/test_integration.py
+# quackcore/tests/test_integrations/llms/test_integration.py
 """
 Integration tests for the LLM module.
 

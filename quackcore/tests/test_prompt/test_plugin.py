@@ -1,4 +1,4 @@
-# tests/quackcore/test_prompt/test_plugin.py
+# quackcore/tests/test_prompt/test_plugin.py
 """
 Tests for the prompt plugin functionality.
 """

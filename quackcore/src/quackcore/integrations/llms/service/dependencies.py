@@ -1,4 +1,4 @@
-# src/quackcore/integrations/llms/service/dependencies.py
+# quackcore/src/quackcore/integrations/llms/service/dependencies.py
 """
 Dependency checking for LLM integration.
 

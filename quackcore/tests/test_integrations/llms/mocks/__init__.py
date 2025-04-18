@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/llms/mocks/__init__.py
+# quackcore/tests/test_integrations/llms/mocks/__init__.py
 """
 Mock objects for LLM integration testing.
 

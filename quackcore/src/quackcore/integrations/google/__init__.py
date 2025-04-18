@@ -1,4 +1,4 @@
-# src/quackcore/integrations/google/__init__.py
+# quackcore/src/quackcore/integrations/google/__init__.py
 """
 Google integrations package for QuackCore.
 

@@ -1,4 +1,4 @@
-# src/quackster/core/quests.py
+# quackster/src/quackster/core/quests.py
 """
 Quest definitions and management for QuackCore quackster.
 

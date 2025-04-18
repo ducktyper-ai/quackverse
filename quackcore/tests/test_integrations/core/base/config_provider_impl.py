@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/core/base/config_provider_impl.py
+# quackcore/tests/test_integrations/core/base/config_provider_impl.py
 """
 Implementation classes for testing config providers.
 """

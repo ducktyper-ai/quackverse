@@ -1,4 +1,4 @@
-# src/quackster/npc/tools/tutorial_tools.py
+# quackster/src/quackster/npc/tools/tutorial_tools.py
 """
 Tools for tutorial-related information and guidance.
 

@@ -1,4 +1,4 @@
-# src/quackster/core/github_api.py
+# quackster/src/quackster/core/github_api.py
 """
 GitHub API utilities for checking user actions.
 

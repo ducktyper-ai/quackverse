@@ -1,4 +1,4 @@
-# src/quackcore/integrations/github/__init__.py
+# quackcore/src/quackcore/integrations/github/__init__.py
 """GitHub integration for QuackCore."""
 
 from __future__ import annotations

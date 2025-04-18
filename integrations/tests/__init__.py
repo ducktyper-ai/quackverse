@@ -1,1 +1,1 @@
-# tests/integrations/__init__.py
+# integrations/tests/__init__.py

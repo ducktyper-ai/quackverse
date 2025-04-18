@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/llms/test_models.py
+# quackcore/tests/test_integrations/llms/test_models.py
 """
 Tests for LLM data models.
 

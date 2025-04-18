@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/mail/test_mail.py
+# quackcore/tests/test_integrations/google/mail/test_mail.py
 """
 Main entry point for Google Mail integration tests.
 

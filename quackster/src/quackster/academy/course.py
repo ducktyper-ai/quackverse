@@ -1,4 +1,4 @@
-# src/quackster/academy/course.py
+# quackster/src/quackster/academy/course.py
 """
 Course management module.
 

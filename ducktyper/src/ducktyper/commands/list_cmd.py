@@ -1,4 +1,4 @@
-# src/tests/commands/list_cmd.py
+# ducktyper/src/ducktyper/commands/list_cmd.py
 """
 Implementation of the 'list' command.
 
@@ -7,14 +7,13 @@ The list command displays all available QuackTools.
 
 import json
 import sys
-from typing import Optional
 
 import typer
+
+from ducktyper.src.ducktyper.ui.mode import is_playful_mode
+from ducktyper.ui.branding import print_banner, print_error, print_info, retro_table
 from quackcore.cli import CliContext
 from quackcore.plugins.registry import list_plugins
-
-from ducktyper.ui.branding import print_banner, print_error, print_info, retro_table
-from ducktyper.src.ducktyper.ui.mode import is_playful_mode
 
 # Create Typer app for the list command
 app = typer.Typer(
@@ -27,7 +26,7 @@ app = typer.Typer(
 @app.callback(invoke_without_command=True)
 def list_tools(
         ctx: typer.Context,
-        type_filter: Optional[str] = typer.Option(
+        type_filter: str | None = typer.Option(
             None, "--type", "-t", help="Filter by tool type"
         ),
         output_json: bool = typer.Option(

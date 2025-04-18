@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/drive/test_drive.py
+# quackcore/tests/test_integrations/google/drive/test_drive.py
 """
 Main entry point for Google Drive integration tests.
 

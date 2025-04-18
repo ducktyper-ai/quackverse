@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/core/base/auth_provider_impl.py
+# quackcore/tests/test_integrations/core/base/auth_provider_impl.py
 """
 Implementation classes for testing auth providers.
 """

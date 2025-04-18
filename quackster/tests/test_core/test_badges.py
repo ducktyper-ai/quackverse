@@ -1,1 +1,1 @@
-# tests/quackster/test_core/test_badges.py
+# quackster/tests/test_core/test_badges.py

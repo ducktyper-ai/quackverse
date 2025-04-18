@@ -1,4 +1,4 @@
-# src/quackster/github/teaching_adapter.py
+# quackster/src/quackster/github/teaching_adapter.py
 """GitHub quackster adapter for QuackCore."""
 
 from quackcore.errors import QuackApiError

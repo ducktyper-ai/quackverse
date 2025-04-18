@@ -1,4 +1,4 @@
-# src/quackster/npc/tools/progress_tools.py
+# quackster/src/quackster/npc/tools/progress_tools.py
 """
 Tools for checking user progress, XP, and level information.
 

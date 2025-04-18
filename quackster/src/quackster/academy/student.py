@@ -1,4 +1,4 @@
-# src/quackster/academy/student.py
+# quackster/src/quackster/academy/student.py
 """
 Student management module.
 

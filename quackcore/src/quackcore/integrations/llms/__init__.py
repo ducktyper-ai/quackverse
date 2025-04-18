@@ -1,4 +1,4 @@
-# src/quackcore/integrations/llms/__init__.py
+# quackcore/src/quackcore/integrations/llms/__init__.py
 """
 LLM integration for QuackCore.
 

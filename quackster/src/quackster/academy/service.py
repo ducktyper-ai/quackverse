@@ -1,4 +1,4 @@
-# src/quackster/academy/service.py
+# quackster/src/quackster/academy/service.py
 """
 Teaching service module.
 

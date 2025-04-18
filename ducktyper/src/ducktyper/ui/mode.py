@@ -1,4 +1,4 @@
-# src/tests/ui/mode.py
+# ducktyper/src/ducktyper/ui/mode.py
 """
 UI Mode handling for DuckTyper.
 

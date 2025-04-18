@@ -1,4 +1,4 @@
-# src/quackcore/fs/_helpers/disk.py
+# quackcore/src/quackcore/fs/_helpers/disk.py
 """
 Utility functions for disk _operations.
 """

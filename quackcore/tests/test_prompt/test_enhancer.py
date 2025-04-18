@@ -1,4 +1,4 @@
-# tests/quackcore/test_prompt/test_enhancer.py
+# quackcore/tests/test_prompt/test_enhancer.py
 """
 Tests for the prompt enhancer functionality.
 """

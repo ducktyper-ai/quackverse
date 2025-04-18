@@ -1,4 +1,4 @@
-# tests/quackcore/test_cli/test_formatting.py
+# quackcore/tests/test_cli/test_formatting.py
 """
 Tests for the CLI formatting module.
 """

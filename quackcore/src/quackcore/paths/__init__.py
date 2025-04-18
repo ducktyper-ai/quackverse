@@ -1,4 +1,4 @@
-# src/quackcore/paths/__init__.py
+# quackcore/src/quackcore/paths/__init__.py
 """
 Path resolution and management utilities for QuackCore.
 

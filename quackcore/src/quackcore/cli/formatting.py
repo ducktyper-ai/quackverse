@@ -1,4 +1,4 @@
-# src/quackcore/cli/formatting.py
+# quackcore/src/quackcore/cli/formatting.py
 """
 Text formatting utilities for CLI applications.
 

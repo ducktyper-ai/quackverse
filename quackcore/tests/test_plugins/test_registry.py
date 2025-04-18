@@ -1,4 +1,4 @@
-# tests/quackcore/test_plugins/test_registry.py
+# quackcore/tests/test_plugins/test_registry.py
 """
 Tests for the plugin registry.
 """

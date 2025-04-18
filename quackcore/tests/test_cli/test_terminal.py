@@ -1,4 +1,4 @@
-# tests/quackcore/test_cli/test_terminal.py
+# quackcore/tests/test_cli/test_terminal.py
 """
 Tests for the CLI terminal module.
 """

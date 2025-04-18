@@ -1,4 +1,4 @@
-# src/quackcore/integrations/google/mail/operations/email.py
+# quackcore/src/quackcore/integrations/google/mail/operations/email.py
 """
 Email _operations for Google Mail integration.
 

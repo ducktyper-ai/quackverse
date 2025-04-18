@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/drive/mocks/base.py
+# quackcore/tests/test_integrations/google/drive/mocks/base.py
 """
 Base mock classes and utilities for Google Drive testing.
 """

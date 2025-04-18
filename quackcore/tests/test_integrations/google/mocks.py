@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/mocks.py
+# quackcore/tests/test_integrations/google/mocks.py
 import json
 from unittest.mock import MagicMock
 

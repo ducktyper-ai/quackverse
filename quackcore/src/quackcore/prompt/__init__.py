@@ -1,4 +1,4 @@
-# src/quackcore/prompt/__init__.py
+# quackcore/src/quackcore/prompt/__init__.py
 """
 QuackCore Prompt module.
 

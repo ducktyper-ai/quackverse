@@ -1,4 +1,4 @@
-# tests/quackcore/test_prompt/test_integration.py
+# quackcore/tests/test_prompt/test_integration.py
 """
 Integration tests for the prompt module.
 

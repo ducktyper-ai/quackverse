@@ -1,4 +1,4 @@
-# src/quackster/academy/context.py
+# quackster/src/quackster/academy/context.py
 """
 Teaching context management module.
 

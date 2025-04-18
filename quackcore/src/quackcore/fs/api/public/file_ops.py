@@ -1,4 +1,4 @@
-# src/quackcore/fs/api/public/file_ops.py
+# quackcore/src/quackcore/fs/api/public/file_ops.py
 """
 Public API for file _operations.
 

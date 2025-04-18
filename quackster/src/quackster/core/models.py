@@ -1,4 +1,4 @@
-# src/quackster/core/models.py
+# quackster/src/quackster/core/models.py
 """
 Core models for the QuackCore quackster module's gamification system.
 

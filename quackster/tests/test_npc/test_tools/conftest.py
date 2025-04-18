@@ -1,1 +1,1 @@
-# tests/quackster/test_npc/test_tools/conftest.py
+# quackster/tests/test_npc/test_tools/conftest.py

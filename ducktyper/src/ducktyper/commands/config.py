@@ -1,4 +1,4 @@
-# src/tests/commands/config.py
+# ducktyper/src/ducktyper/commands/config.py
 """
 Implementation of the 'config' command.
 
@@ -9,12 +9,11 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
 
 import typer
 import yaml
-from quackcore.cli import CliContext
 
+from ducktyper.src.ducktyper.ui.mode import is_playful_mode
 from ducktyper.ui.branding import (
     print_banner,
     print_error,
@@ -24,8 +23,8 @@ from ducktyper.ui.branding import (
     quack_say,
     retro_box,
 )
-from ducktyper.src.ducktyper.ui.mode import is_playful_mode
 from ducktyper.ui.styling import format_dict_for_display
+from quackcore.cli import CliContext
 
 # Create Typer app for the config command
 app = typer.Typer(
@@ -57,7 +56,7 @@ def config_callback(ctx: typer.Context) -> None:
 @app.command("show")
 def show_config(
         ctx: typer.Context,
-        section: Optional[str] = typer.Option(
+        section: str | None = typer.Option(
             None, "--section", "-s", help="Show only specified config section"
         ),
 ) -> None:
@@ -172,7 +171,7 @@ def set_config(
 
         config_dict = {}
         try:
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 config_dict = yaml.safe_load(f) or {}
         except FileNotFoundError:
             # Create new config file if it doesn't exist

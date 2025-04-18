@@ -1,4 +1,4 @@
-# tests/quackcore/test_fs/test_service.py
+# quackcore/tests/test_fs/test_service.py
 """
 Tests for the FileSystemService class.
 """

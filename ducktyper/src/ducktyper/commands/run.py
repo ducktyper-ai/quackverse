@@ -1,4 +1,4 @@
-# src/tests/commands/run.py
+# ducktyper/src/ducktyper/commands/run.py
 """
 Implementation of the 'run' command.
 
@@ -7,12 +7,10 @@ The run command executes a specified QuackTool with arguments.
 
 import sys
 from difflib import get_close_matches
-from typing import List, Optional
 
 import typer
-from quackcore.cli import CliContext
-from quackcore.plugins.registry import execute_command, get_plugin, list_plugins
 
+from ducktyper.src.ducktyper.ui.mode import is_playful_mode
 from ducktyper.ui.branding import (
     duck_dance,
     print_banner,
@@ -22,7 +20,8 @@ from ducktyper.ui.branding import (
     print_success,
     quack_say,
 )
-from ducktyper.src.ducktyper.ui.mode import is_playful_mode
+from quackcore.cli import CliContext
+from quackcore.plugins.registry import execute_command, get_plugin, list_plugins
 
 # Create Typer app for the run command
 app = typer.Typer(
@@ -36,7 +35,7 @@ app = typer.Typer(
 def run_tool(
         ctx: typer.Context,
         tool_name: str = typer.Argument(..., help="Name of the tool to run"),
-        args: Optional[List[str]] = typer.Argument(
+        args: list[str] | None = typer.Argument(
             None, help="Arguments to pass to the tool"
         ),
         dance: bool = typer.Option(

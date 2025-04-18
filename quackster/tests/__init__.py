@@ -1,4 +1,4 @@
-# tests/quackster/__init__.py
+# quackster/tests/__init__.py
 """
 Tests for the QuackCore quackster module.
 

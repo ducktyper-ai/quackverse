@@ -1,4 +1,4 @@
-# src/tests/ui/__init__.py
+# ducktyper/src/ducktyper/ui/__init__.py
 """
 UI components for DuckTyper.
 

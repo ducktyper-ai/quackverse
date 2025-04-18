@@ -1,4 +1,4 @@
-# src/quackcore/cli/logging.py
+# quackcore/src/quackcore/cli/logging.py
 """
 Logging utilities for CLI applications.
 

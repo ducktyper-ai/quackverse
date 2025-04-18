@@ -1,4 +1,4 @@
-# src/quackcore/fs/service/path_operations.py
+# quackcore/src/quackcore/fs/service/path_operations.py
 """
 Path _operations utilities for the FileSystemService.
 

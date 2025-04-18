@@ -1,4 +1,4 @@
-# src/tests/commands/new.py
+# ducktyper/src/ducktyper/commands/new.py
 """
 Implementation of the 'new' command.
 
@@ -9,13 +9,11 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import Optional
 
 import typer
-from quackcore.cli import CliContext
-from quackcore.integrations.core import registry
 from rich.prompt import Confirm, Prompt
 
+from ducktyper.src.ducktyper.ui.mode import is_playful_mode
 from ducktyper.ui.branding import (
     print_banner,
     print_error,
@@ -25,7 +23,8 @@ from ducktyper.ui.branding import (
     quack_say,
     retro_box,
 )
-from ducktyper.src.ducktyper.ui.mode import is_playful_mode
+from quackcore.cli import CliContext
+from quackcore.integrations.core import registry
 
 # Create Typer app for the new command
 app = typer.Typer(
@@ -39,14 +38,14 @@ app = typer.Typer(
 def create_new_tool(
         ctx: typer.Context,
         tool_name: str = typer.Argument(..., help="Name of the new tool to create"),
-        output_dir: Optional[str] = typer.Option(
+        output_dir: str | None = typer.Option(
             None, "--output", "-o", help="Output directory for the new tool"
         ),
         template_repo: str = typer.Option(
             "tests-ai/quacktool-template", "--template", "-t",
             help="GitHub repository to use as template"
         ),
-        description: Optional[str] = typer.Option(
+        description: str | None = typer.Option(
             None, "--description", "-d", help="Short description of the tool"
         ),
 ) -> None:
@@ -167,7 +166,7 @@ def create_new_tool(
                         continue
 
                     try:
-                        with open(file_path, 'r', encoding='utf-8') as f:
+                        with open(file_path, encoding='utf-8') as f:
                             content = f.read()
 
                         # Replace all placeholders

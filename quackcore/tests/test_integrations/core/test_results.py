@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/core/test_results.py
+# quackcore/tests/test_integrations/core/test_results.py
 """
 Tests for the integration result classes.
 """

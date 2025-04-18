@@ -1,4 +1,4 @@
-# src/quackcore/prompt/registry.py
+# quackcore/src/quackcore/prompt/registry.py
 """
 Registry module for the PromptBooster.
 

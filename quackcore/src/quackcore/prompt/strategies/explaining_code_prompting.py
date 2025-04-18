@@ -1,4 +1,4 @@
-# src/quackcore/prompt/strategies/explaining_code_prompting.py
+# quackcore/src/quackcore/prompt/strategies/explaining_code_prompting.py
 """
 Explaining Code Prompting strategy for the PromptBooster.
 

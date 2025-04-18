@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/llms/mocks/openai.py
+# quackcore/tests/test_integrations/llms/mocks/openai.py
 """
 Mock OpenAI classes for LLM testing.
 """

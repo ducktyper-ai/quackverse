@@ -1,1 +1,1 @@
-# tests/quackster/test_core/test_models.py
+# quackster/tests/test_core/test_models.py

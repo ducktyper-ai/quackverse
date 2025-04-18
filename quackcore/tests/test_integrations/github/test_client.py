@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/github/test_client.py
+# quackcore/tests/test_integrations/github/test_client.py
 """Tests for GitHub client."""
 
 from unittest.mock import patch

@@ -1,4 +1,4 @@
-# src/quackcore/config/utils.py
+# quackcore/src/quackcore/config/utils.py
 """
 Utility functions for configuration management.
 

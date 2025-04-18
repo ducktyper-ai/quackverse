@@ -1,4 +1,4 @@
-# tests/quackster/test_academy/__init__.py
+# quackster/tests/test_academy/__init__.py
 """
 Tests for the QuackCore quackster academy module.
 

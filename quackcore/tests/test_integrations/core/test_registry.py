@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/core/test_registry.py
+# quackcore/tests/test_integrations/core/test_registry.py
 """
 Tests for the integration registry module.
 """

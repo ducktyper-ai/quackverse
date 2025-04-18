@@ -1,1 +1,1 @@
-# tests/quackster/test_npc/test_tools/test_common.py
+# quackster/tests/test_npc/test_tools/test_common.py

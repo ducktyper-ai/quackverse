@@ -1,4 +1,4 @@
-# tests/quackcore/test_prompt/conftest.py
+# quackcore/tests/test_prompt/conftest.py
 """
 Fixtures for prompt module tests.
 """

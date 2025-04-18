@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/drive/test_protocols.py
+# quackcore/tests/test_integrations/google/drive/test_protocols.py
 """
 Tests for Google Drive protocols module.
 """

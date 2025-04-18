@@ -5,8 +5,6 @@ Shared fixtures for DuckTyper tests.
 
 import sys
 from pathlib import Path
-import pytest
-from unittest.mock import patch, MagicMock
 
 # Add the src directories to the Python path if they're not already there
 DUCKTYPER_ROOT = Path(__file__).parent.parent

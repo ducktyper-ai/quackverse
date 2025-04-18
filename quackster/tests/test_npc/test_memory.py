@@ -1,1 +1,1 @@
-# tests/quackster/test_npc/test_memory.py
+# quackster/tests/test_npc/test_memory.py

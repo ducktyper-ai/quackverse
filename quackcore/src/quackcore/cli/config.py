@@ -1,4 +1,4 @@
-# src/quackcore/cli/config.py
+# quackcore/src/quackcore/cli/config.py
 """
 Configuration utilities for CLI applications.
 

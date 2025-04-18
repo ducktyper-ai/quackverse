@@ -1,1 +1,1 @@
-# src/quackcore/integrations/database/sqlite/__init__.py
+# quackcore/src/quackcore/integrations/database/sqlite/__init__.py

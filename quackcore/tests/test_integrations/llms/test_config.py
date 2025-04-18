@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/llms/test_config.py
+# quackcore/tests/test_integrations/llms/test_config.py
 """
 Tests for LLM configuration models.
 

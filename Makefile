@@ -49,23 +49,29 @@ install-quackcore: ## Install quackcore package
 	@echo "${BLUE}Installing quackcore package...${RESET}"
 	cd quackcore && uv pip install -e .
 	@echo "${GREEN}quackcore installed successfully${RESET}"
+	@# Verify installation
+	@$(PYTHON) -c "import quackcore; print(f'quackcore installed at: {quackcore.__file__}')"
 
 .PHONY: install-ducktyper
-install-ducktyper: ## Install ducktyper package
+install-ducktyper: install-quackcore ## Install ducktyper package
 	@echo "${BLUE}Installing ducktyper package...${RESET}"
 	cd ducktyper && uv pip install -e .
 	@echo "${GREEN}ducktyper installed successfully${RESET}"
+	@# Verify installation
+	@$(PYTHON) -c "import ducktyper; print(f'ducktyper installed at: {ducktyper.__file__}')"
 
 .PHONY: install-quackster
-install-quackster: ## Install quackster package
+install-quackster: install-quackcore ## Install quackster package
 	@echo "${BLUE}Installing quackster package...${RESET}"
 	cd quackster && uv pip install -e .
 	@echo "${GREEN}quackster installed successfully${RESET}"
+	@# Verify installation
+	@$(PYTHON) -c "import quackster; print(f'quackster installed at: {quackster.__file__}')"
 
 .PHONY: install-all
 install-all: install-quackcore install-ducktyper install-quackster ## Install all packages with their optional dependencies
 	@echo "${BLUE}Installing optional dependencies for all packages...${RESET}"
-	cd quackcore && uv pip install -e ".[gmail,notion,google,drive,pandoc,llms,ducktyper]"
+	cd quackcore && uv pip install -e ".[gmail,notion,google,drive,pandoc,llms,ducktyper, github]"
 	cd ducktyper && uv pip install -e ".[all]"
 	cd quackster && uv pip install -e ".[all]"
 	@echo "${GREEN}All packages and dependencies installed successfully${RESET}"
@@ -101,32 +107,35 @@ update: ## Update all dependencies
 .PHONY: test
 test: ## Run tests with coverage
 	@echo "${BLUE}Running tests with coverage...${RESET}"
-	PYTHONPATH="$(shell pwd)/quackcore/src:$(shell pwd)/ducktyper/src:$(shell pwd)/quackster/src:$(PYTHONPATH)" \
-	$(PYTHON) -m pytest $(PYTEST_ARGS) --cov=quackcore/src --cov=ducktyper/src --cov=quackster/src --cov-report=term-missing
+	cd $(shell pwd) && \
+	$(PYTHON) -m pytest quackcore/tests -v --cov=quackcore/src --cov-report=term-missing && \
+	$(PYTHON) -m pytest ducktyper/tests -v --cov=ducktyper/src --cov-report=term-missing && \
+	$(PYTHON) -m pytest quackster/tests -v --cov=quackster/src --cov-report=term-missing
 
 .PHONY: test-quackcore
 test-quackcore: ## Run only quackcore tests
 	@echo "${BLUE}Running quackcore tests...${RESET}"
-	PYTHONPATH="$(shell pwd)/quackcore/src:$(PYTHONPATH)" \
-	$(PYTHON) -m pytest quackcore/tests $(PYTEST_ARGS) --cov=quackcore/src --cov-report=term-missing
+	cd $(shell pwd)/quackcore && \
+	$(PYTHON) -m pytest tests -v --cov=src --cov-report=term-missing
 
 .PHONY: test-ducktyper
 test-ducktyper: ## Run only ducktyper tests
 	@echo "${BLUE}Running ducktyper tests...${RESET}"
-	PYTHONPATH="$(shell pwd)/quackcore/src:$(shell pwd)/ducktyper/src:$(PYTHONPATH)" \
-	$(PYTHON) -m pytest ducktyper/tests $(PYTEST_ARGS) --cov=ducktyper/src --cov-report=term-missing
+	cd $(shell pwd)/ducktyper && \
+	$(PYTHON) -m pytest tests --cov=src --cov-report=term-missing
 
 .PHONY: test-quackster
 test-quackster: ## Run only quackster tests
 	@echo "${BLUE}Running quackster tests...${RESET}"
-	PYTHONPATH="$(shell pwd)/quackcore/src:$(shell pwd)/quackster/src:$(PYTHONPATH)" \
-	$(PYTHON) -m pytest quackster/tests $(PYTEST_ARGS) --cov=quackster/src --cov-report=term-missing
+	cd $(shell pwd)/quackster && \
+	$(PYTHON) -m pytest tests --cov=src --cov-report=term-missing
 
 .PHONY: test-integration
 test-integration: ## Run only integration tests
 	@echo "${BLUE}Running integration tests...${RESET}"
-	PYTHONPATH="$(shell pwd)/quackcore/src:$(shell pwd)/ducktyper/src:$(shell pwd)/quackster/src:$(PYTHONPATH)" \
-	$(PYTHON) -m pytest tests/integration $(PYTEST_ARGS) --cov=quackcore/src --cov=ducktyper/src --cov=quackster/src --cov-report=term-missing
+	cd $(shell pwd) && \
+	$(PYTHON) -m pytest tests/integration $(PYTEST_ARGS) \
+		--cov=quackcore/src --cov=ducktyper/src --cov=quackster/src --cov-report=term-missing
 
 .PHONY: test-module
 test-module: ## Run only integration tests with coverage

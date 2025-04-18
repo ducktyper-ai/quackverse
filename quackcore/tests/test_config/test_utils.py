@@ -1,4 +1,4 @@
-# tests/quackcore/test_config/test_utils.py
+# quackcore/tests/test_config/test_utils.py
 """
 Tests for configuration utility functions.
 """

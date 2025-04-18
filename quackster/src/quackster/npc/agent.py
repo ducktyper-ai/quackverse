@@ -1,4 +1,4 @@
-# src/quackster/npc/agent.py
+# quackster/src/quackster/npc/agent.py
 """
 Main agent orchestration for the Quackster quackster NPC.
 

@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/drive/test_drive_models.py
+# quackcore/tests/test_integrations/google/drive/test_drive_models.py
 """
 Tests for Google Drive models.
 """

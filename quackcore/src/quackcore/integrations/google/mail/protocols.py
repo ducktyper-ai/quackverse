@@ -1,4 +1,4 @@
-# src/quackcore/integrations/google/mail/protocols.py
+# quackcore/src/quackcore/integrations/google/mail/protocols.py
 """
 Protocol definitions for Gmail integration.
 

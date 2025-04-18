@@ -1,1 +1,1 @@
-# tests/quackster/test_github/test_teaching_service.py
+# quackster/tests/test_github/test_teaching_service.py

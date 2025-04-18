@@ -1,4 +1,4 @@
-# src/quackster/academy/assignment.py
+# quackster/src/quackster/academy/assignment.py
 """
 Assignment management module.
 

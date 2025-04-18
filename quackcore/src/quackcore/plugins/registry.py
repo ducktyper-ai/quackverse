@@ -1,4 +1,4 @@
-# src/quackcore/plugins/registry.py
+# quackcore/src/quackcore/plugins/registry.py
 
 from typing import TypeVar
 

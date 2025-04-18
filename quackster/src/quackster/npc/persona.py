@@ -1,4 +1,4 @@
-# src/quackster/npc/persona.py
+# quackster/src/quackster/npc/persona.py
 """
 Persona configuration for the Quackster quackster NPC.
 

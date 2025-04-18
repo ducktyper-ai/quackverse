@@ -1,4 +1,4 @@
-# src/quackcore/fs/_operations/base.py
+# quackcore/src/quackcore/fs/_operations/base.py
 """
 Base implementation of the FileSystemOperations class.
 

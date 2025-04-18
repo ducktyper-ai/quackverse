@@ -1,4 +1,4 @@
-# src/quackcore/fs/service/full_class.py
+# quackcore/src/quackcore/fs/service/full_class.py
 """
 Combined FileSystemService class definition that incorporates all mixins.
 

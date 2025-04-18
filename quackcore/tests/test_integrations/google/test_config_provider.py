@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/test_config_provider.py
+# quackcore/tests/test_integrations/google/test_config_provider.py
 """
 Tests for Google configuration provider.
 

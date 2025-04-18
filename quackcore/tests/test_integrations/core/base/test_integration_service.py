@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/core/base/test_integration_service.py
+# quackcore/tests/test_integrations/core/base/test_integration_service.py
 """
 Tests for the BaseIntegrationService class.
 """

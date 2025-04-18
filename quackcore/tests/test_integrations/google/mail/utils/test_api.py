@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/mail/utils/test_api.py
+# quackcore/tests/test_integrations/google/mail/utils/test_api.py
 """
 Tests for Gmail API utility functions.
 

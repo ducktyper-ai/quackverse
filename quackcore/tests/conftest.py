@@ -3,8 +3,9 @@
 Shared fixtures for QuackCore tests.
 """
 
+# Import the test helper first to set up the Python path
+
 import os
-import sys
 import shutil
 import tempfile
 from collections.abc import Generator
@@ -14,16 +15,19 @@ from unittest.mock import patch
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
-# Add the src directory to the Python path if it's not already there
-QUACKCORE_ROOT = Path(__file__).parent.parent
-SRC_DIR = QUACKCORE_ROOT / "src"
-if SRC_DIR.exists() and str(SRC_DIR.parent) not in sys.path:
-    sys.path.insert(0, str(SRC_DIR.parent))
-
-# Now the imports should work
-from quackcore.config.models import QuackConfig
-from quackcore.fs.results import DataResult, OperationResult
-from quackcore.plugins.protocols import QuackPluginProtocol
+# Now try to import the quackcore modules
+try:
+    from quackcore.config.models import QuackConfig
+    from quackcore.fs.results import DataResult, OperationResult
+    from quackcore.plugins.protocols import QuackPluginProtocol
+except ImportError as e:
+    print(f"Error importing quackcore modules: {e}")
+    # Emergency fallbacks if needed
+    import sys
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+    from quackcore.config.models import QuackConfig
+    from quackcore.fs.results import DataResult, OperationResult
+    from quackcore.plugins.protocols import QuackPluginProtocol
 
 
 @pytest.fixture(autouse=True)

@@ -1,1 +1,1 @@
-# tests/quackcore/test_integration/__init__.py
+# quackcore/tests/test_integration/__init__.py

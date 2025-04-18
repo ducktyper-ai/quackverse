@@ -1,4 +1,4 @@
-# tests/quackcore/test_cli/test_options.py
+# quackcore/tests/test_cli/test_options.py
 """
 Tests for the CLI options module.
 """

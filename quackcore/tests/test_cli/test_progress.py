@@ -1,4 +1,4 @@
-# tests/quackcore/test_cli/test_progress.py
+# quackcore/tests/test_cli/test_progress.py
 """
 Tests for the CLI progress module.
 """

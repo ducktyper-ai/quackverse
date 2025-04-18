@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/llms/test_fallback.py
+# quackcore/tests/test_integrations/llms/test_fallback.py
 """
 Tests for the fallback mechanism for LLM clients.
 

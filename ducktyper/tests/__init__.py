@@ -1,1 +1,1 @@
-# tests/tests/__init__.py
+# ducktyper/tests/__init__.py

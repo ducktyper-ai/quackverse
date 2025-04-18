@@ -1,4 +1,4 @@
-# src/quackcore/prompt/strategies/task_decomposition.py
+# quackcore/src/quackcore/prompt/strategies/task_decomposition.py
 """
 Task decomposition strategy for the PromptBooster.
 

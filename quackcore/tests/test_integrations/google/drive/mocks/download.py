@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/drive/mocks/download.py
+# quackcore/tests/test_integrations/google/drive/mocks/download.py
 """
 Mock classes for Google Drive download _operations.
 """

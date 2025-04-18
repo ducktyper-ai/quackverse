@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/drive/utils/test_utils_query.py
+# quackcore/tests/test_integrations/google/drive/utils/test_utils_query.py
 """
 Tests for Google Drive api query module.
 """

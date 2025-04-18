@@ -1,1 +1,1 @@
-# tests/quackster/test_npc/test_dialogue.py
+# quackster/tests/test_npc/test_dialogue.py

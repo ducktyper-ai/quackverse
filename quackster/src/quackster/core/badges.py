@@ -1,4 +1,4 @@
-# src/quackster/core/badges.py
+# quackster/src/quackster/core/badges.py
 """
 Badge definitions and management for QuackCore quackster.
 

@@ -1,4 +1,4 @@
-# src/quackcore/errors/handlers.py
+# quackcore/src/quackcore/errors/handlers.py
 """
 Error handling utilities for QuackCore.
 

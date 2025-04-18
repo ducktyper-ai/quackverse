@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/github/conftest.py
+# quackcore/tests/test_integrations/github/conftest.py
 """Shared fixtures for GitHub integration tests."""
 
 import json

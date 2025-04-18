@@ -1,4 +1,4 @@
-# src/quackcore/integrations/google/mail/utils/__init__.py
+# quackcore/src/quackcore/integrations/google/mail/utils/__init__.py
 """
 Utilities package for Google Mail integration.
 

@@ -1,4 +1,4 @@
-# src/quackcore/integrations/llms/clients/anthropic.py
+# quackcore/src/quackcore/integrations/llms/clients/anthropic.py
 
 import logging
 import os

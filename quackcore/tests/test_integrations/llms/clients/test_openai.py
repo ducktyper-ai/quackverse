@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/llms/clients/test_openai.py
+# quackcore/tests/test_integrations/llms/clients/test_openai.py
 """
 Tests for the OpenAI LLM client.
 

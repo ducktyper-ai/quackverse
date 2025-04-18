@@ -1,4 +1,4 @@
-# tests/quackcore/test_cli/test_logging.py
+# quackcore/tests/test_cli/test_logging.py
 """
 Tests for the CLI logging module.
 """

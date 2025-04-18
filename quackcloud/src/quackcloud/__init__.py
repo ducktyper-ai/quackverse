@@ -1,1 +1,1 @@
-# src/quackcloud/__init__.py
+# quackcloud/src/quackcloud/__init__.py

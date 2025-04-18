@@ -1,4 +1,4 @@
-# src/quackster/academy/plugin.py
+# quackster/src/quackster/academy/plugin.py
 """
 Plugin implementation for the QuackCore quackster module.
 

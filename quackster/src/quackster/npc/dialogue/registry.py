@@ -1,4 +1,4 @@
-# src/quackster/npc/dialogue/registry.py
+# quackster/src/quackster/npc/dialogue/registry.py
 """
 Central registry for Quackster NPC dialogue.
 

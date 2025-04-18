@@ -1,4 +1,4 @@
-# src/quackcore/fs/_helpers/file_info.py
+# quackcore/src/quackcore/fs/_helpers/file_info.py
 """
 Utility functions for getting file information.
 """

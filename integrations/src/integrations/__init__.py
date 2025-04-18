@@ -1,1 +1,1 @@
-# src/integrations/__init__.py
+# integrations/src/integrations/__init__.py

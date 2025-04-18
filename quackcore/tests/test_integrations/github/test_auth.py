@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/github/test_auth.py
+# quackcore/tests/test_integrations/github/test_auth.py
 """Tests for GitHub integration initialization."""
 
 from unittest.mock import MagicMock, patch

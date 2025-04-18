@@ -1,4 +1,4 @@
-# src/quackcore/integrations/llms/config.py
+# quackcore/src/quackcore/integrations/llms/config.py
 """
 Configuration for LLM integration.
 

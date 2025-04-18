@@ -1,4 +1,4 @@
-# tests/quackcore/test_paths/test_context.py
+# quackcore/tests/test_paths/test_context.py
 """
 Tests for project context models.
 """

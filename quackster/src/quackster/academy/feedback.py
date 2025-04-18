@@ -1,4 +1,4 @@
-# src/quackster/academy/feedback.py
+# quackster/src/quackster/academy/feedback.py
 """
 Feedback module for quackster applications.
 

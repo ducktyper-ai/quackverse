@@ -1,4 +1,4 @@
-# src/tests/ui/branding.py
+# ducktyper/src/ducktyper/ui/branding.py
 """
 DuckTyper branding and UI components.
 
@@ -8,7 +8,7 @@ RPG-inspired styling, ASCII art, and interactive elements.
 
 import time
 from enum import Enum
-from typing import Optional, TypeVar
+from typing import TypeVar
 
 import typer
 from rich.console import Console
@@ -75,7 +75,7 @@ class AlertLevel(str, Enum):
 
 # === 🖼️ UI Components === #
 
-def print_banner(title: str, subtitle: Optional[str] = None,
+def print_banner(title: str, subtitle: str | None = None,
                  mood: str = "happy") -> None:
     """
     Print a stylized banner with title and optional subtitle.
@@ -352,7 +352,7 @@ def get_retro_progress(
 
 
 def retro_table(headers: list[str], rows: list[list[str]],
-                title: Optional[str] = None) -> None:
+                title: str | None = None) -> None:
     """
     Display data in a retro-styled table.
 

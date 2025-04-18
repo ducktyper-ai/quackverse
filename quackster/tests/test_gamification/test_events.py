@@ -1,1 +1,1 @@
-# tests/quackster/test_gamification/test_events.py
+# quackster/tests/test_gamification/test_events.py

@@ -1,4 +1,4 @@
-# src/quackster/github/grading.py
+# quackster/src/quackster/github/grading.py
 """GitHub assignment grading utilities for QuackCore."""
 
 from typing import Any

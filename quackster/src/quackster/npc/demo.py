@@ -1,4 +1,4 @@
-# src/quackster/npc/demo.py
+# quackster/src/quackster/npc/demo.py
 """
 Demo REPL for the Quackster quackster NPC.
 

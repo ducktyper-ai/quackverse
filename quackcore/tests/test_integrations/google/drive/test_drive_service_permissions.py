@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/drive/test_drive_service_permissions.py
+# quackcore/tests/test_integrations/google/drive/test_drive_service_permissions.py
 """
 Tests for Google Drive service permissions _operations.
 """

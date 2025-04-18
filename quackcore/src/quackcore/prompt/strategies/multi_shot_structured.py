@@ -1,4 +1,4 @@
-# src/quackcore/prompt/strategies/multi_shot_structured.py
+# quackcore/src/quackcore/prompt/strategies/multi_shot_structured.py
 """
 Multi-shot structured strategy for the PromptBooster.
 

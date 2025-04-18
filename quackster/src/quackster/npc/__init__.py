@@ -1,4 +1,4 @@
-# src/quackster/npc/__init__.py
+# quackster/src/quackster/npc/__init__.py
 """
 Quackster quackster NPC module.
 

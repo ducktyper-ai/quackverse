@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/drive/test_drive_service_upload.py
+# quackcore/tests/test_integrations/google/drive/test_drive_service_upload.py
 """
 Tests for Google Drive service upload _operations.
 """

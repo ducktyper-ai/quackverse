@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/core/test_registry_discovery.py
+# quackcore/tests/test_integrations/core/test_registry_discovery.py
 """
 Tests for the integration registry discovery features.
 

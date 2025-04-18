@@ -1,4 +1,4 @@
-# src/quackster/npc/rag.py
+# quackster/src/quackster/npc/rag.py
 """
 RAG (Retrieval-Augmented Generation) module for the Quackster quackster NPC.
 

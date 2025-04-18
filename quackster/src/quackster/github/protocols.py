@@ -1,4 +1,4 @@
-# src/quackster/github/protocols.py
+# quackster/src/quackster/github/protocols.py
 """Protocols for GitHub integration."""
 
 from typing import Any, Protocol, runtime_checkable

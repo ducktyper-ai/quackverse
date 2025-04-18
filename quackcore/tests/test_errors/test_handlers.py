@@ -1,4 +1,4 @@
-# tests/quackcore/test_errors/test_handlers.py
+# quackcore/tests/test_errors/test_handlers.py
 """
 Tests for error handling utilities.
 """

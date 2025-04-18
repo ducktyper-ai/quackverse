@@ -1,19 +1,18 @@
-# src/tests/main.py
+# ducktyper/src/ducktyper/main.py
 """
 Main entry point for the DuckTyper CLI.
 """
 
 import os
-from typing import Optional
 
 import typer
-from quackcore.cli import init_cli_env
-from quackcore.cli.options import CliOptions
 from rich.console import Console
 
 from ducktyper.commands import assistant, certify, config, explain, list_cmd, new, run
-from ducktyper.ui.branding import duck_dance, print_banner, print_info, print_success
 from ducktyper.src.ducktyper.ui.mode import is_playful_mode, set_mode_from_env
+from ducktyper.ui.branding import duck_dance, print_banner, print_info, print_success
+from quackcore.cli import init_cli_env
+from quackcore.cli.options import CliOptions
 
 # Create the Typer app
 app = typer.Typer(
@@ -41,7 +40,7 @@ def callback(
         mode: str = typer.Option(
             None, "--mode", "-m", help="UI mode: 'teaching' (default) or 'production'"
         ),
-        config_path: Optional[str] = typer.Option(
+        config_path: str | None = typer.Option(
             None, "--config", help="Path to config file"
         ),
         debug: bool = typer.Option(False, "--debug", help="Enable debug mode"),
@@ -49,11 +48,11 @@ def callback(
                                      help="Enable verbose output"),
         quiet: bool = typer.Option(False, "--quiet", "-q",
                                    help="Quiet mode (errors only)"),
-        log_level: Optional[str] = typer.Option(
+        log_level: str | None = typer.Option(
             None, "--log-level",
             help="Set logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)"
         ),
-        environment: Optional[str] = typer.Option(
+        environment: str | None = typer.Option(
             None, "--environment", help="Override environment"
         ),
 ) -> None:

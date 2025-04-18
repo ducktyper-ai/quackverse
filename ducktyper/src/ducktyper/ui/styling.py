@@ -1,4 +1,4 @@
-# src/tests/ui/styling.py
+# ducktyper/src/ducktyper/ui/styling.py
 """
 Styling utilities for DuckTyper UI.
 
@@ -9,8 +9,9 @@ components, including text formatting, color handling, and layout helpers.
 import os
 import re
 import shutil
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Optional, TypeVar
+from typing import TypeVar
 
 from rich.console import Console
 
@@ -60,7 +61,7 @@ def truncate_text(text: str, max_length: int, indicator: str = "...") -> str:
     return text[: max_length - len(indicator)] + indicator
 
 
-def colorize(text: str, fg: Optional[str] = None, bg: Optional[str] = None,
+def colorize(text: str, fg: str | None = None, bg: str | None = None,
              **styles) -> str:
     """
     Colorize text using Rich's style syntax.
@@ -117,7 +118,7 @@ def style_if_playful(func: Callable[..., T]) -> Callable[..., T]:
     return wrapper
 
 
-def center_text(text: str, width: Optional[int] = None) -> str:
+def center_text(text: str, width: int | None = None) -> str:
     """
     Center text in the terminal.
 

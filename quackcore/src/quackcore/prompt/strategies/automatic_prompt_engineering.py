@@ -1,4 +1,4 @@
-# src/quackcore/prompt/strategies/automatic_prompt_engineering.py
+# quackcore/src/quackcore/prompt/strategies/automatic_prompt_engineering.py
 """
 Automatic Prompt Engineering strategy for the PromptBooster.
 

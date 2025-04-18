@@ -1,4 +1,4 @@
-# src/quackcore/prompt/booster.py
+# quackcore/src/quackcore/prompt/booster.py
 """
 Main PromptBooster module for QuackCore.
 

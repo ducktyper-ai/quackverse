@@ -1,4 +1,4 @@
-# src/quackcore/integrations/llms/registry.py
+# quackcore/src/quackcore/integrations/llms/registry.py
 """
 Registry for LLM clients.
 

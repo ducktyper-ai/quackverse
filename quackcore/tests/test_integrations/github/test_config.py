@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/github/test_config.py
+# quackcore/tests/test_integrations/github/test_config.py
 """Tests for GitHub configuration provider."""
 
 import os

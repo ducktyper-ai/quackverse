@@ -1,1 +1,1 @@
-# tests/quackmedia/__init__.py
+# quackmedia/tests/__init__.py

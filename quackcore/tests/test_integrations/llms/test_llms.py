@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/llms/test_llms.py
+# quackcore/tests/test_integrations/llms/test_llms.py
 """
 Main entry point for LLM integration tests.
 

@@ -1,4 +1,4 @@
-# src/quackster/npc/memory.py
+# quackster/src/quackster/npc/memory.py
 """
 Memory management for the Quackster quackster NPC.
 

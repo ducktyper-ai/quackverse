@@ -1,4 +1,4 @@
-# tests/quackcore/test_cli/test_bootstrap.py
+# quackcore/tests/test_cli/test_bootstrap.py
 """
 Tests for the CLI bootstrap module.
 """

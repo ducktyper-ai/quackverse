@@ -1,1 +1,1 @@
-# tests/quackcore/test_integrations/pandoc/operations/test_utils.py
+# quackcore/tests/test_integrations/pandoc/operations/test_utils.py

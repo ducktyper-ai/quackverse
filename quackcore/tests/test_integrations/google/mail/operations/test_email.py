@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/mail/operations/test_email.py
+# quackcore/tests/test_integrations/google/mail/operations/test_email.py
 """
 Tests for Gmail email _operations.
 

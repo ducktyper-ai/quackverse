@@ -1,4 +1,4 @@
-# src/quackcore/integrations/pandoc/__init__.py
+# quackcore/src/quackcore/integrations/pandoc/__init__.py
 """
 Pandoc integration for QuackCore.
 

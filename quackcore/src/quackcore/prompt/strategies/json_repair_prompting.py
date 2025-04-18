@@ -1,4 +1,4 @@
-# src/quackcore/prompt/strategies/json_repair_prompting.py
+# quackcore/src/quackcore/prompt/strategies/json_repair_prompting.py
 """
 JSON Repair Prompting strategy for the PromptBooster.
 

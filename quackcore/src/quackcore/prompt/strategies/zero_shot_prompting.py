@@ -1,4 +1,4 @@
-# src/quackcore/prompt/strategies/zero_shot_prompting.py
+# quackcore/src/quackcore/prompt/strategies/zero_shot_prompting.py
 """
 Zero-shot Prompting strategy for the PromptBooster.
 

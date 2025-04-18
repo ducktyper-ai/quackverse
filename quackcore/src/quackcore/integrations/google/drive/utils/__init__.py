@@ -1,4 +1,4 @@
-# src/quackcore/integrations/google/drive/utils/__init__.py
+# quackcore/src/quackcore/integrations/google/drive/utils/__init__.py
 """
 Utilities package for Google Drive integration.
 

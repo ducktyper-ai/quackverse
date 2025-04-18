@@ -1,4 +1,4 @@
-# src/quackster/npc/config.py
+# quackster/src/quackster/npc/config.py
 """
 Configuration settings for the Quackster quackster NPC.
 

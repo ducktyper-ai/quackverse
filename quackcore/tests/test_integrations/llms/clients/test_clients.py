@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/llms/clients/test_clients.py
+# quackcore/tests/test_integrations/llms/clients/test_clients.py
 """
 Tests for the consolidated LLM clients module.
 

@@ -1,4 +1,4 @@
-# src/quackcore/fs/_helpers/safe_ops.py
+# quackcore/src/quackcore/fs/_helpers/safe_ops.py
 """
 Utility functions for safe file _operations (copy, move, delete).
 """

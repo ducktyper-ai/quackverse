@@ -1,4 +1,4 @@
-# tests/quackcore/test_prompt/test_booster.py
+# quackcore/tests/test_prompt/test_booster.py
 """
 Tests for the PromptBooster class.
 """

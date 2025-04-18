@@ -1,4 +1,4 @@
-# src/quackcore/fs/service/base.py
+# quackcore/src/quackcore/fs/service/base.py
 """
 Base class for the FileSystemService.
 

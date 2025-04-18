@@ -1,4 +1,4 @@
-# tests/quackcore/test_fs/test_results.py
+# quackcore/tests/test_fs/test_results.py
 """
 Tests for the filesystem operation result classes.
 """

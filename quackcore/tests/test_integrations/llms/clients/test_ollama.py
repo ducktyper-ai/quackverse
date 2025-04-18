@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/llms/clients/test_ollama.py
+# quackcore/tests/test_integrations/llms/clients/test_ollama.py
 """
 Tests for the Ollama LLM client.
 

@@ -1,4 +1,4 @@
-# src/tests/commands/explain.py
+# ducktyper/src/ducktyper/commands/explain.py
 """
 Implementation of the 'explain' command.
 
@@ -8,9 +8,8 @@ The explain command shows documentation and help for a specified QuackTool.
 import sys
 
 import typer
-from quackcore.cli import CliContext
-from quackcore.plugins.registry import get_plugin
 
+from ducktyper.src.ducktyper.ui.mode import is_playful_mode
 from ducktyper.ui.branding import (
     print_banner,
     print_error,
@@ -19,8 +18,9 @@ from ducktyper.ui.branding import (
     retro_box,
     retro_table,
 )
-from ducktyper.src.ducktyper.ui.mode import is_playful_mode
 from ducktyper.ui.styling import format_dict_for_display
+from quackcore.cli import CliContext
+from quackcore.plugins.registry import get_plugin
 
 # Create Typer app for the explain command
 app = typer.Typer(

@@ -1,4 +1,4 @@
-# tests/quackcore/test_cli/test_error.py
+# quackcore/tests/test_cli/test_error.py
 """
 Tests for the CLI error handling module.
 """

@@ -1,4 +1,4 @@
-# src/quackcore/prompt/strategies/chain_of_thought_prompting.py
+# quackcore/src/quackcore/prompt/strategies/chain_of_thought_prompting.py
 """
 Chain of Thought Prompting strategy for the PromptBooster.
 

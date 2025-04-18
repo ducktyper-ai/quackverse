@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/llms/clients/test_anthropic.py
+# quackcore/tests/test_integrations/llms/clients/test_anthropic.py
 """
 Tests for the Anthropic LLM client.
 

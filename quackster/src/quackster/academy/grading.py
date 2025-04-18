@@ -1,4 +1,4 @@
-# src/quackster/academy/grading.py
+# quackster/src/quackster/academy/grading.py
 """
 Grading module for quackster applications.
 

@@ -1,4 +1,4 @@
-# src/quackcore/fs/service/directory_operations.py
+# quackcore/src/quackcore/fs/service/directory_operations.py
 """
 Directory management _operations for the FileSystemService.
 """

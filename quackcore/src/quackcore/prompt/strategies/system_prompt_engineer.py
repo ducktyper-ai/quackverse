@@ -1,4 +1,4 @@
-# src/quackcore/prompt/strategies/system_prompt_engineer.py
+# quackcore/src/quackcore/prompt/strategies/system_prompt_engineer.py
 """
 System Prompt Engineer strategy for the PromptBooster.
 

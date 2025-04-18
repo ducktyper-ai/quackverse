@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/github/test_models.py
+# quackcore/tests/test_integrations/github/test_models.py
 """Tests for GitHub models."""
 
 from datetime import datetime

@@ -1,1 +1,1 @@
-# src/quackcore/integrations/database/bigquery/__init__.py
+# quackcore/src/quackcore/integrations/database/bigquery/__init__.py

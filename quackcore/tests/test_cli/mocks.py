@@ -1,4 +1,4 @@
-# tests/quackcore/test_cli/mocks.py
+# quackcore/tests/test_cli/mocks.py
 """
 Common mock objects and utilities for testing CLI modules.
 

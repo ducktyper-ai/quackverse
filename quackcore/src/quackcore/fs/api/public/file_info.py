@@ -1,4 +1,4 @@
-# src/quackcore/fs/api/public/file_info.py
+# quackcore/src/quackcore/fs/api/public/file_info.py
 """
 Public API for file information _operations.
 

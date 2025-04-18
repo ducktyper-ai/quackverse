@@ -1,4 +1,4 @@
-# src/quackster/github/teaching_service.py
+# quackster/src/quackster/github/teaching_service.py
 """GitHub quackster integration service for QuackCore."""
 
 from typing import Any

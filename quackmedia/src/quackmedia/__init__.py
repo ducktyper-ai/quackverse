@@ -1,1 +1,1 @@
-# src/quackmedia/__init__.py
+# quackmedia/src/quackmedia/__init__.py

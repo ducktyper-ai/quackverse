@@ -1,4 +1,4 @@
-# src/quackcore/paths/_internal/context.py
+# quackcore/src/quackcore/paths/_internal/context.py
 """
 Project context models for path resolution.
 

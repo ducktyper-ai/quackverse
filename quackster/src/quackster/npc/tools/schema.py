@@ -1,4 +1,4 @@
-# src/quackster/npc/tools/schema.py
+# quackster/src/quackster/npc/tools/schema.py
 """
 Pydantic models defining the schema for Quackster NPC tool outputs.
 

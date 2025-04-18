@@ -1,4 +1,4 @@
-# src/quackcore/fs/service/factory.py
+# quackcore/src/quackcore/fs/service/factory.py
 """
 Factory functions for creating FileSystemService instances.
 """

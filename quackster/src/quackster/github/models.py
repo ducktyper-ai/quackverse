@@ -1,4 +1,4 @@
-# src/quackster/github/models.py
+# quackster/src/quackster/github/models.py
 
 """GitHub integration data models for QuackCore."""
 

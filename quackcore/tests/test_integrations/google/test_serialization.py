@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/test_serialization.py
+# quackcore/tests/test_integrations/google/test_serialization.py
 from unittest.mock import MagicMock
 
 

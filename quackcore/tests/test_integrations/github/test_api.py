@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/github/test_api.py
+# quackcore/tests/test_integrations/github/test_api.py
 """Tests for GitHub API request utilities."""
 
 import time

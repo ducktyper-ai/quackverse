@@ -1,1 +1,1 @@
-# src/quackcore/integrations/jupytext/__init__.py
+# quackcore/src/quackcore/integrations/jupytext/__init__.py

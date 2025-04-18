@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/core/base/test_config_provider.py
+# quackcore/tests/test_integrations/core/base/test_config_provider.py
 """
 Tests for the BaseConfigProvider class.
 """

@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/github/test_operations.py
+# quackcore/tests/test_integrations/github/test_operations.py
 """Tests for GitHub API _operations."""
 
 import base64

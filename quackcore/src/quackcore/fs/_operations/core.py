@@ -1,4 +1,4 @@
-# src/quackcore/fs/_operations/core.py
+# quackcore/src/quackcore/fs/_operations/core.py
 """
 Core path resolution and utility functionality for filesystem _operations.
 

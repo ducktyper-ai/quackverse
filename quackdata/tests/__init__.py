@@ -1,1 +1,1 @@
-# tests/quackdata/__init__.py
+# quackdata/tests/__init__.py

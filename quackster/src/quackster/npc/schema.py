@@ -1,4 +1,4 @@
-# src/quackster/npc/schema.py
+# quackster/src/quackster/npc/schema.py
 """
 Schema definitions for the Quackster quackster NPC.
 

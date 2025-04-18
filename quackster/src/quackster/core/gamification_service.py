@@ -1,4 +1,4 @@
-# src/quackster/core/gamification_service.py
+# quackster/src/quackster/core/gamification_service.py
 """
 Gamification service for the QuackCore quackster module.
 

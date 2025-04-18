@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/test_auth_provider.py
+# quackcore/tests/test_integrations/google/test_auth_provider.py
 """
 Tests for Google authentication provider.
 

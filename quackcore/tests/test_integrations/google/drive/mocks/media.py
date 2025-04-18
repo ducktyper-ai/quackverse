@@ -1,4 +1,4 @@
-# tests/quackcore/test_integrations/google/drive/mocks/media.py
+# quackcore/tests/test_integrations/google/drive/mocks/media.py
 """
 Mock objects for Google Drive media _operations (downloads, uploads).
 

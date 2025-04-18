@@ -1,4 +1,4 @@
-# tests/quackcore/test_prompt/test_strategies.py
+# quackcore/tests/test_prompt/test_strategies.py
 """
 Tests for the individual prompt strategy implementations.
 """

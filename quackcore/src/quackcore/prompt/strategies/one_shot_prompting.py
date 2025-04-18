@@ -1,4 +1,4 @@
-# src/quackcore/prompt/strategies/one_shot_prompting.py
+# quackcore/src/quackcore/prompt/strategies/one_shot_prompting.py
 """
 One-shot Prompting strategy for the PromptBooster.
 

@@ -1,4 +1,4 @@
-# src/quackcore/integrations/pandoc/converter.py
+# quackcore/src/quackcore/integrations/pandoc/converter.py
 """
 Core converter implementation for Pandoc integration.
 

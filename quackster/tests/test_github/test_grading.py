@@ -1,1 +1,1 @@
-# tests/quackster/test_github/test_grading.py
+# quackster/tests/test_github/test_grading.py
