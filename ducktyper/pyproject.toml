@@ -1,0 +1,78 @@
+# quackverse/ducktyper/pyproject.toml
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ducktyper"
+version = "0.1.0"
+description = "The unified CLI interface for the QuackVerse ecosystem"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "AGPL-3.0" }
+authors = [
+    { name = "Rod Rivera", email = "rod@aiproduct.engineer" },
+    { name = "QuackVerse Team" }
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: AGPL-3.0 License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "quackcore>=0.1.0",
+    "rich>=10.0.0",
+    "typer>=0.9.0",
+    "pydantic>=2.0.0",
+    "jinja2>=3.0.0",
+    "shellingham>=1.5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.2.0",
+    "mypy>=1.8.0",
+    "black>=23.0.0",
+    "hatchling",
+]
+github = [
+    "pygithub>=1.58.0",
+]
+all = [
+    "pygithub>=1.58.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/ducktyper-ai/quackverse"
+"Bug Tracker" = "https://github.com/ducktyper-ai/quackverse/issues"
+
+[project.scripts]
+ducktyper = "ducktyper.__main__:main"
+
+[project.entry-points."quackcore.cli"]
+ducktyper = "ducktyper.main:app"
+
+[tool.hatch.version]
+path = "src/ducktyper/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ducktyper"]
+
+[tool.coverage.run]
+source = ["ducktyper"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]

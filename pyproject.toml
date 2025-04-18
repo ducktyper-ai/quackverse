@@ -1,42 +1,21 @@
+# quackverse/pyproject.toml (root project)
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+# This is a meta-package for development only, not published to PyPI
 [project]
-name = "quackcore"
+name = "quackverse-dev"
 version = "0.1.0"
-description = "Core infrastructure for the Quack ecosystem of media production tools"
+description = "Development environment for the QuackVerse ecosystem"
 readme = "README.md"
-requires-python = ">=3.13"
-license = { text = "MIT" }
+requires-python = ">=3.10"
+license = { text = "AGPL-3.0" }
 authors = [
     { name = "Rod Rivera", email = "rod@aiproduct.engineer" }
 ]
-keywords = [
-    "automation",
-    "content-creation",
-    "media-production",
-    "workflows",
-]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3.13",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-]
-dependencies = [
-    "pydantic>=2.6.0",
-    "pyyaml>=6.0.1",
-    "rich>=13.6.0",
-    "google-api-python-client>=2.0.0",
-    "google-auth-httplib2>=0.1.0",
-    "google-auth-oauthlib>=0.4.0",
-    "tqdm",
-    "Jinja2",
-    "pydantic[email]",
-]
 
+# Development dependencies shared across all packages
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
@@ -44,53 +23,23 @@ dev = [
     "ruff>=0.2.0",
     "mypy>=1.8.0",
     "isort",
-    "hatchling",
     "black>=23.0.0",
+    "hatchling",
     "hypothesis",
-    "python-docx"
 ]
-gmail = [
-    "google-api-python-client>=2.0.0",
-    "google-auth-httplib2>=0.1.0",
-    "google-auth-oauthlib>=0.4.0",
-]
-notion = [
-    "notion-client>=1.0.0",
-]
-google = [
-    "google-api-python-client>=2.0.0",
-    "google-auth-httplib2>=0.1.0",
-    "google-auth-oauthlib>=0.4.0",
-]
-# Optional dependency for Google Drive
-drive = [
-    "google-api-python-client>=2.0.0",
-    "google-auth-httplib2>=0.1.0",
-    "google-auth-oauthlib>=0.4.0",
-]
-pandoc = ["pypandoc", "beautifulsoup4"]
-
-llms = ['tiktoken', 'openai', 'anthropic']
-
-ducktyper = [ "typer>=0.9.0", "shellingham>=1.5.0",]
 
 [project.urls]
-"Homepage" = "https://github.com/aipengineer/quackcore"
-"Bug Tracker" = "https://github.com/aipengineer/quackcore/issues"
+"Homepage" = "https://github.com/ducktyper-ai/quackverse"
+"Bug Tracker" = "https://github.com/ducktyper-ai/quackverse/issues"
 
-[tool.hatch.version]
-path = "src/quackcore/__init__.py"
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/quackcore"]
-
+# Shared tool configurations
 [tool.isort]
 profile = "black"
 line_length = 88
 
 [tool.ruff]
 line-length = 88
-target-version = "py313"
+target-version = "py310"
 
 [tool.ruff.format]
 quote-style = "double"
@@ -114,14 +63,14 @@ select = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101"]  # Disable S101 (assert warning) in test files
+"**/tests/**/*.py" = ["S101"]  # Disable S101 (assert warning) in test files
 
 [tool.black]
 line-length = 88
-target-version = ["py313"]
+target-version = ["py310", "py311", "py312", "py313"]
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.10"
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 check_untyped_defs = true
@@ -133,26 +82,6 @@ warn_return_any = true
 strict_optional = true
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["quackcore/tests", "ducktyper/tests", "quackster/tests"]
 python_files = ["test_*.py"]
 filterwarnings = ["error"]
-addopts = "-v --cov=quackcore --cov-report=term-missing"
-
-[tool.coverage.run]
-source = ["quackcore"]
-omit = ["tests/*"]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "if __name__ == .__main__.:",
-    "raise NotImplementedError",
-    "if TYPE_CHECKING:",
-]
-
-[project.entry-points."quackcore.plugins"]
-paths = "quackcore.paths.plugin:create_plugin"
-fs = "quackcore.fs.plugin:create_plugin"
-config = "quackcore.config.plugin:create_plugin"
-prompt = "quackcore.prompt.plugin:create_plugin"

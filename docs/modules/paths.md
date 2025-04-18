@@ -96,7 +96,7 @@ known_dirs = paths.list_known_directories()
 ```python
 from quackcore.paths import service as paths
 # Get a content directory
-result = paths.get_content_dir("tutorials", "ducktyper")
+result = paths.get_content_dir("tutorials", "tests")
 if result.success:
     tutorial_dir = result.path
 
@@ -128,18 +128,18 @@ if result.success:
 
 ```python
 from quackcore.paths import service as paths
-result = paths.resolve_content_module("/home/user/project/src/tutorials/ducktyper/intro.py")
+result = paths.resolve_content_module("/home/user/project/src/tutorials/tests/intro.py")
 if result.success:
-    module_name = result.path  # "tutorials.ducktyper.intro"
+    module_name = result.path  # "tutorials.tests.intro"
 ```
 
 ### Module to Path
 
 ```python
 from quackcore.paths import service as paths
-result = paths.get_module_path("tutorials.ducktyper.intro")
+result = paths.get_module_path("tutorials.tests.intro")
 if result.success:
-    file_path = result.path  # "/home/user/project/src/tutorials/ducktyper/intro.py"
+    file_path = result.path  # "/home/user/project/src/tutorials/tests/intro.py"
 ```
 
 ## Path Checking

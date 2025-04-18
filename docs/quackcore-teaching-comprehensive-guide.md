@@ -570,7 +570,7 @@ from quackcore.teaching.core import quests, utils
 user = utils.load_progress()
 
 # Complete a quest (e.g., after external verification)
-if quests.complete_quest(user, "run-ducktyper", forced=True):
+if quests.complete_quest(user, "run-tests", forced=True):
     print("Quest marked as complete!")
 else:
     print("Quest already completed or not found.")
@@ -2488,7 +2488,7 @@ Mark a quest as completed for a user and award XP and badges.
 from quackcore.teaching.core import quests, utils
 
 user = utils.load_progress()
-if quests.complete_quest(user, "run-ducktyper", forced=True):
+if quests.complete_quest(user, "run-tests", forced=True):
     print("Quest marked as complete!")
     utils.save_progress(user)
 else:
