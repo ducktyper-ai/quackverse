@@ -9,8 +9,8 @@ import typer
 from rich.console import Console
 
 from ducktyper.commands import assistant, certify, config, explain, list_cmd, new, run
-from ducktyper.src.ducktyper.ui.mode import is_playful_mode, set_mode_from_env
 from ducktyper.ui.branding import duck_dance, print_banner, print_info, print_success
+from ducktyper.ui.mode import is_playful_mode, set_mode_from_env
 from quackcore.cli import init_cli_env
 from quackcore.cli.options import CliOptions
 

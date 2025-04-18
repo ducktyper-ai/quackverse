@@ -18,7 +18,6 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 
-from ducktyper.src.ducktyper.ui.mode import is_playful_mode
 from ducktyper.ui.branding import (
     COLOR_PALETTE,
     print_banner,
@@ -28,6 +27,7 @@ from ducktyper.ui.branding import (
     quack_say,
     retro_box,
 )
+from ducktyper.ui.mode import is_playful_mode
 from ducktyper.utils import ensure_dir_exists, get_cache_dir
 from quackcore.cli import CliContext
 

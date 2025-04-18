@@ -15,7 +15,7 @@ from typing import TypeVar
 
 from rich.console import Console
 
-from ducktyper.src.ducktyper.ui.mode import is_playful_mode
+from ducktyper.ui.mode import is_playful_mode
 
 # Type variable for generic functions
 T = TypeVar("T")

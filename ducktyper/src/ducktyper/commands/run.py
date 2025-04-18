@@ -10,7 +10,6 @@ from difflib import get_close_matches
 
 import typer
 
-from ducktyper.src.ducktyper.ui.mode import is_playful_mode
 from ducktyper.ui.branding import (
     duck_dance,
     print_banner,
@@ -20,6 +19,7 @@ from ducktyper.ui.branding import (
     print_success,
     quack_say,
 )
+from ducktyper.ui.mode import is_playful_mode
 from quackcore.cli import CliContext
 from quackcore.plugins.registry import execute_command, get_plugin, list_plugins
 

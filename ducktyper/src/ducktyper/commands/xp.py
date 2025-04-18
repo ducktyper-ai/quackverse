@@ -14,7 +14,6 @@ from datetime import datetime
 import typer
 from rich.console import Console
 
-from ducktyper.src.ducktyper.ui.mode import is_playful_mode
 from ducktyper.ui.branding import (
     duck_dance,
     get_retro_progress,
@@ -27,6 +26,7 @@ from ducktyper.ui.branding import (
     retro_box,
     retro_table,
 )
+from ducktyper.ui.mode import is_playful_mode
 from ducktyper.ui.styling import render_progress_bar
 from ducktyper.utils import get_cache_dir
 from quackcore.cli import CliContext

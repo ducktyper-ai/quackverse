@@ -21,7 +21,6 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.prompt import Prompt
 
-from ducktyper.src.ducktyper.ui.mode import is_playful_mode
 from ducktyper.ui.branding import (
     COLOR_PALETTE,
     print_banner,
@@ -31,6 +30,7 @@ from ducktyper.ui.branding import (
     quack_say,
     retro_box,
 )
+from ducktyper.ui.mode import is_playful_mode
 from quackcore.cli import CliContext
 from quackcore.integrations.llms import (
     ChatMessage,

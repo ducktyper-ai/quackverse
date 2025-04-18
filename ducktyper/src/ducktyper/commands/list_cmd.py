@@ -10,8 +10,8 @@ import sys
 
 import typer
 
-from ducktyper.src.ducktyper.ui.mode import is_playful_mode
 from ducktyper.ui.branding import print_banner, print_error, print_info, retro_table
+from ducktyper.ui.mode import is_playful_mode
 from quackcore.cli import CliContext
 from quackcore.plugins.registry import list_plugins
 

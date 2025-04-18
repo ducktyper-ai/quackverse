@@ -13,7 +13,6 @@ from pathlib import Path
 import typer
 from rich.prompt import Confirm, Prompt
 
-from ducktyper.src.ducktyper.ui.mode import is_playful_mode
 from ducktyper.ui.branding import (
     print_banner,
     print_error,
@@ -23,6 +22,7 @@ from ducktyper.ui.branding import (
     quack_say,
     retro_box,
 )
+from ducktyper.ui.mode import is_playful_mode
 from quackcore.cli import CliContext
 from quackcore.integrations.core import registry
 

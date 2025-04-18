@@ -7,8 +7,8 @@ import sys
 from typing import NoReturn
 
 from ducktyper.main import app
-from ducktyper.src.ducktyper.ui.mode import is_playful_mode
 from ducktyper.ui.branding import duck_dance, print_banner, print_error, print_info
+from ducktyper.ui.mode import is_playful_mode
 
 
 def display_intro() -> None:

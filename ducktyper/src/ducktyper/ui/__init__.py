@@ -6,7 +6,7 @@ This package provides all the UI components and utilities for rendering
 the DuckTyper CLI interface with its retro RPG-inspired aesthetics.
 """
 
-from ducktyper.src.ducktyper.ui.mode import (
+from ducktyper.ui.mode import (
     get_current_mode,
     is_playful_mode,
     set_mode,

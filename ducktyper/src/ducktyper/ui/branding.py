@@ -26,7 +26,7 @@ from rich.prompt import Prompt
 from rich.table import Table
 from rich.text import Text
 
-from ducktyper.src.ducktyper.ui.mode import is_playful_mode
+from ducktyper.ui.mode import is_playful_mode
 
 # Create console for rich output
 console = Console()
