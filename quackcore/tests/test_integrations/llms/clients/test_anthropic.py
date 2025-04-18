@@ -14,7 +14,7 @@ import pytest
 from quackcore.errors import QuackApiError, QuackIntegrationError
 from quackcore.integrations.llms.clients.anthropic import AnthropicClient
 from quackcore.integrations.llms.models import ChatMessage, LLMOptions, RoleType
-from tests.quackcore.test_integrations.llms.mocks.anthropic import (
+from tests.test_integrations.llms.mocks.anthropic import (
     MockAnthropicClient,
     MockAnthropicErrorResponse,
     MockAnthropicResponse,

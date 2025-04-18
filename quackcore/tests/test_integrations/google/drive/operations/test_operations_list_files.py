@@ -8,7 +8,7 @@ from unittest.mock import patch
 from quackcore.errors import QuackApiError
 from quackcore.integrations.google.drive.models import DriveFile, DriveFolder
 from quackcore.integrations.google.drive.operations import list_files
-from tests.quackcore.test_integrations.google.drive.mocks import (
+from tests.test_integrations.google.drive.mocks import (
     MockDriveFilesResource,
     MockDriveService,
     create_error_drive_service,

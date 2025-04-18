@@ -18,7 +18,7 @@ from quackcore.integrations.core.results import (  # Import IntegrationResult fo
     IntegrationResult,
 )
 from quackcore.integrations.llms.models import ChatMessage, LLMOptions, RoleType
-from tests.quackcore.test_integrations.llms.mocks.clients import MockClient
+from tests.test_integrations.llms.mocks.clients import MockClient
 
 
 class TestLLMClient:

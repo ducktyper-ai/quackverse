@@ -12,7 +12,7 @@ from quackcore.integrations.google.drive.protocols import (
     DriveService,
     GoogleCredentials,
 )
-from tests.quackcore.test_integrations.google.drive.mocks import (
+from tests.test_integrations.google.drive.mocks import (
     MockDriveFilesResource,
     MockDrivePermissionsResource,
     MockDriveRequest,

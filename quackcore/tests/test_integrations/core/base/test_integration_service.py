@@ -10,13 +10,13 @@ from quackcore.integrations.core.results import (
     ConfigResult,
     IntegrationResult,
 )
-from tests.quackcore.test_integrations.core.base.auth_provider_impl import (
+from tests.test_integrations.core.base.auth_provider_impl import (
     MockAuthProvider,
 )
-from tests.quackcore.test_integrations.core.base.config_provider_impl import (
+from tests.test_integrations.core.base.config_provider_impl import (
     MockConfigProvider,
 )
-from tests.quackcore.test_integrations.core.base.integration_service_impl import (
+from tests.test_integrations.core.base.integration_service_impl import (
     MockIntegrationService,
 )
 

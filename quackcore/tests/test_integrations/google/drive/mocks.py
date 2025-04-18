@@ -10,7 +10,7 @@ Note: This file now re-exports from the mocks/ package for backward compatibilit
 """
 
 # Re-export all mock classes and functions from the mocks package
-from tests.quackcore.test_integrations.google.drive.mocks import (  # Base mocks; Request mocks; Resource mocks; Service mocks; Credential mocks; Media mocks
+from tests.test_integrations.google.drive.mocks import (  # Base mocks; Request mocks; Resource mocks; Service mocks; Credential mocks; Media mocks
     GenericApiRequestMock,
     MockDownloadStatus,
     MockDriveFilesResource,

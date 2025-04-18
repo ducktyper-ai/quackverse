@@ -7,7 +7,7 @@ making them available through a single import.
 """
 
 # Import from anthropic module
-from tests.quackcore.test_integrations.llms.mocks.anthropic import (
+from tests.test_integrations.llms.mocks.anthropic import (
     MockAnthropicClient,
     MockAnthropicErrorResponse,
     MockAnthropicResponse,
@@ -15,20 +15,20 @@ from tests.quackcore.test_integrations.llms.mocks.anthropic import (
 )
 
 # Import from base module
-from tests.quackcore.test_integrations.llms.mocks.base import (
+from tests.test_integrations.llms.mocks.base import (
     MockLLMResponse,
     MockStreamingGenerator,
     MockTokenResponse,
 )
 
 # Import from clients module
-from tests.quackcore.test_integrations.llms.mocks.clients import (
+from tests.test_integrations.llms.mocks.clients import (
     MockClient,
     create_mock_client,
 )
 
 # Import from openai module
-from tests.quackcore.test_integrations.llms.mocks.openai import (
+from tests.test_integrations.llms.mocks.openai import (
     MockOpenAIClient,
     MockOpenAIErrorResponse,
     MockOpenAIResponse,

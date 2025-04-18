@@ -8,8 +8,9 @@ BLUE   := $(shell tput -Txterm setaf 4)
 # Project settings
 PYTHON_VERSION := 3.13
 VENV_NAME := .venv
-PYTHON := $(VENV_NAME)/bin/python
 PROJECT_NAME := quackcore
+REPO_ROOT := $(shell pwd)
+PYTHON := $(REPO_ROOT)/$(VENV_NAME)/bin/python
 
 # Test settings
 TEST_PATH := tests/
@@ -99,42 +100,45 @@ setup: ## Create environment and install full development dependencies
 	@echo "${GREEN}Environment setup script created. To complete setup, run:${RESET}"
 	@echo "${YELLOW}source setup.sh${RESET}"
 
-.PHONY: update
-update: ## Update all dependencies
-	@echo "${BLUE}Updating dependencies...${RESET}"
-	make install-all
-
 .PHONY: test
 test: ## Run tests with coverage
 	@echo "${BLUE}Running tests with coverage...${RESET}"
-	cd $(shell pwd) && \
-	$(PYTHON) -m pytest quackcore/tests -v --cov=quackcore/src --cov-report=term-missing && \
-	$(PYTHON) -m pytest ducktyper/tests -v --cov=ducktyper/src --cov-report=term-missing && \
-	$(PYTHON) -m pytest quackster/tests -v --cov=quackster/src --cov-report=term-missing
+	cd quackcore && \
+	PYTHONPATH="$(REPO_ROOT)/quackcore:$(REPO_ROOT)/quackcore/tests:$(PYTHONPATH)" \
+	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests -v --cov=src --cov-report=term-missing && \
+	cd ../ducktyper && \
+	PYTHONPATH="$(REPO_ROOT)/ducktyper:$(REPO_ROOT)/ducktyper/tests:$(PYTHONPATH)" \
+	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests -v --cov=src --cov-report=term-missing && \
+	cd ../quackster && \
+	PYTHONPATH="$(REPO_ROOT)/quackster:$(REPO_ROOT)/quackster/tests:$(PYTHONPATH)" \
+	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests -v --cov=src --cov-report=term-missing
 
 .PHONY: test-quackcore
 test-quackcore: ## Run only quackcore tests
 	@echo "${BLUE}Running quackcore tests...${RESET}"
-	cd $(shell pwd)/quackcore && \
-	$(PYTHON) -m pytest tests -v --cov=src --cov-report=term-missing
+	cd quackcore && \
+	PYTHONPATH="$(REPO_ROOT)/quackcore:$(REPO_ROOT)/quackcore/tests:$(PYTHONPATH)" \
+	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests -v --cov=src --cov-report=term-missing
 
 .PHONY: test-ducktyper
 test-ducktyper: ## Run only ducktyper tests
 	@echo "${BLUE}Running ducktyper tests...${RESET}"
-	cd $(shell pwd)/ducktyper && \
-	$(PYTHON) -m pytest tests --cov=src --cov-report=term-missing
+	cd ducktyper && \
+	PYTHONPATH="$(REPO_ROOT)/ducktyper:$(REPO_ROOT)/ducktyper/tests:$(PYTHONPATH)" \
+	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests -v --cov=src --cov-report=term-missing
 
 .PHONY: test-quackster
 test-quackster: ## Run only quackster tests
 	@echo "${BLUE}Running quackster tests...${RESET}"
-	cd $(shell pwd)/quackster && \
-	$(PYTHON) -m pytest tests --cov=src --cov-report=term-missing
+	cd quackster && \
+	PYTHONPATH="$(REPO_ROOT)/quackster:$(REPO_ROOT)/quackster/tests:$(PYTHONPATH)" \
+	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests -v --cov=src --cov-report=term-missing
 
 .PHONY: test-integration
 test-integration: ## Run only integration tests
 	@echo "${BLUE}Running integration tests...${RESET}"
-	cd $(shell pwd) && \
-	$(PYTHON) -m pytest tests/integration $(PYTEST_ARGS) \
+	PYTHONPATH="$(REPO_ROOT)/quackcore:$(REPO_ROOT)/ducktyper:$(REPO_ROOT)/quackster:$(PYTHONPATH)" \
+	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests/integration $(PYTEST_ARGS) \
 		--cov=quackcore/src --cov=ducktyper/src --cov=quackster/src --cov-report=term-missing
 
 .PHONY: test-module

@@ -15,7 +15,7 @@ from quackcore.cli.config import (
 )
 from quackcore.config.models import QuackConfig
 from quackcore.errors import QuackConfigurationError, QuackFileNotFoundError
-from tests.quackcore.test_cli.mocks import MockConfig
+from tests.test_cli.mocks import MockConfig
 
 
 class TestFindProjectRoot:

@@ -14,7 +14,7 @@ import pytest
 from quackcore.errors import QuackApiError, QuackIntegrationError
 from quackcore.integrations.llms.clients.openai import OpenAIClient
 from quackcore.integrations.llms.models import ChatMessage, LLMOptions, RoleType
-from tests.quackcore.test_integrations.llms.mocks.openai import (
+from tests.test_integrations.llms.mocks.openai import (
     MockOpenAIClient,
     MockOpenAIErrorResponse,
     MockOpenAIResponse,

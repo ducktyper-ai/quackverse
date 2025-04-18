@@ -6,11 +6,11 @@ Mock OpenAI classes for LLM testing.
 from typing import Any
 from unittest.mock import MagicMock
 
-from tests.quackcore.test_integrations.llms.mocks.base import (
+from tests.test_integrations.llms.mocks.base import (
     MockLLMResponse,
     MockStreamingGenerator,
 )
-from tests.quackcore.test_integrations.llms.mocks.clients import MockClient
+from tests.test_integrations.llms.mocks.clients import MockClient
 
 
 class MockOpenAIResponse(MockLLMResponse):
