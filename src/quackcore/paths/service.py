@@ -1,3 +1,4 @@
+# src/quackcore/paths/service.py
 """
 Path service for QuackCore.
 

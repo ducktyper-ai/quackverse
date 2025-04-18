@@ -175,3 +175,161 @@ We welcome pull requests, issues, and feedback. If you're interested in **commer
 ## 💬 Questions?
 
 Tweet at [@aipengineer](https://twitter.com/aipengineer) or file an issue on GitHub!
+
+## 📌 Quick Start
+
+```bash
+# List available QuackTools
+ducktyper list
+
+# Run a QuackTool
+ducktyper run quackmeta
+
+# Get help for a tool
+ducktyper explain quackmeta
+
+# Enter assistant mode
+ducktyper assistant
+
+# Configure DuckTyper
+ducktyper config edit
+
+# Generate a completion certificate
+ducktyper certify
+
+# View your XP and achievements
+ducktyper xp
+```
+
+## 🏆 Completion Certificates
+
+Generate a sharable achievement certificate:
+
+```bash
+ducktyper certify --name "Your Name" --github "yourusername" --course "QuackVerse Advanced"
+```
+
+This creates:
+- ASCII art certificate (text)
+- Markdown certificate for sharing
+- SVG certificate for visual display
+
+You can add your certificate badge to your GitHub profile:
+
+```markdown
+![Certified QuackVerse Developer](https://ducktyper.ai/badge/quackverse-advanced.svg)
+```
+
+## 🎮 XP and Gamification
+
+Track your progress with experience points and achievements:
+
+```bash
+# View your current XP and level
+ducktyper xp
+
+# View your achievements
+ducktyper xp --achievements
+
+# View your XP history
+ducktyper xp --history
+
+# View all your progress stats
+ducktyper xp --all
+```
+
+XP is earned through:
+- Using QuackTools
+- Completing assignments
+- Contributing to repositories
+- Earning achievements
+
+## 🧪 Creating Your Own QuackTool
+
+Scaffold a new QuackTool:
+
+```bash
+ducktyper new my-awesome-tool
+```
+
+## 🏆 Completion Certificates
+
+Generate a sharable achievement certificate:
+
+```bash
+ducktyper certify --name "Your Name" --github "yourusername" --course "QuackVerse Advanced"
+```
+
+This creates:
+- ASCII art certificate (text)
+- Markdown certificate for sharing
+- SVG certificate for visual display
+
+You can add your certificate badge to your GitHub profile:
+
+```markdown
+![Certified QuackVerse Developer](https://ducktyper.ai/badge/quackverse-advanced.svg)
+```
+
+## 🌈 Features
+
+- 🔍 **Tool Discovery**: Automatically finds all installed QuackTools
+- 🧙‍♂️ **Teaching Mode**: A fun, retro RPG-inspired UI for learning
+- 💼 **Production Mode**: Clean, minimal UI for CI/CD and scripting
+- 🤖 **AI Assistant**: Chat with an AI helper right in your terminal
+- 🧩 **Configuration**: Edit and manage QuackVerse settings
+- 🌟 **Completion Certificates**: Generate shareable achievement certificates
+- 🎮 **Gamification**: XP tracking and achievement visualization
+
+## 🧠 Assistant Mode
+
+Start a conversation with your terminal buddy:
+
+```bash
+ducktyper assistant
+```
+
+You can ask questions like:
+- "How do I use the QuackDB tool?"
+- "What tools work with audio files?"
+- "Help me build a tool for image classification"
+
+## 🎮 Teaching Mode vs Production Mode
+
+DuckTyper offers two distinct UI experiences:
+
+### Teaching Mode (Default)
+- Colorful, gamified experience
+- Retro RPG styling and animations
+- Perfect for learning and exploration
+
+### Production Mode
+- Clean, minimal output
+- No animations or decorative elements
+- Ideal for CI/CD pipelines and automation
+
+You can switch modes using:
+
+```bash
+# For a single command
+ducktyper --mode=production list
+
+# Globally via environment variable
+export DUCKTYPER_MODE=production
+```
+
+## 🔧 Configuration
+
+Edit your configuration with:
+
+```bash
+ducktyper config edit
+```
+
+## 🧪 Creating Your Own QuackTool
+
+Scaffold a new QuackTool:
+
+```bash
+ducktyper new my-awesome-tool
+```
