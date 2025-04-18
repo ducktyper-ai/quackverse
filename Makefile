@@ -44,22 +44,40 @@ env: ## Create virtual environment using uv
 	@echo "${GREEN}Virtual environment created. Activate it with:${RESET}"
 	@echo "source $(VENV_NAME)/bin/activate"
 
-.PHONY: install
-install: ## Install quackcore package
+.PHONY: install-quackcore
+install-quackcore: ## Install quackcore package
 	@echo "${BLUE}Installing quackcore package...${RESET}"
-	uv pip install -e .
+	cd quackcore && uv pip install -e .
+	@echo "${GREEN}quackcore installed successfully${RESET}"
+
+.PHONY: install-ducktyper
+install-ducktyper: ## Install ducktyper package
+	@echo "${BLUE}Installing ducktyper package...${RESET}"
+	cd ducktyper && uv pip install -e .
+	@echo "${GREEN}ducktyper installed successfully${RESET}"
+
+.PHONY: install-quackster
+install-quackster: ## Install quackster package
+	@echo "${BLUE}Installing quackster package...${RESET}"
+	cd quackster && uv pip install -e .
+	@echo "${GREEN}quackster installed successfully${RESET}"
 
 .PHONY: install-all
-install-all: ## Install package with all optional dependencies
-	@echo "${BLUE}Installing quackcore package with all optional dependencies but not dev tools...${RESET}"
-	uv pip install -e ".[gmail,notion,google,drive,pandoc, llms, ducktyper]"
-	@echo "${GREEN}All packages installed successfully${RESET}"
-
+install-all: install-quackcore install-ducktyper install-quackster ## Install all packages with their optional dependencies
+	@echo "${BLUE}Installing optional dependencies for all packages...${RESET}"
+	cd quackcore && uv pip install -e ".[gmail,notion,google,drive,pandoc,llms,ducktyper]"
+	cd ducktyper && uv pip install -e ".[all]"
+	cd quackster && uv pip install -e ".[all]"
+	@echo "${GREEN}All packages and dependencies installed successfully${RESET}"
 
 .PHONY: install-dev
-install-dev: ## Install both packages with development dependencies
-	@echo "${BLUE}Installing packages with development tools...${RESET}"
+install-dev: ## Install development dependencies for all packages
+	@echo "${BLUE}Installing development tools...${RESET}"
+	cd quackcore && uv pip install -e ".[dev]"
+	cd ducktyper && uv pip install -e ".[dev]"
+	cd quackster && uv pip install -e ".[dev]"
 	uv pip install -e ".[dev]"
+	@echo "${GREEN}Development dependencies installed successfully${RESET}"
 
 .PHONY: setup
 setup: ## Create environment and install full development dependencies
@@ -68,6 +86,8 @@ setup: ## Create environment and install full development dependencies
 	@echo 'uv venv --python $(PYTHON_VERSION)' >> setup.sh
 	@echo 'source $(VENV_NAME)/bin/activate' >> setup.sh
 	@echo 'make install-all' >> setup.sh
+	@echo 'make install-dev' >> setup.sh
+	@echo 'echo "${GREEN}Setup complete! Development environment ready.${RESET}"' >> setup.sh
 	@echo 'rm "$$0"' >> setup.sh
 	@chmod +x setup.sh
 	@echo "${GREEN}Environment setup script created. To complete setup, run:${RESET}"
@@ -79,35 +99,85 @@ update: ## Update all dependencies
 	make install-all
 
 .PHONY: test
-test: install-dev ## Run tests with coverage
-	$(PYTHON) -m pytest $(TEST_PATH) $(PYTEST_ARGS) --cov=src --cov-report=term-missing
+test: ## Run tests with coverage
+	@echo "${BLUE}Running tests with coverage...${RESET}"
+	$(PYTHON) -m pytest $(TEST_PATH) $(PYTEST_ARGS) --cov=quackcore/src --cov=ducktyper/src --cov=quackster/src --cov-report=term-missing
+
+.PHONY: test-quackcore
+test-quackcore: ## Run only quackcore tests
+	@echo "${BLUE}Running quackcore tests...${RESET}"
+	$(PYTHON) -m pytest quackcore/tests $(PYTEST_ARGS) --cov=quackcore/src --cov-report=term-missing
+
+.PHONY: test-ducktyper
+test-ducktyper: ## Run only ducktyper tests
+	@echo "${BLUE}Running ducktyper tests...${RESET}"
+	$(PYTHON) -m pytest ducktyper/tests $(PYTEST_ARGS) --cov=ducktyper/src --cov-report=term-missing
+
+.PHONY: test-quackster
+test-quackster: ## Run only quackster tests
+	@echo "${BLUE}Running quackster tests...${RESET}"
+	$(PYTHON) -m pytest quackster/tests $(PYTEST_ARGS) --cov=quackster/src --cov-report=term-missing
 
 .PHONY: test-module
-test-module: install-dev ## Run only integration tests with coverage
-	$(PYTHON) -m pytest tests/test_integrations/pandoc $(PYTEST_ARGS) --cov=src --cov-report=term-missing
+test-module: ## Run only integration tests with coverage
+	@echo "${BLUE}Running specific integration tests...${RESET}"
+	$(PYTHON) -m pytest tests/test_integrations/pandoc $(PYTEST_ARGS) --cov=quackcore/src --cov-report=term-missing
 
 .PHONY: format
 format: ## Format code with Ruff and isort
 	@echo "${BLUE}Formatting code...${RESET}"
-	$(PYTHON) -m ruff check src/ tests/ examples/ --fix
+	$(PYTHON) -m ruff check quackcore/src/ quackcore/tests/ ducktyper/src/ ducktyper/tests/ quackster/src/ quackster/tests/ examples/ --fix
 	$(PYTHON) -m ruff format .
 	$(PYTHON) -m isort .
 
 .PHONY: lint
-lint: install-dev ## Run linters
-	$(PYTHON) -m ruff check src/ tests/ examples/
-	$(PYTHON) -m ruff format --check src/ tests/ examples/
-	$(PYTHON) -m mypy src/ tests/ examples/
+lint: ## Run linters
+	@echo "${BLUE}Running linters...${RESET}"
+	$(PYTHON) -m ruff check quackcore/src/ quackcore/tests/ ducktyper/src/ ducktyper/tests/ quackster/src/ quackster/tests/ examples/
+	$(PYTHON) -m ruff format --check quackcore/src/ quackcore/tests/ ducktyper/src/ ducktyper/tests/ quackster/src/ quackster/tests/ examples/
+	$(PYTHON) -m mypy quackcore/src/ quackcore/tests/ ducktyper/src/ ducktyper/tests/ quackster/src/ quackster/tests/ examples/
 
 .PHONY: clean
 clean: ## Clean build artifacts and cache
+	@echo "${BLUE}Cleaning build artifacts and cache...${RESET}"
 	rm -rf build/ dist/ *.egg-info .coverage .mypy_cache .pytest_cache .ruff_cache $(VENV_NAME)
 	rm -rf setup.sh
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
+	# Clean subpackages
+	cd quackcore && rm -rf build/ dist/ *.egg-info
+	cd ducktyper && rm -rf build/ dist/ *.egg-info
+	cd quackster && rm -rf build/ dist/ *.egg-info
+	@echo "${GREEN}Cleaned all build artifacts and cache.${RESET}"
+
+.PHONY: build
+build: clean format lint test ## Build all packages for distribution
+	@echo "${BLUE}Building packages for distribution...${RESET}"
+	cd quackcore && uv pip build
+	cd ducktyper && uv pip build
+	cd quackster && uv pip build
+	@echo "${GREEN}Packages built successfully. Distribution files in respective dist/ directories.${RESET}"
+
+.PHONY: publish
+publish: build ## Publish packages to PyPI
+	@echo "${BLUE}Publishing packages to PyPI...${RESET}"
+	@echo "${YELLOW}This will publish the following packages:${RESET}"
+	@echo "  - quackcore"
+	@echo "  - ducktyper"
+	@echo "  - quackster"
+	@echo "${YELLOW}Are you sure you want to continue? (y/n)${RESET}"
+	@read -p " " yn; \
+	if [ "$$yn" = "y" ]; then \
+		cd quackcore && uv pip publish --repository pypi; \
+		cd ../ducktyper && uv pip publish --repository pypi; \
+		cd ../quackster && uv pip publish --repository pypi; \
+		echo "${GREEN}All packages published successfully!${RESET}"; \
+	else \
+		echo "${YELLOW}Publishing cancelled.${RESET}"; \
+	fi
 
 .PHONY: pre-commit
-pre-commit: format lint test clean ## Run all checks before committing
+pre-commit: format lint test ## Run all checks before committing
 	@echo "${GREEN}✓ All checks passed${RESET}"
 
 .PHONY: structure
@@ -125,6 +195,7 @@ structure: ## Show project structure
 	fi
 	@echo "${RESET}"
 
+# Additional targets remain unchanged
 .PHONY: prune-branches
 prune-branches: ## Remove local branches that are no longer tracked on the remote
 	@echo "${BLUE}Pruning local branches that are no longer tracked on the remote...${RESET}"
@@ -133,7 +204,6 @@ prune-branches: ## Remove local branches that are no longer tracked on the remot
 	    git branch -D $$branch; \
 	  done
 	@echo "${GREEN}Stale branches have been removed.${RESET}"
-
 
 .PHONY: add-paths
 add-paths: ## Add file paths as first-line comments to all Python files

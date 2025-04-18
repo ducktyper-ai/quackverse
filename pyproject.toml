@@ -1,11 +1,11 @@
 # quackverse/pyproject.toml (root project)
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.18.0"]
 build-backend = "hatchling.build"
 
 # This is a meta-package for development only, not published to PyPI
 [project]
-name = "quackverse-dev"
+name = "quackverse"
 version = "0.1.0"
 description = "Development environment for the QuackVerse ecosystem"
 readme = "README.md"
@@ -24,13 +24,34 @@ dev = [
     "mypy>=1.8.0",
     "isort",
     "black>=23.0.0",
-    "hatchling",
     "hypothesis",
 ]
 
 [project.urls]
 "Homepage" = "https://github.com/ducktyper-ai/quackverse"
 "Bug Tracker" = "https://github.com/ducktyper-ai/quackverse/issues"
+
+# This is the key part for monorepo support
+[tool.hatch.build]
+# Skip building this package, as it's just a development wrapper
+skip-excluded-dirs = true
+exclude = [
+    "/tests",
+    "/.venv",
+    "/.mypy_cache",
+    "/.pytest_cache",
+    "/.ruff_cache",
+    "/.hypothesis",
+    "/.idea",
+]
+
+# Shared configuration for all subpackages
+[tool.hatch.build.targets.wheel]
+packages = ["quackcore", "ducktyper", "quackster"]
+
+# Define no source package since this is a monorepo metapackage
+[tool.hatch.build.targets.sdist]
+exclude = ["*"]  # Exclude everything from the sdist
 
 # Shared tool configurations
 [tool.isort]

@@ -6,13 +6,17 @@ Whether you're automating metadata extraction, building AI agents, exploring tok
 
 ---
 
-## 🌐 What’s Inside?
+## 🌐 What's Inside?
 
 | Tool | Description |
 |------|-------------|
 | [`quackcore`](https://github.com/ducktyper-ai/quackverse/quackcore) | The shared foundation for all QuackTools — infrastructure, integrations, protocols |
 | [`ducktyper`](https://github.com/ducktyper-ai/quackverse/ducktyper) | The unified CLI experience to run, learn from, and interact with QuackTools |
+| [`quackster`](https://github.com/ducktyper-ai/quackverse/quackster) | Teaching and learning components for the QuackVerse ecosystem |
 | [`quacktools/*`](https://github.com/ducktyper-ai) | Modular tools for AI workflows — metadata, prompt engineering, token inspection, and more |
+| `quackdata` | Data manipulation tools (coming soon) |
+| `quackmedia` | Media production tools (coming soon) |
+| `quackcloud` | Cloud infrastructure (coming soon) |
 | `quackdocs/` | Canonical docs, specs, and implementation guides (coming soon) |
 | `quackbrand/` | Mascots, design assets, and licensing guidelines |
 
@@ -33,17 +37,123 @@ QuackVerse is inspired by:
 The main entrypoint for the ecosystem is:
 
 ```bash
-pip install tests
+pip install ducktyper
 ```
 
 Once installed, try:
 
 ```bash
-tests list
-tests run quacktool-name
+ducktyper list
+ducktyper run quacktool-name
 ```
 
 Each tool has its own README with usage examples and learning paths.
+
+### Development Setup
+
+#### Prerequisites
+
+- Python 3.10 or newer
+- [uv](https://github.com/astral-sh/uv) - Fast Python package installer and resolver
+
+#### Quick Start
+
+The fastest way to get started is to use the setup script:
+
+```bash
+# Clone the repository
+git clone https://github.com/ducktyper-ai/quackverse
+cd quackverse
+
+# Run the setup script (creates venv and installs dependencies)
+make setup
+source setup.sh
+```
+
+#### Manual Setup
+
+If you prefer to set up manually:
+
+```bash
+# Create a virtual environment
+make env
+source .venv/bin/activate
+
+# Install all packages with dependencies
+make install-all
+
+# Install development tools
+make install-dev
+```
+
+---
+
+## 🧑‍💻 Development Workflow
+
+### Testing
+
+Run the full test suite:
+
+```bash
+make test
+```
+
+Run tests for specific packages:
+
+```bash
+make test-quackcore
+make test-ducktyper
+make test-quackster
+```
+
+### Code Quality
+
+Format your code and run linters:
+
+```bash
+make format  # Format code with Ruff and isort
+make lint    # Run linters (Ruff, MyPy)
+```
+
+Before committing, run all checks:
+
+```bash
+make pre-commit
+```
+
+### Building and Publishing
+
+To build distribution packages:
+
+```bash
+make build
+```
+
+To publish to PyPI:
+
+```bash
+make publish
+```
+
+### Project Structure
+
+To view the current project structure:
+
+```bash
+make structure
+```
+
+---
+
+## 🛠️ Modern Python Packaging
+
+QuackVerse follows modern Python packaging best practices:
+- **Monorepo Structure**: Multiple related packages in a single repository
+- **uv for Dependency Management**: Fast, modern Python package installer
+- **hatchling for Building**: Modern, extensible build backend
+- **Ruff for Linting**: Fast, comprehensive Python linter
+- **MyPy for Type Checking**: Static type analysis
+- **pytest for Testing**: Comprehensive testing framework
 
 ---
 
@@ -74,7 +184,17 @@ We welcome contributions from educators, hackers, and AI enthusiasts.
 **Rod & the DuckTyper Collective at AI Product Engineer**  
 Independent creators building tools for the next generation of AI developers.
 
-```
+---
+
+## 💬 Questions?
+
+Tweet at [@aipengineer](https://twitter.com/aipengineer) or file an issue on GitHub!
+---
+
+## 🐤 Brought to you by
+
+**Rod & the DuckTyper Collective at AI Product Engineer**  
+Independent creators building tools for the next generation of AI developers.
 
 ---
 
