@@ -10,9 +10,9 @@ Whether you're automating metadata extraction, building AI agents, exploring tok
 
 | Tool | Description |
 |------|-------------|
-| [`quackcore`](https://github.com/ducktyper-ai/quackverse/quackcore) | The shared foundation for all QuackTools — infrastructure, integrations, protocols |
-| [`ducktyper`](https://github.com/ducktyper-ai/quackverse/ducktyper) | The unified CLI experience to run, learn from, and interact with QuackTools |
-| [`quackster`](https://github.com/ducktyper-ai/quackverse/quackster) | Teaching and learning components for the QuackVerse ecosystem |
+| [`quackcore`](https://github.com/ducktyper-ai/quackverse/tree/main/quackcore) | The shared foundation for all QuackTools — infrastructure, integrations, protocols |
+| [`ducktyper`](https://github.com/ducktyper-ai/quackverse/tree/main/ducktyper) | The unified CLI experience to run, learn from, and interact with QuackTools |
+| [`quackster`](https://github.com/ducktyper-ai/quackverse/tree/main/quackster) | Teaching and learning components for the QuackVerse ecosystem |
 | [`quacktools/*`](https://github.com/ducktyper-ai) | Modular tools for AI workflows — metadata, prompt engineering, token inspection, and more |
 | `quackdata` | Data manipulation tools (coming soon) |
 | `quackmedia` | Media production tools (coming soon) |
@@ -175,7 +175,7 @@ We welcome contributions from educators, hackers, and AI enthusiasts.
 
 - Open issues to request a new QuackTool or learning module
 - Use pull requests for bugfixes or enhancements
-- Follow us at [ducktyper.ai](https://ducktyper.ai)
+- Follow us at [aiproduct.engineer](https://aiproduct.engineer)
 
 ---
 
