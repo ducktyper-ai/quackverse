@@ -23,8 +23,9 @@ class TestPandocModels:
     def test_file_info_model(self):
         """Test the FileInfo model."""
         # Test with minimal required fields
-        file_info = FileInfo(path=Path("/path/to/file.html"), format="html")
-        assert file_info.path == Path("/path/to/file.html")
+        file_info = FileInfo(path="/path/to/file.html",
+                             format="html")  # Changed from Path to string
+        assert file_info.path == "/path/to/file.html"  # Changed from Path to string
         assert file_info.format == "html"
         assert file_info.size == 0
         assert file_info.modified is None
@@ -32,17 +33,39 @@ class TestPandocModels:
 
         # Test with all fields specified
         file_info = FileInfo(
-            path=Path("/path/to/file.md"),
+            path="/path/to/file.md",  # Changed from Path to string
             format="markdown",
             size=1024,
             modified=1609459200.0,  # 2021-01-01 00:00:00
             extra_args=["--reference-doc=template.docx"],
         )
-        assert file_info.path == Path("/path/to/file.md")
+        assert file_info.path == "/path/to/file.md"  # Changed from Path to string
         assert file_info.format == "markdown"
         assert file_info.size == 1024
         assert file_info.modified == 1609459200.0
         assert file_info.extra_args == ["--reference-doc=template.docx"]
+
+    def test_conversion_task_model(self):
+        """Test the ConversionTask model."""
+        # Create a FileInfo instance to use in the task
+        source_file = FileInfo(path="/path/to/file.html", format="html",
+                               size=512)  # Changed from Path to string
+
+        # Test with minimal required fields
+        task = ConversionTask(source=source_file, target_format="markdown")
+        assert task.source == source_file
+        assert task.target_format == "markdown"
+        assert task.output_path is None
+
+        # Test with all fields specified
+        task = ConversionTask(
+            source=source_file,
+            target_format="docx",
+            output_path="/path/to/output.docx",  # Changed from Path to string
+        )
+        assert task.source == source_file
+        assert task.target_format == "docx"
+        assert task.output_path == "/path/to/output.docx"  # Changed from Path to string
 
     def test_conversion_task_model(self):
         """Test the ConversionTask model."""

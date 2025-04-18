@@ -450,58 +450,56 @@ class TestPandocService:
             instance = mock.return_value
             yield mock
 
-    @pytest.fixture
-    def mock_fs(self):
-        """Fixture to mock the fs module."""
-        # First, patch the low-level file _operations to avoid real fs access
-        with patch("quackcore.fs.service.get_file_info") as mock_get_file_info:
-            # Set up the mock to prevent real filesystem access
+@pytest.fixture
+def mock_fs(self):
+    """Fixture to mock the fs module."""
+    # First, patch the low-level file _operations to avoid real fs access
+    with patch("quackcore.fs.service.get_file_info") as mock_get_file_info:
+        # Set up the mock to prevent real filesystem access
+        file_info = FileInfoResult(
+            success=True,
+            path="/path/to/file",
+            exists=True,
+            is_file=True,
+        )
+        mock_get_file_info.return_value = file_info
+
+        # Now patch the fs module in the service
+        with patch("quackcore.integrations.pandoc.service.fs") as mock_fs:
+            # Setup default behavior for file info checks
             file_info = FileInfoResult(
                 success=True,
                 path="/path/to/file",
                 exists=True,
                 is_file=True,
+                is_dir=True,  # Important for directory validation
             )
-            mock_get_file_info.return_value = file_info
+            mock_fs.service.get_file_info.return_value = file_info  # Changed from _get_file_info to get_file_info
 
-            # Now patch the fs module in the service
-            with patch("quackcore.integrations.pandoc.service.fs") as mock_fs:
-                # Setup default behavior for file info checks
-                file_info = FileInfoResult(
-                    success=True,
-                    path="/path/to/file",
-                    exists=True,
-                    is_file=True,
-                    is_dir=True,  # Important for directory validation
-                )
-                mock_fs.service._get_file_info.return_value = file_info
+            # Setup default behavior for directory creation
+            dir_result = OperationResult(
+                success=True,
+                path="/path/to/output",
+                message="Directory created",
+            )
+            mock_fs.create_directory.return_value = dir_result
 
-                # Setup default behavior for directory creation
-                dir_result = OperationResult(
-                    success=True,
-                    path="/path/to/output",
-                    message="Directory created",
-                )
-                mock_fs.create_directory.return_value = dir_result
+            # Setup default behavior for finding files
+            find_result = MagicMock()
+            find_result.success = True
+            find_result.files = [
+                "/path/to/file1.html",  # Changed from Path objects to strings
+                "/path/to/file2.html",
+            ]
+            mock_fs.find_files.return_value = find_result
 
-                # Setup default behavior for finding files
-                find_result = MagicMock()
-                find_result.success = True
-                find_result.files = [
-                    Path("/path/to/file1.html"),
-                    Path("/path/to/file2.html"),
-                ]
-                mock_fs.find_files.return_value = find_result
+            # Setup default behavior for path api - use resolver instead of api
+            with patch("quackcore.paths.resolver.normalize_path") as mock_normalize:
+                # Important: Make sure normalized paths are absolute and don't refer to actual filesystem
+                mock_normalize.return_value = "/absolute/normalized/path"  # Changed from Path to string
 
-                # Setup default behavior for path api
-                with patch("quackcore.paths.api.normalize_path") as mock_normalize:
-                    # Important: Make sure normalized paths are absolute and don't refer to actual filesystem
-                    mock_normalize.return_value = Path("/absolute/normalized/path")
+                with patch("quackcore.paths.resolver.resolve_project_path") as mock_resolve:
+                    # Make resolved paths absolute but predictable
+                    mock_resolve.side_effect = lambda p: f"/resolved{p}"  # Changed to return strings instead of Path objects
 
-                    with patch(
-                        "quackcore.paths.resolver.resolve_project_path"
-                    ) as mock_resolve:
-                        # Make resolved paths absolute but predictable
-                        mock_resolve.side_effect = lambda p: Path(f"/resolved{p}")
-
-                        yield mock_fs
+                    yield mock_fs

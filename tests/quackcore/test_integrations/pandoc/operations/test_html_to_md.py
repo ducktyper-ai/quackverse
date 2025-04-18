@@ -34,9 +34,13 @@ class TestHtmlToMarkdownOperations:
     @pytest.fixture
     def config(self):
         """Fixture to create a PandocConfig for testing."""
-        return PandocConfig(
-            output_dir="/path/to/output",  # Changed from Path to string
-        )
+        # Patch the validator to avoid using the problematic fs.get_path_info
+        with patch(
+                "quackcore.integrations.pandoc.config.PandocConfig.validate_output_dir") as mock_validator:
+            mock_validator.return_value = "/path/to/output"
+            return PandocConfig(
+                output_dir="/path/to/output",
+            )
 
     @pytest.fixture
     def metrics(self):

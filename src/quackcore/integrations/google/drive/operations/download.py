@@ -14,6 +14,7 @@ from quackcore.fs import service as fs
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.google.drive.protocols import DriveService
 from quackcore.integrations.google.drive.utils.api import execute_api_request
+from quackcore.paths import service as paths
 
 
 def resolve_download_path(
@@ -38,7 +39,7 @@ def resolve_download_path(
         return str(fs.join_path(temp_dir, file_name))
 
     # Resolve the local path
-    local_path_obj = resolver._resolve_project_path(local_path)
+    local_path_obj = paths.resolve_project_path(local_path)
     file_info = fs.get_file_info(local_path_obj)
 
     if file_info.success and file_info.exists:

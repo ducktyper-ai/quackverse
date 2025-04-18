@@ -24,38 +24,38 @@ class TestPathResolver:
 
     def test_get_project_root(self, mock_project_structure: Path) -> None:
         """Test finding a project root based on marker files."""
-        resolver = PathResolver()
+        from quackcore.paths import service as paths
 
         # Test finding from project root
-        root = resolver._get_project_root(str(mock_project_structure))
+        root = paths.get_project_root(str(mock_project_structure))
         assert root == mock_project_structure
 
         # Test finding from subdirectory
-        subdir = mock_project_structure / "src"
-        root = resolver._get_project_root(subdir)
+        subdir = f"{mock_project_structure}/src"
+        root = paths.resolver._get_project_root(subdir)
         assert root == mock_project_structure
 
         # Test with custom marker files
-        root = resolver._get_project_root(
-            mock_project_structure, marker_files=["pyproject.toml"]
+        root = paths.get_project_root(
+            str(mock_project_structure), marker_files=["pyproject.toml"]
         )
         assert root == mock_project_structure
 
         # Test with custom marker directories
-        root = resolver._get_project_root(
+        root = paths.get_project_root(
             mock_project_structure, marker_dirs=["src", "tests"]
         )
         assert root == mock_project_structure
 
         # Test with non-existent path (should raise)
         with pytest.raises(QuackFileNotFoundError):
-            resolver._get_project_root("/nonexistent/path")
+            paths.get_project_root("/nonexistent/path")
 
         # Test where no project root can be found
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             with pytest.raises(QuackFileNotFoundError):
-                resolver._get_project_root(tmp_path)
+                paths.get_project_root(tmp_path)
 
     def test_find_source_directory(self, mock_project_structure: Path) -> None:
         """Test finding a source directory."""

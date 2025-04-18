@@ -149,8 +149,9 @@ class TeachingContext:
         # If the provided path is already absolute, return it.
         if os.path.isabs(path_value):
             return path_value
-        # Otherwise, join with self.base_dir using fs.join_path.
-        return fs.join_path(self.base_dir, path_value)
+        # Otherwise, join with self.base_dir using fs service module
+        from quackcore.fs import service
+        return service.join_path(self.base_dir, path_value)
 
     def ensure_directories(self) -> None:
         """Ensure all required directories exist."""

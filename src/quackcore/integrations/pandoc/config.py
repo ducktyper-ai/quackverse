@@ -119,8 +119,8 @@ class PandocConfig(BaseModel):
 
         Delegates to quackcore.fs to validate the path format.
         """
-        # fs.get_path_info expects a string and returns an object with a 'success' flag.
-        path_info = fs.get_path_info(v)
+        from quackcore.fs import service
+        path_info = service.get_path_info(v)
         if not path_info.success:
             raise ValueError(f"Invalid path format: {v}")
         return v

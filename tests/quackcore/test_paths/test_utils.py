@@ -10,8 +10,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from quackcore.errors import QuackFileNotFoundError
-from quackcore.paths import service as paths
 from quackcore.fs import service as fs
+from quackcore.paths import service as paths
 
 
 class TestPathUtils:

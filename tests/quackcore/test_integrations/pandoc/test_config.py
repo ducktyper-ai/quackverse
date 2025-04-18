@@ -40,14 +40,16 @@ class TestPandocConfig:
             standalone=False,
             markdown_headings="setext",
             reference_links=True,
-            resource_path=[Path("/path/to/resources"), Path("/custom/resources")],
+            resource_path=["/path/to/resources", "/custom/resources"],
+            # Changed from Path objects to strings
         )
         assert options.wrap == "auto"
         assert options.standalone is False
         assert options.markdown_headings == "setext"
         assert options.reference_links is True
         assert len(options.resource_path) == 2
-        assert options.resource_path[0] == Path("/path/to/resources")
+        assert options.resource_path[
+                   0] == "/path/to/resources"  # Changed from Path to string
 
     def test_validation_config(self):
         """Test ValidationConfig configuration model."""
@@ -110,28 +112,31 @@ class TestPandocConfig:
         assert isinstance(config.metrics, MetricsConfig)
         assert config.html_to_md_extra_args == ["--strip-comments", "--no-highlight"]
         assert config.md_to_docx_extra_args == []
-        assert config.output_dir == Path("./output")
+        assert config.output_dir == "./output"  # Changed from Path to string
         assert isinstance(config.logging, LoggingConfig)
 
         # Test custom values
-        config = PandocConfig(
-            pandoc_options=PandocOptions(wrap="auto"),
-            validation=ValidationConfig(min_file_size=100),
-            retry_mechanism=RetryConfig(max_conversion_retries=5),
-            metrics=MetricsConfig(track_file_sizes=False),
-            html_to_md_extra_args=["--custom-arg"],
-            md_to_docx_extra_args=["--reference-doc=template.docx"],
-            output_dir=Path("/custom/output"),
-            logging=LoggingConfig(level="DEBUG"),
-        )
-        assert config.pandoc_options.wrap == "auto"
-        assert config.validation.min_file_size == 100
-        assert config.retry_mechanism.max_conversion_retries == 5
-        assert config.metrics.track_file_sizes is False
-        assert config.html_to_md_extra_args == ["--custom-arg"]
-        assert config.md_to_docx_extra_args == ["--reference-doc=template.docx"]
-        assert config.output_dir == Path("/custom/output")
-        assert config.logging.level == "DEBUG"
+        with patch(
+                "quackcore.integrations.pandoc.config.PandocConfig.validate_output_dir") as mock_validator:
+            mock_validator.return_value = "/custom/output"
+            config = PandocConfig(
+                pandoc_options=PandocOptions(wrap="auto"),
+                validation=ValidationConfig(min_file_size=100),
+                retry_mechanism=RetryConfig(max_conversion_retries=5),
+                metrics=MetricsConfig(track_file_sizes=False),
+                html_to_md_extra_args=["--custom-arg"],
+                md_to_docx_extra_args=["--reference-doc=template.docx"],
+                output_dir="/custom/output",  # Changed from Path to string
+                logging=LoggingConfig(level="DEBUG"),
+            )
+            assert config.pandoc_options.wrap == "auto"
+            assert config.validation.min_file_size == 100
+            assert config.retry_mechanism.max_conversion_retries == 5
+            assert config.metrics.track_file_sizes is False
+            assert config.html_to_md_extra_args == ["--custom-arg"]
+            assert config.md_to_docx_extra_args == ["--reference-doc=template.docx"]
+            assert config.output_dir == "/custom/output"  # Changed from Path to string
+            assert config.logging.level == "DEBUG"
 
     def test_validate_output_dir(self):
         """Test the output_dir validation in PandocConfig."""

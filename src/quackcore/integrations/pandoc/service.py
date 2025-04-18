@@ -137,7 +137,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
     def html_to_markdown(
-        self, html_path: str, output_path: str | None = None
+            self, html_path: str, output_path: str | None = None
     ) -> IntegrationResult[str]:
         """
         Convert HTML to Markdown.
@@ -156,11 +156,14 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
         try:
+            # Use paths service to resolve project paths
+            from quackcore.paths import service as paths
             html_path = paths.resolve_project_path(html_path)
 
             if output_path is None and self.converter:
                 config = getattr(self.converter, "config", None)
                 if isinstance(config, PandocConfig):
+                    from quackcore.fs import service as fs
                     stem = os.path.splitext(os.path.basename(html_path))[0]
                     output_path = fs.join_path(config.output_dir, f"{stem}.md")
                 else:

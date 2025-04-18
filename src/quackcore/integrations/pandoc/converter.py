@@ -20,11 +20,8 @@ from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.pandoc import PandocConfig
 from quackcore.integrations.pandoc.models import ConversionMetrics, ConversionTask
 from quackcore.integrations.pandoc.operations import (
-    convert_html_to_markdown,
-    convert_markdown_to_docx,
     verify_pandoc,
 )
-from quackcore.integrations.pandoc.operations.utils import get_file_info
 from quackcore.integrations.pandoc.protocols import (
     BatchConverterProtocol,
     DocumentConverterProtocol,
@@ -61,7 +58,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
         return self._pandoc_version
 
     def convert_file(
-        self, input_path: str, output_path: str, output_format: str
+            self, input_path: str, output_path: str, output_format: str
     ) -> IntegrationResult[str]:
         """
         Convert a file from one format to another.
@@ -75,8 +72,12 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             IntegrationResult containing the output file path (string).
         """
         try:
+            # Use operations.utils directly (not api) to get file info
+            from quackcore.integrations.pandoc.operations.utils import get_file_info
             input_info = get_file_info(input_path)
+
             # Create output directory from the output_path (using os.path.dirname)
+            from quackcore.fs import service as fs
             output_dir = os.path.dirname(output_path)
             dir_result: OperationResult = fs.create_directory(output_dir, exist_ok=True)
             if not dir_result.success:
@@ -85,6 +86,10 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
                 )
 
             if input_info.format == "html" and output_format == "markdown":
+                # Use operations directly instead of _operations
+                from quackcore.integrations.pandoc.operations import (
+                    convert_html_to_markdown,
+                )
                 result = convert_html_to_markdown(
                     input_path, output_path, self.config, self.metrics
                 )
@@ -98,6 +103,10 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
                     result.error or "Conversion failed"
                 )
             elif input_info.format == "markdown" and output_format == "docx":
+                # Use operations directly instead of _operations
+                from quackcore.integrations.pandoc.operations import (
+                    convert_markdown_to_docx,
+                )
                 result = convert_markdown_to_docx(
                     input_path, output_path, self.config, self.metrics
                 )
@@ -121,7 +130,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             return IntegrationResult.error_result(f"Conversion error: {str(e)}")
 
     def convert_batch(
-        self, tasks: Sequence[ConversionTask], output_dir: str | None = None
+            self, tasks: Sequence[ConversionTask], output_dir: str | None = None
     ) -> IntegrationResult[list[str]]:
         """
         Convert a batch of files.
@@ -135,6 +144,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             IntegrationResult containing a list of successfully converted file paths (as strings).
         """
         # Use the provided output_dir, or fallback to the config value (already a string)
+        from quackcore.fs import service as fs
         output_directory: str = (
             output_dir if output_dir is not None else self.config.output_dir
         )

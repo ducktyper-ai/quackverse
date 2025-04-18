@@ -30,7 +30,7 @@ class TestDocumentConverter:
     def config(self):
         """Fixture to create a PandocConfig for testing."""
         return PandocConfig(
-            output_dir=Path("/path/to/output"),
+            output_dir="/path/to/output",
         )
 
     @pytest.fixture
