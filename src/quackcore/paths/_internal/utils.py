@@ -9,25 +9,15 @@ to quackcore.fs or built-in os.path utilities.
 """
 
 import os
-from dataclasses import dataclass
 from typing import Any
 
 from quackcore.errors import QuackFileNotFoundError, wrap_io_errors
 from quackcore.fs import service as fs
 from quackcore.logging import get_logger
+from quackcore.paths._internal.context import PathInfo
 
 # Get module-specific logger
 logger = get_logger(__name__)
-
-
-# Redefine PathInfo to work with strings
-@dataclass
-class PathInfo:
-    """Information about a normalized path."""
-
-    success: bool
-    path: str
-    error: Exception | None = None
 
 
 @wrap_io_errors
@@ -64,7 +54,6 @@ def _normalize_path_with_info(path: Any) -> PathInfo:
         except Exception:
             fallback = "/" + path_str
         return PathInfo(success=False, path=fallback, error=e)
-
 
 @wrap_io_errors
 def _find_project_root(

@@ -1,4 +1,3 @@
-# src/quackcore/paths/service.py
 """
 Path service for QuackCore.
 
@@ -12,7 +11,11 @@ from typing import Any
 from quackcore.fs.results import DataResult, OperationResult
 from quackcore.logging import get_logger
 from quackcore.paths._internal.resolver import PathResolver
-from quackcore.paths._internal.utils import _infer_module_from_path
+from quackcore.paths._internal.utils import (
+    _find_nearest_directory,
+    _infer_module_from_path,
+    _resolve_relative_to_project,
+)
 from quackcore.paths.api.public.results import ContextResult, PathResult
 
 
@@ -40,11 +43,14 @@ class PathService:
             A normalized path string
         """
         from quackcore.paths._internal.utils import _normalize_path_param
+
         return _normalize_path_param(path_param)
 
     def get_project_root(
         self,
         start_dir: str | Path | DataResult | OperationResult | None = None,
+        marker_files: list[str | Path | DataResult | OperationResult] | None = None,
+        marker_dirs: list[str | Path | DataResult | OperationResult] | None = None,
     ) -> PathResult:
         """
         Find the project root directory.
@@ -52,13 +58,17 @@ class PathService:
         Args:
             start_dir: Directory to start searching from (string, Path, DataResult,
                        or OperationResult; default: current directory)
+            marker_files: Filenames indicating a project root (optional)
+            marker_dirs: Directory names indicating a project root (optional)
 
         Returns:
             PathResult with the project root directory if successful.
         """
         try:
             start = None if start_dir is None else self._normalize_input_path(start_dir)
-            path = self._resolver._get_project_root(start)
+            mf = None if marker_files is None else [self._normalize_input_path(m) for m in marker_files]
+            md = None if marker_dirs is None else [self._normalize_input_path(d) for d in marker_dirs]
+            path = self._resolver._get_project_root(start, mf, md)
             return PathResult(success=True, path=path)
         except Exception as e:
             self.logger.error(f"Failed to get project root: {e}")
@@ -219,226 +229,109 @@ class PathService:
             self.logger.error(f"Failed to get module path for '{module}': {e}")
             return PathResult(success=False, error=str(e))
 
-    def get_relative_path(
+
+    def find_nearest_directory(
         self,
-        abs_path: str | Path | DataResult | OperationResult,
+        name: str,
         start_dir: str | Path | DataResult | OperationResult | None = None,
+        max_levels: int = 5,
     ) -> PathResult:
         """
-        Get the path relative to the project root.
+        Find the nearest directory with the given name.
 
         Args:
-            abs_path: Absolute path to convert (string, Path, DataResult, or OperationResult)
-            start_dir: Directory to start searching from (string, Path,
-                       DataResult, or OperationResult; default: current directory)
+            name: Name of the directory to locate.
+            start_dir: Directory to start searching from (string, Path, DataResult, or OperationResult; default: current directory)
+            max_levels: How many parent levels to ascend when searching.
 
         Returns:
-            PathResult with the relative path if successful.
-        """
-        try:
-            path_str = self._normalize_input_path(abs_path)
-            norm_path = os.path.abspath(path_str)
-
-            root_result = self.get_project_root(start_dir)
-            if not root_result.success or not root_result.path:
-                return PathResult(success=False, error=root_result.error)
-
-            root_dir = root_result.path
-            if not norm_path.startswith(root_dir):
-                return PathResult(
-                    success=False,
-                    error=f"Path '{abs_path}' is not inside project root '{root_dir}'",
-                )
-
-            rel_path = os.path.relpath(norm_path, root_dir)
-            return PathResult(success=True, path=rel_path)
-        except Exception as e:
-            self.logger.error(f"Failed to get relative path for '{abs_path}': {e}")
-            return PathResult(success=False, error=str(e))
-
-    def get_content_dir(
-        self,
-        content_type: str,
-        content_name: str,
-        start_dir: str | Path | DataResult | OperationResult | None = None,
-    ) -> PathResult:
-        """
-        Get the directory for specific content.
-
-        Args:
-            content_type: Type of content (e.g., "tutorials", "videos")
-            content_name: Name of the content
-            start_dir: Directory to start searching from (string, Path,
-                       DataResult, or OperationResult; default: current directory)
-
-        Returns:
-            PathResult with the content directory path if successful.
+            PathResult with the found directory path if successful.
         """
         try:
             start = None if start_dir is None else self._normalize_input_path(start_dir)
-            context_result = self.detect_project_context(start)
-            if not context_result.success or not context_result.context:
-                return PathResult(success=False, error=context_result.error)
-
-            context = context_result.context
-            src_dir = context._get_source_dir()
-            if not src_dir:
-                return PathResult(
-                    success=False, error="Source directory not found in project"
-                )
-
-            content_dir = os.path.join(src_dir, content_type, content_name)
-            if not os.path.isdir(content_dir):
-                return PathResult(
-                    success=False,
-                    error=f"Content directory for '{content_type}/{content_name}' not found",
-                )
-
-            return PathResult(success=True, path=content_dir)
+            dir_path = _find_nearest_directory(name, start, max_levels)
+            return PathResult(success=True, path=dir_path)
         except Exception as e:
-            self.logger.error(
-                f"Failed to get content directory for '{content_type}/{content_name}': {e}"
-            )
+            self.logger.error(f"Failed to find nearest directory '{name}': {e}")
             return PathResult(success=False, error=str(e))
 
-    def list_known_directories(
+    def find_project_root(
         self,
         start_dir: str | Path | DataResult | OperationResult | None = None,
-    ) -> list[str]:
+        marker_files: list[str] | None = None,
+        marker_dirs: list[str] | None = None,
+    ) -> PathResult:
         """
-        List all known directories in the project.
+        Find the project root directory using custom marker files or dirs.
 
         Args:
-            start_dir: Directory to start searching from (string, Path,
-                       DataResult, or OperationResult; default: current directory)
+            start_dir: Directory to start searching from (string, Path, DataResult, or OperationResult; default: current directory)
+            marker_files: Filenames that identify a project root (e.g. ['pyproject.toml'])
+            marker_dirs: Directory names that identify a project root (e.g. ['src', 'tests'])
 
         Returns:
-            List of known directory names.
+            PathResult with the project root directory if successful.
         """
         try:
             start = None if start_dir is None else self._normalize_input_path(start_dir)
-            context_result = self.detect_project_context(start)
-            if not context_result.success or not context_result.context:
-                return []
-
-            context = context_result.context
-            return list(context.directories.keys())
+            root = self._resolver._get_project_root(start, marker_files, marker_dirs)
+            return PathResult(success=True, path=root)
         except Exception as e:
-            self.logger.error(f"Failed to list known directories: {e}")
-            return []
+            self.logger.error(f"Failed to find project root with markers: {e}")
+            return PathResult(success=False, error=str(e))
 
-    def is_inside_project(
+    def resolve_relative_to_project(
         self,
         path: str | Path | DataResult | OperationResult,
-        start_dir: str | Path | DataResult | OperationResult | None = None,
-    ) -> bool:
+        project_root: str | Path | DataResult | OperationResult | None = None,
+    ) -> PathResult:
         """
-        Check if a path is inside the project root.
+        Resolve a path relative to the project root without needing full context.
 
         Args:
-            path: Path to check (string, Path, DataResult, or OperationResult)
-            start_dir: Directory to start searching from (string, Path,
-                       DataResult, or OperationResult; default: current directory)
+            path: The path to resolve (string, Path, DataResult, or OperationResult)
+            project_root: Explicit project root (string, Path, DataResult, or OperationResult; default: auto-detected)
 
         Returns:
-            True if the path is inside the project root, False otherwise.
+            PathResult with the resolved absolute path if successful.
         """
         try:
             path_str = self._normalize_input_path(path)
-            norm_path = os.path.abspath(path_str)
-
-            root_result = self.get_project_root(start_dir)
-            if not root_result.success or not root_result.path:
-                return False
-
-            root_dir = root_result.path
-            return norm_path.startswith(root_dir)
+            root = None if project_root is None else self._normalize_input_path(project_root)
+            resolved = _resolve_relative_to_project(path_str, root)
+            return PathResult(success=True, path=resolved)
         except Exception as e:
-            self.logger.error(
-                f"Failed to check if path '{path}' is inside project: {e}"
-            )
-            return False
+            self.logger.error(f"Failed to resolve path relative to project: {e}")
+            return PathResult(success=False, error=str(e))
 
-    def resolve_content_module(
-        self,
-        path: str | Path | DataResult | OperationResult,
-        start_dir: str | Path | DataResult | OperationResult | None = None,
+    def infer_module_from_path(
+            self,
+            path: str | Path | DataResult | OperationResult,
+            project_root: str | Path | DataResult | OperationResult | None = None,
     ) -> PathResult:
         """
-        Get the module name for a content file path.
+        Infer the Python module name from a file path.
 
         Args:
-            path: Path to the content file (string, Path, DataResult, or OperationResult)
-            start_dir: Directory to start searching from (string, Path,
-                       DataResult, or OperationResult; default: current directory)
+            path: Path to the file (string, Path, DataResult, or OperationResult)
+            project_root: Project root directory (string, Path, DataResult, or OperationResult; optional)
 
         Returns:
-            PathResult with the module name if successful.
+            PathResult with the inferred module name if successful.
         """
         try:
             path_str = self._normalize_input_path(path)
-            norm_path = os.path.abspath(path_str)
-
-            start = None if start_dir is None else self._normalize_input_path(start_dir)
-            context_result = self.detect_content_context(start)
-            if not context_result.success or not context_result.context:
-                return PathResult(success=False, error=context_result.error)
-
-            context = context_result.context
-            src_dir = context._get_source_dir()
-            if not src_dir:
-                return PathResult(
-                    success=False, error="Source directory not found in project"
-                )
-
-            if not norm_path.startswith(src_dir):
-                return PathResult(
-                    success=False,
-                    error=f"Path '{path}' is not inside source directory '{src_dir}'",
-                )
-
-            module_name = _infer_module_from_path(norm_path, context.root_dir)
+            root = None if project_root is None else self._normalize_input_path(
+                project_root)
+            module_name = _infer_module_from_path(path_str, root)
             return PathResult(success=True, path=module_name)
         except Exception as e:
-            self.logger.error(f"Failed to resolve content module for '{path}': {e}")
+            self.logger.error(f"Failed to infer module name for '{path}': {e}")
             return PathResult(success=False, error=str(e))
 
-    def path_exists_in_known_dir(
-        self,
-        dir_name: str,
-        rel_path: str | Path | DataResult | OperationResult,
-        start_dir: str | Path | DataResult | OperationResult | None = None,
-    ) -> bool:
-        """
-        Check if a relative path exists in a known directory.
-
-        Args:
-            dir_name: Name of the known directory (e.g., "assets")
-            rel_path: Relative path within the directory (string, Path,
-                      DataResult, or OperationResult)
-            start_dir: Directory to start searching from (string, Path,
-                       DataResult, or OperationResult; default: current directory)
-
-        Returns:
-            True if the path exists, False otherwise.
-        """
-        try:
-            dir_result = self.get_known_directory(dir_name, start_dir)
-            if not dir_result.success or not dir_result.path:
-                return False
-
-            rel_str = self._normalize_input_path(rel_path)
-            full_path = os.path.join(dir_result.path, rel_str)
-            return os.path.exists(full_path)
-        except Exception as e:
-            self.logger.error(
-                f"Failed to check if path '{rel_path}' exists in '{dir_name}': {e}"
-            )
-            return False
-
     def find_source_directory(
-        self,
-        start_dir: str | Path | DataResult | OperationResult | None = None,
+            self,
+            start_dir: str | Path | DataResult | OperationResult | None = None,
     ) -> PathResult:
         """
         Find the source directory of the project.
@@ -459,16 +352,15 @@ class PathService:
             return PathResult(success=False, error=str(e))
 
     def find_output_directory(
-        self,
-        start_dir: str | Path | DataResult | OperationResult | None = None,
-        create: bool = False,
+            self,
+            start_dir: str | Path | DataResult | OperationResult | None = None,
+            create: bool = False,
     ) -> PathResult:
         """
         Find or create the output directory of the project.
 
         Args:
-            start_dir: Directory to start searching from (string, Path,
-                       DataResult, or OperationResult; default: current directory)
+            start_dir: Directory to start searching from (string, Path, DataResult, or OperationResult; default: current directory)
             create: Whether to create the directory if it doesn't exist
 
         Returns:
@@ -483,15 +375,14 @@ class PathService:
             return PathResult(success=False, error=str(e))
 
     def infer_current_content(
-        self,
-        start_dir: str | Path | DataResult | OperationResult | None = None,
+            self,
+            start_dir: str | Path | DataResult | OperationResult | None = None,
     ) -> dict[str, str]:
         """
-        Infer current content type and name from the current directory.
+        Infer current content type and name from a directory.
 
         Args:
-            start_dir: Directory to start from (string, Path,
-                       DataResult, or OperationResult; default: current working directory)
+            start_dir: Directory to start from (string, Path, DataResult, or OperationResult; default: current directory)
 
         Returns:
             Dictionary with 'type' and 'name' keys if found.
@@ -502,3 +393,192 @@ class PathService:
         except Exception as e:
             self.logger.error(f"Failed to infer current content: {e}")
             return {}
+
+    def get_relative_path(
+        self,
+        abs_path: str | Path | DataResult | OperationResult,
+        start_dir: str | Path | DataResult | OperationResult | None = None,
+    ) -> PathResult:
+        """
+        Get the path relative to the project root.
+
+        Args:
+            abs_path: Absolute path to convert (string, Path, DataResult, or OperationResult)
+            start_dir: Directory to start searching from (string, Path, DataResult,
+                       or OperationResult; default: current directory)
+
+        Returns:
+            PathResult with the relative path if successful.
+        """
+        try:
+            p = self._normalize_input_path(abs_path)
+            norm = os.path.abspath(p)
+            root_res = self.get_project_root(start_dir)
+            if not root_res.success or not root_res.path:
+                return PathResult(success=False, error=root_res.error)
+            root = root_res.path
+            if not norm.startswith(root):
+                return PathResult(
+                    success=False,
+                    error=f"Path '{p}' is not inside project root '{root}'",
+                )
+            rel = os.path.relpath(norm, root)
+            return PathResult(success=True, path=rel)
+        except Exception as e:
+            self.logger.error(f"Failed to get relative path for '{abs_path}': {e}")
+            return PathResult(success=False, error=str(e))
+
+    def get_content_dir(
+        self,
+        content_type: str,
+        content_name: str,
+        start_dir: str | Path | DataResult | OperationResult | None = None,
+    ) -> PathResult:
+        """
+        Get the directory for specific content.
+
+        Args:
+            content_type: Type of content (e.g., "tutorials", "videos")
+            content_name: Name of the content
+            start_dir: Directory to start searching from (string, Path, DataResult,
+                       or OperationResult; default: current directory)
+
+        Returns:
+            PathResult with the content directory path if successful.
+        """
+        try:
+            start = None if start_dir is None else self._normalize_input_path(start_dir)
+            ctx_res = self.detect_project_context(start)
+            if not ctx_res.success or not ctx_res.context:
+                return PathResult(success=False, error=ctx_res.error)
+            src = ctx_res.context._get_source_dir()
+            if not src:
+                return PathResult(success=False, error="Source directory not found in project")
+            full = os.path.join(src, content_type, content_name)
+            if not os.path.isdir(full):
+                return PathResult(
+                    success=False,
+                    error=f"Content directory '{content_type}/{content_name}' not found",
+                )
+            return PathResult(success=True, path=full)
+        except Exception as e:
+            self.logger.error(f"Failed to get content directory for '{content_type}/{content_name}': {e}")
+            return PathResult(success=False, error=str(e))
+
+    def list_known_directories(
+        self,
+        start_dir: str | Path | DataResult | OperationResult | None = None,
+    ) -> list[str]:
+        """
+        List all known directories in the project.
+
+        Args:
+            start_dir: Directory to start searching from (string, Path, DataResult,
+                       or OperationResult; default: current directory)
+
+        Returns:
+            List of known directory names.
+        """
+        try:
+            start = None if start_dir is None else self._normalize_input_path(start_dir)
+            ctx_res = self.detect_project_context(start)
+            if not ctx_res.success or not ctx_res.context:
+                return []
+            return list(ctx_res.context.directories.keys())
+        except Exception as e:
+            self.logger.error(f"Failed to list known directories: {e}")
+            return []
+
+    def is_inside_project(
+        self,
+        path: str | Path | DataResult | OperationResult,
+        start_dir: str | Path | DataResult | OperationResult | None = None,
+    ) -> bool:
+        """
+        Check if a path is inside the project root.
+
+        Args:
+            path: Path to check (string, Path, DataResult, or OperationResult)
+            start_dir: Directory to start searching from (string, Path, DataResult,
+                       or OperationResult; default: current directory)
+
+        Returns:
+            True if the path is inside the project root, False otherwise.
+        """
+        try:
+            p = self._normalize_input_path(path)
+            norm = os.path.abspath(p)
+            root_res = self.get_project_root(start_dir)
+            if not root_res.success or not root_res.path:
+                return False
+            return norm.startswith(root_res.path)
+        except Exception as e:
+            self.logger.error(f"Failed to check if path '{path}' is inside project: {e}")
+            return False
+
+    def resolve_content_module(
+        self,
+        path: str | Path | DataResult | OperationResult,
+        start_dir: str | Path | DataResult | OperationResult | None = None,
+    ) -> PathResult:
+        """
+        Get the module name for a content file path.
+
+        Args:
+            path: Path to the content file (string, Path, DataResult, or OperationResult)
+            start_dir: Directory to start searching from (string, Path, DataResult,
+                       or OperationResult; default: current directory)
+
+        Returns:
+            PathResult with the module name if successful.
+        """
+        try:
+            p = self._normalize_input_path(path)
+            norm = os.path.abspath(p)
+            start = None if start_dir is None else self._normalize_input_path(start_dir)
+            ctx_res = self.detect_content_context(start)
+            if not ctx_res.success or not ctx_res.context:
+                return PathResult(success=False, error=ctx_res.error)
+            src = ctx_res.context._get_source_dir()
+            if not src or not norm.startswith(src):
+                return PathResult(
+                    success=False,
+                    error=f"Path '{p}' is not inside source directory '{src}'",
+                )
+            mod = _infer_module_from_path(norm, ctx_res.context.root_dir)
+            return PathResult(success=True, path=mod)
+        except Exception as e:
+            self.logger.error(f"Failed to resolve content module for '{path}': {e}")
+            return PathResult(success=False, error=str(e))
+
+    def path_exists_in_known_dir(
+        self,
+        dir_name: str,
+        rel_path: str | Path | DataResult | OperationResult,
+        start_dir: str | Path | DataResult | OperationResult | None = None,
+    ) -> bool:
+        """
+        Check if a relative path exists in a known directory.
+
+        Args:
+            dir_name: Name of the known directory (e.g., "assets")
+            rel_path: Relative path within that directory
+            start_dir: Directory to start searching from (string, Path, DataResult,
+                       or OperationResult; default: current directory)
+
+        Returns:
+            True if the path exists, False otherwise.
+        """
+        try:
+            root_dir = self.get_known_directory(dir_name, start_dir)
+            if not root_dir.success or not root_dir.path:
+                return False
+            rp = self._normalize_input_path(rel_path)
+            return os.path.exists(os.path.join(root_dir.path, rp))
+        except Exception as e:
+            self.logger.error(f"Failed to check path '{rel_path}' in '{dir_name}': {e}")
+            return False
+
+
+
+

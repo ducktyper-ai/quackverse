@@ -6,7 +6,7 @@ This module provides data models for representing project structure context,
 which is used for resolving paths in a project.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # Helper function to compute the relative path (if applicable)
@@ -242,3 +242,18 @@ class ContentContext(ProjectContext):
             if dir_info.is_temp:
                 return dir_info.path
         return None
+
+
+# Redefine PathInfo to work with strings
+class PathInfo(BaseModel):
+    """Information about a normalized path."""
+
+    success: bool = Field(..., description="Whether normalization succeeded")
+    path: str = Field(..., description="Normalized path as a string")
+    error: Exception | None = Field(
+        default=None,
+        description="Error encountered during normalization",
+    )
+
+    # allow Exception objects in the schema
+    model_config = ConfigDict(arbitrary_types_allowed=True)
