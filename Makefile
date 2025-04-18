@@ -101,22 +101,32 @@ update: ## Update all dependencies
 .PHONY: test
 test: ## Run tests with coverage
 	@echo "${BLUE}Running tests with coverage...${RESET}"
-	$(PYTHON) -m pytest $(TEST_PATH) $(PYTEST_ARGS) --cov=quackcore/src --cov=ducktyper/src --cov=quackster/src --cov-report=term-missing
+	PYTHONPATH="$(shell pwd)/quackcore/src:$(shell pwd)/ducktyper/src:$(shell pwd)/quackster/src:$(PYTHONPATH)" \
+	$(PYTHON) -m pytest $(PYTEST_ARGS) --cov=quackcore/src --cov=ducktyper/src --cov=quackster/src --cov-report=term-missing
 
 .PHONY: test-quackcore
 test-quackcore: ## Run only quackcore tests
 	@echo "${BLUE}Running quackcore tests...${RESET}"
+	PYTHONPATH="$(shell pwd)/quackcore/src:$(PYTHONPATH)" \
 	$(PYTHON) -m pytest quackcore/tests $(PYTEST_ARGS) --cov=quackcore/src --cov-report=term-missing
 
 .PHONY: test-ducktyper
 test-ducktyper: ## Run only ducktyper tests
 	@echo "${BLUE}Running ducktyper tests...${RESET}"
+	PYTHONPATH="$(shell pwd)/quackcore/src:$(shell pwd)/ducktyper/src:$(PYTHONPATH)" \
 	$(PYTHON) -m pytest ducktyper/tests $(PYTEST_ARGS) --cov=ducktyper/src --cov-report=term-missing
 
 .PHONY: test-quackster
 test-quackster: ## Run only quackster tests
 	@echo "${BLUE}Running quackster tests...${RESET}"
+	PYTHONPATH="$(shell pwd)/quackcore/src:$(shell pwd)/quackster/src:$(PYTHONPATH)" \
 	$(PYTHON) -m pytest quackster/tests $(PYTEST_ARGS) --cov=quackster/src --cov-report=term-missing
+
+.PHONY: test-integration
+test-integration: ## Run only integration tests
+	@echo "${BLUE}Running integration tests...${RESET}"
+	PYTHONPATH="$(shell pwd)/quackcore/src:$(shell pwd)/ducktyper/src:$(shell pwd)/quackster/src:$(PYTHONPATH)" \
+	$(PYTHON) -m pytest tests/integration $(PYTEST_ARGS) --cov=quackcore/src --cov=ducktyper/src --cov=quackster/src --cov-report=term-missing
 
 .PHONY: test-module
 test-module: ## Run only integration tests with coverage
