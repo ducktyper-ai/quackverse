@@ -4,8 +4,6 @@ Tests for the FileSystemService class.
 """
 
 import json
-import os
-import platform
 import tempfile
 from pathlib import Path
 
@@ -392,19 +390,22 @@ class TestFileSystemService:
 
         # Test creating a non-existent directory
         result = service.ensure_directory(dir_path)
-        assert result.exists()
-        assert result.is_dir()
+        assert result.success is True
+        assert dir_path.exists()
+        assert dir_path.is_dir()
 
         # Test with existing directory
         result = service.ensure_directory(dir_path)
-        assert result.exists()
-        assert result.is_dir()
+        assert result.success is True
+        assert dir_path.exists()
+        assert dir_path.is_dir()
 
         # Test with nested path
         nested_path = dir_path / "sub1" / "sub2"
         result = service.ensure_directory(nested_path)
-        assert result.exists()
-        assert result.is_dir()
+        assert result.success is True
+        assert nested_path.exists()
+        assert nested_path.is_dir()
 
     def test_get_unique_filename(self, temp_dir: Path) -> None:
         """Test getting a unique filename."""
@@ -412,17 +413,19 @@ class TestFileSystemService:
 
         # Test with a non-existent filename
         unique_name = service.get_unique_filename(temp_dir, "unique.txt")
-        assert unique_name == temp_dir / "unique.txt"
-        assert not unique_name.exists()
+        assert unique_name.success is True
+        assert unique_name.data == str(temp_dir / "unique.txt")
+        assert not Path(unique_name.data).exists()
 
         # Test with an existing filename
         existing_file = temp_dir / "existing.txt"
         existing_file.touch()
         unique_name = service.get_unique_filename(temp_dir, "existing.txt")
-        assert unique_name != existing_file
-        assert str(unique_name).startswith(str(temp_dir / "existing"))
-        assert "_1" in str(unique_name)
-        assert not unique_name.exists()
+        assert unique_name.success is True
+        assert unique_name.data != str(existing_file)
+        assert str(unique_name.data).startswith(str(temp_dir / "existing"))
+        assert "_1" in str(unique_name.data)
+        assert not Path(unique_name.data).exists()
 
     def test_path_utilities(self, temp_dir: Path) -> None:
         """Test path manipulation utilities."""
@@ -430,22 +433,33 @@ class TestFileSystemService:
 
         # Test join_path
         joined_path = service.join_path(temp_dir, "subdir", "file.txt")
-        assert joined_path == temp_dir / "subdir" / "file.txt"
+        assert joined_path.success is True
+        assert joined_path.data == str(temp_dir / "subdir" / "file.txt")
 
         # Test split_path
         split = service.split_path(temp_dir / "subdir" / "file.txt")
-        assert len(split) >= 3
-        assert split[-1] == "file.txt"
-        assert split[-2] == "subdir"
+        assert split.success is True
+        assert len(split.data) >= 3
+        assert split.data[-1] == "file.txt"
+        assert split.data[-2] == "subdir"
 
         # Test normalize_path
         normalized = service.normalize_path("./test/../test")
-        assert normalized.name == "test"
+        assert normalized.success is True
+        assert Path(normalized.data).name == "test"
 
         # Test get_extension
-        assert service.get_extension("file.txt") == "txt"
-        assert service.get_extension("file") == ""
-        assert service.get_extension("file.tar.gz") == "gz"
+        ext_result = service.get_extension("file.txt")
+        assert ext_result.success is True
+        assert ext_result.data == "txt"
+
+        ext_result = service.get_extension("file")
+        assert ext_result.success is True
+        assert ext_result.data == ""
+
+        ext_result = service.get_extension("file.tar.gz")
+        assert ext_result.success is True
+        assert ext_result.data == "gz"
 
         # Test is_same_file
         file1 = temp_dir / "same1.txt"
@@ -453,14 +467,25 @@ class TestFileSystemService:
         file2 = temp_dir / "same2.txt"
         file2.touch()
         file1_link = temp_dir / "same1_link.txt"
+
+        import os
+        import platform
         os.symlink(
             file1, file1_link
         ) if platform.system() != "Windows" else file1_link.touch()
 
-        assert service.is_same_file(file1, file1)
-        assert not service.is_same_file(file1, file2)
+        result = service.is_same_file(file1, file1)
+        assert result.success is True
+        assert result.data is True
+
+        result = service.is_same_file(file1, file2)
+        assert result.success is True
+        assert result.data is False
+
         if platform.system() != "Windows":
-            assert service.is_same_file(file1, file1_link)
+            result = service.is_same_file(file1, file1_link)
+            assert result.success is True
+            assert result.data is True
 
     @given(st.text(min_size=1, max_size=100))
     def test_hypothetical_file_operations(self, content: str) -> None:

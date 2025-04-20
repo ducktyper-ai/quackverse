@@ -15,6 +15,7 @@ from quackcore.cli.config import (
 )
 from quackcore.config.models import QuackConfig
 from quackcore.errors import QuackConfigurationError, QuackFileNotFoundError
+
 from .mocks import MockConfig
 
 

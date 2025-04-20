@@ -325,7 +325,7 @@ def split_path(path: str | Path | DataResult | OperationResult) -> DataResult[li
     return _service.split_path(path)
 
 
-def join_path(*parts: str | Path | DataResult | OperationResult) -> Path:
+def join_path(*parts: str | Path | DataResult | OperationResult) -> DataResult[str]:
     """
     Join path components.
 

@@ -240,7 +240,7 @@ class TestFileSystemOperations:
 
         # Test creating existing directory with exist_ok=False
         with patch(
-            "quackcore.fs._operations.ensure_directory"
+                "quackcore.fs._operations._ensure_directory"
         ) as mock_ensure_directory:
             mock_ensure_directory.side_effect = QuackFileExistsError(
                 str(temp_dir / "new_dir")
@@ -492,7 +492,7 @@ class TestFileSystemOperations:
             assert "permission denied" in result.error.lower()
 
         # Test IO error
-        with patch("quackcore.fs._operations.atomic_write") as mock_atomic_write:
+        with patch("quackcore.fs._operations._atomic_write") as mock_atomic_write:
             mock_atomic_write.side_effect = QuackIOError("IO error")
             result = operations._write_text("io_error.txt", "content")
             assert result.success is False

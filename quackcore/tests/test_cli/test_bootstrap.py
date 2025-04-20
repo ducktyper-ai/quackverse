@@ -12,6 +12,7 @@ from quackcore.cli.boostrap import from_cli_options, init_cli_env
 from quackcore.cli.context import QuackContext
 from quackcore.cli.options import CliOptions
 from quackcore.errors import QuackError
+
 from .mocks import (
     MockConfig,
     create_mock_logger,
