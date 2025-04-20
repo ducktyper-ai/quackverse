@@ -8,7 +8,7 @@ for enhancing prompts using various strategies.
 
 from typing import Any
 
-from quackcore.fs import service as fs
+from quackcore.fs.service import standalone
 from quackcore.logging import get_logger
 
 from .registry import find_strategies_by_tags, get_all_strategies, get_strategy_by_id
@@ -283,14 +283,14 @@ Tags: {", ".join(s.tags)}
         }
 
         try:
-            # Ensure parent directory exists using quackcore.fs.
+            # Ensure parent directory exists using quackcore.standalone.
             # Compute parent directory by splitting the path and joining all parts except the last.
-            parent_dir = fs.join_path(*fs.split_path(path)[:-1])
-            fs.create_directory(parent_dir, exist_ok=True)
+            parent_dir = standalone.join_path(*standalone.split_path(path)[:-1])
+            standalone.create_directory(parent_dir, exist_ok=True)
 
             # Determine output format based on file extension.
             if str(path).lower().endswith(".json"):
-                result = fs.write_json(path, export_data, indent=2)
+                result = standalone.write_json(path, export_data, indent=2)
                 if not result.success:
                     raise OSError(f"Failed to export prompt: {result.error}")
             else:
@@ -306,14 +306,14 @@ Tags: {", ".join(s.tags)}
                     ) as temp_file:
                         temp_path = temp_file.name
 
-                    json_result = fs.write_json(
+                    json_result = standalone.write_json(
                         temp_path, export_data["metadata"], indent=2
                     )
                     if json_result.success:
-                        read_result = fs.read_text(temp_path)
+                        read_result = standalone.read_text(temp_path)
                         if read_result.success:
                             content += f"{read_result.content}\n\n"
-                            fs.delete(temp_path, missing_ok=True)
+                            standalone.delete(temp_path, missing_ok=True)
                         else:
                             raise ValueError("Failed to read temporary JSON file")
                     else:
@@ -326,7 +326,7 @@ Tags: {", ".join(s.tags)}
 
                 content += f"# Explanation\n\n{export_data['explanation']}\n"
 
-                result = fs.write_text(path, content)
+                result = standalone.write_text(path, content)
                 if not result.success:
                     raise OSError(f"Failed to export prompt: {result.error}")
 

@@ -11,7 +11,7 @@ from quackcore.integrations.google.drive.protocols import (
     DriveFilesResource,
     DriveService,
 )
-from tests.test_integrations.google.drive.mocks.resources import (
+from .resources import (
     MockDriveFilesResource,
     MockDrivePermissionsResource,
 )

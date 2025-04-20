@@ -45,13 +45,13 @@ class TestDriveOperationsListFiles:
 
         # Setup mock execute_api_request - correct the import path
         with patch(
-            "quackcore.integrations.google.drive._operations.list_files.execute_api_request"
+            "quackcore.integrations.google.drive.operations.list_files.execute_api_request"
         ) as mock_execute:
             mock_execute.return_value = {"files": mock_file_list}
 
             # Setup mock build_query - correct the import path
             with patch(
-                "quackcore.integrations.google.drive._operations.list_files.build_query"
+                "quackcore.integrations.google.drive.operations.list_files.build_query"
             ) as mock_query:
                 mock_query.return_value = "query"
 
@@ -105,13 +105,13 @@ class TestDriveOperationsListFiles:
 
         # Setup mock execute_api_request with correct path
         with patch(
-            "quackcore.integrations.google.drive._operations.list_files.execute_api_request"
+            "quackcore.integrations.google.drive.operations.list_files.execute_api_request"
         ) as mock_execute:
             mock_execute.return_value = mock_response
 
             # Setup mock build_query with correct path
             with patch(
-                "quackcore.integrations.google.drive._operations.list_files.build_query"
+                "quackcore.integrations.google.drive.operations.list_files.build_query"
             ) as mock_query:
                 mock_query.return_value = "query"
 
@@ -141,7 +141,7 @@ class TestDriveOperationsListFiles:
 
         # Setup mock execute_api_request to raise an error
         with patch(
-            "quackcore.integrations.google.drive._operations.list_files.execute_api_request"
+            "quackcore.integrations.google.drive.operations.list_files.execute_api_request"
         ) as mock_execute:
             mock_execute.side_effect = QuackApiError(
                 "API error", service="Google Drive", api_method="files.list"
@@ -149,7 +149,7 @@ class TestDriveOperationsListFiles:
 
             # Setup mock build_query
             with patch(
-                "quackcore.integrations.google.drive._operations.list_files.build_query"
+                "quackcore.integrations.google.drive.operations.list_files.build_query"
             ) as mock_query:
                 mock_query.return_value = "query"
 
@@ -172,13 +172,13 @@ class TestDriveOperationsListFiles:
 
         # Setup mock execute_api_request
         with patch(
-            "quackcore.integrations.google.drive._operations.list_files.execute_api_request"
+            "quackcore.integrations.google.drive.operations.list_files.execute_api_request"
         ) as mock_execute:
             mock_execute.return_value = mock_response
 
             # Setup mock build_query
             with patch(
-                "quackcore.integrations.google.drive._operations.list_files.build_query"
+                "quackcore.integrations.google.drive.operations.list_files.build_query"
             ) as mock_query:
                 mock_query.return_value = "query"
 
@@ -221,12 +221,12 @@ class TestDriveOperationsListFiles:
 
         # Mock API responses
         with patch(
-            "quackcore.integrations.google.drive._operations.list_files.execute_api_request"
+            "quackcore.integrations.google.drive.operations.list_files.execute_api_request"
         ) as mock_execute:
             mock_execute.return_value = {"files": file_list}
 
             with patch(
-                "quackcore.integrations.google.drive._operations.list_files.build_query"
+                "quackcore.integrations.google.drive.operations.list_files.build_query"
             ):
                 # Call the function
                 result = list_files.list_files(mock_drive_service)

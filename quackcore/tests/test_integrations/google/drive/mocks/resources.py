@@ -10,7 +10,7 @@ from quackcore.integrations.google.drive.protocols import (
     DrivePermissionsResource,
     DriveRequest,
 )
-from tests.test_integrations.google.drive.mocks.requests import (
+from .requests import (
     MockDriveRequest,
 )
 

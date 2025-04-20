@@ -10,7 +10,7 @@ module for standardized LLM interactions.
 from collections.abc import Sequence
 
 from quackcore.config import config as quack_config
-from quackcore.fs import service as fs
+from quackcore.fs.service import standalone
 from quackcore.logging import get_logger
 
 # Set up logger
@@ -49,7 +49,7 @@ def _load_config():
         config_paths = ["config/prompt_enhancer.yaml", "prompt_enhancer.yaml"]
 
         for path in config_paths:
-            result = fs.read_yaml(path)
+            result = standalone.read_yaml(path)
             if result.success:
                 enhancer_config = result.data
                 logger.debug(f"Loaded enhancer config from {path}")

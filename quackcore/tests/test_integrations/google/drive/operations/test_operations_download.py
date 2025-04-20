@@ -30,7 +30,7 @@ class TestDriveOperationsDownload:
             patch("io.BytesIO") as mock_bytesio,
             # Patch the fs module directly as it's imported as an alias
             patch(
-                "quackcore.integrations.google.drive._operations.download.fs"
+                "quackcore.integrations.google.drive.operations.download.fs"
             ) as mock_fs,
             patch(
                 "quackcore.integrations.google.drive.api.api.execute_api_request"
@@ -71,7 +71,7 @@ class TestDriveOperationsDownload:
 
             # Mock paths resolver
             with patch(
-                "quackcore.integrations.google.drive._operations.download.resolver"
+                "quackcore.integrations.google.drive.operations.download.resolver"
             ) as mock_resolver:
                 mock_resolver.resolve_project_path.return_value = "/tmp/test_file.txt"
 
@@ -91,7 +91,7 @@ class TestDriveOperationsDownload:
 
         # Patch the fs module directly as it's imported as an alias
         with patch(
-            "quackcore.integrations.google.drive._operations.download.fs"
+            "quackcore.integrations.google.drive.operations.download.fs"
         ) as mock_fs:
             # Setup the mock to return what the test expects
             mock_fs.create_temp_directory.return_value = tmp_path / "temp_dir"
@@ -114,7 +114,7 @@ class TestDriveOperationsDownload:
             mock_resolve.return_value = local_dir
 
             with patch(
-                "quackcore.integrations.google.drive._operations.download.fs"
+                "quackcore.integrations.google.drive.operations.download.fs"
             ) as mock_fs:
                 # Setup mock to return a directory
                 mock_fs.get_file_info.return_value = FileInfoResult(
@@ -139,7 +139,7 @@ class TestDriveOperationsDownload:
             mock_resolve.return_value = local_file
 
             with patch(
-                "quackcore.integrations.google.drive._operations.download.fs"
+                "quackcore.integrations.google.drive.operations.download.fs"
             ) as mock_fs:
                 # Setup mock to return a file
                 mock_fs.get_file_info.return_value = FileInfoResult(
@@ -192,7 +192,7 @@ class TestDriveOperationsDownload:
             patch("googleapiclient.http.MediaIoBaseDownload") as mock_download,
             patch("io.BytesIO") as mock_bytesio,
             patch(
-                "quackcore.integrations.google.drive._operations.download.fs"
+                "quackcore.integrations.google.drive.operations.download.fs"
             ) as mock_fs,
             patch("quackcore.paths.resolver.resolve_project_path") as mock_resolve,
             patch(
