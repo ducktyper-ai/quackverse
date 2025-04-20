@@ -232,7 +232,7 @@ class PathOperationsMixin:
             )
 
     def resolve_path(self, path: str | Path | DataResult | OperationResult) -> \
-    DataResult[str]:
+    PathResult:
         """
         Resolve a path relative to the service's base_dir and return as a string.
 
@@ -243,25 +243,28 @@ class PathOperationsMixin:
             path: Input path (absolute or relative) (string, Path, DataResult, or OperationResult)
 
         Returns:
-            DataResult with the fully resolved, absolute path as a string.
+            PathResult with the fully resolved, absolute path as a string.
         """
         try:
             normalized_path = self._normalize_input_path(path)
             resolved = self.operations._resolve_path(normalized_path)
-            return DataResult(
+            return PathResult(
                 success=True,
                 path=resolved,
-                data=str(resolved),
-                format="path",
+                is_absolute=resolved.is_absolute(),
+                is_valid=True,
+                exists=resolved.exists(),
                 message=f"Resolved path to: {resolved}",
             )
         except Exception as e:
-            normalized_path = self._normalize_input_path(path)
-            return DataResult(
+            # even on failure we normalize so we have a Path to report on
+            normalized = self._normalize_input_path(path)
+            return PathResult(
                 success=False,
-                path=normalized_path,
-                data="",
-                format="path",
-                error=str(e),
+                path=normalized,
+                is_absolute=normalized.is_absolute(),
+                is_valid=False,
+                exists=normalized.exists(),
                 message="Failed to resolve path",
+                error=str(e),
             )

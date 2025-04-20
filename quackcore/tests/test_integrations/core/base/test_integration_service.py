@@ -25,8 +25,8 @@ class TestBaseIntegrationService:
         config_provider = MockConfigProvider()
         auth_provider = MockAuthProvider()
 
-        # Patch the resolve_project_path method to return the input path
-        with patch("quackcore.paths.service.resolve_project_path") as mock_resolve:
+        # Patch the fs service standalone method to return the input path
+        with patch("quackcore.fs.service.standalone.resolve_path") as mock_resolve:
             mock_resolve.return_value = "/test/config.yaml"
 
             service = MockIntegrationService(

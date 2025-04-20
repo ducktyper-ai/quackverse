@@ -430,3 +430,19 @@ def expand_user_vars(path: str | Path | DataResult | OperationResult) -> DataRes
     """
 
     return _service.expand_user_vars(path)
+
+def resolve_path(path: str | Path | DataResult | OperationResult) -> \
+    PathResult:
+        """
+        Resolve a path relative to the service's base_dir and return as a string.
+
+        This is a public, safe wrapper around _resolve_path that conforms to
+        the DataResult structure used throughout QuackCore.
+
+        Args:
+            path: Input path (absolute or relative) (string, Path, DataResult, or OperationResult)
+
+        Returns:
+            PathResult with the fully resolved, absolute path as a string.
+        """
+        return _service.resolve_path(path)
