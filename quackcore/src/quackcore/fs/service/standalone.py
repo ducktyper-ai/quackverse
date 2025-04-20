@@ -366,6 +366,18 @@ def normalize_path_with_info(path: str | Path | DataResult | OperationResult) ->
     """
     return _service.normalize_path_with_info(path)
 
+def normalize_path(path: str | Path | DataResult | OperationResult) -> PathResult:
+    """
+    Normalize a path.
+
+    Args:
+        path: The path to normalize (string, Path, DataResult, or OperationResult)
+
+    Returns:
+        PathResult containing the normalized path and status information.
+    """
+    return _service.normalize_path(path)
+
 
 def get_path_info(path: str | Path | DataResult | OperationResult) -> PathResult:
     """
@@ -393,7 +405,7 @@ def is_valid_path(path: str | Path | DataResult | OperationResult) -> DataResult
     return _service.is_valid_path(path)
 
 
-def get_extension(self, path: str | Path | DataResult | OperationResult) -> DataResult[str]:
+def get_extension(path: str | Path | DataResult | OperationResult) -> DataResult[str]:
     """
     Get the file extension from a path.
 
@@ -404,3 +416,17 @@ def get_extension(self, path: str | Path | DataResult | OperationResult) -> Data
         DataResult with file extension without the dot
     """
     return _service.get_extension(path)
+
+def expand_user_vars(path: str | Path | DataResult | OperationResult) -> DataResult[
+    str]:
+    """
+    Expand user variables and environment variables in a path.
+
+    Args:
+        path: Path with variables to expand (string, Path, DataResult, or OperationResult)
+
+    Returns:
+        DataResult with expanded path as string
+    """
+
+    return _service.expand_user_vars(path)

@@ -11,7 +11,7 @@ from os import getcwd
 from os import path as ospath
 
 from quackcore.errors import QuackFileNotFoundError, wrap_io_errors
-from quackcore.fs import service as fs
+from quackcore.fs.service import standalone
 from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
 from quackcore.paths._internal.context import ContentContext, ProjectContext
 from quackcore.paths._internal.utils import _find_nearest_directory, _find_project_root
@@ -29,10 +29,14 @@ def _is_relative_to(child: str, parent: str) -> bool:
 
 # Helper function to get parent directory from a string path.
 def _get_parent_dir(p: str) -> str:
-    comps = fs.split_path(p)
+    split_result = standalone.split_path(p)
+    if not split_result.success:
+        return p
+    comps = split_result.data
     if len(comps) <= 1:
         return p
-    return fs.join_path(*comps[:-1])
+    join_result = standalone.join_path(*comps[:-1])
+    return join_result.data if join_result.success else p
 
 
 # Helper function to compute relative path.
@@ -128,8 +132,11 @@ class PathResolver:
             "scripts": {},
         }
         for name, attrs in standard_dirs.items():
-            dir_path = fs.join_path(root_dir, name)
-            info = fs.get_file_info(dir_path)
+            join_result = standalone.join_path(root_dir, name)
+            if not join_result.success:
+                continue
+            dir_path = join_result.data
+            info = standalone.get_file_info(dir_path)
             if info.success and info.exists and info.is_dir:
                 context._add_directory(name, dir_path, **attrs)
 
@@ -150,8 +157,11 @@ class PathResolver:
             QuackFileNotFoundError: If a source directory cannot be found.
         """
         current_dir = start_dir if start_dir is not None else getcwd()
-        init_path = fs.join_path(current_dir, "__init__.py")
-        info = fs.get_file_info(init_path)
+        join_result = standalone.join_path(current_dir, "__init__.py")
+        if not join_result.success:
+            raise QuackFileNotFoundError("__init__.py", f"Failed to join path: {join_result.error}")
+        init_path = join_result.data
+        info = standalone.get_file_info(init_path)
         if info.success and info.exists:
             return current_dir
 
@@ -159,8 +169,11 @@ class PathResolver:
             return _find_nearest_directory("src", current_dir)
         except QuackFileNotFoundError as e:
             for _ in range(5):
-                init_path = fs.join_path(current_dir, "__init__.py")
-                info = fs.get_file_info(init_path)
+                join_result = standalone.join_path(current_dir, "__init__.py")
+                if not join_result.success:
+                    continue
+                init_path = join_result.data
+                info = standalone.get_file_info(init_path)
                 if info.success and info.exists:
                     return current_dir
                 current_dir = _get_parent_dir(current_dir)
@@ -188,20 +201,33 @@ class PathResolver:
             QuackFileNotFoundError: If output directory cannot be found and create is False.
         """
         if start_dir and create:
-            output_dir = fs.join_path(start_dir, "output")
-            fs.create_directory(output_dir, exist_ok=True)
+            join_result = standalone.join_path(start_dir, "output")
+            if not join_result.success:
+                raise QuackFileNotFoundError("output", f"Failed to join path: {join_result.error}")
+            output_dir = join_result.data
+            create_result = standalone.create_directory(output_dir, exist_ok=True)
+            if not create_result.success:
+                raise QuackFileNotFoundError("output", f"Failed to create directory: {create_result.error}")
             return output_dir
 
         try:
             root_dir = self._get_project_root(start_dir)
             for candidate in ["output", "build"]:
-                output_dir = fs.join_path(root_dir, candidate)
-                info = fs.get_file_info(output_dir)
+                join_result = standalone.join_path(root_dir, candidate)
+                if not join_result.success:
+                    continue
+                output_dir = join_result.data
+                info = standalone.get_file_info(output_dir)
                 if info.success and info.exists:
                     return output_dir
             if create:
-                output_dir = fs.join_path(root_dir, "output")
-                fs.create_directory(output_dir, exist_ok=True)
+                join_result = standalone.join_path(root_dir, "output")
+                if not join_result.success:
+                    raise QuackFileNotFoundError("output", f"Failed to join path: {join_result.error}")
+                output_dir = join_result.data
+                create_result = standalone.create_directory(output_dir, exist_ok=True)
+                if not create_result.success:
+                    raise QuackFileNotFoundError("output", f"Failed to create directory: {create_result.error}")
                 return output_dir
             raise QuackFileNotFoundError(
                 "output", f"Could not find output directory in project root {root_dir}"
@@ -209,8 +235,13 @@ class PathResolver:
         except QuackFileNotFoundError as e:
             current_dir = start_dir or getcwd()
             if create:
-                output_dir = fs.join_path(current_dir, "output")
-                fs.create_directory(output_dir, exist_ok=True)
+                join_result = standalone.join_path(current_dir, "output")
+                if not join_result.success:
+                    raise QuackFileNotFoundError("output", f"Failed to join path: {join_result.error}")
+                output_dir = join_result.data
+                create_result = standalone.create_directory(output_dir, exist_ok=True)
+                if not create_result.success:
+                    raise QuackFileNotFoundError("output", f"Failed to create directory: {create_result.error}")
                 return output_dir
             raise QuackFileNotFoundError(
                 "output", f"Could not find output directory in or near {current_dir}"
@@ -236,7 +267,12 @@ class PathResolver:
         if ospath.isabs(path_value):
             return path_value
         root = project_root or self._get_project_root()
-        return fs.join_path(root, path_value)
+        join_result = standalone.join_path(root, path_value)
+        if not join_result.success:
+            self.logger.error(f"Failed to join path: {join_result.error}")
+            # Fallback to using os.path.join directly
+            return ospath.join(root, path_value)
+        return join_result.data
 
     def _infer_content_structure(
         self,
@@ -260,7 +296,9 @@ class PathResolver:
             context.content_type = parts[0]
             if len(parts) > 1:
                 context.content_name = parts[1]
-                context.content_dir = fs.join_path(src_dir, parts[0], parts[1])
+                join_result = standalone.join_path(src_dir, parts[0], parts[1])
+                if join_result.success:
+                    context.content_dir = join_result.data
 
     @wrap_io_errors
     def _detect_project_context(
@@ -280,7 +318,7 @@ class PathResolver:
             QuackFileNotFoundError: If the start directory does not exist.
         """
         start = start_dir or getcwd()
-        info = fs.get_file_info(start)
+        info = standalone.get_file_info(start)
         if not (info.success and info.exists):
             raise QuackFileNotFoundError(start)
 
@@ -309,8 +347,11 @@ class PathResolver:
         """
         root = context.root_dir
         for fname in ["quack_config.yaml", "pyproject.toml", "setup.py"]:
-            fp = fs.join_path(root, fname)
-            info = fs.get_file_info(fp)
+            join_result = standalone.join_path(root, fname)
+            if not join_result.success:
+                continue
+            fp = join_result.data
+            info = standalone.get_file_info(fp)
             if info.success and info.exists and info.is_file:
                 context.config_file = fp
                 break

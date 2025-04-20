@@ -178,9 +178,9 @@ def find_config_file() -> str | None:
     # Try to find project root and check for config there.
     try:
         # Import locally to avoid circular imports
-        from quackcore.paths.resolver import get_project_root
+        from quackcore.paths import service as paths
 
-        root = get_project_root()
+        root = paths.get_project_root()
         for name in ["quack_config.yaml", "config/quack_config.yaml"]:
             candidate = os.path.join(root, name)
             if os.path.exists(candidate):

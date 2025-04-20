@@ -283,7 +283,7 @@ class GoogleConfigProvider(BaseConfigProvider):
         Returns:
             dict[str, Any]: Configuration with resolved paths
         """
-        from quackcore.paths.resolver import resolve_project_path  # Direct import
+        from quackcore.paths import service as paths  # Direct import
 
         resolved_config = config.copy()
 
@@ -291,7 +291,7 @@ class GoogleConfigProvider(BaseConfigProvider):
         for key in ["client_secrets_file", "credentials_file"]:
             if key in resolved_config and resolved_config[key]:
                 try:
-                    resolved_path = resolve_project_path(
+                    resolved_path = paths.resolve_project_path(
                         resolved_config[key]
                     )  # Direct call
                     resolved_config[key] = str(resolved_path)

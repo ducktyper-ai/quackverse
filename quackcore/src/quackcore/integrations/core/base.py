@@ -12,8 +12,6 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from quackcore.errors import QuackConfigurationError, QuackFileNotFoundError
-from quackcore.fs import expand_user_vars
-from quackcore.fs import service as fs
 from quackcore.integrations.core.protocols import (
     AuthProviderProtocol,
     ConfigProviderProtocol,
@@ -62,14 +60,13 @@ class BaseAuthProvider(ABC, AuthProviderProtocol):
             str: Resolved absolute path
         """
         try:
+            from quackcore.paths import service as paths
             resolved_path = paths.resolve_project_path(file_path)
             return str(resolved_path)
         except Exception as e:
             self.logger.warning(f"Could not resolve project path: {e}")
-            # Import the global service instance as recommended in best practices
-            from quackcore.fs import service as fs
-
-            normalized_path = fs.normalize_path(file_path)
+            from quackcore.fs.service import standalone
+            normalized_path = standalone.normalize_path(file_path)
             return str(normalized_path)
 
     @property
@@ -134,11 +131,11 @@ class BaseAuthProvider(ABC, AuthProviderProtocol):
             return False
 
         try:
-            from quackcore.fs import service as fs
+            from quackcore.fs.service import standalone
 
-            parent_path = fs.split_path(self.credentials_file)[:-1]
-            parent_dir = fs.join_path(*parent_path)
-            result = fs.create_directory(parent_dir, exist_ok=True)
+            parent_path = standalone.split_path(self.credentials_file)[:-1]
+            parent_dir = standalone.join_path(*parent_path)
+            result = standalone.create_directory(parent_dir, exist_ok=True)
             return result.success
         except Exception as e:
             self.logger.error(f"Unexpected error creating credentials directory: {e}")
@@ -192,25 +189,23 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
                     "Configuration file not found in default locations."
                 )
 
-        path_obj = self._resolve_path(config_path)
-
         # Import functions at runtime so that patches work.
-        from quackcore.fs.service import get_file_info, read_yaml
+        from quackcore.fs.service import standalone
 
         # Check if configuration file exists.
-        file_info = get_file_info(path_obj)
+        file_info = standalone.get_file_info(config_path)
         if not file_info.success or not file_info.exists:
             raise QuackConfigurationError(
-                f"Configuration file not found: {path_obj}",
-                config_path=str(path_obj),
+                f"Configuration file not found: {config_path}",
+                config_path=str(config_path),
             )
 
         # Read configuration file.
-        yaml_result = read_yaml(path_obj)
+        yaml_result = standalone.read_yaml(config_path)
         if not yaml_result.success:
             raise QuackConfigurationError(
                 f"Failed to read YAML configuration: {yaml_result.error}",
-                config_path=str(path_obj),
+                config_path=str(config_path),
             )
 
         # Extract integration-specific configuration.
@@ -225,7 +220,7 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         return ConfigResult.success_result(
             content=integration_config,
             message="Successfully loaded configuration",
-            config_path=str(path_obj),
+            config_path=str(config_path),
         )
 
     def _extract_config(self, config_data: dict[str, Any]) -> dict[str, Any]:
@@ -254,11 +249,11 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         env_var = f"QUACK_{self.name.upper()}_CONFIG"
         if config_path := os.environ.get(env_var):
             # Import these specifically at runtime to match the patching in tests
-            from quackcore.fs import service as fs
+            from quackcore.fs.service import standalone
 
-            expanded_path = expand_user_vars(config_path)
+            expanded_path = standalone.expand_user_vars(config_path)
             # Convert Path to string to match test expectation
-            file_info = fs.get_file_info(str(expanded_path))
+            file_info = standalone.get_file_info(str(expanded_path))
             if file_info.success and file_info.exists:
                 return str(expanded_path)
 
@@ -266,7 +261,6 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         project_root = None
         try:
             from quackcore.paths import service as paths
-
             project_root = paths.get_project_root()
         except (QuackFileNotFoundError, FileNotFoundError, OSError) as e:
             self.logger.debug(
@@ -274,26 +268,27 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
             )
 
         # Import these here to match patching in tests
-        from quackcore.fs import service as fs
+        from quackcore.fs.service import standalone
 
         # Check default locations.
         for location in self.DEFAULT_CONFIG_LOCATIONS:
-            expanded_location = expand_user_vars(location)
+            expanded_location = standalone.expand_user_vars(location)
             # If the expanded location is relative
             # and we have a project root, join them.
             if not os.path.isabs(str(expanded_location)) and project_root:
-                expanded_location = fs.join_path(project_root, expanded_location)
+                expanded_location = standalone.join_path(project_root,
+                                                         expanded_location)
             # Convert Path to string for consistency with tests
-            file_info = fs.get_file_info(str(expanded_location))
+            file_info = standalone.get_file_info(str(expanded_location))
             if file_info.success and file_info.exists:
                 return str(expanded_location)
 
         # Fallback: try candidate in project root.
         if project_root:
-            candidate = fs.join_path(project_root, "quack_config.yaml")
-            candidate = expand_user_vars(candidate)
+            candidate = standalone.join_path(project_root, "quack_config.yaml")
+            candidate = standalone.expand_user_vars(candidate)
             # Convert Path to string for consistency with tests
-            file_info = fs.get_file_info(str(candidate))
+            file_info = standalone.get_file_info(str(candidate))
             if file_info.success and file_info.exists:
                 return str(candidate)
 
@@ -315,9 +310,9 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         except Exception as e:
             self.logger.warning(f"Could not resolve project path: {e}")
             # Import normalize_path at runtime.
-            from quackcore.fs import service as fs
+            from quackcore.fs.service import standalone
 
-            normalized_path = fs.normalize_path(file_path)
+            normalized_path = standalone.normalize_path(file_path)
             return str(normalized_path)
 
     @abstractmethod
@@ -348,11 +343,11 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
     """Base class for integration services."""
 
     def __init__(
-        self,
-        config_provider: ConfigProviderProtocol | None = None,
-        auth_provider: AuthProviderProtocol | None = None,
-        config_path: str | None = None,
-        log_level: int = LOG_LEVELS[LogLevel.INFO],
+            self,
+            config_provider: ConfigProviderProtocol | None = None,
+            auth_provider: AuthProviderProtocol | None = None,
+            config_path: str | None = None,
+            log_level: int = LOG_LEVELS[LogLevel.INFO],
     ) -> None:
         """
         Initialize the base integration service.
@@ -373,10 +368,12 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
         # Use QuackCore's path resolver to normalize config path if provided
         if config_path:
             try:
+                from quackcore.paths import service as paths
                 self.config_path = str(paths.resolve_project_path(config_path))
             except Exception as e:
                 self.logger.warning(f"Could not resolve config path: {e}")
-                self.config_path = str(fs.normalize_path(config_path))
+                from quackcore.fs.service import standalone
+                self.config_path = config_path
         else:
             self.config_path = None
 

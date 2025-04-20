@@ -11,7 +11,7 @@ from quackcore.fs._helpers.common import _normalize_path
 from quackcore.fs._helpers.comparison import _is_same_file, _is_subdirectory
 from quackcore.fs._helpers.path_ops import _expand_user_vars, _split_path
 from quackcore.fs._helpers.path_utils import _normalize_path_param
-from quackcore.fs.results import DataResult, OperationResult
+from quackcore.fs.results import DataResult, OperationResult, PathResult
 from quackcore.logging import get_logger
 
 logger = get_logger(__name__)
@@ -87,7 +87,7 @@ def expand_user_vars(path: str | Path | DataResult | OperationResult) -> DataRes
         )
 
 
-def normalize_path(path: str | Path | DataResult | OperationResult) -> DataResult[str]:
+def normalize_path(path: str | Path | DataResult | OperationResult) -> PathResult:
     """
     Normalize a path for cross-platform compatibility.
 
@@ -95,27 +95,35 @@ def normalize_path(path: str | Path | DataResult | OperationResult) -> DataResul
         path: Path to normalize (string, Path, DataResult, or OperationResult)
 
     Returns:
-        DataResult with normalized path as string
+        PathResult with normalized path and metadata
     """
     try:
-        normalized_path = _normalize_path_param(path)
-        normalized_result = _normalize_path(normalized_path)
+        # Ensure we have a raw Path or string
+        normalized_input = _normalize_path_param(path)
+        # Perform the normalization
+        normalized = _normalize_path(normalized_input)
+        # Gather metadata
+        is_abs = normalized.is_absolute()
+        exists = normalized.exists()
 
-        return DataResult(
+        return PathResult(
             success=True,
-            path=normalized_path,
-            data=str(normalized_result),
-            format="path",
+            path=normalized,
+            is_absolute=is_abs,
+            is_valid=True,
+            exists=exists,
             message="Successfully normalized path",
         )
     except Exception as e:
         logger.error(f"Failed to normalize path {path}: {e}")
-        normalized_path = _normalize_path_param(path)
-        return DataResult(
+        # Attempt to normalize input for error reporting
+        normalized_input = _normalize_path_param(path)
+        return PathResult(
             success=False,
-            path=normalized_path,
-            data=str(path),
-            format="path",
+            path=normalized_input,
+            is_absolute=False,
+            is_valid=False,
+            exists=False,
             error=str(e),
             message="Failed to normalize path",
         )

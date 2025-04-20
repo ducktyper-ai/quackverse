@@ -434,7 +434,7 @@ class TestFileSystemService:
         # Test join_path
         joined_path = service.join_path(temp_dir, "subdir", "file.txt")
         assert joined_path.success is True
-        assert joined_path.data == str(temp_dir / "subdir" / "file.txt")
+        assert joined_path.path == temp_dir / "subdir" / "file.txt"
 
         # Test split_path
         split = service.split_path(temp_dir / "subdir" / "file.txt")
@@ -446,7 +446,7 @@ class TestFileSystemService:
         # Test normalize_path
         normalized = service.normalize_path("./test/../test")
         assert normalized.success is True
-        assert Path(normalized.data).name == "test"
+        assert normalized.path.name == "test"
 
         # Test get_extension
         ext_result = service.get_extension("file.txt")

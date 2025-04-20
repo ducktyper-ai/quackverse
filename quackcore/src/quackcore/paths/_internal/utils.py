@@ -12,7 +12,7 @@ import os
 from typing import Any
 
 from quackcore.errors import QuackFileNotFoundError, wrap_io_errors
-from quackcore.fs import service as fs
+from quackcore.fs.service import standalone
 from quackcore.logging import get_logger
 from quackcore.paths._internal.context import PathInfo
 
@@ -45,7 +45,7 @@ def _normalize_path_with_info(path: Any) -> PathInfo:
     try:
         # Delegate normalization to the fs layer; fs.normalize_path returns a Path,
         # so we convert it to string.
-        normalized = str(fs.normalize_path(path_str))
+        normalized = str(standalone.normalize_path(path_str))
         return PathInfo(success=True, path=normalized, error=None)
     except Exception as e:
         # Fallback: use os.path.abspath as a backup

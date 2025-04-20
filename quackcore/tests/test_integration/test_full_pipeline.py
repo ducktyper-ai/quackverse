@@ -14,6 +14,7 @@ from quackcore.config.models import QuackConfig
 from quackcore.errors import QuackError
 from quackcore.fs.service import FileSystemService
 from quackcore.paths import PathResolver
+from quackcore.paths import service as paths
 from quackcore.plugins.protocols import (
     CommandPluginProtocol,
     ProviderPluginProtocol,
@@ -91,11 +92,17 @@ class SamplePathPlugin(CommandPluginProtocol):
 
     def find_project_root(self, start_dir: str | None = None) -> Path:
         """Find the project root directory."""
-        return self.resolver._get_project_root(start_dir)
+        result = paths.get_project_root(start_dir)
+        if not result.success:
+            raise QuackError(f"Failed to find project root: {result.error}")
+        return result.path
 
     def resolve_path(self, path: str, project_root: str | None = None) -> Path:
         """Resolve a path relative to the project root."""
-        return self.resolver._resolve_project_path(path, project_root)
+        result = paths.resolve_project_path(path, project_root)
+        if not result.success:
+            raise QuackError(f"Failed to resolve path: {result.error}")
+        return result.path
 
 
 class SampleConfigProvider(ProviderPluginProtocol):
@@ -132,7 +139,7 @@ class TestIntegration:
     def test_config_to_filesystem_pipeline(self, temp_dir: Path) -> None:
         """Test integrating configuration with filesystem _operations."""
         # Create a test configuration file
-        config_file = temp_dir / "test_config.yaml"
+        config_file = temp_dir / "test_config.yaml"  # Fixed string concatenation
         config_data = {
             "general": {"project_name": "TestProject"},
             "paths": {
@@ -156,7 +163,7 @@ class TestIntegration:
         test_file.write_text("Test data content")
 
         # Load the configuration
-        config = load_config(config_file)
+        config = load_config(str(config_file))
 
         # Create services using the configuration
         fs_service = FileSystemService(base_dir=config.paths.base_dir)
@@ -172,9 +179,10 @@ class TestIntegration:
         assert read_result.content == "Test data content"
 
         # Test reading through resolved paths
-        path_resolver = PathResolver()
-        data_path = path_resolver._resolve_project_path("data/test.txt", temp_dir)
-        assert data_path == test_file
+        data_path_result = paths.resolve_project_path("data/test.txt", temp_dir)
+        assert data_path_result.success is True
+        data_path = data_path_result.path
+        assert Path(data_path) == test_file
 
         read_result = fs_service.read_text(data_path)
         assert read_result.success is True
@@ -250,10 +258,10 @@ class TestIntegration:
         with pytest.raises(QuackError):
             registry.execute_command("nonexistent_command")
 
-        # Test path resolution error handling
-        path_resolver = PathResolver()
+        # Test path resolution error handling - use SamplePathPlugin
+        path_plugin = SamplePathPlugin(PathResolver())
         with pytest.raises(QuackError):
-            path_resolver._get_project_root("/nonexistent/path")
+            path_plugin.find_project_root("/nonexistent/path")
 
         # Test config loading error handling
         with pytest.raises(QuackError):

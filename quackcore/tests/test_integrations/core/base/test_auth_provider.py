@@ -21,10 +21,10 @@ class TestBaseAuthProvider:
     def test_init(self, temp_dir: Path) -> None:
         """Test initializing the auth provider."""
         # Test with credentials file
-        credentials_file = temp_dir / "credentials.json"
-        provider = MockAuthProvider(credentials_file=str(credentials_file))
+        credentials_file = str(temp_dir / "credentials.json")
+        provider = MockAuthProvider(credentials_file=credentials_file)
 
-        assert provider.credentials_file == str(credentials_file)
+        assert provider.credentials_file == credentials_file
         assert provider.authenticated is False
         assert provider.name == "test_auth"
 
@@ -38,37 +38,30 @@ class TestBaseAuthProvider:
 
         # Test with absolute path
         abs_path = "/absolute/path"
-        resolved = provider._resolve_path(abs_path)
-        assert resolved == abs_path
 
-        # Test with relative path (mocking resolver)
-        with patch(
-            "quackcore.integrations.core.base.resolver.resolve_project_path"
-        ) as mock_resolve:
-            mock_resolve.return_value = "/resolved/path"
-            resolved = provider._resolve_path("relative/path")
-            assert resolved == "/resolved/path"
-            mock_resolve.assert_called_once()
+        # Need to patch the paths.resolve_project_path call
+        with patch("quackcore.paths.service.resolve_project_path") as mock_resolve:
+            mock_resolve.return_value = abs_path
+            resolved = provider._resolve_path(abs_path)
+            assert resolved == abs_path
+            mock_resolve.assert_called_once_with(abs_path)
 
         # Test with resolver exception - patch the fs service instance
-        with patch(
-            "quackcore.integrations.core.base.resolver.resolve_project_path"
-        ) as mock_resolve:
+        with patch("quackcore.paths.service.resolve_project_path") as mock_resolve:
             mock_resolve.side_effect = Exception("Test error")
-            # Create a mock service instance
-            mock_service = MagicMock()
-            mock_service.normalize_path.return_value = Path("/normalized/path")
-            # Patch the import of the service
-            with patch("quackcore.fs.service", mock_service):
+
+            with patch(
+                    "quackcore.fs.service.standalone.normalize_path") as mock_normalize:
+                mock_normalize.return_value = "/normalized/path"
+
                 resolved = provider._resolve_path("relative/path")
                 assert resolved == "/normalized/path"
-                mock_service.normalize_path.assert_called_once_with("relative/path")
+                mock_normalize.assert_called_once_with("relative/path")
 
     def test_abstract_methods(self) -> None:
         """Test that abstract methods must be implemented."""
         # Attempt to create a class without implementing the abstract methods
         with pytest.raises(TypeError):
-
             class InvalidProvider(BaseAuthProvider):
                 pass
 
@@ -79,18 +72,26 @@ class TestBaseAuthProvider:
         # Create a provider with credentials file
         credentials_file = temp_dir / "credentials.json"
         credentials_file.touch()
-        provider = MockAuthProvider(credentials_file=str(credentials_file))
 
-        # Test successful authentication
-        result = provider.authenticate()
-        assert result.success is True
-        assert provider.authenticated is True
+        # Use patch to verify that os.path.exists returns True for the credentials file
+        with patch("os.path.exists") as mock_exists:
+            mock_exists.return_value = True
+
+            provider = MockAuthProvider(credentials_file=str(credentials_file))
+
+            # Test successful authentication
+            result = provider.authenticate()
+            assert result.success is True
+            assert provider.authenticated is True
 
         # Test with missing credentials file
-        provider = MockAuthProvider(credentials_file="/nonexistent/path")
-        result = provider.authenticate()
-        assert result.success is False
-        assert "not found" in result.error
+        with patch("os.path.exists") as mock_exists:
+            mock_exists.return_value = False
+
+            provider = MockAuthProvider(credentials_file="/nonexistent/path")
+            result = provider.authenticate()
+            assert result.success is False
+            assert "not found" in result.error
 
     def test_refresh_credentials(self) -> None:
         """Test refreshing credentials."""
@@ -107,23 +108,28 @@ class TestBaseAuthProvider:
         assert result.success is True
         assert "refreshed" in result.message
 
-    # In tests/test_integrations/base/test_auth_provider.py
     def test_ensure_credentials_directory(self, temp_dir: Path) -> None:
         """Test ensuring the credentials directory exists."""
         # Test with existing directory
-        credentials_file = temp_dir / "creds" / "credentials.json"
-        provider = MockAuthProvider(credentials_file=str(credentials_file))
+        credentials_file = str(temp_dir / "creds" / "credentials.json")
+        provider = MockAuthProvider(credentials_file=credentials_file)
 
         # Now correctly patch the method
-        with patch("quackcore.fs.service.create_directory") as mock_create:
-            mock_create.return_value.success = True
+        with patch("quackcore.fs.service.standalone.create_directory") as mock_create:
+            mock_result = MagicMock()
+            mock_result.success = True
+            mock_create.return_value = mock_result
+
             result = provider._ensure_credentials_directory()
             assert result is True
             mock_create.assert_called_once()
 
         # Test with creation error
-        with patch("quackcore.fs.service.create_directory") as mock_create:
-            mock_create.return_value.success = False
+        with patch("quackcore.fs.service.standalone.create_directory") as mock_create:
+            mock_result = MagicMock()
+            mock_result.success = False
+            mock_create.return_value = mock_result
+
             result = provider._ensure_credentials_directory()
             assert result is False
 

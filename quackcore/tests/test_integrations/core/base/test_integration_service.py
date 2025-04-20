@@ -1,8 +1,3 @@
-# quackcore/tests/test_integrations/core/base/test_integration_service.py
-"""
-Tests for the BaseIntegrationService class.
-"""
-
 from unittest.mock import patch
 
 from quackcore.integrations.core.results import (
@@ -10,13 +5,13 @@ from quackcore.integrations.core.results import (
     ConfigResult,
     IntegrationResult,
 )
-from tests.test_integrations.core.base.auth_provider_impl import (
+from .auth_provider_impl import (
     MockAuthProvider,
 )
-from tests.test_integrations.core.base.config_provider_impl import (
+from .config_provider_impl import (
     MockConfigProvider,
 )
-from tests.test_integrations.core.base.integration_service_impl import (
+from .integration_service_impl import (
     MockIntegrationService,
 )
 
@@ -30,16 +25,20 @@ class TestBaseIntegrationService:
         config_provider = MockConfigProvider()
         auth_provider = MockAuthProvider()
 
-        service = MockIntegrationService(
-            config_provider=config_provider,
-            auth_provider=auth_provider,
-            config_path="/test/config.yaml",
-        )
+        # Patch the resolve_project_path method to return the input path
+        with patch("quackcore.paths.service.resolve_project_path") as mock_resolve:
+            mock_resolve.return_value = "/test/config.yaml"
 
-        assert service.config_provider is config_provider
-        assert service.auth_provider is auth_provider
-        assert service.config_path == "/test/config.yaml"
-        assert service._initialized is False
+            service = MockIntegrationService(
+                config_provider=config_provider,
+                auth_provider=auth_provider,
+                config_path="/test/config.yaml",
+            )
+
+            assert service.config_provider is config_provider
+            assert service.auth_provider is auth_provider
+            assert service.config_path == "/test/config.yaml"
+            assert service._initialized is False
 
         # Test without providers
         service = MockIntegrationService()

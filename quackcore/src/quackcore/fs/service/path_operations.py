@@ -10,7 +10,7 @@ import tempfile
 from pathlib import Path
 
 from quackcore.errors import wrap_io_errors
-from quackcore.fs import DataResult, OperationResult
+from quackcore.fs.results import DataResult, OperationResult, PathResult
 from quackcore.fs._operations import FileSystemOperations
 from quackcore.fs.api.public import (
     expand_user_vars,
@@ -98,7 +98,7 @@ class PathOperationsMixin:
 
     @wrap_io_errors
     def normalize_path(self, path: str | Path | DataResult | OperationResult) -> \
-    DataResult[str]:
+    PathResult:
         """
         Normalize a path for cross-platform compatibility.
 

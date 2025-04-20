@@ -48,17 +48,21 @@ class TestBaseConfigProvider:
         provider = MockConfigProvider()
 
         # Test successful load
-        with patch("quackcore.fs.service.read_yaml") as mock_read:
-            mock_read.return_value.success = True
-            mock_read.return_value.data = {"test_section": {"test_key": "test_value"}}
+        with patch("quackcore.fs.service.standalone.get_file_info") as mock_info:
+            mock_info.return_value.success = True
+            mock_info.return_value.exists = True
 
-            result = provider.load_config(str(config_file))
-            assert result.success is True
-            assert result.content == {"test_key": "test_value"}
-            assert result.config_path == str(config_file)
+            with patch("quackcore.fs.service.standalone.read_yaml") as mock_read:
+                mock_read.return_value.success = True
+                mock_read.return_value.data = {"test_section": {"test_key": "test_value"}}
+
+                result = provider.load_config(str(config_file))
+                assert result.success is True
+                assert result.content == {"test_key": "test_value"}
+                assert result.config_path == str(config_file)
 
         # Test file not found
-        with patch("quackcore.fs.service.get_file_info") as mock_info:
+        with patch("quackcore.fs.service.standalone.get_file_info") as mock_info:
             mock_info.return_value.success = True
             mock_info.return_value.exists = False
 
@@ -66,11 +70,11 @@ class TestBaseConfigProvider:
                 provider.load_config(str(temp_dir / "nonexistent.yaml"))
 
         # Test invalid YAML
-        with patch("quackcore.fs.service.get_file_info") as mock_info:
+        with patch("quackcore.fs.service.standalone.get_file_info") as mock_info:
             mock_info.return_value.success = True
             mock_info.return_value.exists = True
 
-            with patch("quackcore.fs.service.read_yaml") as mock_read:
+            with patch("quackcore.fs.service.standalone.read_yaml") as mock_read:
                 mock_read.return_value.success = False
                 mock_read.return_value.error = "Invalid YAML"
 
@@ -78,11 +82,11 @@ class TestBaseConfigProvider:
                     provider.load_config(str(config_file))
 
         # Test invalid configuration
-        with patch("quackcore.fs.service.get_file_info") as mock_info:
+        with patch("quackcore.fs.service.standalone.get_file_info") as mock_info:
             mock_info.return_value.success = True
             mock_info.return_value.exists = True
 
-            with patch("quackcore.fs.service.read_yaml") as mock_read:
+            with patch("quackcore.fs.service.standalone.read_yaml") as mock_read:
                 mock_read.return_value.success = True
                 mock_read.return_value.data = {"wrong_section": {}}
 
