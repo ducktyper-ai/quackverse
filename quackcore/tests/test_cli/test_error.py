@@ -278,7 +278,7 @@ class TestGetCliInfo:
                     with patch("os.getpid", return_value=12345):
                         with patch("os.getcwd", return_value="/current/dir"):
                             with patch(
-                                "quackcore.config.api.get_env", return_value="test"
+                                "quackcore.config.utils.get_env", return_value="test"
                             ):
                                 with patch(
                                     "quackcore.cli.terminal.get_terminal_size"
@@ -310,7 +310,7 @@ class TestGetCliInfo:
                 ):
                     with patch("os.getpid"):
                         with patch("os.getcwd"):
-                            with patch("quackcore.config.api.get_env"):
+                            with patch("quackcore.config.utils.get_env"):
                                 with patch(
                                     "quackcore.cli.terminal.get_terminal_size"
                                 ) as mock_term_size:
@@ -335,7 +335,7 @@ class TestGetCliInfo:
                 ):
                     with patch("os.getpid"):
                         with patch("os.getcwd"):
-                            with patch("quackcore.config.api.get_env"):
+                            with patch("quackcore.config.utils.get_env"):
                                 # Make sure get_terminal_size returns a valid tuple
                                 with patch(
                                     "quackcore.cli.terminal.get_terminal_size",

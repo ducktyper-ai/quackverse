@@ -15,7 +15,7 @@ from quackcore.cli.config import (
 )
 from quackcore.config.models import QuackConfig
 from quackcore.errors import QuackConfigurationError, QuackFileNotFoundError
-from tests.test_cli.mocks import MockConfig
+from .mocks import MockConfig
 
 
 class TestFindProjectRoot:
@@ -23,9 +23,9 @@ class TestFindProjectRoot:
 
     def test_with_resolver(self):
         """Test using the path resolver."""
-        # Patch the path_resolver that's imported at the module level
+        # Patch the paths.service that's imported at the module level
         with patch(
-            "quackcore.cli.config.path_resolver.get_project_root"
+            "quackcore.cli.config.paths.get_project_root"
         ) as mock_get_root:
             # Set up mock to return a specific path string
             mock_get_root.return_value = "/project/root"
@@ -51,7 +51,7 @@ class TestFindProjectRoot:
 
         for exception in exceptions:
             with patch(
-                "quackcore.cli.config.path_resolver.get_project_root"
+                "quackcore.cli.config.paths.get_project_root"
             ) as mock_get_root:
                 mock_get_root.side_effect = exception
 
@@ -65,7 +65,7 @@ class TestFindProjectRoot:
 
         # Special handling for QuackFileNotFoundError
         with patch(
-            "quackcore.cli.config.path_resolver.get_project_root"
+            "quackcore.cli.config.paths.get_project_root"
         ) as mock_get_root:
             mock_get_root.side_effect = QuackFileNotFoundError(
                 "unknown", "File not found"
@@ -234,33 +234,29 @@ class TestMergeCliOverrides:
         }
 
         # Mock dependencies
-        with patch("quackcore.config.api.get_config_value") as mock_get_value:
-            with patch("quackcore.config.loader.merge_configs") as mock_merge:
-                # Mock to return current values
-                mock_get_value.side_effect = lambda cfg, path, default: None
+        with patch("quackcore.config.loader.merge_configs") as mock_merge:
+            # Set up mock for merge_configs
+            mock_merged_config = MockConfig()
+            mock_merge.return_value = mock_merged_config
 
-                # Set up mock for merge_configs
-                mock_merged_config = MockConfig()
-                mock_merge.return_value = mock_merged_config
+            # Call the function under test
+            result = _merge_cli_overrides(config, cli_overrides)
 
-                # Call the function under test
-                result = _merge_cli_overrides(config, cli_overrides)
+            # Verify merge_configs was called with the right overrides
+            mock_merge.assert_called_once()
 
-                # Verify merge_configs was called with the right overrides
-                mock_merge.assert_called_once()
+            # Verify the arguments passed to merge_configs
+            call_args = mock_merge.call_args[0]
+            assert call_args[0] is config  # First arg should be original config
 
-                # Verify the arguments passed to merge_configs
-                call_args = mock_merge.call_args[0]
-                assert call_args[0] is config  # First arg should be original config
+            # Verify override dict contains expected keys and values
+            override_dict = call_args[1]  # Second arg should be override dict
+            for key, value in cli_overrides.items():
+                assert key in override_dict
+                assert override_dict[key] == value
 
-                # Verify override dict contains expected keys and values
-                override_dict = call_args[1]  # Second arg should be override dict
-                for key, value in cli_overrides.items():
-                    assert key in override_dict
-                    assert override_dict[key] == value
-
-                # Verify function returns merged config
-                assert result is mock_merged_config
+            # Verify function returns merged config
+            assert result is mock_merged_config
 
     def test_merge_with_nested_paths(self):
         """Test merging CLI overrides with nested paths."""
@@ -275,36 +271,32 @@ class TestMergeCliOverrides:
         }
 
         # Mock dependencies
-        with patch("quackcore.config.api.get_config_value") as mock_get_value:
-            with patch("quackcore.config.loader.merge_configs") as mock_merge:
-                # Mock to return current values
-                mock_get_value.side_effect = lambda cfg, path, default: None
+        with patch("quackcore.config.loader.merge_configs") as mock_merge:
+            # Set up mock for merge_configs
+            mock_merged_config = MockConfig()
+            mock_merge.return_value = mock_merged_config
 
-                # Set up mock for merge_configs
-                mock_merged_config = MockConfig()
-                mock_merge.return_value = mock_merged_config
+            # Call the function under test
+            result = _merge_cli_overrides(config, cli_overrides)
 
-                # Call the function under test
-                result = _merge_cli_overrides(config, cli_overrides)
+            # Verify merge_configs was called
+            mock_merge.assert_called_once()
 
-                # Verify merge_configs was called
-                mock_merge.assert_called_once()
+            # Check the nested structure was created correctly
+            call_args = mock_merge.call_args[0]
+            assert call_args[0] is config
 
-                # Check the nested structure was created correctly
-                call_args = mock_merge.call_args[0]
-                assert call_args[0] is config
+            # Check the nested dict structure
+            override_dict = call_args[1]
+            assert "general" in override_dict
+            assert override_dict["general"]["debug"] is True
+            assert "logging" in override_dict
+            assert override_dict["logging"]["level"] == "DEBUG"
+            assert "paths" in override_dict
+            assert override_dict["paths"]["output_dir"] == "/output"
 
-                # Check the nested dict structure
-                override_dict = call_args[1]
-                assert "general" in override_dict
-                assert override_dict["general"]["debug"] is True
-                assert "logging" in override_dict
-                assert override_dict["logging"]["level"] == "DEBUG"
-                assert "paths" in override_dict
-                assert override_dict["paths"]["output_dir"] == "/output"
-
-                # Verify function returns merged config
-                assert result is mock_merged_config
+            # Verify function returns merged config
+            assert result is mock_merged_config
 
     def test_merge_with_ignored_keys(self):
         """Test that certain keys are ignored during merge."""
@@ -320,33 +312,29 @@ class TestMergeCliOverrides:
         }
 
         # Mock dependencies
-        with patch("quackcore.config.api.get_config_value") as mock_get_value:
-            with patch("quackcore.config.loader.merge_configs") as mock_merge:
-                # Mock to return current values
-                mock_get_value.side_effect = lambda cfg, path, default: None
+        with patch("quackcore.config.loader.merge_configs") as mock_merge:
+            # Set up mock for merge_configs
+            mock_merged_config = MockConfig()
+            mock_merge.return_value = mock_merged_config
 
-                # Set up mock for merge_configs
-                mock_merged_config = MockConfig()
-                mock_merge.return_value = mock_merged_config
+            # Call the function under test
+            result = _merge_cli_overrides(config, cli_overrides)
 
-                # Call the function under test
-                result = _merge_cli_overrides(config, cli_overrides)
+            # Verify merge_configs was called
+            mock_merge.assert_called_once()
 
-                # Verify merge_configs was called
-                mock_merge.assert_called_once()
+            # Check that ignored keys are not included
+            call_args = mock_merge.call_args[0]
+            override_dict = call_args[1]
 
-                # Check that ignored keys are not included
-                call_args = mock_merge.call_args[0]
-                override_dict = call_args[1]
+            # Non-ignored key should be present
+            assert "debug" in override_dict
+            assert override_dict["debug"] is True
 
-                # Non-ignored key should be present
-                assert "debug" in override_dict
-                assert override_dict["debug"] is True
+            # Ignored keys should not be present
+            assert "config" not in override_dict
+            assert "help" not in override_dict
+            assert "version" not in override_dict
 
-                # Ignored keys should not be present
-                assert "config" not in override_dict
-                assert "help" not in override_dict
-                assert "version" not in override_dict
-
-                # Verify function returns merged config
-                assert result is mock_merged_config
+            # Verify function returns merged config
+            assert result is mock_merged_config

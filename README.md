@@ -179,25 +179,6 @@ We welcome contributions from educators, hackers, and AI enthusiasts.
 
 ---
 
-## 🐤 Brought to you by
-
-**Rod & the DuckTyper Collective at AI Product Engineer**  
-Independent creators building tools for the next generation of AI developers.
-
----
-
-## 💬 Questions?
-
-Tweet at [@aipengineer](https://twitter.com/aipengineer) or file an issue on GitHub!
----
-
-## 🐤 Brought to you by
-
-**Rod & the DuckTyper Collective at AI Product Engineer**  
-Independent creators building tools for the next generation of AI developers.
-
----
-
 # 🦆 QuackVerse Licensing Overview
 
 QuackVerse is a modular ecosystem with mixed licensing to balance community contribution and project protection.
@@ -238,3 +219,10 @@ We welcome pull requests, issues, and feedback. If you're interested in **commer
 ## 💬 Questions?
 
 Tweet at [@aipengineer](https://twitter.com/aipengineer) or file an issue on GitHub!
+
+---
+
+## 🐤 Brought to you by
+
+**Rod & the DuckTyper Collective at AI Product Engineer**  
+Independent creators building tools for the next generation of AI developers.

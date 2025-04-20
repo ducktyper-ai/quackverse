@@ -16,7 +16,7 @@ from quackcore.cli.options import CliOptions
 
 # Create the Typer app
 app = typer.Typer(
-    name="tests",
+    name="Ducktyper",
     help="The unified CLI interface for the QuackVerse ecosystem.",
     add_completion=True,
 )
