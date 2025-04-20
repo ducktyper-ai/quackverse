@@ -19,7 +19,7 @@ class TestGoogleDriveServiceUpload:
     )
     @patch.object(GoogleDriveService, "_initialize_config")
     def test_upload_file(
-        self, mock_init_config: MagicMock, mock_verify: MagicMock, temp_dir: Path
+        self, mock_init_config: MagicMock, mock_verify: MagicMock, tmp_path: Path
     ) -> None:
         """Test uploading a file."""
         # Bypass verification
@@ -36,7 +36,7 @@ class TestGoogleDriveServiceUpload:
         service._initialized = True
 
         # Create a test file
-        test_file = temp_dir / "test_file.txt"
+        test_file = tmp_path / "test_file.txt"
         test_file.write_text("test content")
 
         # Mock file info
@@ -52,7 +52,7 @@ class TestGoogleDriveServiceUpload:
         # Test successful upload
         with patch.object(GoogleDriveService, "_resolve_file_details") as mock_resolve:
             mock_resolve.return_value = (
-                Path(test_file),
+                Path(test_file),  # Return Path object, not string
                 "test_file.txt",
                 "shared_folder",
                 "text/plain",
@@ -88,13 +88,13 @@ class TestGoogleDriveServiceUpload:
                         mock_execute_upload.assert_called_once()
                         mock_permissions.assert_called_once_with("file123")
                         mock_fs_service.read_binary.assert_called_once_with(
-                            Path(test_file)
+                            Path(test_file)  # Use Path object, not string
                         )
 
         # Test with file read error
         with patch.object(GoogleDriveService, "_resolve_file_details") as mock_resolve:
             mock_resolve.return_value = (
-                Path(test_file),
+                Path(test_file),  # Use Path object, not string
                 "test_file.txt",
                 "shared_folder",
                 "text/plain",
@@ -117,7 +117,7 @@ class TestGoogleDriveServiceUpload:
         # Test with upload error
         with patch.object(GoogleDriveService, "_resolve_file_details") as mock_resolve:
             mock_resolve.return_value = (
-                Path(test_file),
+                Path(test_file),  # Use Path object, not string
                 "test_file.txt",
                 "shared_folder",
                 "text/plain",

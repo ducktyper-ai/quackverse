@@ -170,7 +170,7 @@ class TestGoogleMailService:
     )
     @patch("quackcore.integrations.google.auth.GoogleAuthProvider.get_credentials")
     @patch(
-        "quackcore.integrations.google.mail._operations.auth.initialize_gmail_service"
+        "quackcore.integrations.google.mail.operations.auth.initialize_gmail_service"
     )
     @patch("quackcore.integrations.core.base.BaseIntegrationService.initialize")
     def test_initialize(
@@ -268,14 +268,14 @@ class TestGoogleMailService:
 
         # Mock the email _operations module
         with patch(
-            "quackcore.integrations.google.mail._operations.email.list_emails"
+            "quackcore.integrations.google.mail.operations.email.list_emails"
         ) as mock_list:
             mock_list.return_value = IntegrationResult.success_result(
                 content=[{"id": "msg1"}, {"id": "msg2"}]
             )
 
             with patch(
-                "quackcore.integrations.google.mail._operations.email.build_query"
+                "quackcore.integrations.google.mail.operations.email.build_query"
             ) as mock_build:
                 mock_build.return_value = "after:2021/01/01 label:INBOX label:IMPORTANT"
 
@@ -307,7 +307,7 @@ class TestGoogleMailService:
         # Test with error
         service.gmail_service = create_error_gmail_service()
         with patch(
-            "quackcore.integrations.google.mail._operations.email.list_emails"
+            "quackcore.integrations.google.mail.operations.email.list_emails"
         ) as mock_list:
             mock_list.side_effect = Exception("API error")
 
@@ -343,7 +343,7 @@ class TestGoogleMailService:
 
         # Mock the email _operations module
         with patch(
-            "quackcore.integrations.google.mail._operations.email.download_email"
+            "quackcore.integrations.google.mail.operations.email.download_email"
         ) as mock_download:
             mock_download.return_value = IntegrationResult.success_result(
                 content="/path/to/storage/email.html"
@@ -370,7 +370,7 @@ class TestGoogleMailService:
         # Test with error
         service.gmail_service = create_error_gmail_service()
         with patch(
-            "quackcore.integrations.google.mail._operations.email.download_email"
+            "quackcore.integrations.google.mail.operations.email.download_email"
         ) as mock_download:
             mock_download.side_effect = Exception("API error")
 

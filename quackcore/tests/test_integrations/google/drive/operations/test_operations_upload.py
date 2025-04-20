@@ -224,7 +224,7 @@ class TestDriveOperationsUpload:
 
             # Mock read_binary to fail using the correct import path
             with patch(
-                "quackcore.integrations.google.drive.operations.upload.fs"
+                    "quackcore.integrations.google.drive.operations.upload.fs"
             ) as mock_fs:
                 mock_fs.read_binary.return_value.success = False
                 mock_fs.read_binary.return_value.error = "Read error"
@@ -255,7 +255,7 @@ class TestDriveOperationsUpload:
 
             # Mock read_binary
             with patch(
-                "quackcore.integrations.google.drive.operations.upload.fs"
+                    "quackcore.integrations.google.drive.operations.upload.fs"
             ) as mock_fs:
                 mock_fs.read_binary.return_value.success = True
                 mock_fs.read_binary.return_value.content = b"test content"
@@ -265,12 +265,12 @@ class TestDriveOperationsUpload:
 
                 # Patch MediaInMemoryUpload with our mock
                 with patch(
-                    "quackcore.integrations.google.drive.operations.upload.MediaInMemoryUpload",
-                    return_value=media_mock,
+                        "quackcore.integrations.google.drive.operations.upload.MediaInMemoryUpload",
+                        return_value=media_mock,
                 ):
                     # Mock execute_api_request to raise an error
                     with patch(
-                        "quackcore.integrations.google.drive.operations.upload.execute_api_request"
+                            "quackcore.integrations.google.drive.operations.upload.execute_api_request"
                     ) as mock_execute:
                         mock_execute.side_effect = QuackApiError(
                             "API error",
@@ -313,7 +313,7 @@ class TestDriveOperationsUpload:
 
             # Mock read_binary
             with patch(
-                "quackcore.integrations.google.drive.operations.upload.fs"
+                    "quackcore.integrations.google.drive.operations.upload.fs"
             ) as mock_fs:
                 mock_fs.read_binary.return_value.success = True
                 mock_fs.read_binary.return_value.content = b"PDF content"
@@ -323,12 +323,12 @@ class TestDriveOperationsUpload:
 
                 # Patch MediaInMemoryUpload with our mock
                 with patch(
-                    "quackcore.integrations.google.drive.operations.upload.MediaInMemoryUpload",
-                    return_value=media_mock,
+                        "quackcore.integrations.google.drive.operations.upload.MediaInMemoryUpload",
+                        return_value=media_mock,
                 ):
                     # Mock execute_api_request
                     with patch(
-                        "quackcore.integrations.google.drive.operations.upload.execute_api_request"
+                            "quackcore.integrations.google.drive.operations.upload.execute_api_request"
                     ) as mock_execute:
                         mock_execute.return_value = {
                             "id": "doc123",
@@ -340,7 +340,7 @@ class TestDriveOperationsUpload:
 
                         # Mock permissions but disable public sharing
                         with patch(
-                            "quackcore.integrations.google.drive.operations.permissions.set_file_permissions"
+                                "quackcore.integrations.google.drive.operations.permissions.set_file_permissions"
                         ):
                             # Test upload with specific metadata
                             result = upload.upload_file(
@@ -353,8 +353,8 @@ class TestDriveOperationsUpload:
 
                             assert result.success is True
                             assert (
-                                result.content
-                                == "https://drive.google.com/file/d/doc123/view"
+                                    result.content
+                                    == "https://drive.google.com/file/d/doc123/view"
                             )
 
                             # Verify the file metadata was constructed correctly
@@ -366,16 +366,16 @@ class TestDriveOperationsUpload:
                             # Check the body passed to create
                             assert files_resource.create_call_count == 1
                             assert (
-                                files_resource.last_create_body["name"]
-                                == "document.pdf"
+                                    files_resource.last_create_body["name"]
+                                    == "document.pdf"
                             )
                             assert (
-                                files_resource.last_create_body["mimeType"]
-                                == "application/pdf"
+                                    files_resource.last_create_body["mimeType"]
+                                    == "application/pdf"
                             )
                             assert (
-                                files_resource.last_create_body["description"]
-                                == "Important document"
+                                    files_resource.last_create_body["description"]
+                                    == "Important document"
                             )
                             assert files_resource.last_create_body["parents"] == [
                                 "folder456"

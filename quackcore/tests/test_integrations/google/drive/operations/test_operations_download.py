@@ -33,16 +33,16 @@ class TestDriveOperationsDownload:
                 "quackcore.integrations.google.drive.operations.download.fs"
             ) as mock_fs,
             patch(
-                "quackcore.integrations.google.drive.api.api.execute_api_request"
+                "quackcore.integrations.google.drive.utils.api.execute_api_request"
             ) as mock_execute,
         ):
             # Configure fs module mocks
-            mock_resolve = MagicMock(return_value="/tmp/test_file.txt")
+            mock_resolve = MagicMock(return_value=Path("/tmp/test_file.txt"))
             mock_fs.join_path.return_value = Path("/tmp/test_file.txt")
-            mock_fs.create_temp_directory.return_value = "/tmp"
+            mock_fs.create_temp_directory.return_value = Path("/tmp")
 
             mock_fs.create_directory.return_value = OperationResult(
-                success=True, path="/tmp", message="Directory created"
+                success=True, path=Path("/tmp"), message="Directory created"
             )
             mock_execute.return_value = {
                 "name": "test_file.txt",
@@ -64,16 +64,16 @@ class TestDriveOperationsDownload:
             # Configure write_binary mock
             mock_fs.write_binary.return_value = WriteResult(
                 success=True,
-                path="/tmp/test_file.txt",
+                path=Path("/tmp/test_file.txt"),
                 bytes_written=12,
                 message="File written",
             )
 
             # Mock paths resolver
             with patch(
-                "quackcore.integrations.google.drive.operations.download.resolver"
+                "quackcore.integrations.google.drive.operations.download.paths"
             ) as mock_resolver:
-                mock_resolver.resolve_project_path.return_value = "/tmp/test_file.txt"
+                mock_resolver.resolve_project_path.return_value = Path("/tmp/test_file.txt")
 
                 # Call download function
                 result = download.download_file(
@@ -93,7 +93,7 @@ class TestDriveOperationsDownload:
         with patch(
             "quackcore.integrations.google.drive.operations.download.fs"
         ) as mock_fs:
-            # Setup the mock to return what the test expects
+            # Setup the mock to return Path objects, not strings
             mock_fs.create_temp_directory.return_value = tmp_path / "temp_dir"
             mock_fs.join_path.return_value = tmp_path / "temp_dir" / "test_file.txt"
 
@@ -105,7 +105,7 @@ class TestDriveOperationsDownload:
                 "create_temp_directory should be called"
             )
             assert mock_fs.join_path.called, "join_path should be called"
-            assert str(result) == str(tmp_path / "temp_dir" / "test_file.txt")
+            assert Path(result) == tmp_path / "temp_dir" / "test_file.txt"
 
         # Test with local path to directory
         local_dir = tmp_path / "local_dir"
@@ -118,7 +118,7 @@ class TestDriveOperationsDownload:
             ) as mock_fs:
                 # Setup mock to return a directory
                 mock_fs.get_file_info.return_value = FileInfoResult(
-                    success=True, path=str(local_dir), exists=True, is_dir=True
+                    success=True, path=local_dir, exists=True, is_dir=True
                 )
 
                 # Setup mock_join to return expected path
@@ -127,7 +127,7 @@ class TestDriveOperationsDownload:
                 # Test function with a directory path
                 result = download.resolve_download_path(file_metadata, str(local_dir))
 
-                assert str(result) == str(local_dir / "test_file.txt")
+                assert Path(result) == local_dir / "test_file.txt"
                 assert mock_fs.join_path.called, (
                     "join_path should be called for directory paths"
                 )
@@ -144,7 +144,7 @@ class TestDriveOperationsDownload:
                 # Setup mock to return a file
                 mock_fs.get_file_info.return_value = FileInfoResult(
                     success=True,
-                    path=str(local_file),
+                    path=local_file,
                     exists=True,
                     is_file=True,
                     is_dir=False,
@@ -153,7 +153,7 @@ class TestDriveOperationsDownload:
                 # Test function with a file path
                 result = download.resolve_download_path(file_metadata, str(local_file))
 
-                assert str(result) == str(local_file)
+                assert Path(result) == local_file
 
     def test_download_file_api_error(self) -> None:
         """Test download file with API error."""
@@ -165,7 +165,7 @@ class TestDriveOperationsDownload:
 
         # Mock execute_api_request to raise QuackApiError
         with patch(
-            "quackcore.integrations.google.drive.api.api.execute_api_request"
+            "quackcore.integrations.google.drive.utils.api.execute_api_request"
         ) as mock_execute:
             mock_execute.side_effect = QuackApiError(
                 "Failed to get file metadata",
@@ -196,14 +196,14 @@ class TestDriveOperationsDownload:
             ) as mock_fs,
             patch("quackcore.paths.resolver.resolve_project_path") as mock_resolve,
             patch(
-                "quackcore.integrations.google.drive.api.api.execute_api_request"
+                "quackcore.integrations.google.drive.utils.api.execute_api_request"
             ) as mock_execute,
         ):
             # Configure mocks
-            mock_resolve.return_value = "/tmp/test_file.txt"
+            mock_resolve.return_value = Path("/tmp/test_file.txt")
             mock_fs.join_path.return_value = Path("/tmp/test_file.txt")
             mock_fs.create_directory.return_value = OperationResult(
-                success=True, path="/tmp", message="Directory created"
+                success=True, path=Path("/tmp"), message="Directory created"
             )
             mock_execute.return_value = {
                 "name": "test_file.txt",
@@ -213,7 +213,7 @@ class TestDriveOperationsDownload:
             # Configure write_binary to fail
             mock_fs.write_binary.return_value = WriteResult(
                 success=False,
-                path="/tmp/test_file.txt",
+                path=Path("/tmp/test_file.txt"),
                 error="Write error",
                 bytes_written=0,
             )

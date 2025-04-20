@@ -24,17 +24,17 @@ class TestGoogleDriveServiceDownload:
         with patch(
                 "quackcore.integrations.google.drive.service.paths"
         ) as mock_paths:
-            # Setup paths service mock to return predictable PathResult objects
+            # Setup paths service mock to return predictable PathResult objects with Path objects
             mock_paths.resolve_project_path.return_value = PathResult(
                 success=True,
-                path=str(Path("/fake/test/dir/mock_path"))  # Convert Path to string
+                path=Path("/fake/test/dir/mock_path")  # Use Path, not string
             )
 
             with patch("quackcore.fs.service.get_file_info") as mock_file_info:
                 # All file info checks should return that files exist
                 file_info_result = FileInfoResult(
                     success=True,
-                    path="/fake/test/dir/mock_credentials.json",
+                    path=Path("/fake/test/dir/mock_credentials.json"),
                     exists=True,
                     is_file=True,
                     message="File exists",
@@ -53,11 +53,11 @@ class TestGoogleDriveServiceDownload:
                     # Patch fs module
                     with patch(
                             "quackcore.integrations.google.drive.service.fs") as mock_fs:
-                        # Configure join_path to return a DataResult
+                        # Configure join_path to return a DataResult with Path object
                         mock_fs.join_path.return_value = DataResult(
                             success=True,
                             path=Path("/fake/test/dir/joined_path"),
-                            data="/fake/test/dir/joined_path",
+                            data=Path("/fake/test/dir/joined_path"),  # Use Path object, not string
                             format="path",
                             message="Successfully joined path parts"
                         )
@@ -108,24 +108,24 @@ class TestGoogleDriveServiceDownload:
                 mock_resolve.return_value = "/tmp/test_file.txt"
 
                 with patch("quackcore.integrations.google.drive.service.fs") as mock_fs:
-                    # Setup join_path to return a DataResult
+                    # Setup join_path to return a DataResult with Path object
                     mock_fs.join_path.return_value = DataResult(
                         success=True,
                         path=Path("/tmp/test_file.txt"),
-                        data="/tmp/test_file.txt",
+                        data=Path("/tmp/test_file.txt"),  # Use Path object, not string
                         format="path",
                         message="Successfully joined path parts"
                     )
 
                     # Mock create_directory to return success
                     mock_fs.create_directory.return_value = OperationResult(
-                        success=True, path="/tmp", message="Directory created"
+                        success=True, path=Path("/tmp"), message="Directory created"
                     )
 
                     # Mock write_binary to return success
                     mock_fs.write_binary.return_value = WriteResult(
                         success=True,
-                        path="/tmp/test_file.txt",
+                        path=Path("/tmp/test_file.txt"),
                         bytes_written=len(b"file content"),
                         message="File written",
                     )
@@ -172,24 +172,24 @@ class TestGoogleDriveServiceDownload:
             mock_resolve.return_value = "/tmp/test_file.txt"
 
             with patch("quackcore.integrations.google.drive.service.fs") as mock_fs:
-                # Setup join_path to return a DataResult
+                # Setup join_path to return a DataResult with Path object
                 mock_fs.join_path.return_value = DataResult(
                     success=True,
                     path=Path("/tmp/test_file.txt"),
-                    data="/tmp/test_file.txt",
+                    data=Path("/tmp/test_file.txt"),  # Use Path object, not string
                     format="path",
                     message="Successfully joined path parts"
                 )
 
                 # Mock create_directory to return success
                 mock_fs.create_directory.return_value = OperationResult(
-                    success=True, path="/tmp", message="Directory created"
+                    success=True, path=Path("/tmp"), message="Directory created"
                 )
 
                 # Simulate a write error
                 mock_fs.write_binary.return_value = WriteResult(
                     success=False,
-                    path="/tmp/test_file.txt",
+                    path=Path("/tmp/test_file.txt"),
                     error="Write error",
                 )
 
