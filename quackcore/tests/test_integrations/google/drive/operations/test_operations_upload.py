@@ -11,6 +11,7 @@ import pytest
 from quackcore.errors import QuackApiError, QuackIntegrationError
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.google.drive.operations import upload
+from quackcore.paths.api.public.results import PathResult
 from tests.test_integrations.google.drive.mocks import (
     MockDriveFilesResource,
     MockDriveService,
@@ -73,43 +74,42 @@ class TestDriveOperationsUpload:
         test_file.write_text("test content")
 
         # Mock resolver
-        with patch("quackcore.paths.resolver.resolve_project_path") as mock_resolve:
-            mock_resolve.return_value = test_file
+        with patch("quackcore.integrations.google.drive.operations.upload.paths_service") as mock_paths_service:
+            mock_paths_service.resolve_project_path.return_value = PathResult(
+                success=True,
+                path=str(test_file)  # Use string, not Path
+            )
 
             # Mock file info
-            with patch("quackcore.fs.service.get_file_info") as mock_info:
+            with patch("quackcore.fs.service.standalone.get_file_info") as mock_info:
                 mock_info.return_value.success = True
                 mock_info.return_value.exists = True
 
-                # Mock split_path
-                with patch("quackcore.fs.service.split_path") as mock_split:
-                    mock_split.return_value = ["test_file.txt"]
+                # Mock get_mime_type
+                with patch("quackcore.fs.service.standalone.get_mime_type") as mock_mime:
+                    mock_mime.return_value = "text/plain"
 
-                    # Mock get_mime_type
-                    with patch("quackcore.fs.service.get_mime_type") as mock_mime:
-                        mock_mime.return_value = "text/plain"
+                    # Test with default parameters
+                    path_obj, filename, folder_id, mime_type = (
+                        upload.resolve_file_details(str(test_file), None, None)
+                    )
 
-                        # Test with default parameters
-                        path_obj, filename, folder_id, mime_type = (
-                            upload.resolve_file_details(str(test_file), None, None)
+                    assert path_obj == str(test_file)
+                    assert filename == "test_file.txt"
+                    assert folder_id is None
+                    assert mime_type == "text/plain"
+
+                    # Test with custom parameters
+                    path_obj, filename, folder_id, mime_type = (
+                        upload.resolve_file_details(
+                            str(test_file), "remote_name.txt", "folder123"
                         )
+                    )
 
-                        assert path_obj == test_file
-                        assert filename == "test_file.txt"
-                        assert folder_id is None
-                        assert mime_type == "text/plain"
-
-                        # Test with custom parameters
-                        path_obj, filename, folder_id, mime_type = (
-                            upload.resolve_file_details(
-                                str(test_file), "remote_name.txt", "folder123"
-                            )
-                        )
-
-                        assert path_obj == test_file
-                        assert filename == "remote_name.txt"
-                        assert folder_id == "folder123"
-                        assert mime_type == "text/plain"
+                    assert path_obj == str(test_file)
+                    assert filename == "remote_name.txt"
+                    assert folder_id == "folder123"
+                    assert mime_type == "text/plain"
 
     def test_resolve_file_details_not_found(self, tmp_path: Path) -> None:
         """Test error handling when file is not found."""
@@ -117,11 +117,14 @@ class TestDriveOperationsUpload:
         test_file = tmp_path / "nonexistent.txt"
 
         # Mock resolver
-        with patch("quackcore.paths.resolver.resolve_project_path") as mock_resolve:
-            mock_resolve.return_value = test_file
+        with patch("quackcore.integrations.google.drive.operations.upload.paths_service") as mock_paths_service:
+            mock_paths_service.resolve_project_path.return_value = PathResult(
+                success=True,
+                path=str(test_file)  # Use string, not Path
+            )
 
             # Mock file info to show file doesn't exist
-            with patch("quackcore.fs.service.get_file_info") as mock_info:
+            with patch("quackcore.fs.service.standalone.get_file_info") as mock_info:
                 mock_info.return_value.success = True
                 mock_info.return_value.exists = False
 
@@ -150,15 +153,15 @@ class TestDriveOperationsUpload:
         # Mock file resolution - bypassing internal function calls
         with patch.object(upload, "resolve_file_details") as mock_resolve:
             mock_resolve.return_value = (
-                test_file,
+                str(test_file),
                 "test_file.txt",
                 "folder123",
                 "text/plain",
             )
 
-            # Mock fs _operations
+            # Mock standalone operations
             with patch(
-                "quackcore.integrations.google.drive.operations.upload.fs"
+                "quackcore.integrations.google.drive.operations.upload.standalone"
             ) as mock_fs:
                 mock_fs.read_binary.return_value.success = True
                 mock_fs.read_binary.return_value.content = b"test content"
@@ -216,7 +219,7 @@ class TestDriveOperationsUpload:
         # Mock resolve_file_details
         with patch.object(upload, "resolve_file_details") as mock_resolve:
             mock_resolve.return_value = (
-                test_file,
+                str(test_file),
                 "test_file.txt",
                 "folder123",
                 "text/plain",
@@ -224,7 +227,7 @@ class TestDriveOperationsUpload:
 
             # Mock read_binary to fail using the correct import path
             with patch(
-                    "quackcore.integrations.google.drive.operations.upload.fs"
+                    "quackcore.integrations.google.drive.operations.upload.standalone"
             ) as mock_fs:
                 mock_fs.read_binary.return_value.success = False
                 mock_fs.read_binary.return_value.error = "Read error"
@@ -247,7 +250,7 @@ class TestDriveOperationsUpload:
         # Mock resolve_file_details
         with patch.object(upload, "resolve_file_details") as mock_resolve:
             mock_resolve.return_value = (
-                test_file,
+                str(test_file),
                 "test_file.txt",
                 "folder123",
                 "text/plain",
@@ -255,7 +258,7 @@ class TestDriveOperationsUpload:
 
             # Mock read_binary
             with patch(
-                    "quackcore.integrations.google.drive.operations.upload.fs"
+                    "quackcore.integrations.google.drive.operations.upload.standalone"
             ) as mock_fs:
                 mock_fs.read_binary.return_value.success = True
                 mock_fs.read_binary.return_value.content = b"test content"
@@ -292,7 +295,7 @@ class TestDriveOperationsUpload:
 
         # Create a custom mock service with specific file metadata
         mock_drive_service = create_mock_drive_service(
-            file_id="doc123",
+            fileId="doc123",
             file_metadata={
                 "id": "doc123",
                 "name": "document.pdf",
@@ -305,7 +308,7 @@ class TestDriveOperationsUpload:
         # Mock resolve_file_details
         with patch.object(upload, "resolve_file_details") as mock_resolve:
             mock_resolve.return_value = (
-                test_file,
+                str(test_file),
                 "document.pdf",
                 "folder456",
                 "application/pdf",
@@ -313,7 +316,7 @@ class TestDriveOperationsUpload:
 
             # Mock read_binary
             with patch(
-                    "quackcore.integrations.google.drive.operations.upload.fs"
+                    "quackcore.integrations.google.drive.operations.upload.standalone"
             ) as mock_fs:
                 mock_fs.read_binary.return_value.success = True
                 mock_fs.read_binary.return_value.content = b"PDF content"

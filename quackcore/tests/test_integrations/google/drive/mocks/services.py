@@ -11,6 +11,7 @@ from quackcore.integrations.google.drive.protocols import (
     DriveFilesResource,
     DriveService,
 )
+
 from .resources import (
     MockDriveFilesResource,
     MockDrivePermissionsResource,
@@ -72,7 +73,7 @@ class MockDriveService(DriveService):
         try:
             # Get metadata using the mock files resource
             try:
-                file_metadata = self.files().get(file_id=remote_id).execute()
+                file_metadata = self.files().get(fileId=remote_id).execute()
             except Exception as api_error:
                 return IntegrationResult.error_result(
                     f"Failed to get file metadata: {api_error}"
@@ -114,7 +115,7 @@ class MockDriveService(DriveService):
 
 
 def create_mock_drive_service(
-    file_id: str = "file123",
+    fileId: str = "file123",
     file_metadata: dict[str, Any] | None = None,
     file_list: list[dict[str, Any]] | None = None,
 ) -> DriveService:
@@ -122,7 +123,7 @@ def create_mock_drive_service(
     Create and return a configurable mock Drive service.
 
     Args:
-        file_id: ID to use for created files
+        fileId: ID to use for created files
         file_metadata: Metadata to return for file _operations
         file_list: List of files to return in list operation
 
@@ -130,14 +131,14 @@ def create_mock_drive_service(
         A mock Drive service object that implements the DriveService protocol
     """
     files_resource = MockDriveFilesResource(
-        file_id=file_id,
+        fileId=fileId,
         file_metadata=file_metadata
         or {
-            "id": file_id,
+            "id": fileId,
             "name": "test_file.txt",
             "mimeType": "text/plain",
-            "webViewLink": f"https://drive.google.com/file/d/{file_id}/view",
-            "webContentLink": f"https://drive.google.com/uc?id={file_id}",
+            "webViewLink": f"https://drive.google.com/file/d/{fileId}/view",
+            "webContentLink": f"https://drive.google.com/uc?id={fileId}",
         },
         file_list=file_list,
     )

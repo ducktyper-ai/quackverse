@@ -14,7 +14,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaInMemoryUpload
 
 from quackcore.errors import QuackApiError, QuackIntegrationError
-from quackcore.fs import service as fs
+from quackcore.fs.service import standalone
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.google.drive.operations import permissions
 from quackcore.integrations.google.drive.protocols import (
@@ -22,7 +22,7 @@ from quackcore.integrations.google.drive.protocols import (
     GoogleCredentials,
 )
 from quackcore.integrations.google.drive.utils.api import execute_api_request
-from quackcore.paths import service as paths
+from quackcore.paths import service as paths_service
 
 
 def initialize_drive_service(credentials: GoogleCredentials) -> DriveService:
@@ -50,7 +50,7 @@ def initialize_drive_service(credentials: GoogleCredentials) -> DriveService:
 
 
 def resolve_file_details(
-    file_path: str, remote_path: str | None, parent_folder_id: str | None
+        file_path: str, remote_path: str | None, parent_folder_id: str | None
 ) -> tuple[str, str, str | None, str]:
     """
     Resolve file details for upload.
@@ -67,30 +67,37 @@ def resolve_file_details(
         QuackIntegrationError: If the file does not exist.
     """
     # Delegate to the resolver to convert the provided file path into a project path.
-    resolved_path = paths.resolve_project_path(file_path)  # returns a string
-    file_info = fs.get_file_info(resolved_path)
+    resolve_result = paths_service.resolve_project_path(file_path)
+    if not resolve_result.success:
+        raise QuackIntegrationError(f"Failed to resolve path: {resolve_result.error}")
+    resolved_path = resolve_result.path
+
+    # Get file information
+    file_info = standalone.get_file_info(resolved_path)
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(f"File not found: {file_path}")
 
-    # If a remote_path was provided (and does not start with a slash),
-    # use it as the filename; otherwise, get the filename from the resolved path.
+    # Determine the filename to use
     if remote_path and not remote_path.startswith("/"):
         filename = remote_path
     else:
-        parts = fs.split_path(resolved_path)
-        filename = parts[-1]
-    mime_type = fs.get_mime_type(resolved_path) or "application/octet-stream"
+        # Get the filename from the path
+        path_parts = str(resolved_path).split("/")
+        filename = path_parts[-1] if path_parts else "file"
+
+    # Get the MIME type and add folder ID
+    mime_type = standalone.get_mime_type(resolved_path) or "application/octet-stream"
     return resolved_path, filename, parent_folder_id, mime_type
 
 
 def upload_file(
-    drive_service: DriveService,
-    file_path: str,
-    remote_path: str | None = None,
-    description: str | None = None,
-    parent_folder_id: str | None = None,
-    make_public: bool = True,
-    logger: logging.Logger | None = None,
+        drive_service: DriveService,
+        file_path: str,
+        remote_path: str | None = None,
+        description: str | None = None,
+        parent_folder_id: str | None = None,
+        make_public: bool = True,
+        logger: logging.Logger | None = None,
 ) -> IntegrationResult[str]:
     """
     Upload a file to Google Drive.
@@ -126,7 +133,7 @@ def upload_file(
             file_metadata["parents"] = [folder_id]
 
         # Read file content as binary using our FS API (which expects a string path)
-        media_content = fs.read_binary(resolved_path)
+        media_content = standalone.read_binary(resolved_path)
         if not media_content.success:
             return IntegrationResult.error_result(
                 f"Failed to read file: {media_content.error}"
@@ -149,26 +156,26 @@ def upload_file(
         )
 
         # Convert file ID to string
-        file_id = str(file["id"])
+        fileId = str(file["id"])
 
         # Set file permissions if requested
         if make_public:
             perm_result = permissions.set_file_permissions(
-                drive_service, file_id, "reader", "anyone", logger
+                drive_service, fileId, "reader", "anyone", logger
             )
             if not perm_result.success:
                 logger.warning(f"Failed to set permissions: {perm_result.error}")
 
         # Extract a usable link from the returned file data
         link: str = (
-            str(file.get("webViewLink", ""))
-            or str(file.get("webContentLink", ""))
-            or f"https://drive.google.com/file/d/{file_id}/view"
+                str(file.get("webViewLink", ""))
+                or str(file.get("webContentLink", ""))
+                or f"https://drive.google.com/file/d/{fileId}/view"
         )
 
         return IntegrationResult.success_result(
             content=link,
-            message=f"File uploaded successfully with ID: {file_id}",
+            message=f"File uploaded successfully with ID: {fileId}",
         )
 
     except QuackApiError as e:

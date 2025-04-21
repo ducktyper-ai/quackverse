@@ -17,13 +17,13 @@ class DrivePermissionsResource(Protocol):
     """Protocol for Google Drive permissions resource."""
 
     def create(
-        self, file_id: str, body: dict[str, object], fields: str
+        self, fileId: str, body: dict[str, object], fields: str
     ) -> "DriveRequest[dict[str, object]]":
         """
         Create a permission for a file.
 
         Args:
-            file_id: ID of the file.
+            fileId: ID of the file.
             body: Permission data.
             fields: Fields to include in the response.
 
@@ -71,13 +71,13 @@ class DriveFilesResource(Protocol):
         ...
 
     def get(
-        self, file_id: str, fields: str | None = None
+        self, fileId: str, fields: str | None = None
     ) -> DriveRequest[dict[str, object]]:
         """
         Get a file's metadata.
 
         Args:
-            file_id: ID of the file.
+            fileId: ID of the file.
             fields: Fields to include in the response.
 
         Returns:
@@ -85,12 +85,12 @@ class DriveFilesResource(Protocol):
         """
         ...
 
-    def get_media(self, file_id: str) -> DriveRequest[bytes]:
+    def get_media(self, fileId: str) -> DriveRequest[bytes]:
         """
         Download a file's content.
 
         Args:
-            file_id: ID of the file.
+            fileId: ID of the file.
 
         Returns:
             DriveRequest: Request object for downloading file content.
@@ -117,13 +117,13 @@ class DriveFilesResource(Protocol):
         ...
 
     def update(
-        self, file_id: str, body: dict[str, object], fields: str | None = None
+        self, fileId: str, body: dict[str, object], fields: str | None = None
     ) -> DriveRequest[dict[str, object]]:
         """
         Update a file's metadata.
 
         Args:
-            file_id: ID of the file.
+            fileId: ID of the file.
             body: Updated metadata.
             fields: Fields to include in the response.
 
@@ -132,12 +132,12 @@ class DriveFilesResource(Protocol):
         """
         ...
 
-    def delete(self, file_id: str) -> DriveRequest[None]:
+    def delete(self, fileId: str) -> DriveRequest[None]:
         """
         Delete a file.
 
         Args:
-            file_id: ID of the file.
+            fileId: ID of the file.
 
         Returns:
             DriveRequest: Request object for deleting file.

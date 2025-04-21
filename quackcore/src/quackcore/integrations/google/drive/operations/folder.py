@@ -86,7 +86,7 @@ def create_folder(
 
 def delete_file(
     drive_service: DriveService,
-    file_id: str,
+    fileId: str,
     permanent: bool = False,
     logger: logging.Logger | None = None,
 ) -> IntegrationResult[bool]:
@@ -95,7 +95,7 @@ def delete_file(
 
     Args:
         drive_service: Google Drive service object.
-        file_id: ID of the file or folder to delete.
+        fileId: ID of the file or folder to delete.
         permanent: Whether to permanently delete or move to trash.
         logger: Optional logger instance.
 
@@ -106,22 +106,22 @@ def delete_file(
 
     try:
         if permanent:
-            # Permanently delete
+            # Permanently delete - Use delete method directly
             execute_api_request(
-                drive_service.files().delete(file_id=file_id),
+                drive_service.files().delete(fileId=fileId),
                 "Failed to delete file from Google Drive",
                 "files.delete",
             )
         else:
             # Move to trash
             execute_api_request(
-                drive_service.files().update(file_id=file_id, body={"trashed": True}),
+                drive_service.files().update(fileId=fileId, body={"trashed": True}),
                 "Failed to trash file in Google Drive",
                 "files.update",
             )
 
         action = "permanently deleted" if permanent else "moved to trash"
-        message = f"File {action} successfully: {file_id}"
+        message = f"File {action} successfully: {fileId}"
 
         return IntegrationResult.success_result(
             content=True,

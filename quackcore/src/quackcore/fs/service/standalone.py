@@ -446,3 +446,31 @@ def resolve_path(path: str | Path | DataResult | OperationResult) -> \
             PathResult with the fully resolved, absolute path as a string.
         """
         return _service.resolve_path(path)
+
+
+def get_mime_type(path: str | Path | DataResult | OperationResult) -> \
+        DataResult[str] | None:
+    """
+    Get the MIME type of a file.
+
+    Args:
+        path: Path to the file (string, Path, DataResult, or OperationResult)
+
+    Returns:
+        MIME type string or None if not determinable
+    """
+    return _service.get_mime_type(path)
+
+def create_temp_directory(prefix: str = "quackcore_", suffix: str = ""
+    ) -> DataResult[str]:
+        """
+        Create a temporary directory.
+
+        Args:
+            prefix: Prefix for the temporary directory name
+            suffix: Suffix for the temporary directory name
+
+        Returns:
+            DataResult with path to the created temporary directory
+        """
+        return _service.create_temp_directory(prefix, suffix)

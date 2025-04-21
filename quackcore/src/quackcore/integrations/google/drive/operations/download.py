@@ -7,18 +7,19 @@ This module provides robust file download functionality with improved error hand
 
 import io
 import logging
+import os.path as ospath
 from collections.abc import Mapping
 
 from quackcore.errors import QuackApiError
-from quackcore.fs import service as fs
+from quackcore.fs.service import standalone
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.google.drive.protocols import DriveService
 from quackcore.integrations.google.drive.utils.api import execute_api_request
-from quackcore.paths import service as paths
+from quackcore.paths import service as paths_service
 
 
 def resolve_download_path(
-    file_metadata: Mapping[str, object], local_path: str | None = None
+        file_metadata: Mapping[str, object], local_path: str | None = None
 ) -> str:
     """
     Resolve the local path for file download with enhanced path handling.
@@ -33,20 +34,32 @@ def resolve_download_path(
     file_name = str(file_metadata.get("name", "downloaded_file"))
 
     if local_path is None:
-        # Create a temp directory using fs.create_temp_directory
-        temp_dir = fs.create_temp_directory(prefix="gdrive_download_")
-        # Use fs.join_path for path joining
-        return str(fs.join_path(temp_dir, file_name))
+        # Create a temp directory
+        temp_dir_result = standalone.create_temp_directory(prefix="gdrive_download_")
+        temp_dir = temp_dir_result.data if hasattr(temp_dir_result,
+                                                   "data") else temp_dir_result
+        # Join Paths
+        join_result = standalone.join_path(temp_dir, file_name)
+        joined_path = join_result.data if hasattr(join_result, "data") else join_result
+        return str(joined_path)
 
     # Resolve the local path
-    local_path_obj = paths.resolve_project_path(local_path)
-    file_info = fs.get_file_info(local_path_obj)
+    local_path_result = paths_service.resolve_project_path(local_path)
+    if not local_path_result.success:
+        # Just use the provided path if resolution fails
+        local_path_obj = local_path
+    else:
+        local_path_obj = local_path_result.path
+
+    file_info = standalone.get_file_info(local_path_obj)
 
     if file_info.success and file_info.exists:
         # Handle different cases depending on whether local_path is a directory or file
         if file_info.is_dir:
             # If it's a directory, join the file name to it
-            joined_path = fs.join_path(local_path_obj, file_name)
+            join_result = standalone.join_path(local_path_obj, file_name)
+            joined_path = join_result.data if hasattr(join_result,
+                                                      "data") else join_result
             return str(joined_path)
         else:
             # If it's a file, use the path as is
@@ -57,10 +70,10 @@ def resolve_download_path(
 
 
 def download_file(
-    drive_service: DriveService,
-    remote_id: str,
-    local_path: str | None = None,
-    logger: logging.Logger | None = None,
+        drive_service: DriveService,
+        remote_id: str,
+        local_path: str | None = None,
+        logger: logging.Logger | None = None,
 ) -> IntegrationResult[str]:
     """
     Download a file from Google Drive.
@@ -80,7 +93,7 @@ def download_file(
         # Get file metadata
         try:
             file_metadata = execute_api_request(
-                drive_service.files().get(file_id=remote_id, fields="name, mimeType"),
+                drive_service.files().get(fileId=remote_id, fields="name, mimeType"),
                 "Failed to get file metadata from Google Drive",
                 "files.get",
             )
@@ -94,16 +107,16 @@ def download_file(
         download_path = resolve_download_path(file_metadata, local_path)
 
         # Ensure parent directory exists
-        parent_dir = fs.join_path(download_path).parent
-        parent_result = fs.create_directory(parent_dir, exist_ok=True)
-        if not parent_result.success:
+        parent_dir = ospath.dirname(download_path)
+        create_result = standalone.create_directory(parent_dir, exist_ok=True)
+        if not create_result.success:
             return IntegrationResult.error_result(
-                f"Failed to create directory: {parent_result.error}"
+                f"Failed to create directory: {create_result.error}"
             )
 
         # Download the file content
         try:
-            request = drive_service.files().get_media(file_id=remote_id)
+            request = drive_service.files().get_media(fileId=remote_id)
             from googleapiclient.http import MediaIoBaseDownload
 
             fh = io.BytesIO()
@@ -126,7 +139,7 @@ def download_file(
         file_content = fh.read()
 
         # Write file to disk
-        write_result = fs.write_binary(download_path, file_content)
+        write_result = standalone.write_binary(download_path, file_content)
         if not write_result.success:
             return IntegrationResult.error_result(
                 f"Failed to write file: {write_result.error}"

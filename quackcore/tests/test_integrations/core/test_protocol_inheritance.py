@@ -99,7 +99,7 @@ class MinimalStorageIntegration:
     def upload_file(
         self, file_path: str, remote_path: str | None = None
     ) -> IntegrationResult[str]:
-        return IntegrationResult.success_result("file_id")
+        return IntegrationResult.success_result("fileId")
 
     def download_file(
         self, remote_id: str, local_path: str | None = None
@@ -224,7 +224,7 @@ class TestProtocolInheritance:
             def upload_file(
                 self, file_path: str, remote_path: str | None = None
             ) -> IntegrationResult[str]:
-                return IntegrationResult.success_result("file_id")
+                return IntegrationResult.success_result("fileId")
 
             def download_file(
                 self, remote_id: str, local_path: str | None = None
@@ -267,7 +267,7 @@ class TestProtocolInheritance:
             def upload_file(
                 self, file_path: str, remote_path: str | None = None
             ) -> IntegrationResult[str]:
-                return IntegrationResult.success_result("file_id")
+                return IntegrationResult.success_result("fileId")
 
             # Missing download_file method
 
@@ -312,9 +312,9 @@ class TestProtocolInheritance:
 
         upload_result = storage.upload_file("/path/to/file")
         assert isinstance(upload_result, IntegrationResult)
-        assert upload_result.content == "file_id"
+        assert upload_result.content == "fileId"
 
-        download_result = storage.download_file("file_id")
+        download_result = storage.download_file("fileId")
         assert isinstance(download_result, IntegrationResult)
         assert download_result.content == "local_path"
 
@@ -369,7 +369,7 @@ class TestProtocolInheritance:
             def upload_file(
                 self, file_path: str, remote_path: str = None
             ) -> IntegrationResult[str]:
-                return IntegrationResult.success_result("file_id")
+                return IntegrationResult.success_result("fileId")
 
             def download_file(
                 self, remote_id: str, local_path: str = None

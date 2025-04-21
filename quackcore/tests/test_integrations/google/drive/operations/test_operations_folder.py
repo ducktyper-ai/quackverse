@@ -23,7 +23,7 @@ class TestDriveOperationsFolder:
         """Test creating a folder in Google Drive."""
         # Create mock drive service with our factory
         mock_drive_service = create_mock_drive_service(
-            file_id="folder123",
+            fileId="folder123",
             file_metadata={
                 "id": "folder123",
                 "name": "Test Folder",
@@ -90,7 +90,7 @@ class TestDriveOperationsFolder:
     def test_create_folder_with_logger(self) -> None:
         """Test creating a folder with an explicit logger."""
         # Create mock drive service
-        mock_drive_service = create_mock_drive_service(file_id="folder456")
+        mock_drive_service = create_mock_drive_service(fileId="folder456")
 
         # Create a mock logger
         mock_logger = logging.getLogger("test_logger")
@@ -148,7 +148,7 @@ class TestDriveOperationsFolder:
     def test_delete_file_permanent(self) -> None:
         """Test permanently deleting a file."""
         # Create mock drive service
-        mock_drive_service = create_mock_drive_service(file_id="file123")
+        mock_drive_service = create_mock_drive_service(fileId="file123")
 
         # Mock API request execution - adjust path to match folder.py
         with patch(
@@ -179,7 +179,7 @@ class TestDriveOperationsFolder:
     def test_delete_file_trash(self) -> None:
         """Test moving a file to trash."""
         # Create mock drive service
-        mock_drive_service = create_mock_drive_service(file_id="file123")
+        mock_drive_service = create_mock_drive_service(fileId="file123")
 
         # Mock API request execution - adjust path to match folder.py
         with patch(
@@ -235,7 +235,7 @@ class TestDriveOperationsFolder:
         """Test file deletion with custom mock configuration."""
         # Create a customized mock service directly using the mock classes
         files_resource = MockDriveFilesResource(
-            file_id="custom123",
+            fileId="custom123",
             file_metadata={"id": "custom123", "name": "Custom File"},
         )
         mock_service = MockDriveService(files_resource)

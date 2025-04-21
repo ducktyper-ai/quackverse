@@ -5,6 +5,7 @@ from quackcore.integrations.core.results import (
     ConfigResult,
     IntegrationResult,
 )
+
 from .auth_provider_impl import (
     MockAuthProvider,
 )

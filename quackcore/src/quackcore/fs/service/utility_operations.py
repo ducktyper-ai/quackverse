@@ -3,6 +3,9 @@
 Utility _operations for the FileSystemService.
 """
 
+# TODO: Refactor to not make use of an API public
+# TODO: Rethink if we need to have helpers and api instead of operations and service only
+
 from pathlib import Path
 
 from quackcore.errors import wrap_io_errors
@@ -11,7 +14,6 @@ from quackcore.fs._operations import FileSystemOperations
 from quackcore.fs.api.public import (
     atomic_write,
     compute_checksum,
-    create_temp_directory,
     create_temp_file,
     ensure_directory,
     find_files_by_content,
@@ -73,22 +75,6 @@ class UtilityOperationsMixin:
         """
         normalized_directory = self._normalize_input_path(directory)
         return get_unique_filename(normalized_directory, filename)
-
-    @wrap_io_errors
-    def create_temp_directory(
-            self, prefix: str = "quackcore_", suffix: str = ""
-    ) -> DataResult[str]:
-        """
-        Create a temporary directory.
-
-        Args:
-            prefix: Directory name prefix
-            suffix: Directory name suffix
-
-        Returns:
-            Path to the created temporary directory
-        """
-        return create_temp_directory(prefix, suffix)
 
     @wrap_io_errors
     def create_temp_file(

@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from quackcore.errors import QuackConfigurationError, QuackFileNotFoundError
+
 from .config_provider_impl import (
     MockConfigProvider,
 )

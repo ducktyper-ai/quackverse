@@ -10,6 +10,7 @@ from quackcore.integrations.google.drive.protocols import (
     DrivePermissionsResource,
     DriveRequest,
 )
+
 from .requests import (
     MockDriveRequest,
 )
@@ -40,7 +41,6 @@ class MockDrivePermissionsResource(DrivePermissionsResource):
 
     def create(
         self,
-        file_id: str = None,
         fileId: str = None,
         body: dict[str, object] = None,
         fields: str = None,
@@ -49,7 +49,6 @@ class MockDrivePermissionsResource(DrivePermissionsResource):
         Mock create method for creating a permission.
 
         Args:
-            file_id: ID of the file (test parameter)
             fileId: ID of the file (implementation parameter)
             body: Permission data
             fields: Fields to include in the response
@@ -58,10 +57,9 @@ class MockDrivePermissionsResource(DrivePermissionsResource):
             A mock request that will return the permission data
         """
         # Handle parameter name differences
-        file_id = file_id or fileId
 
         self.create_call_count += 1
-        self.last_file_id = file_id
+        self.last_file_id = fileId
         self.last_permission_body = body
         self.last_fields = fields
 
@@ -75,7 +73,7 @@ class MockDriveFilesResource(DriveFilesResource):
 
     def __init__(
         self,
-        file_id: str = "file123",
+        fileId: str = "file123",
         file_metadata: dict[str, Any] | None = None,
         file_list: list[dict[str, Any]] | None = None,
         permissions_resource: DrivePermissionsResource | None = None,
@@ -90,7 +88,7 @@ class MockDriveFilesResource(DriveFilesResource):
         Initialize mock files resource.
 
         Args:
-            file_id: ID to return for created files
+            fileId: ID to return for created files
             file_metadata: Metadata to return for file _operations
             file_list: List of files to return in list operation
             permissions_resource: Mock permissions resource to use
@@ -102,13 +100,13 @@ class MockDriveFilesResource(DriveFilesResource):
             delete_error: Exception to raise on delete operation, if any
         """
         self._permissions = permissions_resource or MockDrivePermissionsResource()
-        self.file_id = file_id
+        self.fileId = fileId
         self.file_metadata = file_metadata or {
-            "id": self.file_id,
+            "id": self.fileId,
             "name": "test_file.txt",
             "mimeType": "text/plain",
-            "webViewLink": f"https://drive.google.com/file/d/{self.file_id}/view",
-            "webContentLink": f"https://drive.google.com/uc?id={self.file_id}",
+            "webViewLink": f"https://drive.google.com/file/d/{self.fileId}/view",
+            "webContentLink": f"https://drive.google.com/uc?id={self.fileId}",
         }
         self.file_list = file_list or [
             {
@@ -185,13 +183,12 @@ class MockDriveFilesResource(DriveFilesResource):
         return request
 
     def get(
-        self, file_id: str = None, fileId: str = None, fields: str | None = None
+        self, fileId: str = None, fields: str | None = None
     ) -> DriveRequest[dict[str, object]]:
         """
         Mock get method for retrieving a file's metadata.
 
         Args:
-            file_id: ID of the file (test parameter)
             fileId: ID of the file (implementation parameter)
             fields: Fields to include in the response
 
@@ -199,30 +196,27 @@ class MockDriveFilesResource(DriveFilesResource):
             A mock request that will return the file metadata
         """
         # Handle parameter name differences
-        file_id = file_id or fileId
 
         self.get_call_count += 1
-        self.last_get_file_id = file_id
+        self.last_get_file_id = fileId
         self.last_get_fields = fields
 
         return MockDriveRequest(self.file_metadata, self.get_error)
 
-    def get_media(self, file_id: str = None, fileId: str = None) -> DriveRequest[bytes]:
+    def get_media(self, fileId: str = None) -> DriveRequest[bytes]:
         """
         Mock get_media method for downloading a file's content.
 
         Args:
-            file_id: ID of the file (test parameter)
             fileId: ID of the file (implementation parameter)
 
         Returns:
             A mock request that will return the file content
         """
         # Handle parameter name differences
-        file_id = file_id or fileId
 
         self.get_media_call_count += 1
-        self.last_get_media_file_id = file_id
+        self.last_get_media_file_id = fileId
 
         # Default file content as bytes
         file_content = b"Test file content"
@@ -231,7 +225,7 @@ class MockDriveFilesResource(DriveFilesResource):
         mock_request = MockDriveRequest(file_content, self.get_media_error)
 
         # Add additional attributes that might be checked during download
-        mock_request.mock.file_id = file_id
+        mock_request.mock.fileId = fileId
         mock_request.mock.mime_type = "text/plain"
 
         return cast(DriveRequest[bytes], mock_request)
@@ -265,7 +259,6 @@ class MockDriveFilesResource(DriveFilesResource):
 
     def update(
         self,
-        file_id: str = None,
         fileId: str = None,
         body: dict[str, object] = None,
         fields: str | None = None,
@@ -274,7 +267,6 @@ class MockDriveFilesResource(DriveFilesResource):
         Mock update method for updating a file's metadata.
 
         Args:
-            file_id: ID of the file (test parameter)
             fileId: ID of the file (implementation parameter)
             body: Updated metadata
             fields: Fields to include in the response
@@ -282,11 +274,9 @@ class MockDriveFilesResource(DriveFilesResource):
         Returns:
             A mock request that will return the updated file metadata
         """
-        # Handle parameter name differences
-        file_id = file_id or fileId
 
         self.update_call_count += 1
-        self.last_update_file_id = file_id
+        self.last_update_file_id = fileId
         self.last_update_body = body
         self.last_update_fields = fields
 
@@ -298,22 +288,20 @@ class MockDriveFilesResource(DriveFilesResource):
         request._body = body
         return request
 
-    def delete(self, file_id: str = None, fileId: str = None) -> DriveRequest[None]:
+    def delete(self, fileId: str = None) -> DriveRequest[None]:
         """
         Mock delete method for deleting a file.
 
         Args:
-            file_id: ID of the file (test parameter)
             fileId: ID of the file (implementation parameter)
 
         Returns:
             A mock request for the delete operation
         """
         # Handle parameter name differences
-        file_id = file_id or fileId
 
         self.delete_call_count += 1
-        self.last_delete_file_id = file_id
+        self.last_delete_file_id = fileId
 
         return cast(DriveRequest[None], MockDriveRequest(None, self.delete_error))
 

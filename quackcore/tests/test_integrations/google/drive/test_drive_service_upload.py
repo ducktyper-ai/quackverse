@@ -70,7 +70,7 @@ class TestGoogleDriveServiceUpload:
             }
 
             with patch(
-                "quackcore.integrations.google.drive.service.fs", mock_fs_service
+                "quackcore.integrations.google.drive.service.standalone", mock_fs_service
             ):
                 with patch.object(service, "_execute_upload", mock_execute_upload):
                     with patch.object(
@@ -106,7 +106,7 @@ class TestGoogleDriveServiceUpload:
             mock_fs_service.read_binary.return_value.error = "Read error"
 
             with patch(
-                "quackcore.integrations.google.drive.service.fs", mock_fs_service
+                "quackcore.integrations.google.drive.service.standalone", mock_fs_service
             ):
                 result = service.upload_file(str(test_file))
 
@@ -133,7 +133,7 @@ class TestGoogleDriveServiceUpload:
             )
 
             with patch(
-                "quackcore.integrations.google.drive.service.fs", mock_fs_service
+                "quackcore.integrations.google.drive.service.standalone", mock_fs_service
             ):
                 with patch.object(service, "_execute_upload", mock_execute_upload):
                     result = service.upload_file(str(test_file))

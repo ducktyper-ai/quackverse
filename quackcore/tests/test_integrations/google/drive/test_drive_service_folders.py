@@ -104,7 +104,7 @@ class TestGoogleDriveServiceFolders:
 
         # Mock API response for delete
         mock_delete = MagicMock()
-        service.drive_service.files()._delete.return_value = mock_delete
+        service.drive_service.files().delete.return_value = mock_delete
         mock_delete.execute.return_value = None
 
         # Mock API response for update (move to trash)
@@ -113,22 +113,22 @@ class TestGoogleDriveServiceFolders:
         mock_update.execute.return_value = None
 
         # Test permanent deletion
-        result = service.delete_file("file_id", permanent=True)
+        result = service.delete_file("fileId", permanent=True)
         assert result.success is True
-        service.drive_service.files()._delete.assert_called_once_with(fileId="file_id")
+        service.drive_service.files().delete.assert_called_once_with(fileId="fileId")
 
         # Test move to trash
         service.drive_service.files().update.reset_mock()
-        result = service.delete_file("file_id", permanent=False)
+        result = service.delete_file("fileId", permanent=False)
         assert result.success is True
         service.drive_service.files().update.assert_called_once_with(
-            fileId="file_id", body={"trashed": True}
+            fileId="fileId", body={"trashed": True}
         )
 
         # Test API error
         service.drive_service.files().update.side_effect = QuackApiError(
             "API error", service="drive"
         )
-        result = service.delete_file("error_file_id")
+        result = service.delete_file("error_fileId")
         assert result.success is False
         assert "API error" in result.error

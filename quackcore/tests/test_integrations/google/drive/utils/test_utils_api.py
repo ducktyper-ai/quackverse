@@ -196,7 +196,7 @@ class TestDriveUtilsApi:
         """Test execute_api_request with a complex mock service structure."""
         # Create a mock Drive service
         mock_service = create_mock_drive_service(
-            file_id="test123",
+            fileId="test123",
             file_metadata={
                 "id": "test123",
                 "name": "test.txt",
@@ -206,7 +206,7 @@ class TestDriveUtilsApi:
 
         # Test the execute_api_request with a file get operation
         files_resource = mock_service.files()
-        get_request = files_resource.get(file_id="test123", fields="id,name,mimeType")
+        get_request = files_resource.get(fileId="test123", fields="id,name,mimeType")
 
         # Execute the request using the utility function
         result = api.execute_api_request(

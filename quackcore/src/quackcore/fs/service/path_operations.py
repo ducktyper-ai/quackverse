@@ -5,12 +5,13 @@ Path _operations utilities for the FileSystemService.
 These utilities extend the FileSystemService with methods for path manipulation.
 """
 
+# TODO: We need here its own PathOperations object in _operations instead of using the public api
+
 import os
 import tempfile
 from pathlib import Path
 
 from quackcore.errors import wrap_io_errors
-from quackcore.fs.results import DataResult, OperationResult, PathResult
 from quackcore.fs._operations import FileSystemOperations
 from quackcore.fs.api.public import (
     expand_user_vars,
@@ -18,7 +19,10 @@ from quackcore.fs.api.public import (
     is_subdirectory,
     split_path,
 )
-from quackcore.fs.api.public import normalize_path as utils_normalize_path
+from quackcore.fs.api.public import (
+    normalize_path as utils_normalize_path,
+)
+from quackcore.fs.results import DataResult, OperationResult, PathResult
 
 
 class PathOperationsMixin:

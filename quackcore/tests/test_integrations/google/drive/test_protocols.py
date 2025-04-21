@@ -55,7 +55,7 @@ class TestDriveProtocols:
 
         # Test using the protocol method
         result = mock_permissions.create(
-            file_id="file123", body={"type": "anyone", "role": "reader"}, fields="id"
+            fileId="file123", body={"type": "anyone", "role": "reader"}, fields="id"
         )
 
         # Verify the result is a DriveRequest
@@ -77,7 +77,7 @@ class TestDriveProtocols:
         """Test DriveFilesResource protocol implementation."""
         # Create our MockDriveFilesResource that implements the protocol
         mock_files = MockDriveFilesResource(
-            file_id="file123", file_metadata={"id": "file123", "name": "test.txt"}
+            fileId="file123", file_metadata={"id": "file123", "name": "test.txt"}
         )
 
         # Check if it matches the protocol
@@ -94,14 +94,14 @@ class TestDriveProtocols:
         assert mock_files.last_create_fields == "id,webViewLink"
 
         # Test get
-        result = mock_files.get(file_id="file123", fields="name,mimeType")
+        result = mock_files.get(fileId="file123", fields="name,mimeType")
         assert isinstance(result, DriveRequest)
         assert mock_files.get_call_count == 1
         assert mock_files.last_get_file_id == "file123"
         assert mock_files.last_get_fields == "name,mimeType"
 
         # Test get_media
-        result = mock_files.get_media(file_id="file123")
+        result = mock_files.get_media(fileId="file123")
         assert isinstance(result, DriveRequest)
         assert mock_files.get_media_call_count == 1
         assert mock_files.last_get_media_file_id == "file123"
@@ -115,14 +115,14 @@ class TestDriveProtocols:
         assert mock_files.last_list_page_size == 100
 
         # Test update
-        result = mock_files.update(file_id="file123", body={"trashed": True})
+        result = mock_files.update(fileId="file123", body={"trashed": True})
         assert isinstance(result, DriveRequest)
         assert mock_files.update_call_count == 1
         assert mock_files.last_update_file_id == "file123"
         assert mock_files.last_update_body["trashed"] is True
 
         # Test delete
-        result = mock_files.delete(file_id="file123")
+        result = mock_files.delete(fileId="file123")
         assert isinstance(result, DriveRequest)
         assert mock_files.delete_call_count == 1
         assert mock_files.last_delete_file_id == "file123"
@@ -196,6 +196,6 @@ class TestDriveProtocols:
             DrivePermissionsResource,
         )
         assert isinstance(
-            MockDriveFilesResource(file_id="custom", file_metadata={"id": "custom"}),
+            MockDriveFilesResource(fileId="custom", file_metadata={"id": "custom"}),
             DriveFilesResource,
         )
