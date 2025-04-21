@@ -1,4 +1,5 @@
 # quackcore/src/quackcore/integrations/core/base.py
+
 """
 Base classes for QuackCore integrations.
 
@@ -29,9 +30,9 @@ class BaseAuthProvider(ABC, AuthProviderProtocol):
     """Base class for authentication providers."""
 
     def __init__(
-            self,
-            credentials_file: str | None = None,
-            log_level: int = LOG_LEVELS[LogLevel.INFO],
+        self,
+        credentials_file: str | None = None,
+        log_level: int = LOG_LEVELS[LogLevel.INFO],
     ) -> None:
         """
         Initialize the base authentication provider.
@@ -60,13 +61,15 @@ class BaseAuthProvider(ABC, AuthProviderProtocol):
         """
         try:
             from quackcore.fs.service import standalone
+
             result = standalone.resolve_path(file_path)
-            if hasattr(result, 'path'):
+            if hasattr(result, "path"):
                 return str(result.path)
             return str(result)
         except Exception as e:
             self.logger.warning(f"Could not resolve project path: {e}")
             from quackcore.fs.service import standalone
+
             normalized_path = standalone.normalize_path(file_path)
             return str(normalized_path)
 
@@ -134,13 +137,21 @@ class BaseAuthProvider(ABC, AuthProviderProtocol):
         try:
             from quackcore.fs.service import standalone
 
-            parent_parts = standalone.split_path(self.credentials_file)
-            # Make sure we're only using the directory parts
-            if len(parent_parts.data) > 1:
-                parent_parts = parent_parts[:-1]
-            parent_dir = standalone.join_path(*parent_parts)
+            parts = standalone.split_path(self.credentials_file)
+            # Normalize to a simple list of path components
+            if hasattr(parts, "data"):
+                seq = parts.data
+            elif isinstance(parts, (list, tuple)):
+                seq = list(parts)
+            else:
+                seq = list(parts)
+
+            # Drop the last component (the file name) if present
+            dir_parts = seq[:-1] if len(seq) > 1 else seq
+
+            parent_dir = standalone.join_path(*dir_parts)
             result = standalone.create_directory(parent_dir, exist_ok=True)
-            return result.success if hasattr(result, 'success') else False
+            return getattr(result, "success", False)
         except Exception as e:
             self.logger.error(f"Unexpected error creating credentials directory: {e}")
             return False
@@ -185,7 +196,6 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
             QuackConfigurationError: If the configuration file cannot be found or
                                       if reading the YAML fails.
         """
-        # Determine config path.
         if not config_path:
             config_path = self._find_config_file()
             if not config_path:
@@ -193,10 +203,8 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
                     "Configuration file not found in default locations."
                 )
 
-        # Import functions at runtime so that patches work.
         from quackcore.fs.service import standalone
 
-        # Check if configuration file exists.
         file_info = standalone.get_file_info(config_path)
         if not file_info.success or not file_info.exists:
             raise QuackConfigurationError(
@@ -204,7 +212,6 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
                 config_path=str(config_path),
             )
 
-        # Read configuration file.
         yaml_result = standalone.read_yaml(config_path)
         if not yaml_result.success:
             raise QuackConfigurationError(
@@ -212,13 +219,10 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
                 config_path=str(config_path),
             )
 
-        # Extract integration-specific configuration.
         config_data = yaml_result.data
         integration_config = self._extract_config(config_data)
 
-        # Validate configuration.
         if not self.validate_config(integration_config):
-            # Return an error result rather than raising.
             return ConfigResult.error_result("Configuration validation failed")
 
         return ConfigResult.success_result(
@@ -237,8 +241,6 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         Returns:
             dict[str, Any]: Integration-specific configuration
         """
-        # Default implementation - override in subclass
-        # to extract integration-specific section
         integration_name = self.name.lower().replace(" ", "_")
         return config_data.get(integration_name, {})
 
@@ -249,50 +251,37 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         Returns:
             str | None: Path to the configuration file if found, None otherwise.
         """
-        # Check environment variable first.
         env_var = f"QUACK_{self.name.upper()}_CONFIG"
         if config_path := os.environ.get(env_var):
-            # Import these specifically at runtime to match the patching in tests
             from quackcore.fs.service import standalone
 
             expanded_path = standalone.expand_user_vars(config_path)
-            # Convert Path to string to match test expectation
             file_info = standalone.get_file_info(str(expanded_path))
             if file_info.success and file_info.exists:
                 return str(expanded_path)
 
-        # Attempt to get the project root, with graceful error handling
         project_root = None
         try:
             from quackcore.paths import service as paths
-            if hasattr(paths, 'get_project_root'):
+
+            if hasattr(paths, "get_project_root"):
                 project_root = paths.get_project_root()
         except (QuackFileNotFoundError, FileNotFoundError, OSError) as e:
-            self.logger.debug(
-                f"Project root not found, checking only direct paths: {e}"
-            )
+            self.logger.debug(f"Project root not found, checking only direct paths: {e}")
 
-        # Import these here to match patching in tests
         from quackcore.fs.service import standalone
 
-        # Check default locations.
         for location in self.DEFAULT_CONFIG_LOCATIONS:
             expanded_location = standalone.expand_user_vars(location)
-            # If the expanded location is relative
-            # and we have a project root, join them.
             if not os.path.isabs(str(expanded_location)) and project_root:
-                expanded_location = standalone.join_path(project_root,
-                                                         expanded_location)
-            # Convert Path to string for consistency with tests
+                expanded_location = standalone.join_path(project_root, expanded_location)
             file_info = standalone.get_file_info(str(expanded_location))
             if file_info.success and file_info.exists:
                 return str(expanded_location)
 
-        # Fallback: try candidate in project root.
         if project_root:
             candidate = standalone.join_path(project_root, "quack_config.yaml")
             candidate = standalone.expand_user_vars(candidate)
-            # Convert Path to string for consistency with tests
             file_info = standalone.get_file_info(str(candidate))
             if file_info.success and file_info.exists:
                 return str(candidate)
@@ -311,13 +300,13 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
         """
         try:
             from quackcore.fs.service import standalone
+
             result = standalone.resolve_path(file_path)
-            if hasattr(result, 'path'):
+            if hasattr(result, "path"):
                 return str(result.path)
             return str(result)
         except Exception as e:
             self.logger.warning(f"Could not resolve project path: {e}")
-            # Return the original path in case of exception to keep test compatibility
             return file_path
 
     @abstractmethod
@@ -348,12 +337,12 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
     """Base class for integration services."""
 
     def __init__(
-            self,
-            config_provider: ConfigProviderProtocol | None = None,
-            auth_provider: AuthProviderProtocol | None = None,
-            config: dict[str, Any] | None = None,
-            config_path: str | None = None,
-            log_level: int = LOG_LEVELS[LogLevel.INFO],
+        self,
+        config_provider: ConfigProviderProtocol | None = None,
+        auth_provider: AuthProviderProtocol | None = None,
+        config: dict[str, Any] | None = None,
+        config_path: str | None = None,
+        log_level: int = LOG_LEVELS[LogLevel.INFO],
     ) -> None:
         """
         Initialize the base integration service.
@@ -374,7 +363,6 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
         self.config = config
         self._initialized = False
 
-        # Set config path if provided (using _set_config_path)
         self.config_path = None
         if config_path:
             self._set_config_path(config_path)
@@ -383,23 +371,22 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
         """
         Set the configuration path.
 
-        This method is separated to allow easier patching in tests. In a real
-        environment, we normalize the path to handle relative paths correctly.
+        This method is separated to allow easier patching in tests.
 
         Args:
             config_path: Path to configuration file
         """
         self.config_path = config_path
         try:
-            # Use QuackCore's path resolver to normalize config path
             from quackcore.fs.service import standalone
+
             result = standalone.resolve_path(config_path)
-            self.config_path = str(result.path) if hasattr(result, 'path') else str(
-                result)
+            self.config_path = str(result.path) if hasattr(result, "path") else str(
+                result
+            )
             self.logger.debug(f"Set config path to {self.config_path}")
         except Exception as e:
             self.logger.error(f"Error setting config path: {e}")
-            # Keep the original path if normalization fails
             self.config_path = config_path
 
     @property
@@ -411,14 +398,11 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
     @property
     def version(self) -> str:
         """Version of the integration."""
-        return "1.0.0"  # Default version, override in subclass
+        return "1.0.0"
 
     def initialize(self) -> IntegrationResult:
         """
         Initialize the integration.
-
-        This method initializes the integration by loading configuration and
-        initializing required components.
 
         Returns:
             IntegrationResult: Result of initialization
@@ -430,25 +414,19 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
             )
 
         try:
-            # Load configuration if not already loaded
             if not self.config and self.config_provider:
                 config_result = self.config_provider.load_config(self.config_path)
                 if not config_result.success:
-                    config_error = QuackConfigurationError(
+                    raise QuackConfigurationError(
                         f"Failed to load configuration: {config_result.error}",
                         config_path=self.config_path,
                     )
-                    self.logger.error(str(config_error))
-                    return IntegrationResult.error_result(str(config_error))
                 self.config = config_result.content
-
-                # Set config path if not already set
                 if config_result.config_path and not self.config_path:
                     self._set_config_path(config_result.config_path)
 
-            # Initialize authentication if not already initialized
             if self.auth_provider and not getattr(
-                    self.auth_provider, "authenticated", False
+                self.auth_provider, "authenticated", False
             ):
                 auth_result = self.auth_provider.authenticate()
                 if not auth_result.success:
@@ -470,12 +448,7 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
             )
 
     def is_available(self) -> bool:
-        """
-        Check if the integration is available.
-
-        Returns:
-            bool: True if integration is available
-        """
+        """Check if the integration is available."""
         return self._initialized
 
     def _ensure_initialized(self) -> IntegrationResult | None:
