@@ -59,7 +59,12 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
             log_level: Logging level.
         """
         config_provider = GoogleConfigProvider("drive", log_level)
-        super().__init__(config_provider, None, config_path, log_level)
+        super().__init__(
+            config_provider = config_provider,
+            auth_provider = None,
+            config = None,
+            config_path = config_path,
+            log_level = log_level)
 
         self.config: dict[str, Any] = self._initialize_config(
             client_secrets_file, credentials_file, shared_folder_id
