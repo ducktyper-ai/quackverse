@@ -331,7 +331,7 @@ class TestGmailEmailOperations:
             patch(
                 "quackcore.integrations.google.mail.operations.email.clean_filename"
             ) as mock_clean,
-            patch("quackcore.integrations.google.mail.operations.email.fs") as mock_fs,
+            patch("quackcore.integrations.google.mail.operations.email.standalone") as mock_fs,
         ):
             # Set up date/time to ensure consistent filename generation
             mock_dt.now.return_value = datetime(2023, 1, 15, 10, 30, 0)
