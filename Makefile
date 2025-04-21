@@ -100,6 +100,11 @@ setup: ## Create environment and install full development dependencies
 	@echo "${GREEN}Environment setup script created. To complete setup, run:${RESET}"
 	@echo "${YELLOW}source setup.sh${RESET}"
 
+.PHONY: update
+update: ## Update all dependencies
+	@echo "${BLUE}Updating dependencies...${RESET}"
+	make install-dev
+
 .PHONY: test
 test: ## Run tests with coverage
 	@echo "${BLUE}Running tests with coverage...${RESET}"

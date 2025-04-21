@@ -100,7 +100,7 @@ class TestGmailAttachmentOperations:
                 side_effect=lambda x: x,
             ),
             patch(
-                "quackcore.integrations.google.mail.operations.attachments.fs"
+                "quackcore.integrations.google.mail.operations.attachments.standalone"
             ) as mock_fs,
             patch(
                 "quackcore.integrations.google.mail.operations.attachments.base64"
@@ -180,7 +180,7 @@ class TestGmailAttachmentOperations:
                 side_effect=lambda x: x,
             ),
             patch(
-                "quackcore.integrations.google.mail.operations.attachments.fs"
+                "quackcore.integrations.google.mail.operations.attachments.standalone"
             ) as mock_fs,
             patch(
                 "quackcore.integrations.google.mail.operations.attachments.base64"
@@ -273,7 +273,7 @@ class TestGmailAttachmentOperations:
                 side_effect=lambda x: x,
             ),
             patch(
-                "quackcore.integrations.google.mail.operations.attachments.fs"
+                "quackcore.integrations.google.mail.operations.attachments.standalone"
             ) as mock_fs,
             patch(
                 "quackcore.integrations.google.mail.operations.attachments.base64"

@@ -10,7 +10,7 @@ import importlib
 import time
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.fs import service as fs
+from quackcore.fs.service import standalone
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.models import ConversionDetails, ConversionMetrics
@@ -39,7 +39,7 @@ def _validate_markdown_input(markdown_path: str) -> int:
     Raises:
         QuackIntegrationError: If the input file is missing or empty.
     """
-    file_info = fs.get_file_info(markdown_path)
+    file_info = standalone.get_file_info(markdown_path)
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(
             f"Input file not found: {markdown_path}",
@@ -55,7 +55,7 @@ def _validate_markdown_input(markdown_path: str) -> int:
         original_size = 0
 
     try:
-        read_result = fs.read_text(markdown_path, encoding="utf-8")
+        read_result = standalone.read_text(markdown_path, encoding="utf-8")
         if not read_result.success:
             raise QuackIntegrationError(
                 f"Could not read Markdown file: {read_result.error}",
@@ -97,8 +97,8 @@ def _convert_markdown_to_docx_once(
     )
 
     # Get the parent directory of the output file by splitting and joining parts
-    parent_dir = fs.join_path(*fs.split_path(output_path)[:-1])
-    dir_result = fs.create_directory(parent_dir, exist_ok=True)
+    parent_dir = standalone.join_path(*standalone.split_path(output_path)[:-1])
+    dir_result = standalone.create_directory(parent_dir, exist_ok=True)
     if not dir_result.success:
         raise QuackIntegrationError(
             f"Failed to create output directory: {dir_result.error}",
@@ -138,7 +138,7 @@ def _get_conversion_output(output_path: str, start_time: float) -> tuple[float, 
         QuackIntegrationError: If output file info cannot be retrieved.
     """
     conversion_time: float = time.time() - start_time
-    output_info = fs.get_file_info(output_path)
+    output_info = standalone.get_file_info(output_path)
     if not output_info.success:
         raise QuackIntegrationError(
             f"Failed to get info for converted file: {output_path}",
@@ -174,8 +174,8 @@ def convert_markdown_to_docx(
     Returns:
         IntegrationResult[tuple[str, ConversionDetails]]: Result of the conversion.
     """
-    # Get file name from the input path using fs.split_path
-    filename: str = fs.split_path(markdown_path)[-1]
+    # Get file name from the input path using standalone.split_path
+    filename: str = standalone.split_path(markdown_path)[-1]
 
     if metrics is None:
         metrics = ConversionMetrics()
@@ -275,7 +275,7 @@ def validate_conversion(
     validation_errors: list[str] = []
     validation = config.validation
 
-    output_info = fs.get_file_info(output_path)
+    output_info = standalone.get_file_info(output_path)
     if not output_info.success or not output_info.exists:
         validation_errors.append(f"Output file does not exist: {output_path}")
         return validation_errors
@@ -298,7 +298,7 @@ def validate_conversion(
     if not valid_ratio:
         validation_errors.extend(ratio_errors)
 
-    if validation.verify_structure and fs.get_file_info(output_path).exists:
+    if validation.verify_structure and standalone.get_file_info(output_path).exists:
         is_valid, structure_errors = validate_docx_structure(
             output_path, validation.check_links
         )
@@ -328,7 +328,7 @@ def _check_docx_metadata(docx_path: str, source_path: str, check_links: bool) ->
             return
 
         doc = Document(docx_path)
-        source_filename = fs.split_path(source_path)[-1]
+        source_filename = standalone.split_path(source_path)[-1]
         source_found = False
 
         if hasattr(doc, "core_properties"):
