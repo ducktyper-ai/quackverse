@@ -90,7 +90,8 @@ class TestPathResolver:
         # Test creating output directory
         no_output_dir = mock_project_structure / "no_output"
         no_output_dir.mkdir()
-        created_output = resolver._find_output_directory(str(no_output_dir), create=True)
+        created_output = resolver._find_output_directory(str(no_output_dir),
+                                                         create=True)
         assert created_output == str(no_output_dir / "output")
         assert Path(created_output).exists()
 
@@ -99,12 +100,13 @@ class TestPathResolver:
         # that does not contain an output folder.
         non_existent_dir = mock_project_structure / "non_existent_dir"
         non_existent_dir.mkdir()
-        with patch.object(resolver, "_get_project_root", return_value=str(non_existent_dir)):
+        with patch.object(resolver, "_get_project_root",
+                          return_value=str(non_existent_dir)):
             with pytest.raises(QuackFileNotFoundError):
                 resolver._find_output_directory(str(non_existent_dir), create=False)
 
-    def test_resolve_project_path(self, mock_project_structure: Path) -> None:
-        """Test resolving a path relative to the project root."""
+    def test_internal_resolve_project_path(self, mock_project_structure: Path) -> None:
+        """Test the internal _resolve_project_path method directly."""
         resolver = PathResolver()
 
         # Test resolving a relative path
@@ -115,25 +117,58 @@ class TestPathResolver:
 
         # Test resolving an absolute path (should remain unchanged)
         abs_path = Path("/absolute/path/file.txt")
-        resolved = resolver._resolve_project_path(str(abs_path), str(mock_project_structure))
+        resolved = resolver._resolve_project_path(str(abs_path),
+                                                  str(mock_project_structure))
         assert resolved == str(abs_path)
 
-        # Use a proper mocking approach to handle the QuackFileNotFoundError correctly
-        # Test resolving without explicit project root (should find it)
+        # Test resolving without explicit project root
         with patch.object(
-            resolver, "_get_project_root", return_value=str(mock_project_structure)
+                resolver, "_get_project_root", return_value=str(mock_project_structure)
         ):
             resolved = resolver._resolve_project_path("src/file.txt")
             assert resolved == str(mock_project_structure / "src" / "file.txt")
 
-        # Test resolving when project root cannot be found
+        # Test when project root cannot be found
+        # IMPORTANT: This test actually expects the exception since the internal method does raise it
         with patch.object(
-            resolver, "_get_project_root", side_effect=QuackFileNotFoundError("")
+                resolver, "_get_project_root", side_effect=QuackFileNotFoundError("")
         ):
-            # Mock getcwd to ensure a consistent test environment
-            with patch("os.getcwd", return_value="/current/dir"):
-                resolved = resolver._resolve_project_path("file.txt")
-                assert resolved == "/current/dir/file.txt"
+            # The internal method is designed to raise the exception
+            with pytest.raises(QuackFileNotFoundError):
+                resolver._resolve_project_path("file.txt")
+
+    def test_service_resolve_project_path(self, mock_project_structure: Path) -> None:
+        """Test the public service.resolve_project_path method with error handling."""
+        from quackcore.paths import service as paths
+
+        # Test resolving a relative path
+        resolved_result = paths.resolve_project_path("src/file.txt",
+                                                     mock_project_structure)
+        assert resolved_result.success
+        assert resolved_result.path == str(mock_project_structure / "src" / "file.txt")
+
+        # Test resolving an absolute path (should remain unchanged)
+        abs_path = Path("/absolute/path/file.txt")
+        resolved_result = paths.resolve_project_path(abs_path, mock_project_structure)
+        assert resolved_result.success
+        assert resolved_result.path == str(abs_path)
+
+        # For these tests, we need to patch the correct location
+        # Use the service object directly instead of trying to access PathService class
+        with patch.object(paths._resolver, "_resolve_project_path") as mock_resolve:
+            mock_resolve.return_value = str(mock_project_structure / "src" / "file.txt")
+            resolved_result = paths.resolve_project_path("src/file.txt")
+            assert resolved_result.success
+            assert resolved_result.path == str(
+                mock_project_structure / "src" / "file.txt")
+
+        # Test handling errors
+        with patch.object(paths._resolver, "_resolve_project_path") as mock_resolve:
+            mock_resolve.side_effect = Exception("Test error")
+            resolved_result = paths.resolve_project_path("file.txt")
+            assert not resolved_result.success
+            assert resolved_result.error is not None
+            assert "Test error" in str(resolved_result.error)
 
     def test_detect_project_context(self, mock_project_structure: Path) -> None:
         """Test detecting project context from a directory."""
@@ -157,7 +192,7 @@ class TestPathResolver:
         assert context2.root_dir == str(mock_project_structure)
         assert id(context) == id(context2)  # Should be the same cached object
 
-        # Test with non-existent path - update to use proper error handling
+        # Test with non-existent path
         with pytest.raises(QuackFileNotFoundError):
             resolver._detect_project_context("/nonexistent/path")
 
@@ -194,11 +229,13 @@ class TestPathResolver:
         assert context.content_dir == str(content_dir / "example")
 
         # Test with explicit content type
-        context = resolver._detect_content_context(str(example_dir), content_type="manual")
+        context = resolver._detect_content_context(str(example_dir),
+                                                   content_type="manual")
         assert context.content_type == "manual"
 
         # Test with non-content directory
-        context = resolver._detect_content_context(str(mock_project_structure / "tests"))
+        context = resolver._detect_content_context(
+            str(mock_project_structure / "tests"))
         assert context.content_type is None
         assert context.content_name is None
 

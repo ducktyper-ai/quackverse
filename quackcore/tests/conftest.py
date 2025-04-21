@@ -19,8 +19,8 @@ from _pytest.monkeypatch import MonkeyPatch
 try:
     from quackcore.config.models import QuackConfig
     from quackcore.fs.results import DataResult, OperationResult
-    from quackcore.plugins.protocols import QuackPluginProtocol
     from quackcore.fs.service import standalone as fs_standalone
+    from quackcore.plugins.protocols import QuackPluginProtocol
 except ImportError as e:
     print(f"Error importing quackcore modules: {e}")
     # Emergency fallbacks if needed
@@ -29,8 +29,8 @@ except ImportError as e:
     sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
     from quackcore.config.models import QuackConfig
     from quackcore.fs.results import DataResult, OperationResult
-    from quackcore.plugins.protocols import QuackPluginProtocol
     from quackcore.fs.service import standalone as fs_standalone
+    from quackcore.plugins.protocols import QuackPluginProtocol
 
 
 @pytest.fixture(autouse=True)
