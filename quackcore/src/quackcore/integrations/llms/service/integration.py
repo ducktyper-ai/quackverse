@@ -5,7 +5,6 @@ Core LLM integration class.
 This module provides the main LLMIntegration class which serves as the entry point
 for using different LLM providers.
 """
-
 from collections.abc import Callable, Sequence
 
 from quackcore.errors import QuackIntegrationError
@@ -42,12 +41,22 @@ class LLMIntegration(BaseIntegrationService):
             log_level: Logging level
             enable_fallback: Whether to enable fallback between providers
         """
-        config_provider = LLMConfigProvider(log_level)
-        super().__init__(config_provider, None, config_path, log_level)
+        # Retain the provided log level explicitly
+        self.log_level = log_level
 
+        # Initialize configuration provider and base service
+        config_provider = LLMConfigProvider(log_level)
+        super().__init__(config_provider, None, config_path, str(log_level))
+
+        # Retain provided log level
+        self.log_level = log_level
+
+        # User-specified settings
         self.provider = provider
         self.model = model
         self.api_key = api_key
+
+        # Internal state
         self.client: LLMClient | None = None
         self._using_mock = False
         self._enable_fallback = enable_fallback
@@ -69,7 +78,7 @@ class LLMIntegration(BaseIntegrationService):
         Raises:
             QuackIntegrationError: If configuration is invalid
         """
-        if not self.config:
+        if not getattr(self, 'config', None):
             # Get default configuration
             if not self.config_provider:
                 raise QuackIntegrationError("Configuration provider not initialized")
@@ -170,7 +179,7 @@ class LLMIntegration(BaseIntegrationService):
         Raises:
             QuackIntegrationError: If the client is not initialized
         """
-        if not self._initialized or not self.client:
+        if not getattr(self, '_initialized', False) or not self.client:
             raise QuackIntegrationError("LLM client not initialized")
 
         return self.client
