@@ -20,6 +20,7 @@ try:
     from quackcore.config.models import QuackConfig
     from quackcore.fs.results import DataResult, OperationResult
     from quackcore.plugins.protocols import QuackPluginProtocol
+    from quackcore.fs.service import standalone as fs_standalone
 except ImportError as e:
     print(f"Error importing quackcore modules: {e}")
     # Emergency fallbacks if needed
@@ -29,6 +30,7 @@ except ImportError as e:
     from quackcore.config.models import QuackConfig
     from quackcore.fs.results import DataResult, OperationResult
     from quackcore.plugins.protocols import QuackPluginProtocol
+    from quackcore.fs.service import standalone as fs_standalone
 
 
 @pytest.fixture(autouse=True)
@@ -169,7 +171,7 @@ def mock_project_structure(temp_dir: Path) -> Path:
     # Create project root with marker files
     project_root = temp_dir / "test_project"
     project_root.mkdir()
-    (project_root / "pyproject.toml").touch()
+    (project_root / "pyproject.toml").write_text("# Mock pyproject.toml")
 
     # Create src directory with module structure
     src_dir = project_root / "src"
@@ -217,3 +219,15 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "integration: mark a test as an integration test"
     )
+
+
+# Fix for the mock_normalize_path fixture
+@pytest.fixture(autouse=True)
+def mock_normalize_path(monkeypatch):
+    """Mock the normalize_path function to avoid filesystem access."""
+
+    def mock_normalize(path):
+        return Path(os.path.abspath(str(path)))
+
+    # Fix: Use the correct import path for normalize_path
+    monkeypatch.setattr(fs_standalone, "normalize_path", mock_normalize)

@@ -230,12 +230,11 @@ class PathService:
             self.logger.error(f"Failed to get module path for '{module}': {e}")
             return PathResult(success=False, error=str(e))
 
-
     def find_nearest_directory(
-        self,
-        name: str,
-        start_dir: str | Path | DataResult | OperationResult | None = None,
-        max_levels: int = 5,
+            self,
+            name: str,
+            start_dir: str | Path | DataResult | OperationResult | None = None,
+            max_levels: int = 5,
     ) -> PathResult:
         """
         Find the nearest directory with the given name.
@@ -257,10 +256,10 @@ class PathService:
             return PathResult(success=False, error=str(e))
 
     def find_project_root(
-        self,
-        start_dir: str | Path | DataResult | OperationResult | None = None,
-        marker_files: list[str] | None = None,
-        marker_dirs: list[str] | None = None,
+            self,
+            start_dir: str | Path | DataResult | OperationResult | None = None,
+            marker_files: list[str] | None = None,
+            marker_dirs: list[str] | None = None,
     ) -> PathResult:
         """
         Find the project root directory using custom marker files or dirs.
@@ -393,6 +392,7 @@ class PathService:
             return self._resolver._infer_current_content(start)
         except Exception as e:
             self.logger.error(f"Failed to infer current content: {e}")
+            # Return an empty dict rather than potentially returning None
             return {}
 
     def get_relative_path(

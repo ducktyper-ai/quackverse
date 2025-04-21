@@ -33,8 +33,9 @@ class TestPathResolver:
 
         # Test finding from subdirectory
         subdir = f"{mock_project_structure}/src"
-        root = paths.resolver._get_project_root(subdir)
-        assert root == str(mock_project_structure)
+        root_result = paths.find_project_root(subdir)
+        assert root_result.success
+        assert root_result.path == str(mock_project_structure)
 
         # Test with custom marker files
         root_result = paths.get_project_root(
@@ -50,15 +51,17 @@ class TestPathResolver:
         assert root_result.success
         assert root_result.path == str(mock_project_structure)
 
-        # Test with non-existent path (should raise)
-        with pytest.raises(QuackFileNotFoundError):
-            paths.get_project_root("/nonexistent/path")
+        # Test with non-existent path
+        root_result = paths.get_project_root("/nonexistent/path")
+        assert not root_result.success
+        assert root_result.error is not None
 
         # Test where no project root can be found
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
-            with pytest.raises(QuackFileNotFoundError):
-                paths.get_project_root(tmp_path)
+            root_result = paths.get_project_root(tmp_path)
+            assert not root_result.success
+            assert root_result.error is not None
 
     def test_find_source_directory(self, mock_project_structure: Path) -> None:
         """Test finding a source directory."""
@@ -115,6 +118,7 @@ class TestPathResolver:
         resolved = resolver._resolve_project_path(str(abs_path), str(mock_project_structure))
         assert resolved == str(abs_path)
 
+        # Use a proper mocking approach to handle the QuackFileNotFoundError correctly
         # Test resolving without explicit project root (should find it)
         with patch.object(
             resolver, "_get_project_root", return_value=str(mock_project_structure)
@@ -126,7 +130,7 @@ class TestPathResolver:
         with patch.object(
             resolver, "_get_project_root", side_effect=QuackFileNotFoundError("")
         ):
-            # Should use current directory as fallback
+            # Mock getcwd to ensure a consistent test environment
             with patch("os.getcwd", return_value="/current/dir"):
                 resolved = resolver._resolve_project_path("file.txt")
                 assert resolved == "/current/dir/file.txt"
@@ -153,7 +157,7 @@ class TestPathResolver:
         assert context2.root_dir == str(mock_project_structure)
         assert id(context) == id(context2)  # Should be the same cached object
 
-        # Test with non-existent path
+        # Test with non-existent path - update to use proper error handling
         with pytest.raises(QuackFileNotFoundError):
             resolver._detect_project_context("/nonexistent/path")
 
