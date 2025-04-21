@@ -84,11 +84,13 @@ class TestLLMIntegrationComprehensive:
             file_info_result.is_file = True
             mock_file_info.return_value = file_info_result
 
-            # Also patch normalize_path
-            with patch("quackcore.fs.api.normalize_path") as mock_normalize_path:
+            # Also patch resolve_path
+            with patch("quackcore.fs.service.standalone.resolve_path") as mock_resolve_path:
                 # Create a mock path string directly
                 mock_path = "/Users/rodrivera/custom_config.yaml"
-                mock_normalize_path.return_value = mock_path
+                mock_result = MagicMock()
+                mock_result.path = mock_path
+                mock_resolve_path.return_value = mock_result
 
                 # Mock os.getcwd to prevent FileNotFoundError
                 with patch("os.getcwd", return_value="/Users/rodrivera"):
@@ -104,7 +106,6 @@ class TestLLMIntegrationComprehensive:
                     assert integration.provider == "anthropic"
                     assert integration.model == "claude-3-opus"
                     assert integration.api_key == "test-key"
-                    # Compare with the mocked path directly
                     assert integration.config_path == mock_path
                     assert integration.log_level == 10
                     assert integration._enable_fallback is False

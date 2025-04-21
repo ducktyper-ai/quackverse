@@ -1,4 +1,4 @@
-# quackcore/src/quackcore/integrations/llms/service/integration.py
+# quackcore/integrations/llms/service/integration.py
 """
 Core LLM integration class.
 

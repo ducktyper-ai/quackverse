@@ -29,9 +29,9 @@ class BaseAuthProvider(ABC, AuthProviderProtocol):
     """Base class for authentication providers."""
 
     def __init__(
-        self,
-        credentials_file: str | None = None,
-        log_level: int = LOG_LEVELS[LogLevel.INFO],
+            self,
+            credentials_file: str | None = None,
+            log_level: int = LOG_LEVELS[LogLevel.INFO],
     ) -> None:
         """
         Initialize the base authentication provider.
@@ -136,7 +136,7 @@ class BaseAuthProvider(ABC, AuthProviderProtocol):
 
             parent_parts = standalone.split_path(self.credentials_file)
             # Make sure we're only using the directory parts
-            if len(parent_parts) > 1:
+            if len(parent_parts.data) > 1:
                 parent_parts = parent_parts[:-1]
             parent_dir = standalone.join_path(*parent_parts)
             result = standalone.create_directory(parent_dir, exist_ok=True)
@@ -351,6 +351,7 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
             self,
             config_provider: ConfigProviderProtocol | None = None,
             auth_provider: AuthProviderProtocol | None = None,
+            config: dict[str, Any] | None = None,
             config_path: str | None = None,
             log_level: int = LOG_LEVELS[LogLevel.INFO],
     ) -> None:
@@ -360,6 +361,7 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
         Args:
             config_provider: Configuration provider
             auth_provider: Authentication provider
+            config: Configuration data
             config_path: Path to configuration file
             log_level: Logging level
         """
@@ -369,21 +371,36 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
 
         self.config_provider = config_provider
         self.auth_provider = auth_provider
-
-        # Use QuackCore's path resolver to normalize config path if provided
-        if config_path:
-            try:
-                from quackcore.fs.service import standalone
-                result = standalone.resolve_path(config_path)
-                self.config_path = str(result.path) if hasattr(result, 'path') else str(result)
-            except Exception as e:
-                self.logger.warning(f"Could not resolve config path: {e}")
-                self.config_path = config_path
-        else:
-            self.config_path = None
-
-        self.config: dict | None = None
+        self.config = config
         self._initialized = False
+
+        # Set config path if provided (using _set_config_path)
+        self.config_path = None
+        if config_path:
+            self._set_config_path(config_path)
+
+    def _set_config_path(self, config_path: str) -> None:
+        """
+        Set the configuration path.
+
+        This method is separated to allow easier patching in tests. In a real
+        environment, we normalize the path to handle relative paths correctly.
+
+        Args:
+            config_path: Path to configuration file
+        """
+        self.config_path = config_path
+        try:
+            # Use QuackCore's path resolver to normalize config path
+            from quackcore.fs.service import standalone
+            result = standalone.resolve_path(config_path)
+            self.config_path = str(result.path) if hasattr(result, 'path') else str(
+                result)
+            self.logger.debug(f"Set config path to {self.config_path}")
+        except Exception as e:
+            self.logger.error(f"Error setting config path: {e}")
+            # Keep the original path if normalization fails
+            self.config_path = config_path
 
     @property
     @abstractmethod
@@ -406,6 +423,12 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
         Returns:
             IntegrationResult: Result of initialization
         """
+        if self._initialized:
+            self.logger.debug(f"{self.name} integration already initialized")
+            return IntegrationResult.success_result(
+                message=f"{self.name} integration already initialized"
+            )
+
         try:
             # Load configuration if not already loaded
             if not self.config and self.config_provider:
@@ -419,9 +442,13 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
                     return IntegrationResult.error_result(str(config_error))
                 self.config = config_result.content
 
+                # Set config path if not already set
+                if config_result.config_path and not self.config_path:
+                    self._set_config_path(config_result.config_path)
+
             # Initialize authentication if not already initialized
             if self.auth_provider and not getattr(
-                self.auth_provider, "authenticated", False
+                    self.auth_provider, "authenticated", False
             ):
                 auth_result = self.auth_provider.authenticate()
                 if not auth_result.success:
@@ -460,6 +487,7 @@ class BaseIntegrationService(ABC, IntegrationProtocol):
                                         None if initialized
         """
         if not self._initialized:
+            self.logger.info(f"Auto-initializing {self.name} integration")
             init_result = self.initialize()
             if not init_result.success:
                 return init_result
