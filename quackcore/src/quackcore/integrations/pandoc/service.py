@@ -163,7 +163,6 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             if output_path is None and self.converter:
                 config = getattr(self.converter, "config", None)
                 if isinstance(config, PandocConfig):
-                    from quackcore.fs import service as fs
                     stem = os.path.splitext(os.path.basename(html_path))[0]
                     output_path = standalone.join_path(config.output_dir, f"{stem}.md")
                 else:
