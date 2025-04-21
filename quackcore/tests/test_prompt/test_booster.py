@@ -3,15 +3,14 @@
 Tests for the PromptBooster class.
 """
 
-from quackcore.prompt.booster import PromptBooster
-from quackcore.prompt.registry import clear_registry, register_prompt_strategy
-from quackcore.prompt.strategy_base import PromptStrategy
-
-
 # Fixed test_enhancer.py imports
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+from quackcore.prompt.booster import PromptBooster
+from quackcore.prompt.registry import clear_registry, register_prompt_strategy
+from quackcore.prompt.strategy_base import PromptStrategy
 
 
 @pytest.fixture
@@ -424,7 +423,7 @@ def test_booster_export_fallback(sample_strategy, tmp_path):
 
                 # Verify json.dumps was called
                 mock_dumps.assert_called_once()
-                
+
 def test_booster_estimate_token_count():
     """Test token count estimation."""
     # Create a mock token count function
