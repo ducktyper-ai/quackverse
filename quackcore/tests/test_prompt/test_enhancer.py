@@ -68,13 +68,13 @@ def test_load_config():
     config_mock = MagicMock()
     config_mock.get_custom.return_value = {}  # Empty custom config
 
-    fs_mock = MagicMock()
-    fs_mock.read_yaml.return_value = MagicMock(success=True, data=custom_config)
+    standalone_mock = MagicMock()
+    standalone_mock.read_yaml.return_value = MagicMock(success=True, data=custom_config)
 
     # Direct patch without modifying internal implementation
     with (
         patch("quackcore.prompt.enhancer.quack_config", config_mock),
-        patch("quackcore.prompt.enhancer.fs", fs_mock),
+        patch("quackcore.prompt.enhancer.standalone", standalone_mock),
         patch.dict(
             "quackcore.prompt.enhancer.DEFAULT_CONFIG",
             {
@@ -100,7 +100,6 @@ def test_load_config():
         assert (
             config["system_prompt"]["prompt_engineer"] == "Custom prompt template"
         )  # From custom config
-
 
 def test_enhance_with_llm(mock_llm_integration_class, mock_config):
     """Test enhancing a prompt with an LLM."""

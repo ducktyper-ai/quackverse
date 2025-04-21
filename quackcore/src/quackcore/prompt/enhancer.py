@@ -31,7 +31,7 @@ DEFAULT_CONFIG = {
 }
 
 
-def _load_config():
+def _load_config() -> dict:
     """
     Load configuration for the enhancer module.
 

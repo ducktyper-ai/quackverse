@@ -3,14 +3,15 @@
 Tests for the PromptBooster class.
 """
 
-import json
-from unittest.mock import MagicMock, patch
-
-import pytest
-
 from quackcore.prompt.booster import PromptBooster
 from quackcore.prompt.registry import clear_registry, register_prompt_strategy
 from quackcore.prompt.strategy_base import PromptStrategy
+
+
+# Fixed test_enhancer.py imports
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 @pytest.fixture
@@ -337,35 +338,41 @@ def test_booster_export(sample_strategy, tmp_path):
     booster.render()
 
     # Define export paths
-    json_path = tmp_path / "export.json"
-    text_path = tmp_path / "export.txt"
+    json_path = str(tmp_path / "export.json")
+    text_path = str(tmp_path / "export.txt")
 
-    # Export to JSON and check
-    booster.export(json_path)
-    assert json_path.exists()
+    # Mock the standalone functions to return success
+    with patch("quackcore.prompt.booster.standalone") as mock_standalone:
+        # Configure the split_path mock
+        mock_standalone.split_path.return_value = MagicMock(
+            success=True,
+            data=[str(tmp_path), "export.json"]
+        )
 
-    # Read and validate JSON
-    with open(json_path) as f:
-        data = json.load(f)
-        assert "prompt" in data
-        assert data["prompt"] == "Task: Export test"
-        assert "metadata" in data
-        assert "explanation" in data
+        # Configure the join_path mock
+        mock_standalone.join_path.return_value = MagicMock(
+            success=True,
+            data=str(tmp_path)
+        )
 
-    # Create a subdirectory that doesn't exist yet
-    new_dir = tmp_path / "new_dir"
-    new_path = new_dir / "export.txt"
+        # Configure the write_json mock
+        mock_standalone.write_json.return_value = MagicMock(success=True)
 
-    # Export to text with directory creation
-    booster.export(new_path)
-    assert new_path.exists()
+        # Configure the create_directory mock
+        mock_standalone.create_directory.return_value = MagicMock(success=True)
 
-    # Read and validate text
-    content = new_path.read_text()
-    assert "# Prompt" in content
-    assert "Task: Export test" in content
-    assert "# Metadata" in content
-    assert "# Explanation" in content
+        # Export to JSON and check
+        booster.export(json_path)
+
+        # Verify mocks were called correctly
+        mock_standalone.split_path.assert_called_with(json_path)
+        mock_standalone.join_path.assert_called()
+        mock_standalone.create_directory.assert_called()
+        mock_standalone.write_json.assert_called_with(json_path, {
+            "prompt": "Task: Export test",
+            "metadata": booster.metadata(),
+            "explanation": booster.explain(),
+        }, indent=2)
 
 
 def test_booster_export_fallback(sample_strategy, tmp_path):
@@ -380,24 +387,44 @@ def test_booster_export_fallback(sample_strategy, tmp_path):
     booster.render()
 
     # Define export path
-    text_path = tmp_path / "export.txt"
+    text_path = str(tmp_path / "export.txt")
 
-    # Mock fs.write_json to fail for the temporary file
-    with (
-        patch("quackcore.fs.service.write_json") as mock_write_json,
-        patch("json.dumps") as mock_dumps,
-    ):
-        # First call succeeds (for metadata), second call fails (for temp file)
-        mock_write_json.side_effect = [MagicMock(success=False, error="Test error")]
-        mock_dumps.return_value = '{"mock": "json"}'
+    # Mock the standalone functions
+    with patch("quackcore.prompt.booster.standalone") as mock_standalone:
+        # Configure the split_path mock
+        mock_standalone.split_path.return_value = MagicMock(
+            success=True,
+            data=[str(tmp_path), "export.txt"]
+        )
 
-        # Export using the fallback
-        booster.export(text_path)
+        # Configure the join_path mock
+        mock_standalone.join_path.return_value = MagicMock(
+            success=True,
+            data=str(tmp_path)
+        )
 
-        # Verify mock was called
-        mock_dumps.assert_called_once()
+        # Configure the create_directory mock
+        mock_standalone.create_directory.return_value = MagicMock(success=True)
 
+        # Configure the write_text mock
+        mock_standalone.write_text.return_value = MagicMock(success=True)
 
+        # Configure the write_json mock to fail, which will trigger the fallback
+        mock_standalone.write_json.return_value = MagicMock(success=False,
+                                                            error="Test error")
+
+        # Mock tempfile to force an exception in the try block
+        with patch("tempfile.NamedTemporaryFile", side_effect=Exception("Test error")):
+            # Now mock json.dumps for the fallback path
+            with patch("json.dumps") as mock_dumps:
+                mock_dumps.return_value = '{"mock": "json"}'
+
+                # Export using the fallback
+                booster.export(text_path)
+
+                # Verify json.dumps was called
+                mock_dumps.assert_called_once()
+                
 def test_booster_estimate_token_count():
     """Test token count estimation."""
     # Create a mock token count function

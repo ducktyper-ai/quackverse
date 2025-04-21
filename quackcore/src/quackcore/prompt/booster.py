@@ -274,7 +274,7 @@ Tags: {", ".join(s.tags)}
             path: Path (as a string) to save the export file.
 
         Raises:
-            IOError: If the file cannot be written.
+            OSError: If the file cannot be written.
         """
         export_data = {
             "prompt": self.optimized_prompt or self.raw_prompt,
@@ -284,13 +284,21 @@ Tags: {", ".join(s.tags)}
 
         try:
             # Ensure parent directory exists using quackcore.standalone.
-            # Compute parent directory by splitting the path and joining all parts except the last.
-            parent_dir = standalone.join_path(*standalone.split_path(path)[:-1])
-            standalone.create_directory(parent_dir, exist_ok=True)
+            # Convert path to string if it's a Path object
+            path_str = str(path)
+
+            # Get the parent directory
+            split_result = standalone.split_path(path_str)
+            if split_result.success and split_result.data:
+                path_parts = split_result.data[:-1]  # All parts except the last
+                parent_dir_result = standalone.join_path(*path_parts)
+                if parent_dir_result.success:
+                    parent_dir = parent_dir_result.data
+                    standalone.create_directory(parent_dir, exist_ok=True)
 
             # Determine output format based on file extension.
-            if str(path).lower().endswith(".json"):
-                result = standalone.write_json(path, export_data, indent=2)
+            if path_str.lower().endswith(".json"):
+                result = standalone.write_json(path_str, export_data, indent=2)
                 if not result.success:
                     raise OSError(f"Failed to export prompt: {result.error}")
             else:
@@ -302,7 +310,7 @@ Tags: {", ".join(s.tags)}
                     import tempfile
 
                     with tempfile.NamedTemporaryFile(
-                        mode="w+", delete=False
+                            mode="w+", delete=False
                     ) as temp_file:
                         temp_path = temp_file.name
 
@@ -326,11 +334,11 @@ Tags: {", ".join(s.tags)}
 
                 content += f"# Explanation\n\n{export_data['explanation']}\n"
 
-                result = standalone.write_text(path, content)
+                result = standalone.write_text(path_str, content)
                 if not result.success:
                     raise OSError(f"Failed to export prompt: {result.error}")
 
-            logger.info("Exported prompt to %s", path)
+            logger.info("Exported prompt to %s", path_str)
 
         except Exception as e:
             logger.error("Failed to export prompt: %s", str(e))
