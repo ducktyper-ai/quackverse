@@ -21,8 +21,6 @@ from quackcore.integrations.github.service import GitHubIntegration
 @pytest.fixture
 def mock_auth_provider():
     """Create a mock authentication provider."""
-    # Create an autospec instance.
-    # Do not try to override the 'name' property as it is read‐only and already returns "GitHub".
     auth_provider = cast(
         GitHubAuthProvider, create_autospec(GitHubAuthProvider, instance=True)
     )
@@ -35,7 +33,6 @@ def mock_config_provider():
     config_provider = cast(
         GitHubConfigProvider, create_autospec(GitHubConfigProvider, instance=True)
     )
-    # Do not override the 'name' property; its implementation already returns "GitHub".
     config_provider.get_default_config.return_value = {
         "token": "test_token",
         "api_url": "https://api.github.com",
@@ -60,13 +57,12 @@ class TestGitHubIntegration:
 
     def test_init_with_default_providers(self):
         """Test initialization with default providers."""
-        # Creating service with no providers should create default ones.
         service = GitHubIntegration()
 
         assert service.name == "GitHub"
         assert service.version == "1.0.0"
-        # The default providers will be instantiated from the real classes.
-        assert isinstance(service.auth_provider, GitHubAuthProvider)
+        # We no longer auto-create an auth_provider, but we do get a default config_provider
+        assert service.auth_provider is None
         assert isinstance(service.config_provider, GitHubConfigProvider)
         assert service.client is None
         assert not service._initialized
@@ -87,6 +83,7 @@ class TestGitHubIntegration:
             "max_retries": 3,
             "retry_delay": 1.0,
         }
+        github_service.auth_provider = mock_auth_provider
 
         # Mock auth provider to return token.
         mock_auth_provider.get_credentials.return_value = {"token": "test_token"}
@@ -100,7 +97,6 @@ class TestGitHubIntegration:
             assert "GitHub integration initialized successfully" in result.message
             assert github_service._initialized is True
 
-            # Cast to MagicMock when checking call attributes.
             cast(MagicMock, mock_client_class).assert_called_once_with(
                 token="test_token",
                 api_url="https://api.github.com",
@@ -150,6 +146,7 @@ class TestGitHubIntegration:
 
             # Set config without token.
             github_service.config = {"api_url": "https://api.github.com"}
+            github_service.auth_provider = mock_auth_provider
 
             # Mock auth provider to return token.
             mock_auth_provider.get_credentials.return_value = {"token": "auth_token"}
@@ -162,7 +159,6 @@ class TestGitHubIntegration:
                 assert result.success is True
                 assert github_service._initialized is True
 
-                # Use cast to check call attributes.
                 assert cast(MagicMock, mock_client_class).call_count == 1
                 _, kwargs = mock_client_class.call_args
                 assert kwargs.get("token") == "auth_token"
@@ -175,6 +171,7 @@ class TestGitHubIntegration:
             mock_base_init.return_value = IntegrationResult.success_result()
 
             github_service.config = {"api_url": "https://api.github.com"}
+            github_service.auth_provider = mock_auth_provider
 
             # Simulate that get_credentials returns no token.
             mock_auth_provider.get_credentials.return_value = {"token": None}
@@ -190,7 +187,6 @@ class TestGitHubIntegration:
                 assert result.success is True
                 assert github_service._initialized is True
 
-                # Cast the authenticate method so we can check call_count.
                 assert cast(MagicMock, mock_auth_provider.authenticate).call_count == 1
                 assert cast(MagicMock, mock_client_class).call_count == 1
                 _, kwargs = mock_client_class.call_args
@@ -204,7 +200,9 @@ class TestGitHubIntegration:
             mock_base_init.return_value = IntegrationResult.success_result()
 
             github_service.config = {"api_url": "https://api.github.com"}
+            github_service.auth_provider = mock_auth_provider
 
+            # Simulate auth provider returns no token and then fails to authenticate.
             mock_auth_provider.get_credentials.return_value = {"token": None}
             mock_auth_provider.authenticate.return_value = AuthResult.error_result(
                 error="Authentication failed", message="Invalid token"
@@ -243,23 +241,19 @@ class TestGitHubIntegration:
         ) as mock_base_init:
             mock_base_init.return_value = IntegrationResult.success_result()
 
-            # Mock GitHubClient to raise an exception when instantiated
             with patch(
                 "quackcore.integrations.github.service.GitHubClient"
             ) as mock_client_class:
                 mock_client_class.side_effect = Exception("Unexpected error")
 
-                # Ensure config is available to trigger the client initialization path
                 github_service.config = {
                     "token": "test_token",
                     "api_url": "https://api.github.com",
                 }
-
-                # Mock auth provider to return token
-                if github_service.auth_provider:
-                    github_service.auth_provider.get_credentials = MagicMock(
-                        return_value={"token": "test_token"}
-                    )
+                github_service.auth_provider = github_service.auth_provider or MagicMock()
+                github_service.auth_provider.get_credentials = MagicMock(
+                    return_value={"token": "test_token"}
+                )
 
                 result = github_service.initialize()
 
@@ -667,47 +661,33 @@ class TestGitHubIntegration:
 
     def test_initialize_handles_exceptions(self):
         """Test that initialize properly handles exceptions."""
-        # Create a mock auth provider that raises an exception during authenticate
         mock_auth = MagicMock()
         mock_auth.authenticate.side_effect = Exception("Unexpected auth error")
 
-        # Create a mock config provider with valid config
         mock_config = MagicMock()
         mock_config.load_config.return_value = MagicMock(
-            success=True, content={"token": "test_token"}
+            success=True, content={"token": "test_token", "api_url": "https://api.github.com"}
         )
+        mock_config.get_config = MagicMock(return_value={"token": "test_token", "api_url": "https://api.github.com"})
 
-        # Add get_config method to mock_config
-        mock_config.get_config = MagicMock(return_value={"token": "test_token"})
+        service = GitHubIntegration()
+        service.auth_provider = cast(AuthProviderProtocol, mock_auth)
+        service.config_provider = cast(ConfigProviderProtocol, mock_config)
 
-        # Create service with our mocked providers
-        service = GitHubIntegration(
-            auth_provider=cast(AuthProviderProtocol, mock_auth),
-            config_provider=cast(ConfigProviderProtocol, mock_config),
-        )
-
-        # Initialize base class to avoid additional complexity
         with patch(
             "quackcore.integrations.core.BaseIntegrationService.initialize"
         ) as mock_base_init:
             mock_base_init.return_value = IntegrationResult.success_result()
 
-            # Mock the config attribute directly
             service.config = {
                 "token": "test_token",
                 "api_url": "https://api.github.com",
             }
-
-            # Ensure _initialized is False before we start
             service._initialized = False
 
-            # Call initialize which should handle the exception
             result = service.initialize()
 
-            # Verify the result indicates failure
             assert result.success is False
             assert "Failed to initialize GitHub integration" in result.error
             assert "Unexpected auth error" in result.error
-
-            # Verify _initialized remains False
             assert service._initialized is False

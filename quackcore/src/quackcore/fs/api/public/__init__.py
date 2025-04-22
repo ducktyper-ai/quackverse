@@ -27,6 +27,7 @@ from quackcore.fs.api.public.path_ops import (
     is_subdirectory,
     normalize_path,
     split_path,
+extract_path_from_result,
 )
 from quackcore.fs.api.public.safe_ops import (
     copy_safely,
@@ -61,6 +62,7 @@ __all__ = [
     "is_subdirectory",
     "normalize_path",
     "split_path",
+    "extract_path_from_result",
     # Safe _operations
     "copy_safely",
     "delete_safely",
