@@ -41,10 +41,10 @@ class PathOperationsMixin:
     def join_path(self, *parts: str | Path | DataResult | OperationResult) -> \
     DataResult[str]:
         """
-        Join path components.
+        Join path components safely, extracting path values from result objects.
 
         Args:
-            *parts: Path parts to join (can be string, Path, DataResult, or OperationResult)
+            *parts: Path parts to join (can be any type of path or result object)
 
         Returns:
             DataResult with the joined path
@@ -53,8 +53,21 @@ class PathOperationsMixin:
             if not parts:
                 result_path = Path()
             else:
-                # Normalize each part before joining
-                normalized_parts = [self._normalize_input_path(part) for part in parts]
+                # Extract proper path component from each part
+                extracted_parts = []
+                for part in parts:
+                    # Handle PathResult (path attribute)
+                    if hasattr(part, "path") and part.path is not None:
+                        extracted_parts.append(part.path)
+                    # Handle DataResult (data attribute)
+                    elif hasattr(part, "data") and part.data is not None:
+                        extracted_parts.append(part.data)
+                    else:
+                        extracted_parts.append(part)
+
+                # Now normalize each extracted part
+                normalized_parts = [self._normalize_input_path(part) for part in
+                                    extracted_parts]
                 base_path = normalized_parts[0]
                 for part in normalized_parts[1:]:
                     base_path = base_path / part

@@ -185,31 +185,23 @@ class GoogleDriveService(BaseIntegrationService, StorageIntegrationProtocol):
     def _resolve_file_details(
             self, file_path: str, remote_path: str | None, parent_folder_id: str | None
     ) -> tuple[Any, str, str | None, str]:
-        """
-        Resolve file details for upload.
+        """Resolve file details for upload."""
+        from quackcore.fs.service import standalone
 
-        Args:
-            file_path: Path to the file to upload.
-            remote_path: Optional remote path or name.
-            parent_folder_id: Optional parent folder ID.
-
-        Returns:
-            A tuple containing the resolved path object,
-            filename, folder ID, and MIME type.
-
-        Raises:
-            QuackIntegrationError: If the file does not exist.
-        """
+        # Extract clean paths using our new helper
         path_obj_result = paths_service.resolve_project_path(file_path)
         if not path_obj_result.success:
             raise QuackIntegrationError(
                 f"Failed to resolve path: {path_obj_result.error}")
-        path_obj = path_obj_result.path
+
+        # Extract the clean path as a string from the path_obj_result
+        path_obj = standalone.extract_path_from_result(path_obj_result)
 
         file_info = standalone.get_file_info(path_obj)
         if not file_info.success or not file_info.exists:
             raise QuackIntegrationError(f"File not found: {file_path}")
 
+        # Determine the filename to use
         if remote_path and not remote_path.startswith("/"):
             filename = remote_path
         else:

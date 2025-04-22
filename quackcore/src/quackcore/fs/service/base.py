@@ -54,7 +54,12 @@ class FileSystemService:
         Returns:
             A normalized Path object
         """
-        if isinstance(path, (DataResult, OperationResult)) and hasattr(path, "data"):
+        # Extract from path attribute first (for PathResult)
+        if hasattr(path, "path") and path.path is not None:
+            return Path(path.path)
+
+        # Then check for data attribute (for DataResult)
+        if hasattr(path, "data") and path.data is not None:
             path_content = path.data
         else:
             path_content = path

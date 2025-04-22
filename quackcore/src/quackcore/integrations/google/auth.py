@@ -135,18 +135,21 @@ class GoogleAuthProvider(BaseAuthProvider):
                 )
                 return None
 
+            # Access the result data correctly
+            data = json_result.data
+
             # Try web client configuration first (most common for installed apps)
-            if "web" in json_result.data and "redirect_uris" in json_result.data["web"]:
-                redirect_uris = json_result.data["web"]["redirect_uris"]
+            if "web" in data and "redirect_uris" in data["web"]:
+                redirect_uris = data["web"]["redirect_uris"]
                 if redirect_uris and len(redirect_uris) > 0:
                     return redirect_uris[0]
 
             # Try installed client configuration
             if (
-                "installed" in json_result.data
-                and "redirect_uris" in json_result.data["installed"]
+                    "installed" in data
+                    and "redirect_uris" in data["installed"]
             ):
-                redirect_uris = json_result.data["installed"]["redirect_uris"]
+                redirect_uris = data["installed"]["redirect_uris"]
                 if redirect_uris and len(redirect_uris) > 0:
                     return redirect_uris[0]
 
@@ -162,17 +165,15 @@ class GoogleAuthProvider(BaseAuthProvider):
         if not file_info.exists:
             return None
 
-        file_info = standalone.get_file_info(self.credentials_file)
-        if not file_info.exists:
-            return None
-
         json_result = standalone.read_json(self.credentials_file)
         if not json_result.success:
             self.logger.warning(f"Failed to load credentials: {json_result.error}")
             return None
 
         try:
-            return Credentials.from_authorized_user_info(json_result.data, self.scopes)
+            # Access the result data correctly
+            credential_data = json_result.data
+            return Credentials.from_authorized_user_info(credential_data, self.scopes)
         except ValueError as e:
             self.logger.warning(f"Invalid credential data: {e}")
             return None
@@ -236,9 +237,22 @@ class GoogleAuthProvider(BaseAuthProvider):
             self.logger.warning("No credentials file specified, cannot save")
             return False
 
-        parent_dir = standalone.split_path(self.credentials_file)[:-1]
-        if parent_dir:
-            directory_path = standalone.join_path(*parent_dir)
+        split_result = standalone.split_path(self.credentials_file)
+        if not split_result.success:
+            self.logger.error(f"Failed to split path: {split_result.error}")
+            return False
+
+        # Extract the components and remove the last one (filename)
+        path_components = split_result.data[:-1]
+        if path_components:
+            # Join them back together to get the directory path
+            join_result = standalone.join_path(*path_components)
+            if not join_result.success:
+                self.logger.error(f"Failed to join directory path: {join_result.error}")
+                return False
+
+            directory_path = join_result.data
+            # Create the directory
             result = standalone.create_directory(directory_path, exist_ok=True)
             if not result.success:
                 self.logger.error(

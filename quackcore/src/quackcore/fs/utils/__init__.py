@@ -18,6 +18,7 @@ from quackcore.fs.api import (
     delete_safely,
     ensure_directory,
     expand_user_vars,
+    extract_path_from_result,
     find_files_by_content,
     get_disk_usage,
     get_file_size_str,
@@ -58,4 +59,5 @@ __all__ = [
     "move_safely",
     "normalize_path",
     "split_path",
+    "extract_path_from_result",
 ]

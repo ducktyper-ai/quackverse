@@ -456,13 +456,17 @@ def _normalize_path_param(path_param: Any) -> str:
     Helper function to consistently handle different path input types.
 
     Args:
-        path_param: Path parameter (string, Path, DataResult, or OperationResult)
+        path_param: Path parameter (string, Path, DataResult, OperationResult)
 
     Returns:
         Normalized path string
     """
-    # Extract data if it's a Result object
-    if hasattr(path_param, "data"):
+    # Handle different result types
+    if hasattr(path_param, "path") and path_param.path is not None:
+        # If it has a path attribute (like PathResult), use that
+        return str(path_param.path)
+    elif hasattr(path_param, "data") and path_param.data is not None:
+        # If it has a data attribute (like DataResult), use that
         path_content = path_param.data
     else:
         path_content = path_param

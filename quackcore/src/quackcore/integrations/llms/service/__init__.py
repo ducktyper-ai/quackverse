@@ -96,7 +96,12 @@ class LLMIntegration(BaseIntegrationService):
             enable_fallback: Whether to enable fallback between providers
         """
         config_provider = LLMConfigProvider(log_level)
-        super().__init__(config_provider, None, config_path, log_level)
+        super().__init__(
+            config_provider=config_provider,
+            auth_provider=None,
+            config=None,
+            config_path=config_path,
+            log_level=log_level)
 
         self.provider = provider
         self.model = model

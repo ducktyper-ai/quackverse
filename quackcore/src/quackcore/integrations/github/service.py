@@ -49,10 +49,10 @@ class GitHubIntegration(BaseIntegrationService, GitHubIntegrationProtocol):
 
         super().__init__(
             config_provider=config_provider,
-            auth_provider=auth_provider,
+            auth_provider=None,
+            config=None,
             config_path=config_path,
-            log_level=effective_log_level,
-        )
+            log_level=effective_log_level)
 
         self.client = None
 

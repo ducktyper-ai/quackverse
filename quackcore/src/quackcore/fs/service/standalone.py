@@ -474,3 +474,17 @@ def create_temp_directory(prefix: str = "quackcore_", suffix: str = ""
             DataResult with path to the created temporary directory
         """
         return _service.create_temp_directory(prefix, suffix)
+
+def extract_path_from_result(path_or_result: str | Path | DataResult | OperationResult) -> DataResult[str]:
+    """
+    Extract a path string from any result object or path-like object.
+
+    Args:
+        path_or_result: Any object that might contain a path (string, Path, DataResult,
+                        OperationResult, PathResult, or any path-like object)
+
+    Returns:
+        The extracted path as a string
+    """
+    from quackcore.fs.api.public import extract_path_from_result as _extract_path
+    return _extract_path(path_or_result)

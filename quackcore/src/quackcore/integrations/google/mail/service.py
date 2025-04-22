@@ -50,7 +50,12 @@ class GoogleMailService(BaseIntegrationService):
             log_level: Logging level.
         """
         config_provider = GoogleConfigProvider("mail", log_level)
-        super().__init__(config_provider, None, config_path, log_level)
+        super().__init__(
+            config_provider=config_provider,
+            auth_provider=None,
+            config=None,
+            config_path=config_path,
+            log_level=log_level)
 
         # If explicit parameters are provided, override configuration from file.
         self.custom_config: dict[str, object] = {}

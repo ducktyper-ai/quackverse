@@ -12,7 +12,7 @@ import os
 from abc import ABC, abstractmethod
 from typing import Any
 
-from quackcore.errors import QuackConfigurationError, QuackFileNotFoundError
+from quackcore.errors import QuackConfigurationError
 from quackcore.integrations.core.protocols import (
     AuthProviderProtocol,
     ConfigProviderProtocol,
@@ -256,7 +256,11 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
             from quackcore.fs.service import standalone
 
             expanded_path = standalone.expand_user_vars(config_path)
-            file_info = standalone.get_file_info(str(expanded_path))
+            # Extract path from result
+            if hasattr(expanded_path, "data"):
+                expanded_path = expanded_path.data
+
+            file_info = standalone.get_file_info(expanded_path)
             if file_info.success and file_info.exists:
                 return str(expanded_path)
 
@@ -265,24 +269,46 @@ class BaseConfigProvider(ABC, ConfigProviderProtocol):
             from quackcore.paths import service as paths
 
             if hasattr(paths, "get_project_root"):
-                project_root = paths.get_project_root()
-        except (QuackFileNotFoundError, FileNotFoundError, OSError) as e:
-            self.logger.debug(f"Project root not found, checking only direct paths: {e}")
+                project_root_result = paths.get_project_root()
+                # Extract path from result
+                if project_root_result.success and project_root_result.path:
+                    project_root = project_root_result.path
+        except Exception as e:
+            self.logger.debug(
+                f"Project root not found, checking only direct paths: {e}")
 
         from quackcore.fs.service import standalone
 
         for location in self.DEFAULT_CONFIG_LOCATIONS:
             expanded_location = standalone.expand_user_vars(location)
+            # Extract data from result
+            if hasattr(expanded_location, "data"):
+                expanded_location = expanded_location.data
+
             if not os.path.isabs(str(expanded_location)) and project_root:
-                expanded_location = standalone.join_path(project_root, expanded_location)
-            file_info = standalone.get_file_info(str(expanded_location))
+                join_result = standalone.join_path(project_root, expanded_location)
+                # Extract path from result
+                if hasattr(join_result, "data"):
+                    expanded_location = join_result.data
+
+            file_info = standalone.get_file_info(expanded_location)
             if file_info.success and file_info.exists:
                 return str(expanded_location)
 
         if project_root:
-            candidate = standalone.join_path(project_root, "quack_config.yaml")
+            candidate_result = standalone.join_path(project_root, "quack_config.yaml")
+            # Extract path from result
+            if hasattr(candidate_result, "data"):
+                candidate = candidate_result.data
+            else:
+                candidate = candidate_result
+
             candidate = standalone.expand_user_vars(candidate)
-            file_info = standalone.get_file_info(str(candidate))
+            # Extract from result
+            if hasattr(candidate, "data"):
+                candidate = candidate.data
+
+            file_info = standalone.get_file_info(candidate)
             if file_info.success and file_info.exists:
                 return str(candidate)
 

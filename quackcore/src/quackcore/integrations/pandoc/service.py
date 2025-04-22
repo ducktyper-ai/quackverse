@@ -60,7 +60,12 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             log_level: Logging level
         """
         config_provider = PandocConfigProvider(log_level)
-        super().__init__(config_provider, None, config_path, str(log_level))
+        super().__init__(
+            config_provider=config_provider,
+            auth_provider=None,
+            config=None,
+            config_path=config_path,
+            log_level=log_level)
 
         # Store output_dir as a string
         self.output_dir: str | None = output_dir if output_dir else None

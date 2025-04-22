@@ -33,3 +33,39 @@ def _normalize_path_param(path: Any) -> Path:
         return Path(path_content)
     except TypeError:
         return Path(str(path_content))
+
+
+def extract_path_from_result(result_obj: Any) -> str | Path:
+    """
+    Extract a path from any result object or path-like object.
+
+    This function handles all types of result objects (PathResult, DataResult,
+    OperationResult) and extracts the actual path component for use in path operations.
+
+    Args:
+        result_obj: Any object that might contain a path
+
+    Returns:
+        The extracted path as a string or Path object
+    """
+    # Handle PathResult objects (with 'path' attribute)
+    if hasattr(result_obj, "path") and result_obj.path is not None:
+        return result_obj.path
+
+    # Handle DataResult objects (with 'data' attribute)
+    if hasattr(result_obj, "data") and result_obj.data is not None:
+        data_content = result_obj.data
+        # If data itself is a path-like, return it
+        if hasattr(data_content, "__fspath__") or isinstance(data_content, str):
+            return data_content
+
+    # Handle path-like objects directly
+    if hasattr(result_obj, "__fspath__"):
+        return result_obj
+
+    # Handle string paths
+    if isinstance(result_obj, str):
+        return result_obj
+
+    # Last resort: try string conversion
+    return str(result_obj)
