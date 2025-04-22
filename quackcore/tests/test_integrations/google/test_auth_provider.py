@@ -239,14 +239,26 @@ class TestGoogleAuthProvider:
         # Directory creation fails
         provider.credentials_file = "/path/to/credentials.json"
         with (
-            patch("quackcore.integrations.google.auth.standalone.split_path") as mock_split,
-            patch("quackcore.integrations.google.auth.standalone.join_path") as mock_join,
+            patch(
+                "quackcore.integrations.google.auth.standalone.split_path") as mock_split,
+            patch(
+                "quackcore.integrations.google.auth.standalone.join_path") as mock_join,
             patch(
                 "quackcore.integrations.google.auth.standalone.create_directory"
             ) as mock_mkdir,
         ):
-            mock_split.return_value = ["path", "to", "credentials.json"]
-            mock_join.return_value = "/path/to"
+            # Return a DataResult with success=True and data attribute for split_path
+            split_result = MagicMock()
+            split_result.success = True
+            split_result.data = ["path", "to", "credentials.json"]
+            mock_split.return_value = split_result
+
+            # Return a DataResult with success=True and data attribute for join_path
+            join_result = MagicMock()
+            join_result.success = True
+            join_result.data = "/path/to"
+            mock_join.return_value = join_result
+
             mock_mkdir.return_value.success = False
             assert not provider._save_credentials_to_file(mock_credentials())
 

@@ -247,11 +247,16 @@ class GoogleAuthProvider(BaseAuthProvider):
         if path_components:
             # Join them back together to get the directory path
             join_result = standalone.join_path(*path_components)
-            if not join_result.success:
-                self.logger.error(f"Failed to join directory path: {join_result.error}")
-                return False
 
-            directory_path = join_result.data
+            # Handle both cases: join_path returning string directly or a DataResult
+            directory_path = join_result
+            if hasattr(join_result, 'success'):
+                if not join_result.success:
+                    self.logger.error(
+                        f"Failed to join directory path: {join_result.error}")
+                    return False
+                directory_path = join_result.data
+
             # Create the directory
             result = standalone.create_directory(directory_path, exist_ok=True)
             if not result.success:
