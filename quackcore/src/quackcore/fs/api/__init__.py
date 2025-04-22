@@ -29,6 +29,9 @@ from quackcore.fs.api.public import (
     move_safely,
     normalize_path,
     split_path,
+    extract_path_from_result,
+    extract_path_str,
+    safe_path_str,
 )
 
 __all__ = [
@@ -55,4 +58,7 @@ __all__ = [
     "move_safely",
     "normalize_path",
     "split_path",
+    "extract_path_from_result",
+    "extract_path_str",
+    "safe_path_str",
 ]

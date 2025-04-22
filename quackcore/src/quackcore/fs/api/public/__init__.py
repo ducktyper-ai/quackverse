@@ -27,7 +27,7 @@ from quackcore.fs.api.public.path_ops import (
     is_subdirectory,
     normalize_path,
     split_path,
-extract_path_from_result,
+
 )
 from quackcore.fs.api.public.safe_ops import (
     copy_safely,
@@ -37,6 +37,12 @@ from quackcore.fs.api.public.safe_ops import (
 from quackcore.fs.api.public.temp import (
     create_temp_directory,
     create_temp_file,
+)
+
+from quackcore.fs.api.public.path_utils import (
+    extract_path_from_result,
+    safe_path_str,
+    extract_path_str
 )
 
 __all__ = [
@@ -62,7 +68,6 @@ __all__ = [
     "is_subdirectory",
     "normalize_path",
     "split_path",
-    "extract_path_from_result",
     # Safe _operations
     "copy_safely",
     "delete_safely",
@@ -70,4 +75,8 @@ __all__ = [
     # Temporary files and directories
     "create_temp_directory",
     "create_temp_file",
+    # Path utils
+    "extract_path_from_result",
+    "extract_path_str",
+    "safe_path_str",
 ]

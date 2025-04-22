@@ -7,6 +7,7 @@ This provides the core functionality and initialization for the service.
 
 from pathlib import Path
 
+from quackcore.fs._helpers.path_utils import _extract_path_str, _safe_path_str
 from quackcore.fs._operations import FileSystemOperations
 from quackcore.fs.results import DataResult, OperationResult
 from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
@@ -40,31 +41,33 @@ class FileSystemService:
         self.base_dir = Path(base_dir) if base_dir else Path.cwd()
         self.operations = FileSystemOperations(self.base_dir)
 
-    def _normalize_input_path(self,
-                              path: str | Path | DataResult | OperationResult) -> Path:
+    def _normalize_input_path(
+            self, path: str | Path | DataResult | OperationResult
+    ) -> Path:
         """
-        Normalize an input path to a Path object.
+        Normalize an input path to a clean, safe Path object.
 
-        This method handles various input types (str, Path, DataResult, OperationResult)
-        and converts them to a standard Path object for internal use.
-
-        Args:
-            path: Input path, which can be a string, Path, DataResult, or OperationResult
-
-        Returns:
-            A normalized Path object
+        This method extracts, unwraps, and validates the path-like input, falling back to
+        the base directory if the result is invalid or non-path-compatible.
         """
-        # Extract from path attribute first (for PathResult)
-        if hasattr(path, "path") and path.path is not None:
-            return Path(path.path)
-
-        # Then check for data attribute (for DataResult)
-        if hasattr(path, "data") and path.data is not None:
-            path_content = path.data
-        else:
-            path_content = path
-
         try:
-            return Path(path_content)
-        except TypeError:
-            return Path(str(path_content))
+            if hasattr(path, "path") and path.path is not None:
+                raw_path = path.path
+            elif hasattr(path, "data") and path.data is not None:
+                raw_path = path.data
+            else:
+                raw_path = path
+
+            # Normalize and safely convert
+            raw_str = _extract_path_str(raw_path)
+            safe_str = _safe_path_str(raw_str)
+            if safe_str:
+                return Path(safe_str)
+
+        except Exception as e:
+            self.logger.warning(f"[normalize_input_path] Failed on path: {path} — {e}")
+
+        self.logger.warning(
+            f"[normalize_input_path] Falling back to base_dir: {self.base_dir}")
+        return self.base_dir
+

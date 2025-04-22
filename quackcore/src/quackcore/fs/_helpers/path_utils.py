@@ -2,13 +2,16 @@
 """
 Path utility functions that don't introduce circular dependencies.
 """
-
+import os
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeVar, cast
 
+from quackcore.fs.protocols import HasUnwrap, HasValue, BaseResult
 from quackcore.logging import get_logger
 
 logger = get_logger(__name__)
+
+T = TypeVar("T")
 
 def _normalize_path_param(path: Any) -> Path:
     """
@@ -35,7 +38,7 @@ def _normalize_path_param(path: Any) -> Path:
         return Path(str(path_content))
 
 
-def extract_path_from_result(result_obj: Any) -> str | Path:
+def _extract_path_from_result(result_obj: Any) -> str | Path:
     """
     Extract a path from any result object or path-like object.
 
@@ -69,3 +72,87 @@ def extract_path_from_result(result_obj: Any) -> str | Path:
 
     # Last resort: try string conversion
     return str(result_obj)
+
+
+def _extract_path_str(obj: Any) -> str:
+    """
+    Extract a string path from any path-like object or result object.
+
+    This function handles various types of objects that might be used
+    as paths, including Result objects, Path objects, and strings.
+
+    Args:
+        obj: Any object that might contain or represent a path
+
+    Returns:
+        A string representation of the path
+
+    Raises:
+        TypeError: If the object cannot be converted to a path string
+        ValueError: If the object is a failed Result object
+    """
+    # Check if it's a failed Result object
+    if hasattr(obj, "success") and not getattr(obj, "success", True):
+        raise ValueError(f"Cannot extract path from failed Result object: {obj}")
+
+    # Handle Result objects with value/unwrap methods
+    if hasattr(obj, "value") and callable(getattr(obj, "value")):
+        try:
+            # Recursively extract path from the unwrapped value
+            return _extract_path_str(cast(HasValue, obj).value())
+        except (AttributeError, TypeError, ValueError) as e:
+            raise TypeError(f"Failed to extract path using value() method: {e}")
+
+    # Alternative unwrap method naming
+    if hasattr(obj, "unwrap") and callable(getattr(obj, "unwrap")):
+        try:
+            # Recursively extract path from the unwrapped value
+            return _extract_path_str(cast(HasUnwrap, obj).unwrap())
+        except (AttributeError, TypeError, ValueError) as e:
+            raise TypeError(f"Failed to extract path using unwrap() method: {e}")
+
+    # Handle DataResult objects with data attribute first (higher priority)
+    if hasattr(obj, "data") and getattr(obj, "data") is not None:
+        data_content = getattr(obj, "data")
+        if isinstance(data_content, (str, Path)) or hasattr(data_content, "__fspath__"):
+            return _extract_path_str(data_content)
+        else:
+            # Raise TypeError for non-path-like data
+            raise TypeError(f"DataResult.data is not a path-like object: {type(data_content)}")
+
+    # Handle PathResult objects with path attribute (lower priority)
+    if hasattr(obj, "path") and getattr(obj, "path") is not None:
+        return _extract_path_str(getattr(obj, "path"))
+
+    # Handle os.PathLike objects (including Path)
+    if hasattr(obj, "__fspath__"):
+        return os.fspath(obj)
+
+    # Handle strings
+    if isinstance(obj, str):
+        return obj
+
+    # If we got here, we couldn't convert the object to a path string
+    raise TypeError(
+        f"Invalid path-like object: {type(obj)}. Expected str, Path, or a Result object with path data.")
+
+def _safe_path_str(obj: Any, default: str | None = None) -> str | None :
+    """
+    Safely extract a string path from any object, returning a default on failure.
+
+    This function is similar to extract_path_str, but never raises exceptions.
+    Instead, it returns the default value and logs a warning when extraction fails.
+
+    Args:
+        obj: Any object that might contain or represent a path
+        default: Value to return if path extraction fails
+
+    Returns:
+        The extracted path string or the default value
+    """
+    try:
+        return _extract_path_str(obj)
+    except (TypeError, ValueError) as e:
+        logger.warning(f"Failed to extract path: {e}. Using default: {default}")
+        return default
+
