@@ -8,10 +8,9 @@ all the operation mixins into the FileSystemOperations class,
 which is the primary internal implementation used by the public API.
 
 The _operations package follows this contract:
-- Internal methods (with '_' prefix) can return basic types like Path
-- All public methods return Result objects (WriteResult, ReadResult, etc.)
-- Input types are flexible (str | Path) and resolved early
-- Comprehensive error handling and logging throughout
+- Internal methods return basic types (str, bytes, Path, bool)
+- Input types are limited to str or Path and resolved early
+- Exceptions are raised naturally and not caught at this level
 """
 
 from pathlib import Path
@@ -55,14 +54,14 @@ class FileSystemOperations(
     Core implementation of filesystem _operations.
 
     This class combines all operation mixins to provide a complete
-    filesystem _operations implementation with consistent error handling,
-    logging, and return types. It serves as the internal implementation
+    filesystem _operations implementation with error handling,
+    logging, and return values. It serves as the internal implementation
     layer used by the public API in quackcore.fs.service.
 
     All methods follow this contract:
-    - Internal methods (with '_' prefix) can return basic types like Path
-    - External methods return Result objects (WriteResult, ReadResult, etc.)
-    - All methods accept flexible input paths (str | Path)
+    - Internal methods accept only str or Path input
+    - Internal methods return basic types (str, bytes, Path, bool, etc.)
+    - Exceptions are raised naturally and not caught at this level
     """
 
     def __init__(self, base_dir: Any = None) -> None:
@@ -79,7 +78,7 @@ class FileSystemOperations(
         logger.debug(f"Initialized FileSystemOperations with base_dir: {self.base_dir}")
         _initialize_mime_types()
 
-    def _resolve_path(self, path: Any) -> Path:
+    def _resolve_path(self, path: str | Path) -> Path:
         """
         Resolve a path relative to the base directory.
 
@@ -87,7 +86,7 @@ class FileSystemOperations(
         relative to the base directory set during initialization.
 
         Args:
-            path: Path to resolve (str, Path, DataResult, OperationResult, or any object with 'data' attribute)
+            path: Path to resolve (str or Path)
 
         Returns:
             Path: Resolved Path object

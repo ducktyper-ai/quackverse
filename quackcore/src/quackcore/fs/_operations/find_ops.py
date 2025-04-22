@@ -8,12 +8,6 @@ based on patterns, with support for recursive searching and filtering.
 
 from pathlib import Path
 
-from quackcore.errors import (
-    QuackFileNotFoundError,
-    QuackIOError,
-    QuackPermissionError,
-)
-from quackcore.fs.results import DataResult, FindResult, OperationResult
 from quackcore.logging import get_logger
 
 # Set up logger
@@ -28,12 +22,12 @@ class FindOperationsMixin:
     patterns, with support for recursive search and filtering options.
     """
 
-    def _resolve_path(self, path: str | Path | DataResult | OperationResult) -> Path:
+    def _resolve_path(self, path: str | Path) -> Path:
         """
         Resolve a path relative to the base directory.
 
         Args:
-            path: Path to resolve (str, Path, DataResult, or OperationResult)
+            path: Path to resolve (str or Path)
 
         Returns:
             Path: Resolved Path object
@@ -48,23 +42,29 @@ class FindOperationsMixin:
 
     def _find_files(
         self,
-        path: str | Path | DataResult | OperationResult,
+        path: str | Path,
         pattern: str,
         recursive: bool = True,
         include_hidden: bool = False,
-    ) -> FindResult:
+    ) -> tuple[list[Path], list[Path]]:
         """
         Find files and directories matching a pattern.
 
         Args:
-            path: Directory to search (str, Path, DataResult, or OperationResult)
+            path: Directory to search (str or Path)
             pattern: Pattern to match files against (glob pattern)
             recursive: Whether to search recursively in subdirectories
             include_hidden: Whether to include hidden files/directories
                            (those starting with ".")
 
         Returns:
-            FindResult with matching files and directories
+            tuple[list[Path], list[Path]]: A tuple containing (matching files, matching directories)
+
+        Raises:
+            FileNotFoundError: If the directory doesn't exist
+            NotADirectoryError: If the path is not a directory
+            PermissionError: If there's no permission to read the directory
+            IOError: For other IO-related errors
 
         Note:
             Internal helper method not meant for external consumption.
@@ -76,71 +76,28 @@ class FindOperationsMixin:
             f"recursive={recursive}, include_hidden={include_hidden}"
         )
 
-        try:
-            # Early validation of the path
-            if not self._validate_search_path(resolved_path):
-                logger.error(
-                    f"Directory does not exist or is not a directory: {resolved_path}"
-                )
-                return FindResult(
-                    success=False,
-                    path=resolved_path,
-                    pattern=pattern,
-                    recursive=recursive,
-                    files=[],
-                    directories=[],
-                    total_matches=0,
-                    error=f"Directory does not exist or "
-                    f"is not a directory: {resolved_path}",
-                )
-
-            # Perform the search
-            files, directories = self._perform_pattern_search(
-                resolved_path, pattern, recursive, include_hidden
+        # Early validation of the path
+        if not self._validate_search_path(resolved_path):
+            logger.error(
+                f"Directory does not exist or is not a directory: {resolved_path}"
+            )
+            raise NotADirectoryError(
+                f"Directory does not exist or is not a directory: {resolved_path}"
             )
 
-            # Create the result
-            total_matches = len(files) + len(directories)
-            logger.info(
-                f"Found {len(files)} files and {len(directories)} directories "
-                f"matching '{pattern}' in {resolved_path}"
-            )
+        # Perform the search
+        files, directories = self._perform_pattern_search(
+            resolved_path, pattern, recursive, include_hidden
+        )
 
-            return FindResult(
-                success=True,
-                path=resolved_path,
-                pattern=pattern,
-                recursive=recursive,
-                files=files,
-                directories=directories,
-                total_matches=total_matches,
-                message=f"Found {len(files)} files and {len(directories)} "
-                f"directories matching '{pattern}'",
-            )
-        except (QuackFileNotFoundError, QuackPermissionError, QuackIOError) as e:
-            logger.error(f"Error finding files in {resolved_path}: {str(e)}")
-            return FindResult(
-                success=False,
-                path=resolved_path,
-                pattern=pattern,
-                recursive=recursive,
-                files=[],
-                directories=[],
-                total_matches=0,
-                error=str(e),
-            )
-        except Exception as e:
-            logger.error(f"Unexpected error finding files in {resolved_path}: {str(e)}")
-            return FindResult(
-                success=False,
-                path=resolved_path,
-                pattern=pattern,
-                recursive=recursive,
-                files=[],
-                directories=[],
-                total_matches=0,
-                error=str(e),
-            )
+        # Log results
+        total_matches = len(files) + len(directories)
+        logger.info(
+            f"Found {len(files)} files and {len(directories)} directories "
+            f"matching '{pattern}' in {resolved_path}"
+        )
+
+        return files, directories
 
     def _validate_search_path(self, path: Path) -> bool:
         """
@@ -188,18 +145,10 @@ class FindOperationsMixin:
         # Choose the appropriate search method explicitly
         if recursive:
             logger.debug(f"Performing recursive glob with pattern '{pattern}'")
-            try:
-                items = list(directory.rglob(pattern))
-            except Exception as e:
-                logger.error(f"Error during recursive glob: {str(e)}")
-                return [], []
+            items = list(directory.rglob(pattern))
         else:
             logger.debug(f"Performing non-recursive glob with pattern '{pattern}'")
-            try:
-                items = list(directory.glob(pattern))
-            except Exception as e:
-                logger.error(f"Error during non-recursive glob: {str(e)}")
-                return [], []
+            items = list(directory.glob(pattern))
 
         logger.debug(f"Found {len(items)} total items matching pattern")
 

@@ -8,14 +8,33 @@ API but are not meant to be consumed directly.
 """
 
 import mimetypes
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
-from quackcore.errors import QuackIOError, QuackPermissionError
-from quackcore.fs.results import DataResult, FileInfoResult, OperationResult
 from quackcore.logging import get_logger
 
 # Set up logger
 logger = get_logger(__name__)
+
+
+@dataclass
+class FileInfo:
+    """
+    Container for file metadata.
+
+    Holds comprehensive information about a file or directory.
+    """
+    path: Path
+    exists: bool
+    is_file: bool = False
+    is_dir: bool = False
+    size: int = 0
+    modified: float = 0.0
+    created: float = 0.0
+    owner: Optional[str] = None
+    permissions: int = 0
+    mime_type: Optional[str] = None
 
 
 class FileInfoOperationsMixin:
@@ -26,12 +45,12 @@ class FileInfoOperationsMixin:
     including existence checks, permissions, size, and MIME types.
     """
 
-    def _resolve_path(self, path: str | Path | DataResult | OperationResult) -> Path:
+    def _resolve_path(self, path: str | Path) -> Path:
         """
         Resolve a path relative to the base directory.
 
         Args:
-            path: Path to resolve (str, Path, DataResult, or OperationResult)
+            path: Path to resolve (str or Path)
 
         Returns:
             Path: Resolved Path object
@@ -44,12 +63,12 @@ class FileInfoOperationsMixin:
         # It's defined here for type checking
         raise NotImplementedError("This method should be overridden")
 
-    def _path_exists(self, path: str | Path | DataResult | OperationResult) -> bool:
+    def _path_exists(self, path: str | Path) -> bool:
         """
         Check if a path exists.
 
         Args:
-            path: Path to check (str, Path, DataResult, or OperationResult)
+            path: Path to check (str or Path)
 
         Returns:
             bool: True if the path exists, False otherwise
@@ -72,7 +91,7 @@ class FileInfoOperationsMixin:
             logger.error(f"Error checking if path exists for {resolved_path}: {str(e)}")
             return False
 
-    def _get_file_info(self, path: str | Path | DataResult | OperationResult) -> FileInfoResult:
+    def _get_file_info(self, path: str | Path) -> FileInfo:
         """
         Get comprehensive information about a file or directory.
 
@@ -80,10 +99,14 @@ class FileInfoOperationsMixin:
         timestamps, ownership, permissions, and MIME type.
 
         Args:
-            path: Path to get information about (str, Path, DataResult, or OperationResult)
+            path: Path to get information about (str or Path)
 
         Returns:
-            FileInfoResult with detailed file information
+            FileInfo: Object containing detailed file information
+
+        Raises:
+            PermissionError: If there's no permission to access the file
+            IOError: For other IO-related errors
 
         Note:
             Internal helper method not meant for external consumption.
@@ -92,62 +115,44 @@ class FileInfoOperationsMixin:
         resolved_path = self._resolve_path(path)
         logger.debug(f"Getting file info for: {resolved_path}")
 
-        try:
-            # Use our _path_exists method to check existence
-            exists = self._path_exists(resolved_path)
-            if not exists:
-                logger.info(f"Path does not exist: {resolved_path}")
-                return FileInfoResult(
-                    success=True,
-                    path=resolved_path,
-                    exists=False,
-                    message=f"Path does not exist: {resolved_path}",
-                )
-
-            # Gather file stats
-            stats = resolved_path.stat()
-            mime_type = None
-
-            # Get MIME type for files
-            if resolved_path.is_file():
-                mime_type, _ = mimetypes.guess_type(str(resolved_path))
-                logger.debug(f"Determined MIME type for {resolved_path}: {mime_type}")
-
-            # Try to get owner information
-            owner = None
-            try:
-                import pwd
-
-                owner = pwd.getpwuid(stats.st_uid).pw_name
-                logger.debug(f"Determined file owner for {resolved_path}: {owner}")
-            except (ImportError, KeyError) as e:
-                logger.debug(f"Could not determine owner for {resolved_path}: {str(e)}")
-                # Continue without owner info
-
-            logger.info(f"Successfully retrieved file info for {resolved_path}")
-            return FileInfoResult(
-                success=True,
+        # Use our _path_exists method to check existence
+        exists = self._path_exists(resolved_path)
+        if not exists:
+            logger.info(f"Path does not exist: {resolved_path}")
+            return FileInfo(
                 path=resolved_path,
-                exists=True,
-                is_file=resolved_path.is_file(),
-                is_dir=resolved_path.is_dir(),
-                size=stats.st_size,
-                modified=stats.st_mtime,
-                created=stats.st_ctime,
-                owner=owner,
-                permissions=stats.st_mode,
-                mime_type=mime_type,
-                message=f"Got file info for {resolved_path}",
+                exists=False,
             )
-        except (QuackPermissionError, QuackIOError) as e:
-            logger.error(f"Error getting file info for {resolved_path}: {str(e)}")
-            return FileInfoResult(
-                success=False, path=resolved_path, exists=False, error=str(e)
-            )
-        except Exception as e:
-            logger.error(
-                f"Unexpected error getting file info for {resolved_path}: {str(e)}"
-            )
-            return FileInfoResult(
-                success=False, path=resolved_path, exists=False, error=str(e)
-            )
+
+        # Gather file stats
+        stats = resolved_path.stat()
+        mime_type = None
+
+        # Get MIME type for files
+        if resolved_path.is_file():
+            mime_type, _ = mimetypes.guess_type(str(resolved_path))
+            logger.debug(f"Determined MIME type for {resolved_path}: {mime_type}")
+
+        # Try to get owner information
+        owner = None
+        try:
+            import pwd
+            owner = pwd.getpwuid(stats.st_uid).pw_name
+            logger.debug(f"Determined file owner for {resolved_path}: {owner}")
+        except (ImportError, KeyError) as e:
+            logger.debug(f"Could not determine owner for {resolved_path}: {str(e)}")
+            # Continue without owner info
+
+        logger.info(f"Successfully retrieved file info for {resolved_path}")
+        return FileInfo(
+            path=resolved_path,
+            exists=True,
+            is_file=resolved_path.is_file(),
+            is_dir=resolved_path.is_dir(),
+            size=stats.st_size,
+            modified=stats.st_mtime,
+            created=stats.st_ctime,
+            owner=owner,
+            permissions=stats.st_mode,
+            mime_type=mime_type,
+        )

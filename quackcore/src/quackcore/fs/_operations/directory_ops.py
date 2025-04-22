@@ -8,16 +8,34 @@ listing contents, getting directory information, and filtering by patterns.
 
 from pathlib import Path
 
-from quackcore.errors import (
-    QuackFileNotFoundError,
-    QuackIOError,
-    QuackPermissionError,
-)
-from quackcore.fs.results import DataResult, DirectoryInfoResult, OperationResult
 from quackcore.logging import get_logger
 
 # Set up logger
 logger = get_logger(__name__)
+
+
+class DirectoryInfo:
+    """
+    Container for directory information.
+
+    This class holds basic information about a directory's contents.
+    """
+
+    def __init__(
+            self,
+            path: Path,
+            files: list[Path],
+            directories: list[Path],
+            total_size: int,
+            is_empty: bool,
+    ):
+        self.path = path
+        self.files = files
+        self.directories = directories
+        self.total_files = len(files)
+        self.total_directories = len(directories)
+        self.total_size = total_size
+        self.is_empty = is_empty
 
 
 class DirectoryOperationsMixin:
@@ -28,12 +46,12 @@ class DirectoryOperationsMixin:
     and filtering by patterns.
     """
 
-    def _resolve_path(self, path: str | Path | DataResult | OperationResult) -> Path:
+    def _resolve_path(self, path: str | Path) -> Path:
         """
         Resolve a path relative to the base directory.
 
         Args:
-            path: Path to resolve (str, Path, DataResult, or OperationResult)
+            path: Path to resolve (str or Path)
 
         Returns:
             Path: Resolved Path object
@@ -48,8 +66,9 @@ class DirectoryOperationsMixin:
         raise NotImplementedError("This method should be overridden")
 
     def _list_directory(
-        self, path: str | Path | DataResult | OperationResult, pattern: str | None = None, include_hidden: bool = False
-    ) -> DirectoryInfoResult:
+            self, path: str | Path, pattern: str | None = None,
+            include_hidden: bool = False
+    ) -> DirectoryInfo:
         """
         List contents of a directory with optional pattern filtering.
 
@@ -58,14 +77,21 @@ class DirectoryOperationsMixin:
         a glob pattern and hidden files can be optionally included.
 
         Args:
-            path: Path to the directory to list (str, Path, DataResult, or OperationResult)
+            path: Path to the directory to list (str or Path)
             pattern: Optional glob pattern to match files and directories against
                      (e.g., "*.py", "data*", etc.)
             include_hidden: Whether to include hidden files/directories
                            (those starting with ".")
 
         Returns:
-            DirectoryInfoResult with directory contents information
+            DirectoryInfo: Object containing directory contents information including
+                          files, directories, sizes, and counts
+
+        Raises:
+            FileNotFoundError: If the directory doesn't exist
+            NotADirectoryError: If the path is not a directory
+            PermissionError: If there's no permission to read the directory
+            IOError: For other IO-related errors
 
         Note:
             Internal helper method not meant for external consumption.
@@ -77,85 +103,58 @@ class DirectoryOperationsMixin:
             f"pattern={pattern}, include_hidden={include_hidden}"
         )
 
-        try:
-            # Check if the path exists and is a directory
-            if not resolved_path.exists():
-                logger.error(f"Directory does not exist: {resolved_path}")
-                return DirectoryInfoResult(
-                    success=False,
-                    path=resolved_path,
-                    exists=False,
-                    error=f"Directory does not exist: {resolved_path}",
-                )
+        # Check if the path exists and is a directory
+        if not resolved_path.exists():
+            logger.error(f"Directory does not exist: {resolved_path}")
+            raise FileNotFoundError(f"Directory does not exist: {resolved_path}")
 
-            if not resolved_path.is_dir():
-                logger.error(f"Path is not a directory: {resolved_path}")
-                return DirectoryInfoResult(
-                    success=False,
-                    path=resolved_path,
-                    exists=True,
-                    error=f"Path is not a directory: {resolved_path}",
-                )
+        if not resolved_path.is_dir():
+            logger.error(f"Path is not a directory: {resolved_path}")
+            raise NotADirectoryError(f"Path is not a directory: {resolved_path}")
 
-            files = []
-            directories = []
-            total_size = 0
+        files = []
+        directories = []
+        total_size = 0
 
-            for item in resolved_path.iterdir():
-                # Skip hidden files if needed
-                if not include_hidden and item.name.startswith("."):
-                    logger.debug(f"Skipping hidden item: {item}")
-                    continue
+        for item in resolved_path.iterdir():
+            # Skip hidden files if needed
+            if not include_hidden and item.name.startswith("."):
+                logger.debug(f"Skipping hidden item: {item}")
+                continue
 
-                # Skip items that don't match the pattern
-                if pattern and not item.match(pattern):
-                    logger.debug(f"Skipping item not matching pattern: {item}")
-                    continue
+            # Skip items that don't match the pattern
+            if pattern and not item.match(pattern):
+                logger.debug(f"Skipping item not matching pattern: {item}")
+                continue
 
-                if item.is_file():
-                    try:
-                        item_size = item.stat().st_size
-                        total_size += item_size
-                        files.append(item)
-                        logger.debug(f"Found file: {item}, size: {item_size}")
-                    except (PermissionError, OSError) as e:
-                        # Skip files we can't access but log the issue
-                        logger.warning(f"Skipping inaccessible file {item}: {str(e)}")
-                elif item.is_dir():
-                    directories.append(item)
-                    logger.debug(f"Found directory: {item}")
+            if item.is_file():
+                try:
+                    item_size = item.stat().st_size
+                    total_size += item_size
+                    files.append(item)
+                    logger.debug(f"Found file: {item}, size: {item_size}")
+                except (PermissionError, OSError) as e:
+                    # Skip files we can't access but log the issue
+                    logger.warning(f"Skipping inaccessible file {item}: {str(e)}")
+            elif item.is_dir():
+                directories.append(item)
+                logger.debug(f"Found directory: {item}")
 
-            logger.info(
-                f"Found {len(files)} files and {len(directories)} directories in {resolved_path}"
-            )
+        is_empty = len(files) == 0 and len(directories) == 0
+        logger.info(
+            f"Found {len(files)} files and {len(directories)} directories in {resolved_path}"
+        )
 
-            # Ensure pattern is displayed correctly in message
-            pattern_msg = f"matching '{pattern}'" if pattern else ""
+        # Ensure pattern is displayed correctly in message
+        pattern_msg = f"matching '{pattern}'" if pattern else ""
+        logger.debug(
+            f"Directory listing complete. Found {len(files)} files and {len(directories)} directories {pattern_msg}".strip()
+        )
 
-            return DirectoryInfoResult(
-                success=True,
-                path=resolved_path,
-                exists=True,
-                is_empty=(len(files) == 0 and len(directories) == 0),
-                files=files,
-                directories=directories,
-                total_files=len(files),
-                total_directories=len(directories),
-                total_size=total_size,
-                message=(
-                    f"Found {len(files)} files and {len(directories)} directories "
-                    f"{pattern_msg}".strip()
-                ),
-            )
-        except (QuackFileNotFoundError, QuackPermissionError, QuackIOError) as e:
-            logger.error(f"Error listing directory {resolved_path}: {str(e)}")
-            return DirectoryInfoResult(
-                success=False, path=resolved_path, exists=False, error=str(e)
-            )
-        except Exception as e:
-            logger.error(
-                f"Unexpected error listing directory {resolved_path}: {str(e)}"
-            )
-            return DirectoryInfoResult(
-                success=False, path=resolved_path, exists=False, error=str(e)
-            )
+        return DirectoryInfo(
+            path=resolved_path,
+            files=files,
+            directories=directories,
+            total_size=total_size,
+            is_empty=is_empty
+        )
