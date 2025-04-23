@@ -53,63 +53,57 @@ service = property(get_service)
 
 # Import all standalone functions
 from quackcore.fs.service.standalone import (
-    # Core file operations
-    read_text,
-    write_text,
-    read_binary,
-    write_binary,
-    read_lines,
-    write_lines,
-
-    # Directory operations
-    create_directory,
-    list_directory,
-    find_files,
-
-    # File management
-    copy,
-    move,
-    delete,
-
-    # Structured data
-    read_yaml,
-    write_yaml,
-    read_json,
-    write_json,
-
-    # File info
-    get_file_info,
-
-    # Path operations
-    split_path,
-    join_path,
-    path_exists,
-    normalize_path_with_info,
-    normalize_path,
-    get_path_info,
-    is_valid_path,
-    get_extension,
-    expand_user_vars,
-    resolve_path,
-
     # Utility operations
     atomic_write,
-    get_disk_usage,
-    get_file_type,
-    get_file_size_str,
-    get_mime_type,
-    get_file_timestamp,
     compute_checksum,
-    create_temp_file,
+    # File management
+    copy,
+    # Directory operations
+    create_directory,
     create_temp_directory,
+    create_temp_file,
+    delete,
     ensure_directory,
-    get_unique_filename,
+    expand_user_vars,
+    extract_path_from_result,
+    find_files,
     find_files_by_content,
-    is_path_writeable,
+    get_disk_usage,
+    get_extension,
+    # File info
+    get_file_info,
+    get_file_size_str,
+    get_file_timestamp,
+    get_file_type,
+    get_mime_type,
+    get_path_info,
+    get_unique_filename,
     is_file_locked,
+    is_path_writeable,
     is_same_file,
     is_subdirectory,
-    extract_path_from_result,
+    is_valid_path,
+    join_path,
+    list_directory,
+    move,
+    normalize_path,
+    normalize_path_with_info,
+    path_exists,
+    read_binary,
+    read_json,
+    read_lines,
+    # Core file operations
+    read_text,
+    # Structured data
+    read_yaml,
+    resolve_path,
+    # Path operations
+    split_path,
+    write_binary,
+    write_json,
+    write_lines,
+    write_text,
+    write_yaml,
 )
 
 # Type variables

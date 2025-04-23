@@ -15,7 +15,6 @@ import yaml
 
 from quackcore.errors import QuackFileExistsError, QuackIOError
 from quackcore.fs._operations import FileSystemOperations
-from quackcore.fs.results import ReadResult, WriteResult
 
 
 class TestFileSystemOperations:

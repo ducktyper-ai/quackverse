@@ -5,7 +5,6 @@ Path operations utilities for the FileSystemService.
 These utilities extend the FileSystemService with methods for path manipulation.
 """
 
-import os
 from pathlib import Path
 
 from quackcore.errors import wrap_io_errors

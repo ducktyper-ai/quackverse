@@ -544,7 +544,7 @@ class UtilityOperationsMixin:
                         import msvcrt
                         msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
                         msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
-                    except IOError:
+                    except OSError:
                         logger.debug(f"File {resolved_path} is locked (Windows)")
                         return True
                 # On Unix, try to get an advisory lock
@@ -553,7 +553,7 @@ class UtilityOperationsMixin:
                         import fcntl
                         fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
                         fcntl.flock(f.fileno(), fcntl.LOCK_UN)
-                    except IOError:
+                    except OSError:
                         logger.debug(f"File {resolved_path} is locked (Unix)")
                         return True
 
@@ -632,7 +632,7 @@ class UtilityOperationsMixin:
                         continue
 
                     # Search the file content
-                    with open(file_path, "r", errors="ignore") as f:
+                    with open(file_path, errors="ignore") as f:
                         content = f.read()
                         if pattern.search(content):
                             matching_files.append(file_path)

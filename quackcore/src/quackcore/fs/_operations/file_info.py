@@ -10,7 +10,6 @@ API but are not meant to be consumed directly.
 import mimetypes
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 from quackcore.logging import get_logger
 
@@ -32,9 +31,9 @@ class FileInfo:
     size: int = 0
     modified: float = 0.0
     created: float = 0.0
-    owner: Optional[str] = None
+    owner: str | None = None
     permissions: int = 0
-    mime_type: Optional[str] = None
+    mime_type: str | None = None
 
 
 class FileInfoOperationsMixin:

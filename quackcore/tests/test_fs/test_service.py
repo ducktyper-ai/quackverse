@@ -117,7 +117,7 @@ class TestFileSystemService:
         result = service.write_text(file_path, "test content")
         assert result.success is True
         # The bytes_written should match the content length in bytes
-        assert result.bytes_written == len("test content".encode('utf-8'))
+        assert result.bytes_written == len(b"test content")
         assert file_path.read_text() == "test content"
 
         # Test overwriting an existing file

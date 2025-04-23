@@ -6,7 +6,6 @@ These utilities extend the FileSystemService with methods to validate
 and inspect paths, primarily used for configuration validation.
 """
 
-import os
 from pathlib import Path
 
 from quackcore.errors import wrap_io_errors

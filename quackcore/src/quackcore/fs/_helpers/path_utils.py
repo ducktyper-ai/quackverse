@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from typing import Any, TypeVar, cast
 
-from quackcore.fs.protocols import HasUnwrap, HasValue, BaseResult
+from quackcore.fs.protocols import HasUnwrap, HasValue
 from quackcore.logging import get_logger
 
 logger = get_logger(__name__)
@@ -96,7 +96,7 @@ def _extract_path_str(obj: Any) -> str:
         raise ValueError(f"Cannot extract path from failed Result object: {obj}")
 
     # Handle Result objects with value/unwrap methods
-    if hasattr(obj, "value") and callable(getattr(obj, "value")):
+    if hasattr(obj, "value") and callable(obj.value):
         try:
             # Recursively extract path from the unwrapped value
             return _extract_path_str(cast(HasValue, obj).value())
@@ -104,7 +104,7 @@ def _extract_path_str(obj: Any) -> str:
             raise TypeError(f"Failed to extract path using value() method: {e}")
 
     # Alternative unwrap method naming
-    if hasattr(obj, "unwrap") and callable(getattr(obj, "unwrap")):
+    if hasattr(obj, "unwrap") and callable(obj.unwrap):
         try:
             # Recursively extract path from the unwrapped value
             return _extract_path_str(cast(HasUnwrap, obj).unwrap())
@@ -112,8 +112,8 @@ def _extract_path_str(obj: Any) -> str:
             raise TypeError(f"Failed to extract path using unwrap() method: {e}")
 
     # Handle DataResult objects with data attribute first (higher priority)
-    if hasattr(obj, "data") and getattr(obj, "data") is not None:
-        data_content = getattr(obj, "data")
+    if hasattr(obj, "data") and obj.data is not None:
+        data_content = obj.data
         if isinstance(data_content, (str, Path)) or hasattr(data_content, "__fspath__"):
             return _extract_path_str(data_content)
         else:
@@ -121,8 +121,8 @@ def _extract_path_str(obj: Any) -> str:
             raise TypeError(f"DataResult.data is not a path-like object: {type(data_content)}")
 
     # Handle PathResult objects with path attribute (lower priority)
-    if hasattr(obj, "path") and getattr(obj, "path") is not None:
-        return _extract_path_str(getattr(obj, "path"))
+    if hasattr(obj, "path") and obj.path is not None:
+        return _extract_path_str(obj.path)
 
     # Handle os.PathLike objects (including Path)
     if hasattr(obj, "__fspath__"):

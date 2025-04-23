@@ -6,8 +6,9 @@ This module tests the GoogleAuthProvider class, including authentication flow,
 token management, and credential handling.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.integrations.core.results import AuthResult

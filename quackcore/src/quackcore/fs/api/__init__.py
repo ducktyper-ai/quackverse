@@ -15,6 +15,8 @@ from quackcore.fs.api.public import (
     delete_safely,
     ensure_directory,
     expand_user_vars,
+    extract_path_from_result,
+    extract_path_str,
     find_files_by_content,
     get_disk_usage,
     get_file_size_str,
@@ -28,10 +30,8 @@ from quackcore.fs.api.public import (
     is_subdirectory,
     move_safely,
     normalize_path,
-    split_path,
-    extract_path_from_result,
-    extract_path_str,
     safe_path_str,
+    split_path,
 )
 
 __all__ = [

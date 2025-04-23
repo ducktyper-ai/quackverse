@@ -7,7 +7,11 @@ This module provides safe, result-oriented wrappers around low-level path _opera
 from pathlib import Path
 from typing import Any
 
-from quackcore.fs._helpers.path_utils import _normalize_path_param, _extract_path_str, _safe_path_str
+from quackcore.fs._helpers.path_utils import (
+    _extract_path_str,
+    _normalize_path_param,
+    _safe_path_str,
+)
 from quackcore.fs.results import DataResult, OperationResult
 from quackcore.logging import get_logger
 

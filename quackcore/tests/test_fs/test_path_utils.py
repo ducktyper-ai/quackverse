@@ -9,7 +9,7 @@ from unittest.mock import patch
 import pytest
 
 from quackcore.fs._helpers.path_utils import _extract_path_str, _safe_path_str
-from quackcore.fs.results import DataResult, PathResult, OperationResult
+from quackcore.fs.results import DataResult, PathResult
 
 
 class TestPathUtils(TestCase):
@@ -114,31 +114,31 @@ class TestPathUtils(TestCase):
 
         result = OuterResult()
         assert _extract_path_str(result) == "inner.txt"
-    
+
     def test_safe_path_with_valid_path(self):
         """Test safe_path with a valid path."""
         assert _safe_path_str(Path("test.txt")) == "test.txt"
-    
+
     def test_safe_path_with_invalid_object(self):
         """Test safe_path with an invalid object."""
         with patch('quackcore.fs._helpers.path_utils.logger') as mock_logger:
             assert _safe_path_str(object()) is None
             mock_logger.warning.assert_called_once()
-    
+
     def test_safe_path_with_custom_default(self):
         """Test safe_path with a custom default value."""
         with patch('quackcore.fs._helpers.path_utils.logger') as mock_logger:
             assert _safe_path_str(object(), default="/fallback") == "/fallback"
             mock_logger.warning.assert_called_once()
-    
+
     def test_safe_path_with_failed_result(self):
         """Test safe_path with a failed result."""
         with patch('quackcore.fs._helpers.path_utils.logger') as mock_logger:
             result = PathResult(
-                success=False, 
-                path=Path("a.txt"), 
-                is_valid=False, 
-                is_absolute=False, 
+                success=False,
+                path=Path("a.txt"),
+                is_valid=False,
+                is_absolute=False,
                 exists=False
             )
             assert _safe_path_str(result, default="default.txt") == "default.txt"
