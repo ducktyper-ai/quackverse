@@ -1,7 +1,4 @@
 # quackcore/src/quackcore/fs/service/directory_operations.py
-"""
-Directory management operations for the FileSystemService.
-"""
 
 from pathlib import Path
 from typing import Protocol
@@ -149,6 +146,7 @@ class DirectoryOperationsMixin:
             return DirectoryInfoResult(
                 success=True,
                 path=normalized_path,
+                exists=True,  # Fix: Set exists to True since we successfully listed the directory
                 files=files,
                 directories=directories,
                 total_files=dir_info.total_files,
@@ -160,11 +158,27 @@ class DirectoryOperationsMixin:
                     f"{dir_info.total_files} files, {dir_info.total_directories} directories"
                 )
             )
+        except FileNotFoundError as e:
+            logger.error(f"Directory not found {normalized_path}: {str(e)}")
+            return DirectoryInfoResult(
+                success=False,
+                path=normalized_path,
+                exists=False,
+                files=[],
+                directories=[],
+                total_files=0,
+                total_directories=0,
+                total_size=0,
+                is_empty=True,
+                error=str(e),
+                message=f"Directory not found: {normalized_path}"
+            )
         except Exception as e:
             logger.error(f"Error listing directory {normalized_path}: {str(e)}")
             return DirectoryInfoResult(
                 success=False,
                 path=normalized_path,
+                exists=False,
                 files=[],
                 directories=[],
                 total_files=0,

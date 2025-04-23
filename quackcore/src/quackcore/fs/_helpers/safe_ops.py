@@ -72,13 +72,12 @@ def _safe_copy(src: Any, dst: Any, overwrite: bool = False) -> Path:
         return dst_path
     except PermissionError as e:
         logger.error(f"Permission denied when copying {src_path} to {dst_path}: {e}")
-        raise QuackPermissionError(str(dst_path), "copy", original_error=e) from e
+        message = f"Permission denied when copying {src_path} to {dst_path}: {str(e)}"
+        raise QuackPermissionError(str(dst_path), "copy", message=message, original_error=e) from e
     except Exception as e:
         logger.error(f"Failed to copy {src_path} to {dst_path}: {e}")
-        raise QuackIOError(
-            f"Failed to copy {src_path} to {dst_path}: {str(e)}", str(dst_path),
-            original_error=e
-        ) from e
+        message = f"Failed to copy {src_path} to {dst_path}: {str(e)}"
+        raise QuackIOError(message, str(dst_path), original_error=e) from e
 
 
 @wrap_io_errors
@@ -129,13 +128,12 @@ def _safe_move(src: Any, dst: Any, overwrite: bool = False) -> Path:
         return dst_path
     except PermissionError as e:
         logger.error(f"Permission denied when moving {src_path} to {dst_path}: {e}")
-        raise QuackPermissionError(str(dst_path), "move", original_error=e) from e
+        message = f"Permission denied when moving {src_path} to {dst_path}: {str(e)}"
+        raise QuackPermissionError(str(dst_path), "move", message=message, original_error=e) from e
     except Exception as e:
         logger.error(f"Failed to move {src_path} to {dst_path}: {e}")
-        raise QuackIOError(
-            f"Failed to move {src_path} to {dst_path}: {str(e)}", str(dst_path),
-            original_error=e
-        ) from e
+        message = f"Failed to move {src_path} to {dst_path}: {str(e)}"
+        raise QuackIOError(message, str(dst_path), original_error=e) from e
 
 
 @wrap_io_errors
@@ -176,9 +174,9 @@ def _safe_delete(path: Any, missing_ok: bool = True) -> bool:
         return True
     except PermissionError as e:
         logger.error(f"Permission denied when deleting {path_obj}: {e}")
-        raise QuackPermissionError(str(path_obj), "delete", original_error=e) from e
+        message = f"Permission denied when deleting {path_obj}: {str(e)}"
+        raise QuackPermissionError(str(path_obj), "delete", message=message, original_error=e) from e
     except Exception as e:
         logger.error(f"Failed to delete {path_obj}: {e}")
-        raise QuackIOError(
-            f"Failed to delete {path_obj}: {str(e)}", str(path_obj), original_error=e
-        ) from e
+        message = f"Failed to delete {path_obj}: {str(e)}"
+        raise QuackIOError(message, str(path_obj), original_error=e) from e

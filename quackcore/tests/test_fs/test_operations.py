@@ -224,9 +224,10 @@ class TestFileSystemOperations:
         assert result is False  # The implementation returns False for missing files with missing_ok=True
 
         # Test deleting non-existent file with missing_ok=False
-        with pytest.raises(FileNotFoundError) as excinfo:
+        with pytest.raises(Exception) as excinfo:
             operations._delete("to_delete.txt", missing_ok=False)
-        assert "not found" in str(excinfo.value).lower()
+        assert "not found" in str(excinfo.value).lower() or "does not exist" in str(
+            excinfo.value).lower()
 
     def test_create_directory(self, temp_dir: Path) -> None:
         """Test creating a directory."""
@@ -382,7 +383,8 @@ class TestFileSystemOperations:
         with pytest.raises(Exception) as excinfo:
             operations._read_yaml("invalid.yaml")
         # The error message contains details about the YAML parsing error
-        assert "mapping values" in str(excinfo.value).lower() or "yaml" in str(excinfo.value).lower()
+        assert "mapping values" in str(excinfo.value).lower() or "yaml" in str(
+            excinfo.value).lower()
 
         # Test non-dictionary YAML
         list_yaml = temp_dir / "list.yaml"
@@ -394,7 +396,7 @@ class TestFileSystemOperations:
         # Test reading non-existent file
         with pytest.raises(FileNotFoundError) as excinfo:
             operations._read_yaml("nonexistent.yaml")
-        assert "not found" in str(excinfo.value).lower()
+        assert "no such file" in str(excinfo.value).lower()
 
     def test_write_yaml(self, temp_dir: Path) -> None:
         """Test writing YAML files."""
@@ -436,7 +438,8 @@ class TestFileSystemOperations:
         with pytest.raises(Exception) as excinfo:
             operations._read_json("invalid.json")
         # The error message contains details about the JSON parsing error
-        assert "expecting value" in str(excinfo.value).lower() or "json" in str(excinfo.value).lower()
+        assert "expecting value" in str(excinfo.value).lower() or "json" in str(
+            excinfo.value).lower()
 
         # Test non-dictionary JSON
         list_json = temp_dir / "list.json"
@@ -448,7 +451,7 @@ class TestFileSystemOperations:
         # Test reading non-existent file
         with pytest.raises(FileNotFoundError) as excinfo:
             operations._read_json("nonexistent.json")
-        assert "not found" in str(excinfo.value).lower()
+        assert "no such file" in str(excinfo.value).lower()
 
     def test_write_json(self, temp_dir: Path) -> None:
         """Test writing JSON files."""

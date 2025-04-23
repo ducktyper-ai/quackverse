@@ -282,18 +282,22 @@ class TestFileSystemService:
         assert result.is_empty is False
         # Convert Path objects to strings for comparison
         assert len(result.files) == 2  # Hidden files not included by default
-        assert len(result.directories)
         assert len(result.directories) == 1
-        # Use string form of paths for comparison
-        assert str(temp_dir / "file1.txt") in result.files
-        assert str(temp_dir / "file2.txt") in result.files
-        assert str(temp_dir / "subdir") in result.directories
+
+        # Check each item individually by converting the Path to string first
+        file_paths = [str(path) for path in result.files]
+        assert str(temp_dir / "file1.txt") in file_paths
+        assert str(temp_dir / "file2.txt") in file_paths
+
+        dir_paths = [str(path) for path in result.directories]
+        assert str(temp_dir / "subdir") in dir_paths
 
         # Test listing with include_hidden=True
         result = service.list_directory(temp_dir, include_hidden=True)
         assert result.success is True
         assert len(result.files) == 3  # Now includes hidden file
-        assert str(temp_dir / ".hidden_file") in result.files
+        file_paths = [str(path) for path in result.files]
+        assert str(temp_dir / ".hidden_file") in file_paths
 
         # Test listing with pattern
         result = service.list_directory(temp_dir, pattern="*.txt")
@@ -323,21 +327,26 @@ class TestFileSystemService:
         assert (
                 len(result.files) == 3
         )  # Includes subdir/subfile.txt due to recursive=True
-        assert str(temp_dir / "file1.txt") in result.files
-        assert str(temp_dir / "file2.txt") in result.files
-        assert str(subdir / "subfile.txt") in result.files
+
+        # Convert Path objects to strings for comparison
+        file_paths = [str(path) for path in result.files]
+        assert str(temp_dir / "file1.txt") in file_paths
+        assert str(temp_dir / "file2.txt") in file_paths
+        assert str(subdir / "subfile.txt") in file_paths
 
         # Test finding without recursion
         result = service.find_files(temp_dir, "*.txt", recursive=False)
         assert result.success is True
         assert len(result.files) == 2  # Excludes subdir/subfile.txt
-        assert str(subdir / "subfile.txt") not in result.files
+        file_paths = [str(path) for path in result.files]
+        assert str(subdir / "subfile.txt") not in file_paths
 
         # Test finding directories
         result = service.find_files(temp_dir, "*subdir*")
         assert result.success is True
         assert len(result.directories) == 1
-        assert str(subdir) in result.directories
+        dir_paths = [str(path) for path in result.directories]
+        assert str(subdir) in dir_paths
 
     def test_read_yaml(self, temp_dir: Path) -> None:
         """Test reading YAML files."""

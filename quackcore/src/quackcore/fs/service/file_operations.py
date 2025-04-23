@@ -1,9 +1,4 @@
 # quackcore/src/quackcore/fs/service/file_operations.py
-"""
-File operations utilities for the FileSystemService.
-
-These utilities extend the FileSystemService with methods for file manipulation.
-"""
 
 from pathlib import Path
 
@@ -92,10 +87,21 @@ class FileOperationsMixin:
                 normalized_path, content, encoding, atomic, calculate_checksum
             )
             logger.debug(f"Successfully wrote text to {result_path}")
+
+            # Calculate the bytes written
+            bytes_written = len(content.encode(encoding))
+
+            # If checksum was requested, calculate it
+            checksum = None
+            if calculate_checksum:
+                checksum = self.operations._compute_checksum(result_path)
+
             return WriteResult(
                 success=True,
                 path=result_path,
-                message=f"Successfully wrote text to {result_path}"
+                message=f"Successfully wrote text to {result_path}",
+                bytes_written=bytes_written,
+                checksum=checksum
             )
         except Exception as e:
             logger.error(f"Error writing text to {normalized_path}: {str(e)}")
@@ -103,12 +109,13 @@ class FileOperationsMixin:
                 success=False,
                 path=normalized_path,
                 error=str(e),
-                message=f"Failed to write text to {normalized_path}"
+                message=f"Failed to write text to {normalized_path}",
+                bytes_written=0
             )
 
     @wrap_io_errors
     def read_binary(self, path: str | Path | DataResult | OperationResult) -> \
-    ReadResult[bytes]:
+            ReadResult[bytes]:
         """
         Read binary content from a file.
 
@@ -166,10 +173,21 @@ class FileOperationsMixin:
             result_path = self.operations._write_binary(normalized_path, content,
                                                         atomic, calculate_checksum)
             logger.debug(f"Successfully wrote binary data to {result_path}")
+
+            # Calculate the number of bytes written
+            bytes_written = len(content)
+
+            # If checksum was requested, calculate it
+            checksum = None
+            if calculate_checksum:
+                checksum = self.operations._compute_checksum(result_path)
+
             return WriteResult(
                 success=True,
                 path=result_path,
-                message=f"Successfully wrote binary data to {result_path}"
+                message=f"Successfully wrote binary data to {result_path}",
+                bytes_written=bytes_written,
+                checksum=checksum
             )
         except Exception as e:
             logger.error(f"Error writing binary data to {normalized_path}: {str(e)}")
@@ -177,7 +195,8 @@ class FileOperationsMixin:
                 success=False,
                 path=normalized_path,
                 error=str(e),
-                message=f"Failed to write binary data to {normalized_path}"
+                message=f"Failed to write binary data to {normalized_path}",
+                bytes_written=0
             )
 
     @wrap_io_errors
@@ -248,19 +267,23 @@ class FileOperationsMixin:
         try:
             content = line_ending.join(lines)
             # For non-default line endings, encode and write in binary mode.
+            bytes_written = 0
             if line_ending != "\n":
                 bytes_content = content.encode(encoding)
                 result_path = self.operations._write_binary(normalized_path,
                                                             bytes_content, atomic)
+                bytes_written = len(bytes_content)
             else:
                 result_path = self.operations._write_text(normalized_path, content,
                                                           encoding, atomic)
+                bytes_written = len(content.encode(encoding))
 
             logger.debug(f"Successfully wrote {len(lines)} lines to {result_path}")
             return WriteResult(
                 success=True,
                 path=result_path,
-                message=f"Successfully wrote {len(lines)} lines to {result_path}"
+                message=f"Successfully wrote {len(lines)} lines to {result_path}",
+                bytes_written=bytes_written
             )
         except Exception as e:
             logger.error(f"Error writing lines to {normalized_path}: {str(e)}")
@@ -268,7 +291,8 @@ class FileOperationsMixin:
                 success=False,
                 path=normalized_path,
                 error=str(e),
-                message=f"Failed to write lines to {normalized_path}"
+                message=f"Failed to write lines to {normalized_path}",
+                bytes_written=0
             )
 
     # File management operations
@@ -294,10 +318,20 @@ class FileOperationsMixin:
             result_path = self.operations._copy(normalized_src, normalized_dst,
                                                 overwrite)
             logger.debug(f"Successfully copied {normalized_src} to {result_path}")
+
+            # Get the size of the copied file if possible
+            bytes_written = 0
+            try:
+                if result_path.is_file():
+                    bytes_written = result_path.stat().st_size
+            except Exception:
+                pass
+
             return WriteResult(
                 success=True,
                 path=result_path,
-                message=f"Successfully copied {normalized_src} to {result_path}"
+                message=f"Successfully copied {normalized_src} to {result_path}",
+                bytes_written=bytes_written
             )
         except Exception as e:
             logger.error(
@@ -306,7 +340,8 @@ class FileOperationsMixin:
                 success=False,
                 path=normalized_dst,
                 error=str(e),
-                message=f"Failed to copy {normalized_src} to {normalized_dst}"
+                message=f"Failed to copy {normalized_src} to {normalized_dst}",
+                bytes_written=0
             )
 
     @wrap_io_errors
@@ -328,13 +363,22 @@ class FileOperationsMixin:
         normalized_src = self._normalize_input_path(src)
         normalized_dst = self._normalize_input_path(dst)
         try:
+            # Get file size before moving if possible
+            bytes_written = 0
+            try:
+                if normalized_src.is_file():
+                    bytes_written = normalized_src.stat().st_size
+            except Exception:
+                pass
+
             result_path = self.operations._move(normalized_src, normalized_dst,
                                                 overwrite)
             logger.debug(f"Successfully moved {normalized_src} to {result_path}")
             return WriteResult(
                 success=True,
                 path=result_path,
-                message=f"Successfully moved {normalized_src} to {result_path}"
+                message=f"Successfully moved {normalized_src} to {result_path}",
+                bytes_written=bytes_written
             )
         except Exception as e:
             logger.error(f"Error moving {normalized_src} to {normalized_dst}: {str(e)}")
@@ -342,7 +386,8 @@ class FileOperationsMixin:
                 success=False,
                 path=normalized_dst,
                 error=str(e),
-                message=f"Failed to move {normalized_src} to {normalized_dst}"
+                message=f"Failed to move {normalized_src} to {normalized_dst}",
+                bytes_written=0
             )
 
     @wrap_io_errors
