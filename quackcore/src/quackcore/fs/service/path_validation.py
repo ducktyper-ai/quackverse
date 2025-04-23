@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 
 class PathValidationMixin:
     """
-    Mixin class for path validation _operations in the FileSystemService.
+    Mixin class for path validation operations in the FileSystemService.
 
     This mixin "dogfoods" our existing implementation from FileInfoOperationsMixin
     (or any compatible implementation exposed via `self._operations`) to check if a path exists.
@@ -35,7 +35,7 @@ class PathValidationMixin:
         raise NotImplementedError("This method should be overridden")
 
     def path_exists(self, path: str | Path | DataResult | OperationResult) -> \
-    DataResult[bool]:
+            DataResult[bool]:
         """
         Check if a path exists in the filesystem by leveraging the existing
         FileInfoOperationsMixin implementation via self._operations.
@@ -104,7 +104,7 @@ class PathValidationMixin:
             is_absolute = normalized_path.is_absolute()
 
             # Check if the path syntax is valid without requiring existence
-            is_valid = self._is_path_syntax_valid(str(normalized_path))
+            is_valid = self.operations._is_path_syntax_valid(str(normalized_path))
 
             # Check for existence (optional info)
             exists_result = self.path_exists(normalized_path)
@@ -132,7 +132,7 @@ class PathValidationMixin:
             )
 
     def is_valid_path(self, path: str | Path | DataResult | OperationResult) -> \
-    DataResult[bool]:
+            DataResult[bool]:
         """
         Check if a path has valid syntax.
 
@@ -147,7 +147,7 @@ class PathValidationMixin:
         """
         normalized_path = self._normalize_input_path(path)
         try:
-            is_valid = self._is_path_syntax_valid(str(normalized_path))
+            is_valid = self.operations._is_path_syntax_valid(str(normalized_path))
 
             return DataResult(
                 success=True,
@@ -167,57 +167,6 @@ class PathValidationMixin:
                 error=f"Failed to check path validity: {str(e)}",
             )
 
-    def _is_path_syntax_valid(self, path_str: str) -> bool:
-        """
-        Check if a path string has valid syntax.
-
-        Args:
-            path_str: Path string to check
-
-        Returns:
-            True if the path has valid syntax
-        """
-        try:
-            # Attempt to create a Path object from the string
-            path_obj = Path(path_str)
-
-            # Windows-specific checks for reserved characters and names
-            if os.name == "nt":
-                reserved_chars = '<>:"|?*'
-                if any(char in path_obj.name for char in reserved_chars):
-                    return False
-
-                reserved_names = [
-                    "CON",
-                    "PRN",
-                    "AUX",
-                    "NUL",
-                    "COM1",
-                    "COM2",
-                    "COM3",
-                    "COM4",
-                    "COM5",
-                    "COM6",
-                    "COM7",
-                    "COM8",
-                    "COM9",
-                    "LPT1",
-                    "LPT2",
-                    "LPT3",
-                    "LPT4",
-                    "LPT5",
-                    "LPT6",
-                    "LPT7",
-                    "LPT8",
-                    "LPT9",
-                ]
-                if any(part.upper() in reserved_names for part in path_obj.parts):
-                    return False
-
-            return True
-        except Exception:
-            return False
-
     @wrap_io_errors
     def normalize_path_with_info(self,
                                  path: str | Path | DataResult | OperationResult) -> PathResult:
@@ -235,13 +184,7 @@ class PathValidationMixin:
         """
         try:
             normalized_path = self._normalize_input_path(path)
-            if not normalized_path.is_absolute():
-                try:
-                    normalized_path = normalized_path.resolve()
-                except FileNotFoundError:
-                    # When resolution fails (for non-existent paths),
-                    # fall back to the original path.
-                    pass
+            normalized_path = self.operations._normalize_path(normalized_path)
 
             exists_result = self.path_exists(normalized_path)
             exists = exists_result.data if exists_result.success else False
@@ -279,19 +222,28 @@ class PathValidationMixin:
             PathResult with the resolved path and validation information
         """
         normalized_path = self._normalize_input_path(path)
-        resolved = self.operations._resolve_path(normalized_path)
-        if not resolved.exists():
+        try:
+            resolved = self.operations._resolve_path(normalized_path)
+            if not resolved.exists():
+                return PathResult(
+                    success=False,
+                    path=resolved,
+                    is_valid=False,
+                    exists=False,
+                    error="Resolved path does not exist",
+                )
+            return PathResult(
+                success=True,
+                path=resolved,
+                is_valid=True,
+                exists=True,
+                message="Successfully resolved existing path",
+            )
+        except Exception as e:
             return PathResult(
                 success=False,
-                path=resolved,
+                path=normalized_path,
                 is_valid=False,
                 exists=False,
-                error="Resolved path does not exist",
+                error=f"Failed to resolve path: {str(e)}",
             )
-        return PathResult(
-            success=True,
-            path=resolved,
-            is_valid=True,
-            exists=True,
-            message="Successfully resolved existing path",
-        )

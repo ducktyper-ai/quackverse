@@ -1,34 +1,26 @@
 # quackcore/src/quackcore/fs/service/path_operations.py
 """
-Path _operations utilities for the FileSystemService.
+Path operations utilities for the FileSystemService.
 
 These utilities extend the FileSystemService with methods for path manipulation.
 """
 
-# TODO: We need here its own PathOperations object in _operations instead of using the public api
-
 import os
-import tempfile
 from pathlib import Path
 
 from quackcore.errors import wrap_io_errors
 from quackcore.fs._operations import FileSystemOperations
-from quackcore.fs.api.public import (
-    expand_user_vars,
-    is_same_file,
-    is_subdirectory,
-    split_path,
-)
-from quackcore.fs.api.public import (
-    normalize_path as utils_normalize_path,
-)
 from quackcore.fs.results import DataResult, OperationResult, PathResult
+from quackcore.logging import get_logger
+
+# Set up logger
+logger = get_logger(__name__)
 
 
 class PathOperationsMixin:
-    """Mixin class for path _operations in the FileSystemService."""
+    """Mixin class for path operations in the FileSystemService."""
 
-    # This ensures the mixin will only be used with classes that have _operations
+    # This ensures the mixin will only be used with classes that have operations
     operations: FileSystemOperations
 
     # This method is added in the base class
@@ -39,7 +31,7 @@ class PathOperationsMixin:
 
     @wrap_io_errors
     def join_path(self, *parts: str | Path | DataResult | OperationResult) -> \
-    DataResult[str]:
+            DataResult[str]:
         """
         Join path components safely, extracting path values from result objects.
 
@@ -108,14 +100,31 @@ class PathOperationsMixin:
             path: Path to split (string, Path, DataResult, or OperationResult)
 
         Returns:
-            List of path components
+            DataResult with list of path components
         """
         normalized_path = self._normalize_input_path(path)
-        return split_path(normalized_path)
+        try:
+            components = self.operations._split_path(normalized_path)
+            return DataResult(
+                success=True,
+                path=normalized_path,
+                data=components,
+                format="path_components",
+                message=f"Split path into {len(components)} components",
+            )
+        except Exception as e:
+            return DataResult(
+                success=False,
+                path=normalized_path,
+                data=[],
+                format="path_components",
+                error=str(e),
+                message="Failed to split path",
+            )
 
     @wrap_io_errors
     def normalize_path(self, path: str | Path | DataResult | OperationResult) -> \
-    PathResult:
+            PathResult:
         """
         Normalize a path for cross-platform compatibility.
 
@@ -125,13 +134,33 @@ class PathOperationsMixin:
             path: Path to normalize (string, Path, DataResult, or OperationResult)
 
         Returns:
-            Normalized Path object
+            PathResult with normalized path
         """
         normalized_path = self._normalize_input_path(path)
-        return utils_normalize_path(normalized_path)
+        try:
+            result_path = self.operations._normalize_path(normalized_path)
+            return PathResult(
+                success=True,
+                path=result_path,
+                is_absolute=result_path.is_absolute(),
+                is_valid=True,
+                exists=result_path.exists(),
+                message=f"Normalized path: {result_path}",
+            )
+        except Exception as e:
+            return PathResult(
+                success=False,
+                path=normalized_path,
+                is_absolute=normalized_path.is_absolute(),
+                is_valid=False,
+                exists=False,
+                error=str(e),
+                message="Failed to normalize path",
+            )
 
+    @wrap_io_errors
     def expand_user_vars(self, path: str | Path | DataResult | OperationResult) -> \
-    DataResult[str]:
+            DataResult[str]:
         """
         Expand user variables and environment variables in a path.
 
@@ -139,11 +168,29 @@ class PathOperationsMixin:
             path: Path with variables (string, Path, DataResult, or OperationResult)
 
         Returns:
-            Expanded Path object
+            DataResult with expanded path
         """
         normalized_path = self._normalize_input_path(path)
-        return expand_user_vars(normalized_path)
+        try:
+            expanded = self.operations._expand_user_vars(normalized_path)
+            return DataResult(
+                success=True,
+                path=normalized_path,
+                data=expanded,
+                format="path",
+                message=f"Expanded path: {expanded}",
+            )
+        except Exception as e:
+            return DataResult(
+                success=False,
+                path=normalized_path,
+                data=str(normalized_path),
+                format="path",
+                error=str(e),
+                message="Failed to expand variables in path",
+            )
 
+    @wrap_io_errors
     def is_same_file(self, path1: str | Path | DataResult | OperationResult,
                      path2: str | Path | DataResult | OperationResult) -> DataResult[
         bool]:
@@ -155,12 +202,30 @@ class PathOperationsMixin:
             path2: Second path (string, Path, DataResult, or OperationResult)
 
         Returns:
-            True if paths refer to the same file
+            DataResult with True if paths refer to the same file
         """
         normalized_path1 = self._normalize_input_path(path1)
         normalized_path2 = self._normalize_input_path(path2)
-        return is_same_file(normalized_path1, normalized_path2)
+        try:
+            is_same = self.operations._is_same_file(normalized_path1, normalized_path2)
+            return DataResult(
+                success=True,
+                path=normalized_path1,
+                data=is_same,
+                format="boolean",
+                message=f"Paths {normalized_path1} and {normalized_path2} {'refer to the same file' if is_same else 'do not refer to the same file'}",
+            )
+        except Exception as e:
+            return DataResult(
+                success=False,
+                path=normalized_path1,
+                data=False,
+                format="boolean",
+                error=str(e),
+                message="Failed to check if paths refer to the same file",
+            )
 
+    @wrap_io_errors
     def is_subdirectory(
             self, child: str | Path | DataResult | OperationResult,
             parent: str | Path | DataResult | OperationResult
@@ -173,11 +238,29 @@ class PathOperationsMixin:
             parent: Potential parent path (string, Path, DataResult, or OperationResult)
 
         Returns:
-            True if child is a subdirectory of parent
+            DataResult with True if child is a subdirectory of parent
         """
         normalized_child = self._normalize_input_path(child)
         normalized_parent = self._normalize_input_path(parent)
-        return is_subdirectory(normalized_child, normalized_parent)
+        try:
+            is_subdir = self.operations._is_subdirectory(normalized_child,
+                                                         normalized_parent)
+            return DataResult(
+                success=True,
+                path=normalized_child,
+                data=is_subdir,
+                format="boolean",
+                message=f"Path {normalized_child} {'is' if is_subdir else 'is not'} a subdirectory of {normalized_parent}",
+            )
+        except Exception as e:
+            return DataResult(
+                success=False,
+                path=normalized_child,
+                data=False,
+                format="boolean",
+                error=str(e),
+                message="Failed to check if path is a subdirectory",
+            )
 
     @wrap_io_errors
     def create_temp_directory(
@@ -194,7 +277,7 @@ class PathOperationsMixin:
             DataResult with path to the created temporary directory
         """
         try:
-            temp_dir = Path(tempfile.mkdtemp(prefix=prefix, suffix=suffix))
+            temp_dir = self.operations._create_temp_directory(prefix, suffix)
             return DataResult(
                 success=True,
                 path=temp_dir,
@@ -214,7 +297,7 @@ class PathOperationsMixin:
 
     @wrap_io_errors
     def get_extension(self, path: str | Path | DataResult | OperationResult) -> \
-    DataResult[str]:
+            DataResult[str]:
         """
         Get the file extension from a path.
 
@@ -224,12 +307,9 @@ class PathOperationsMixin:
         Returns:
             DataResult with file extension without the dot
         """
+        normalized_path = self._normalize_input_path(path)
         try:
-            normalized_path = self._normalize_input_path(path)
-            path_str = str(normalized_path)
-            _, ext = os.path.splitext(path_str)
-            extension = ext.lstrip(".").lower()
-
+            extension = self.operations._get_extension(normalized_path)
             return DataResult(
                 success=True,
                 path=normalized_path,
@@ -238,7 +318,6 @@ class PathOperationsMixin:
                 message=f"Successfully extracted extension: {extension}",
             )
         except Exception as e:
-            normalized_path = self._normalize_input_path(path)
             return DataResult(
                 success=False,
                 path=normalized_path,
@@ -248,8 +327,9 @@ class PathOperationsMixin:
                 message="Failed to extract file extension",
             )
 
+    @wrap_io_errors
     def resolve_path(self, path: str | Path | DataResult | OperationResult) -> \
-    PathResult:
+            PathResult:
         """
         Resolve a path relative to the service's base_dir and return as a string.
 

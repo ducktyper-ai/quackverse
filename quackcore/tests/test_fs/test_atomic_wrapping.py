@@ -1,6 +1,6 @@
 # quackcore/tests/test_fs/test_atomic_wrapping.py
 """
-Tests to ensure that the write_text and write_binary _operations wrap
+Tests to ensure that the write_text and write_binary operations wrap
 their return values correctly in a WriteResult object—even when using atomic writes.
 
 The error we encountered in production (i.e. "PosixPath object has no attribute 'success'")
@@ -24,7 +24,7 @@ def temp_test_dir(tmp_path: Path) -> Path:
 
 
 class TestAtomicWrapping:
-    """Tests to verify that write _operations return a WriteResult wrapper."""
+    """Tests to verify that write operations return a WriteResult wrapper."""
 
     @pytest.fixture
     def fs_service(self) -> FileSystemService:
@@ -53,6 +53,9 @@ class TestAtomicWrapping:
         assert isinstance(result.path, Path), (
             "The 'path' attribute should be a Path object."
         )
+        assert result.bytes_written == len(content.encode('utf-8')), (
+            "The bytes_written should match the content length."
+        )
         # Read the file and verify contents
         assert file_path.read_text() == content, "File content does not match expected."
 
@@ -70,6 +73,7 @@ class TestAtomicWrapping:
         assert isinstance(result, WriteResult)
         assert result.success is True
         assert isinstance(result.path, Path)
+        assert result.bytes_written == len(content.encode('utf-8'))
         assert file_path.read_text() == content, "File content does not match expected."
 
     def test_write_binary_atomic(

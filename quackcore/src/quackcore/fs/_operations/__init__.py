@@ -36,8 +36,10 @@ from .core import _initialize_mime_types, _resolve_path
 from .directory_ops import DirectoryOperationsMixin
 from .file_info import FileInfoOperationsMixin
 from .find_ops import FindOperationsMixin
+from .path_ops import PathOperationsMixin
 from .read_ops import ReadOperationsMixin
 from .serialization_ops import SerializationOperationsMixin
+from .utility_ops import UtilityOperationsMixin
 from .write_ops import WriteOperationsMixin
 
 
@@ -49,6 +51,8 @@ class FileSystemOperations(
     DirectoryOperationsMixin,
     FindOperationsMixin,
     SerializationOperationsMixin,
+    PathOperationsMixin,
+    UtilityOperationsMixin,
 ):
     """
     Core implementation of filesystem _operations.

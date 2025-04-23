@@ -2,7 +2,7 @@
 """
 Standalone utility functions that are exposed at the package level.
 
-These functions provide direct access to common filesystem _operations
+These functions provide direct access to common filesystem operations
 without having to create a service instance.
 """
 
@@ -28,10 +28,12 @@ T = TypeVar("T")  # Generic type for flexible typing
 # Create a service instance specifically for standalone functions
 _service = FileSystemService()
 
-# File _operations
+
+# File operations
 
 
-def read_text(path: str | Path | DataResult | OperationResult, encoding: str = "utf-8") -> ReadResult[str]:
+def read_text(path: str | Path | DataResult | OperationResult,
+              encoding: str = "utf-8") -> ReadResult[str]:
     """
     Read text from a file.
 
@@ -46,10 +48,10 @@ def read_text(path: str | Path | DataResult | OperationResult, encoding: str = "
 
 
 def write_text(
-    path: str | Path | DataResult | OperationResult,
-    content: str,
-    encoding: str = "utf-8",
-    atomic: bool = True,
+        path: str | Path | DataResult | OperationResult,
+        content: str,
+        encoding: str = "utf-8",
+        atomic: bool = True,
 ) -> WriteResult:
     """
     Write text to a file.
@@ -80,9 +82,9 @@ def read_binary(path: str | Path | DataResult | OperationResult) -> ReadResult[b
 
 
 def write_binary(
-    path: str | Path | DataResult | OperationResult,
-    content: bytes,
-    atomic: bool = True,
+        path: str | Path | DataResult | OperationResult,
+        content: bytes,
+        atomic: bool = True,
 ) -> WriteResult:
     """
     Write binary data to a file.
@@ -98,7 +100,8 @@ def write_binary(
     return _service.write_binary(path, content, atomic)
 
 
-def read_lines(path: str | Path | DataResult | OperationResult, encoding: str = "utf-8") -> ReadResult[list[str]]:
+def read_lines(path: str | Path | DataResult | OperationResult,
+               encoding: str = "utf-8") -> ReadResult[list[str]]:
     """
     Read lines from a text file.
 
@@ -113,11 +116,11 @@ def read_lines(path: str | Path | DataResult | OperationResult, encoding: str = 
 
 
 def write_lines(
-    path: str | Path | DataResult | OperationResult,
-    lines: list[str],
-    encoding: str = "utf-8",
-    atomic: bool = True,
-    line_ending: str = "\n",
+        path: str | Path | DataResult | OperationResult,
+        lines: list[str],
+        encoding: str = "utf-8",
+        atomic: bool = True,
+        line_ending: str = "\n",
 ) -> WriteResult:
     """
     Write lines to a text file.
@@ -135,7 +138,8 @@ def write_lines(
     return _service.write_lines(path, lines, encoding, atomic, line_ending)
 
 
-def create_directory(path: str | Path | DataResult | OperationResult, exist_ok: bool = True) -> OperationResult:
+def create_directory(path: str | Path | DataResult | OperationResult,
+                     exist_ok: bool = True) -> OperationResult:
     """
     Create a directory if it doesn't exist.
 
@@ -163,9 +167,9 @@ def read_yaml(path: str | Path | DataResult | OperationResult) -> DataResult[dic
 
 
 def write_yaml(
-    path: str | Path | DataResult | OperationResult,
-    data: dict,
-    atomic: bool = True,
+        path: str | Path | DataResult | OperationResult,
+        data: dict,
+        atomic: bool = True,
 ) -> WriteResult:
     """
     Write data to a YAML file.
@@ -195,10 +199,10 @@ def read_json(path: str | Path | DataResult | OperationResult) -> DataResult[dic
 
 
 def write_json(
-    path: str | Path | DataResult | OperationResult,
-    data: dict,
-    atomic: bool = True,
-    indent: int = 2,
+        path: str | Path | DataResult | OperationResult,
+        data: dict,
+        atomic: bool = True,
+        indent: int = 2,
 ) -> WriteResult:
     """
     Write data to a JSON file.
@@ -229,9 +233,9 @@ def get_file_info(path: str | Path | DataResult | OperationResult) -> FileInfoRe
 
 
 def list_directory(
-    path: str | Path | DataResult | OperationResult,
-    pattern: str | None = None,
-    include_hidden: bool = False,
+        path: str | Path | DataResult | OperationResult,
+        pattern: str | None = None,
+        include_hidden: bool = False,
 ) -> DirectoryInfoResult:
     """
     List contents of a directory.
@@ -248,10 +252,10 @@ def list_directory(
 
 
 def find_files(
-    path: str | Path | DataResult | OperationResult,
-    pattern: str,
-    recursive: bool = True,
-    include_hidden: bool = False,
+        path: str | Path | DataResult | OperationResult,
+        pattern: str,
+        recursive: bool = True,
+        include_hidden: bool = False,
 ) -> FindResult:
     """
     Find files matching a pattern.
@@ -268,7 +272,9 @@ def find_files(
     return _service.find_files(path, pattern, recursive, include_hidden)
 
 
-def copy(src: str | Path | DataResult | OperationResult, dst: str | Path | DataResult | OperationResult, overwrite: bool = False) -> WriteResult:
+def copy(src: str | Path | DataResult | OperationResult,
+         dst: str | Path | DataResult | OperationResult,
+         overwrite: bool = False) -> WriteResult:
     """
     Copy a file or directory.
 
@@ -283,7 +289,9 @@ def copy(src: str | Path | DataResult | OperationResult, dst: str | Path | DataR
     return _service.copy(src, dst, overwrite)
 
 
-def move(src: str | Path | DataResult | OperationResult, dst: str | Path | DataResult | OperationResult, overwrite: bool = False) -> WriteResult:
+def move(src: str | Path | DataResult | OperationResult,
+         dst: str | Path | DataResult | OperationResult,
+         overwrite: bool = False) -> WriteResult:
     """
     Move a file or directory.
 
@@ -298,7 +306,8 @@ def move(src: str | Path | DataResult | OperationResult, dst: str | Path | DataR
     return _service.move(src, dst, overwrite)
 
 
-def delete(path: str | Path | DataResult | OperationResult, missing_ok: bool = True) -> OperationResult:
+def delete(path: str | Path | DataResult | OperationResult,
+           missing_ok: bool = True) -> OperationResult:
     """
     Delete a file or directory.
 
@@ -312,7 +321,8 @@ def delete(path: str | Path | DataResult | OperationResult, missing_ok: bool = T
     return _service.delete(path, missing_ok)
 
 
-def split_path(path: str | Path | DataResult | OperationResult) -> DataResult[list[str]]:
+def split_path(path: str | Path | DataResult | OperationResult) -> DataResult[
+    list[str]]:
     """
     Split a path into its components.
 
@@ -333,7 +343,7 @@ def join_path(*parts: str | Path | DataResult | OperationResult) -> DataResult[s
         *parts: Path parts to join. Each part can be a string, Path, DataResult, or OperationResult.
 
     Returns:
-        Joined Path object.
+        Joined path as string.
     """
     return _service.join_path(*parts)
 
@@ -354,7 +364,8 @@ def path_exists(path: str | Path | DataResult | OperationResult) -> DataResult[b
     return _service.path_exists(path)
 
 
-def normalize_path_with_info(path: str | Path | DataResult | OperationResult) -> PathResult:
+def normalize_path_with_info(
+        path: str | Path | DataResult | OperationResult) -> PathResult:
     """
     Normalize a path and return detailed information.
 
@@ -365,6 +376,7 @@ def normalize_path_with_info(path: str | Path | DataResult | OperationResult) ->
         PathResult containing the normalized path and status information.
     """
     return _service.normalize_path_with_info(path)
+
 
 def normalize_path(path: str | Path | DataResult | OperationResult) -> PathResult:
     """
@@ -417,6 +429,7 @@ def get_extension(path: str | Path | DataResult | OperationResult) -> DataResult
     """
     return _service.get_extension(path)
 
+
 def expand_user_vars(path: str | Path | DataResult | OperationResult) -> DataResult[
     str]:
     """
@@ -428,28 +441,27 @@ def expand_user_vars(path: str | Path | DataResult | OperationResult) -> DataRes
     Returns:
         DataResult with expanded path as string
     """
-
     return _service.expand_user_vars(path)
 
-def resolve_path(path: str | Path | DataResult | OperationResult) -> \
-    PathResult:
-        """
-        Resolve a path relative to the service's base_dir and return as a string.
 
-        This is a public, safe wrapper around _resolve_path that conforms to
-        the DataResult structure used throughout QuackCore.
+def resolve_path(path: str | Path | DataResult | OperationResult) -> PathResult:
+    """
+    Resolve a path relative to the service's base_dir and return as a string.
 
-        Args:
-            path: Input path (absolute or relative) (string, Path, DataResult, or OperationResult)
+    This is a public, safe wrapper around _resolve_path that conforms to
+    the DataResult structure used throughout QuackCore.
 
-        Returns:
-            PathResult with the fully resolved, absolute path as a string.
-        """
-        return _service.resolve_path(path)
+    Args:
+        path: Input path (absolute or relative) (string, Path, DataResult, or OperationResult)
+
+    Returns:
+        PathResult with the fully resolved, absolute path as a string.
+    """
+    return _service.resolve_path(path)
 
 
-def get_mime_type(path: str | Path | DataResult | OperationResult) -> \
-        DataResult[str] | None:
+def get_mime_type(path: str | Path | DataResult | OperationResult) -> DataResult[
+                                                                          str] | None:
     """
     Get the MIME type of a file.
 
@@ -461,21 +473,24 @@ def get_mime_type(path: str | Path | DataResult | OperationResult) -> \
     """
     return _service.get_mime_type(path)
 
-def create_temp_directory(prefix: str = "quackcore_", suffix: str = ""
-    ) -> DataResult[str]:
-        """
-        Create a temporary directory.
 
-        Args:
-            prefix: Prefix for the temporary directory name
-            suffix: Suffix for the temporary directory name
+def create_temp_directory(prefix: str = "quackcore_", suffix: str = "") -> DataResult[
+    str]:
+    """
+    Create a temporary directory.
 
-        Returns:
-            DataResult with path to the created temporary directory
-        """
-        return _service.create_temp_directory(prefix, suffix)
+    Args:
+        prefix: Prefix for the temporary directory name
+        suffix: Suffix for the temporary directory name
 
-def extract_path_from_result(path_or_result: str | Path | DataResult | OperationResult) -> DataResult[str]:
+    Returns:
+        DataResult with path to the created temporary directory
+    """
+    return _service.create_temp_directory(prefix, suffix)
+
+
+def extract_path_from_result(
+        path_or_result: str | Path | DataResult | OperationResult) -> DataResult[str]:
     """
     Extract a path string from any result object or path-like object.
 
@@ -486,5 +501,235 @@ def extract_path_from_result(path_or_result: str | Path | DataResult | Operation
     Returns:
         The extracted path as a string
     """
-    from quackcore.fs.api.public import extract_path_from_result as _extract_path
-    return _extract_path(path_or_result)
+    if hasattr(path_or_result, "path") and path_or_result.path is not None:
+        path = path_or_result.path
+    elif hasattr(path_or_result, "data") and path_or_result.data is not None:
+        path = path_or_result.data
+    else:
+        path = str(path_or_result)
+
+    return DataResult(
+        success=True,
+        path=Path(path),
+        data=str(path),
+        format="path",
+        message="Successfully extracted path"
+    )
+
+
+# New utility functions added in the refactoring
+
+
+def atomic_write(path: str | Path | DataResult | OperationResult,
+                 content: str | bytes) -> WriteResult:
+    """
+    Write content to a file atomically using a temporary file.
+
+    Args:
+        path: Destination file path (string, Path, DataResult, or OperationResult)
+        content: Content to write. Can be either string or bytes.
+
+    Returns:
+        WriteResult with path to the written file.
+    """
+    return _service.atomic_write(path, content)
+
+
+def get_disk_usage(path: str | Path | DataResult | OperationResult) -> DataResult[
+    dict[str, int]]:
+    """
+    Get disk usage information for the given path.
+
+    Args:
+        path: Path to get disk usage for (string, Path, DataResult, or OperationResult)
+
+    Returns:
+        DataResult with dictionary containing total, used, and free space in bytes
+    """
+    return _service.get_disk_usage(path)
+
+
+def get_file_type(path: str | Path | DataResult | OperationResult) -> DataResult[str]:
+    """
+    Get the type of a file.
+
+    Args:
+        path: Path to the file (string, Path, DataResult, or OperationResult)
+
+    Returns:
+        DataResult with file type string
+    """
+    return _service.get_file_type(path)
+
+
+def get_file_size_str(size_bytes: int) -> DataResult[str]:
+    """
+    Convert file size in bytes to a human-readable string.
+
+    Args:
+        size_bytes: File size in bytes
+
+    Returns:
+        DataResult with human-readable file size (e.g., "2.5 MB")
+    """
+    return _service.get_file_size_str(size_bytes)
+
+
+def get_file_timestamp(path: str | Path | DataResult | OperationResult) -> DataResult[
+    float]:
+    """
+    Get the latest timestamp (modification time) for a file.
+
+    Args:
+        path: Path to the file (string, Path, DataResult, or OperationResult)
+
+    Returns:
+        DataResult with timestamp as float
+    """
+    return _service.get_file_timestamp(path)
+
+
+def compute_checksum(
+        path: str | Path | DataResult | OperationResult, algorithm: str = "sha256"
+) -> DataResult[str]:
+    """
+    Compute the checksum of a file.
+
+    Args:
+        path: Path to the file (string, Path, DataResult, or OperationResult)
+        algorithm: Hash algorithm to use (default: "sha256")
+
+    Returns:
+        DataResult with hexadecimal string representing the checksum
+    """
+    return _service.compute_checksum(path, algorithm)
+
+
+def create_temp_file(
+        suffix: str = ".txt", prefix: str = "quackcore_",
+        directory: str | Path | DataResult | OperationResult | None = None
+) -> DataResult[str]:
+    """
+    Create a temporary file.
+
+    Args:
+        suffix: File suffix (e.g., ".txt")
+        prefix: File prefix
+        directory: Directory to create the file in (string, Path, DataResult,
+                  or OperationResult, default: system temp dir)
+
+    Returns:
+        DataResult with path to the created temporary file
+    """
+    return _service.create_temp_file(suffix, prefix, directory)
+
+
+def ensure_directory(
+        path: str | Path | DataResult | OperationResult, exist_ok: bool = True
+) -> OperationResult:
+    """
+    Ensure a directory exists, creating it if necessary.
+
+    Args:
+        path: Directory path to ensure exists (string, Path, DataResult, or OperationResult)
+        exist_ok: If False, raise an error when directory exists
+
+    Returns:
+        OperationResult with operation status
+    """
+    return _service.ensure_directory(path, exist_ok)
+
+
+def get_unique_filename(
+        directory: str | Path | DataResult | OperationResult, filename: str
+) -> DataResult[str]:
+    """
+    Generate a unique filename in the given directory.
+
+    Args:
+        directory: Directory path (string, Path, DataResult, or OperationResult)
+        filename: Base filename
+
+    Returns:
+        DataResult with the unique filename
+    """
+    return _service.get_unique_filename(directory, filename)
+
+
+def find_files_by_content(
+        directory: str | Path | DataResult | OperationResult, text_pattern: str,
+        recursive: bool = True
+) -> DataResult[list[str]]:
+    """
+    Find files containing the given text pattern.
+
+    Args:
+        directory: Directory to search in (string, Path, DataResult, or OperationResult)
+        text_pattern: Text pattern to search for
+        recursive: Whether to search recursively
+
+    Returns:
+        DataResult with list of paths to files containing the pattern
+    """
+    return _service.find_files_by_content(directory, text_pattern, recursive)
+
+
+def is_path_writeable(path: str | Path | DataResult | OperationResult) -> DataResult[
+    bool]:
+    """
+    Check if a path is writeable.
+
+    Args:
+        path: Path to check (string, Path, DataResult, or OperationResult)
+
+    Returns:
+        DataResult with True if the path is writeable
+    """
+    return _service.is_path_writeable(path)
+
+
+def is_file_locked(path: str | Path | DataResult | OperationResult) -> DataResult[bool]:
+    """
+    Check if a file is locked by another process.
+
+    Args:
+        path: Path to the file (string, Path, DataResult, or OperationResult)
+
+    Returns:
+        DataResult with True if the file is locked
+    """
+    return _service.is_file_locked(path)
+
+
+def is_same_file(
+        path1: str | Path | DataResult | OperationResult,
+        path2: str | Path | DataResult | OperationResult
+) -> DataResult[bool]:
+    """
+    Check if two paths refer to the same file.
+
+    Args:
+        path1: First path (string, Path, DataResult, or OperationResult)
+        path2: Second path (string, Path, DataResult, or OperationResult)
+
+    Returns:
+        DataResult with True if paths refer to the same file
+    """
+    return _service.is_same_file(path1, path2)
+
+
+def is_subdirectory(
+        child: str | Path | DataResult | OperationResult,
+        parent: str | Path | DataResult | OperationResult
+) -> DataResult[bool]:
+    """
+    Check if a path is a subdirectory of another path.
+
+    Args:
+        child: Potential child path (string, Path, DataResult, or OperationResult)
+        parent: Potential parent path (string, Path, DataResult, or OperationResult)
+
+    Returns:
+        DataResult with True if child is a subdirectory of parent
+    """
+    return _service.is_subdirectory(child, parent)
