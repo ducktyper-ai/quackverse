@@ -1,3 +1,4 @@
+# quackcore/src/quackcore/fs/protocols.py
 from typing import Any, Protocol
 
 

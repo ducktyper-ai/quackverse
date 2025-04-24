@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# fix_imports.py
 """
 Script to fix imports in quackcore test files.
 """
