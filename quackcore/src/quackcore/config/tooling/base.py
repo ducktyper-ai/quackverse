@@ -7,6 +7,7 @@ configuration models should inherit from.
 
 from pydantic import BaseModel
 
+
 class QuackToolConfigModel(BaseModel):
     """
     Base class for QuackTool-specific config models.

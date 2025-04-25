@@ -5,17 +5,18 @@ This module provides utilities for loading and updating QuackTool-specific
 configurations within the main QuackConfig object.
 """
 
-from typing import Type, tuple
 from collections.abc import Mapping
+from typing import tuple
 
 from quackcore.config import load_config
 from quackcore.config.models import QuackConfig
+
 from .base import QuackToolConfigModel
 
 
 def load_tool_config(
     tool_name: str,
-    config_model: Type[QuackToolConfigModel],
+    config_model: type[QuackToolConfigModel],
     config_path: str | None = None
 ) -> tuple[QuackConfig, QuackToolConfigModel]:
     """

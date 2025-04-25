@@ -5,8 +5,9 @@ This module provides utilities for setting up consistent logging
 across different QuackTools.
 """
 
-import logging
 import atexit
+import logging
+
 from quackcore.fs.service import get_service
 
 # Track file handlers for cleanup during exit
