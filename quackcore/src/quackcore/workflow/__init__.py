@@ -1,4 +1,4 @@
-# quackcore/workflow/__init__.py
+# quackcore/src/quackcore/workflow/__init__.py
 """
 quackcore.workflow – Provides modular runners and mixins for tool workflows.
 

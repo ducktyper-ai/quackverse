@@ -1,4 +1,4 @@
-# Example Test (for reference)
+# quackcore/tests/test_workflow/example_test.py
 from pathlib import Path
 from typing import Any
 

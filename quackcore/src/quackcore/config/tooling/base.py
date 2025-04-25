@@ -1,3 +1,4 @@
+# quackcore/src/quackcore/config/tooling/base.py
 """
 Base class for QuackTool-specific config models.
 

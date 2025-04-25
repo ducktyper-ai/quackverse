@@ -1,4 +1,4 @@
-# quackcore/workflow/runners/file_runner.py
+# quackcore/src/quackcore/workflow/runners/file_runner.py
 from __future__ import annotations
 
 import tempfile

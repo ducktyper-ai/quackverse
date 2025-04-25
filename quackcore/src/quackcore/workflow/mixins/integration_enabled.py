@@ -1,4 +1,4 @@
-# quackcore/workflow/mixins/integration_enabled.py
+# quackcore/src/quackcore/workflow/mixins/integration_enabled.py
 from __future__ import annotations
 
 from typing import Generic, TypeVar

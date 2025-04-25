@@ -1,4 +1,4 @@
-# quackcore/workflow/protocols/remote_handler.py
+# quackcore/src/quackcore/workflow/protocols/remote_handler.py
 from __future__ import annotations
 
 from typing import Protocol, runtime_checkable

@@ -1,65 +1,74 @@
 """
-Configuration loading utilities for QuackTools.
+Logging setup utilities for QuackTools.
 
-This module provides utilities for loading and updating QuackTool-specific
-configurations within the main QuackConfig object.
+This module provides utilities for setting up consistent logging
+across different QuackTools.
 """
 
-from collections.abc import Mapping
-from typing import tuple
+import logging
+import sys
+import atexit
+from quackcore.fs.service import get_service
 
-from quackcore.config import load_config
-from quackcore.config.models import QuackConfig
-
-from .base import QuackToolConfigModel
+# Track file handlers for cleanup during exit
+_file_handlers = []
 
 
-def load_tool_config(
-    tool_name: str,
-    config_model: type[QuackToolConfigModel],
-    config_path: str | None = None
-) -> tuple[QuackConfig, QuackToolConfigModel]:
+def setup_tool_logging(tool_name: str, log_level: str = "INFO") -> None:
     """
-    Load and inject tool-specific config into QuackConfig.
+    Set up logging for a QuackTool.
 
-    If the tool doesn't already have config stored in quack_config.custom,
-    this function will add the default values from config_model.
+    This sets the global log level, adds a console logger and a file logger,
+    and ensures log files are cleaned up during tests.
 
     Args:
         tool_name: The tool name, e.g. 'quackmetadata'
-        config_model: The pydantic model class for the tool's config
-        config_path: Optional path to a QuackConfig file
-
-    Returns:
-        Tuple of (QuackConfig object, tool-specific config model)
+        log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
     """
-    config = load_config(config_path)
+    fs = get_service()
+    level = getattr(logging, log_level.upper(), logging.INFO)
 
-    if tool_name not in config.custom:
-        config.custom[tool_name] = config_model().model_dump()
+    logs_dir = fs.normalize_path("./logs")
+    fs.create_directory(logs_dir, exist_ok=True)
+    log_file = fs.join_path(logs_dir, f"{tool_name}.log")
 
-    tool_data = config.custom.get(tool_name, {})
-    tool_config = config_model(**tool_data)
+    logger = logging.getLogger()
+    logger.setLevel(level)
 
-    return config, tool_config
+    # Console handler (prints to screen)
+    # Check if there's already a StreamHandler writing to stdout/stderr
+    has_console_handler = any(
+        isinstance(h, logging.StreamHandler) and
+        (getattr(h, 'stream', None) in (sys.stdout, sys.stderr))
+        for h in logger.handlers
+    )
+
+    if not has_console_handler:
+        ch = logging.StreamHandler()
+        ch.setLevel(level)
+        logger.addHandler(ch)
+
+    # File handler (saves to file)
+    fh = logging.FileHandler(str(log_file))
+    fh.setLevel(level)
+    logger.addHandler(fh)
+    _file_handlers.append(fh)
+
+    @atexit.register
+    def _cleanup_handlers() -> None:
+        for h in _file_handlers:
+            h.close()
+            logger.removeHandler(h)
 
 
-def update_tool_config(
-    config: QuackConfig,
-    tool_name: str,
-    new_data: dict
-) -> None:
+def get_logger(tool_name: str) -> logging.Logger:
     """
-    Update a tool's config section in the QuackConfig.
+    Get a named logger for the given tool.
 
     Args:
-        config: The QuackConfig object
-        tool_name: e.g. "quackmetadata"
-        new_data: New dictionary to merge into config.custom[tool_name]
+        tool_name: The tool name, e.g. 'quackmetadata'
+
+    Returns:
+        A Logger instance configured for the tool
     """
-    old_data = config.custom.get(tool_name, {})
-    if isinstance(old_data, Mapping):
-        updated = {**old_data, **new_data}
-    else:
-        updated = new_data
-    config.custom[tool_name] = updated
+    return logging.getLogger(tool_name)

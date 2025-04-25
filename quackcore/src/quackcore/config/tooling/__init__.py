@@ -1,3 +1,4 @@
+# quackcore/src/quackcore/config/tooling/__init__.py
 """
 QuackTool Configuration and Logging Helpers.
 
@@ -17,6 +18,7 @@ __all__ = [
     "get_logger",
 ]
 
+"""
 ```python
 #!/usr/bin/env python3
 """
@@ -61,3 +63,4 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+"""
