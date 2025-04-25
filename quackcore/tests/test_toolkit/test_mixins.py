@@ -1,19 +1,17 @@
+# quackcore/tests/test_toolkit/test_mixins.py
 """
 Tests for the QuackTool mixins.
 """
 
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-import pytest
-
-from quackcore.integrations.core import IntegrationResult
 from quackcore.integrations.core.protocols import BaseIntegrationService
 from quackcore.toolkit import (
     IntegrationEnabledMixin,
     OutputFormatMixin,
-    ToolEnvInitializerMixin,
     QuackToolLifecycleMixin,
+    ToolEnvInitializerMixin,
 )
 
 

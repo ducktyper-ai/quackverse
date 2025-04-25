@@ -1,3 +1,4 @@
+# quackcore/src/quackcore/toolkit/__init__.py
 """
 Developer interface layer for creating QuackTools.
 
@@ -25,11 +26,11 @@ class MyTool(IntegrationEnabledMixin[GoogleDriveService], BaseQuackToolPlugin):
 """
 
 from .base import BaseQuackToolPlugin
-from .protocol import QuackToolPluginProtocol
-from .mixins.integration_enabled import IntegrationEnabledMixin
-from .mixins.output_handler import OutputFormatMixin
 from .mixins.env_init import ToolEnvInitializerMixin
+from .mixins.integration_enabled import IntegrationEnabledMixin
 from .mixins.lifecycle import QuackToolLifecycleMixin
+from .mixins.output_handler import OutputFormatMixin
+from .protocol import QuackToolPluginProtocol
 
 __all__ = [
     "BaseQuackToolPlugin",

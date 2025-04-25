@@ -11,13 +11,13 @@ import abc
 import os
 import tempfile
 from logging import Logger
-from typing import Any, cast
+from typing import Any
 
-from quackcore.integrations.core import IntegrationResult
 from quackcore.config.tooling.logger import setup_tool_logging
+from quackcore.integrations.core import IntegrationResult
 from quackcore.plugins.protocols import QuackPluginMetadata
+from quackcore.workflow.output import DefaultOutputWriter, OutputWriter
 from quackcore.workflow.runners.file_runner import FileWorkflowRunner
-from quackcore.workflow.output import OutputWriter, DefaultOutputWriter
 
 
 class BaseQuackToolPlugin(abc.ABC):

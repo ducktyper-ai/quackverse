@@ -1,3 +1,4 @@
+# quackcore/tests/test_toolkit/test_base.py
 """
 Tests for the BaseQuackToolPlugin class.
 """
@@ -5,11 +6,8 @@ Tests for the BaseQuackToolPlugin class.
 import os
 import tempfile
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-import pytest
-
-from quackcore.integrations.core import IntegrationResult
 from quackcore.toolkit import BaseQuackToolPlugin
 
 

@@ -1,9 +1,10 @@
+# quackcore/tests/test_integrations/core/test_get_service.py
 """
 Tests for the get_integration_service function.
 """
 
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from quackcore.integrations.core import get_integration_service
 from quackcore.integrations.core.base import BaseIntegrationService

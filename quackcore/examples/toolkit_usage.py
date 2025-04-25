@@ -1,3 +1,4 @@
+# quackcore/examples/toolkit_usage.py
 """
 Example usage of the QuackCore toolkit.
 

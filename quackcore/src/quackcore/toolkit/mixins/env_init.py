@@ -7,7 +7,6 @@ their environment by importing and initializing the tool's module.
 """
 
 import importlib
-from typing import Any
 
 from quackcore.integrations.core import IntegrationResult
 

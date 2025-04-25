@@ -1,4 +1,4 @@
-# quackcore/workflow/output/__init__.py
+# quackcore/src/quackcore/workflow/output/__init__.py
 """
 Output writing functionality for QuackCore workflows.
 

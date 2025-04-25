@@ -1,4 +1,4 @@
-# quackcore/workflow/output/base.py
+# quackcore/src/quackcore/workflow/output/base.py
 """
 Abstract base class for output writers.
 

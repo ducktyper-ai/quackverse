@@ -1,4 +1,4 @@
-# quackcore/workflow/output/writers.py
+# quackcore/src/quackcore/workflow/output/writers.py
 """
 Implementation of OutputWriter classes for various file formats.
 
@@ -12,8 +12,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-from quackcore.workflow.output.base import OutputWriter
 from quackcore.fs.service import get_service
+from quackcore.workflow.output.base import OutputWriter
 
 # Try importing yaml, set to None if not available
 try:

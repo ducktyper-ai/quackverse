@@ -1,3 +1,4 @@
+# quackcore/src/quackcore/toolkit/mixins/integration_enabled.py
 """
 Integration enabled mixin for QuackTool plugins.
 
@@ -5,7 +6,7 @@ This module provides a mixin that enables integration with various services
 by providing a generic interface for resolving and accessing integration services.
 """
 
-from typing import TypeVar, Generic
+from typing import Generic, TypeVar
 
 from quackcore.integrations.core import get_integration_service
 from quackcore.integrations.core.base import BaseIntegrationService
