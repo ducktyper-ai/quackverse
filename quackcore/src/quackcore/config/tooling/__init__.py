@@ -432,3 +432,261 @@ def setup_tool_logging(tool_name: str, log_level: str = "INFO") -> None:
 
 It complements `quackcore.toolkit` and is foundational for the smooth developer and learner experience promised by QuackVerse.
 """
+
+"""
+---
+
+## 🦆 Project Goal
+
+You’re going to build a new module inside `quackcore` called:
+
+```
+quackcore.config.tooling
+```
+
+This module helps all QuackTools load their config and setup logging the same way, so every tool doesn’t have to copy the same code.
+
+---
+
+## 🧱 Folder Structure to Create
+
+You’ll be working inside this folder:
+
+```
+quackcore/src/quackcore/config/tooling/
+```
+
+Create these 4 files:
+
+```
+tooling/
+├── __init__.py       ✅ Public API
+├── base.py           ✅ Defines base config model
+├── loader.py         ✅ Loads and updates config
+├── logger.py         ✅ Sets up log handling
+```
+
+---
+
+## 1. 🧩 `base.py` – Base Class for Tool Config
+
+This defines a Pydantic base class that all QuackTools should inherit from.
+
+```python
+# quackcore/config/tooling/base.py
+
+from pydantic import BaseModel
+
+class QuackToolConfigModel(BaseModel):
+    """
+    Base class for QuackTool-specific config models.
+
+    Tools should subclass this with their own fields.
+    This base class exists so tooling can type-check config models.
+    """
+    pass
+```
+
+✅ You’re done with this file. Super short and simple.
+
+---
+
+## 2. 📦 `loader.py` – Load and Update Config
+
+This file gives tools the `load_tool_config()` and `update_tool_config()` helpers.
+
+Start with this:
+
+```python
+# quackcore/config/tooling/loader.py
+
+from typing import Type, Tuple
+from quackcore.config import load_config
+from quackcore.config.models import QuackConfig
+from .base import QuackToolConfigModel
+
+
+def load_tool_config(
+    tool_name: str,
+    config_model: Type[QuackToolConfigModel],
+    config_path: str | None = None
+) -> Tuple[QuackConfig, QuackToolConfigModel]:
+    """
+    Load and inject tool-specific config into QuackConfig.
+
+    If the tool doesn't already have config stored in quack_config.custom,
+    this function will add the default values from config_model.
+
+    Returns:
+        Tuple of (QuackConfig object, tool-specific config model)
+    """
+    config = load_config(config_path)
+
+    if tool_name not in config.custom:
+        config.custom[tool_name] = config_model().model_dump()
+
+    tool_data = config.custom.get(tool_name, {})
+    tool_config = config_model(**tool_data)
+
+    return config, tool_config
+
+
+def update_tool_config(
+    config: QuackConfig,
+    tool_name: str,
+    new_data: dict
+) -> None:
+    """
+    Update a tool's config section in the QuackConfig.
+
+    Args:
+        config: The QuackConfig object
+        tool_name: e.g. "quackmetadata"
+        new_data: New dictionary to merge into config.custom[tool_name]
+    """
+    old_data = config.custom.get(tool_name, {})
+    if isinstance(old_data, dict):
+        updated = {**old_data, **new_data}
+    else:
+        updated = new_data
+    config.custom[tool_name] = updated
+```
+
+✅ This file is done.
+
+---
+
+## 3. 🔊 `logger.py` – Set Up Console and File Logging
+
+This part takes care of logging to terminal and file with safe cleanup during tests.
+
+```python
+# quackcore/config/tooling/logger.py
+
+import logging
+import atexit
+from quackcore.fs.service import get_service
+
+_file_handlers = []
+
+
+def setup_tool_logging(tool_name: str, log_level: str = "INFO") -> None:
+    """
+    Set up logging for a QuackTool.
+
+    This sets the global log level, adds a console logger and a file logger,
+    and ensures log files are cleaned up during tests.
+    """
+    fs = get_service()
+    level = getattr(logging, log_level.upper(), logging.INFO)
+
+    logs_dir = fs.normalize_path("./logs")
+    fs.create_directory(logs_dir, exist_ok=True)
+    log_file = fs.join_path(logs_dir, f"{tool_name}.log")
+
+    logger = logging.getLogger()
+    logger.setLevel(level)
+
+    # Console handler (prints to screen)
+    if not any(isinstance(h, logging.StreamHandler) for h in logger.handlers):
+        ch = logging.StreamHandler()
+        ch.setLevel(level)
+        logger.addHandler(ch)
+
+    # File handler (saves to file)
+    fh = logging.FileHandler(str(log_file))
+    fh.setLevel(level)
+    logger.addHandler(fh)
+    _file_handlers.append(fh)
+
+    @atexit.register
+    def _cleanup_handlers():
+        for h in _file_handlers:
+            h.close()
+            logger.removeHandler(h)
+
+
+def get_logger(tool_name: str) -> logging.Logger:
+    """
+    Get a named logger for the given tool.
+
+    Args:
+        tool_name: The tool name, e.g. 'quackmetadata'
+    """
+    return logging.getLogger(tool_name)
+```
+
+✅ Now logging works in tests and production with no surprises.
+
+---
+
+## 4. 🌐 `__init__.py` – What Tools Will Import
+
+Your job is to make the import clean. Put this in:
+
+```python
+# quackcore/config/tooling/__init__.py
+
+from .base import QuackToolConfigModel
+from .loader import load_tool_config, update_tool_config
+from .logger import setup_tool_logging, get_logger
+
+__all__ = [
+    "QuackToolConfigModel",
+    "load_tool_config",
+    "update_tool_config",
+    "setup_tool_logging",
+    "get_logger",
+]
+```
+
+✅ Now tools can just do:
+
+```python
+from quackcore.config.tooling import load_tool_config
+```
+
+---
+
+## ✅ Testing Plan
+
+You can test it with this scratch script:
+
+```python
+# test_tool.py (not in quackcore, just for local testing)
+
+from pydantic import Field
+from quackcore.config.tooling import (
+    QuackToolConfigModel,
+    load_tool_config,
+    update_tool_config,
+    setup_tool_logging,
+    get_logger,
+)
+
+class MyConfig(QuackToolConfigModel):
+    name: str = Field("demo")
+    log_level: str = Field("DEBUG")
+
+config, tool_config = load_tool_config("testtool", MyConfig)
+print(tool_config)
+
+update_tool_config(config, "testtool", {"name": "updated"})
+
+setup_tool_logging("testtool", tool_config.log_level)
+logger = get_logger("testtool")
+logger.debug("This should print and go to file.")
+```
+
+---
+
+## 🧠 What NOT To Do
+
+| Don't do this | Why |
+|---------------|-----|
+| Add `QuackMetadataConfig` inside `quackcore` | Each tool should own its own model |
+| Assume a fixed config key like `quackmetadata` | Use `tool_name` argument instead |
+| Copy all `quackmetadata/config.py` into quackcore | We’re modularizing it now 💪 |
+
+---
+"""

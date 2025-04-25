@@ -735,3 +735,253 @@ Would you like me to:
 
 Let’s build workflows that *feel like Lego, not legacy*. 🧱🦆
 """
+
+
+"""
+Perfect. Below is a super detailed implementation plan for a junior developer to implement the **`quackcore.workflow` module**, based on the `file_processor.py` MVP but modularized, override-friendly, and aligned with QuackCore architecture.
+
+---
+
+# ✅ QuackCore Workflow Module – Implementation Plan
+
+### 📁 Target directory:
+```
+quackcore/
+└── workflow/
+    ├── __init__.py
+    ├── runners/
+    │   └── file_runner.py
+    ├── mixins/
+    │   ├── drive_handler.py
+    │   └── output_writer.py
+    ├── results.py
+    └── protocols/
+        └── remote_handler.py
+```
+
+---
+
+## 🧩 Purpose
+
+Create a modular and overrideable workflow runner for QuackTools that:
+
+- Supports file input (local or remote like Google Drive)
+- Processes the file using a tool-specific processor
+- Writes output in a flexible format
+- Wraps all steps with structured logging and typed result objects
+
+---
+
+## ✅ Step-by-Step Tasks
+
+---
+
+### 1. **Create Result Models in `workflow/results.py`**
+
+These are returned at each stage of the workflow.
+
+```python
+from pydantic import BaseModel
+from pathlib import Path
+from typing import Any, Optional
+
+class InputResult(BaseModel):
+    path: Path
+    metadata: dict[str, Any] = {}
+
+class OutputResult(BaseModel):
+    content: Any
+    raw_text: Optional[str] = None
+
+class FinalResult(BaseModel):
+    result_path: Optional[Path]
+    metadata: dict[str, Any]
+```
+
+---
+
+### 2. **Define `FileWorkflowRunner` in `workflow/runners/file_runner.py`**
+
+```python
+from pathlib import Path
+from typing import Callable, Optional
+from quackcore.workflow.results import InputResult, OutputResult, FinalResult
+from quackcore.logging import get_logger
+
+class FileWorkflowRunner:
+    def __init__(
+        self,
+        processor: Callable[[str, dict], tuple[bool, Any, str]],
+        remote_handler: Optional[Any] = None,
+        output_writer: Optional[Any] = None,
+    ):
+        self.logger = get_logger(__name__)
+        self.processor = processor
+        self.remote_handler = remote_handler
+        self.output_writer = output_writer
+
+    def resolve_input(self, source: str) -> InputResult:
+        if self.remote_handler and self.remote_handler.is_remote(source):
+            return self.remote_handler.download(source)
+        return InputResult(path=Path(source))
+
+    def load_content(self, input_result: InputResult) -> str:
+        from quackcore.fs.service import get_service
+        fs = get_service()
+        read_result = fs.read_text(str(input_result.path))
+        if not read_result.success:
+            raise RuntimeError(read_result.error)
+        return read_result.content
+
+    def run_processor(self, content: str, options: dict) -> OutputResult:
+        success, result, error = self.processor(content, options)
+        if not success:
+            raise RuntimeError(error)
+        return OutputResult(content=result)
+
+    def write_output(self, result: OutputResult, input_path: Path, options: dict) -> FinalResult:
+        if self.output_writer:
+            return self.output_writer.write(result, input_path, options)
+        else:
+            # Default JSON writer
+            from quackcore.fs.service import get_service
+            fs = get_service()
+            out_dir = options.get("output_dir", "./output")
+            fs.create_directory(out_dir, exist_ok=True)
+            out_path = Path(out_dir) / f"{input_path.stem}.json"
+            fs.write_json(str(out_path), result.content, indent=2)
+            return FinalResult(result_path=out_path, metadata={})
+
+    def run(self, source: str, options: dict) -> FinalResult:
+        input_result = self.resolve_input(source)
+        content = self.load_content(input_result)
+        output = self.run_processor(content, options)
+        return self.write_output(output, input_result.path, options)
+```
+
+---
+
+### 3. **Build `DriveHandlerMixin` in `workflow/mixins/drive_handler.py`**
+
+```python
+from quackcore.workflow.results import InputResult
+from quackcore.fs.service import get_service
+from quackcore.integrations.google.drive import GoogleDriveService
+
+class GoogleDriveHandler:
+    def __init__(self):
+        self.drive = GoogleDriveService()
+
+    def is_remote(self, source: str) -> bool:
+        return len(source) >= 25 and "/" not in source and "." not in source
+
+    def download(self, source: str) -> InputResult:
+        result = self.drive.download_file(remote_id=source)
+        if not result.success:
+            raise RuntimeError(result.error)
+        path = result.content.path if hasattr(result.content, "path") else result.content
+        return InputResult(path=path, metadata={"remote_source": "gdrive"})
+```
+
+---
+
+### 4. **Build `OutputWriterMixin` in `workflow/mixins/output_writer.py`**
+
+```python
+from quackcore.workflow.results import OutputResult, FinalResult
+from pathlib import Path
+from quackcore.fs.service import get_service
+
+class DefaultOutputWriter:
+    def write(self, result: OutputResult, input_path: Path, options: dict) -> FinalResult:
+        fs = get_service()
+        out_dir = options.get("output_dir", "./output")
+        fs.create_directory(out_dir, exist_ok=True)
+        out_path = Path(out_dir) / f"{input_path.stem}.json"
+
+        if hasattr(result.content, "model_dump"):
+            data = result.content.model_dump()
+        elif isinstance(result.content, dict):
+            data = result.content
+        else:
+            data = str(result.content)
+
+        write_result = fs.write_json(str(out_path), data, indent=2) if isinstance(data, dict) \
+            else fs.write_text(str(out_path), data)
+
+        if not write_result.success:
+            raise RuntimeError(write_result.error)
+
+        return FinalResult(result_path=out_path, metadata={})
+```
+
+---
+
+### 5. **Define `RemoteFileHandlerProtocol` in `workflow/protocols/remote_handler.py`**
+
+```python
+from quackcore.workflow.results import InputResult
+from typing import Protocol
+
+class RemoteFileHandler(Protocol):
+    def is_remote(self, source: str) -> bool:
+        ...
+
+    def download(self, source: str) -> InputResult:
+        ...
+```
+
+---
+
+### 6. **Initialize the Module in `workflow/__init__.py`**
+
+```python
+"""
+quackcore.workflow – Provides modular runners and mixins for tool workflows.
+"""
+
+from .runners.file_runner import FileWorkflowRunner
+```
+
+---
+
+## ✅ Deliverables for the Junior Dev
+
+| File | Description |
+|------|-------------|
+| `file_runner.py` | Full implementation of the `FileWorkflowRunner` lifecycle |
+| `drive_handler.py` | Optional Google Drive fallback |
+| `output_writer.py` | Output logic (JSON by default) |
+| `results.py` | Typed result models for inputs/outputs |
+| `remote_handler.py` | Protocol for pluggable remote file systems |
+
+---
+
+## 🧪 How to Test
+
+In `tests/workflow/test_file_runner.py`:
+
+```python
+def dummy_processor(content: str, options: dict):
+    return True, {"length": len(content)}, ""
+
+def test_file_runner_with_local_file(tmp_path):
+    test_file = tmp_path / "test.txt"
+    test_file.write_text("hello world")
+
+    runner = FileWorkflowRunner(processor=dummy_processor)
+    result = runner.run(str(test_file), options={"output_dir": str(tmp_path)})
+
+    assert result.result_path.exists()
+```
+
+---
+
+## 🎓 Mentoring Notes
+
+- Stick to QuackCore conventions: `IntegrationResult` or Pydantic models
+- Don’t print to console — use `get_logger(__name__)`
+- Avoid tool-specific logic (e.g., prompt templates)
+- Always clean up temp files
+- Ask for help if unsure about `Path`, `Optional`, or type hints
+"""
