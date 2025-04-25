@@ -1,10 +1,11 @@
 # quackcore/src/quackcore/toolkit/mixins/output_handler.py
 """
-Output format mixin for QuackTool plugins.
-
-This module provides a mixin that allows QuackTool plugins to customize
-how their output is formatted and written.
+This mixin allows tools to specify the output file extension
+(e.g., '.json', '.yaml'), by overriding the `_get_output_extension()` method.
+If more complex control is needed (different OutputWriter classes),
+tools should override `get_output_writer()` directly in BaseQuackToolPlugin.
 """
+
 
 from quackcore.workflow.output import OutputWriter
 

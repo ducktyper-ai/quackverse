@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Generic, TypeVar
 
 from quackcore.integrations.core import get_integration_service
-from quackcore.integrations.core.protocols import BaseIntegrationService
+from quackcore.integrations.core.base import BaseIntegrationService
 
 T = TypeVar("T", bound=BaseIntegrationService)
 

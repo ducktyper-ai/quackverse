@@ -16,11 +16,16 @@ from quackcore.config.tooling.logger import get_logger, setup_tool_logging
 from quackcore.fs.service import get_service
 from quackcore.integrations.core import IntegrationResult
 from quackcore.plugins.protocols import QuackPluginMetadata
-from quackcore.workflow.output import DefaultOutputWriter, OutputWriter
+from quackcore.toolkit import QuackToolPluginProtocol
+from quackcore.workflow.output import (
+    DefaultOutputWriter,
+    OutputWriter,
+    YAMLOutputWriter,
+)
 from quackcore.workflow.runners.file_runner import FileWorkflowRunner
 
 
-class BaseQuackToolPlugin(abc.ABC):
+class BaseQuackToolPlugin(QuackToolPluginProtocol, abc.ABC):
     """
     Base class for all QuackTool plugins.
 
@@ -222,16 +227,9 @@ class BaseQuackToolPlugin(abc.ABC):
         # but tools should override this entire method to return appropriate writer
         # if they want a different format
         extension = self._get_output_extension()
-        if extension == ".yaml" or extension == ".yml":
-            try:
-                from quackcore.workflow.output import YAMLOutputWriter
-                return YAMLOutputWriter()
-            except ImportError:
-                self.logger.warning(
-                    "YAMLOutputWriter not available, falling back to JSON")
-                return DefaultOutputWriter()
+        if extension in (".yaml", ".yml"):
+            return YAMLOutputWriter()
 
-        # Default is JSON
         return DefaultOutputWriter()
 
     def get_remote_handler(self) -> Any | None:

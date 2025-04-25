@@ -6,6 +6,7 @@ from typing import Any
 
 from quackcore.fs.service import get_service
 from quackcore.workflow.results import FinalResult, OutputResult
+from quackcore.workflow.runners.file_runner import WorkflowError
 
 
 class DefaultOutputWriter:
@@ -48,9 +49,9 @@ class DefaultOutputWriter:
 
         # Write as JSON or text depending on content type
         write_result = (
-            fs.write_json(str(out_path), data, indent=2)
+            fs.write_json(out_path, data, indent=2)
             if output_format == "json"
-            else fs.write_text(str(out_path), data)
+            else fs.write_text(out_path, data)
         )
 
         if not write_result.success:
