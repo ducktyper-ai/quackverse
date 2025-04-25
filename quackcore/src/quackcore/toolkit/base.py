@@ -8,12 +8,12 @@ the QuackToolPluginProtocol.
 """
 
 import abc
-import os
 import tempfile
 from logging import Logger
 from typing import Any
 
-from quackcore.config.tooling.logger import setup_tool_logging
+from quackcore.config.tooling.logger import get_logger, setup_tool_logging
+from quackcore.fs.service import get_service
 from quackcore.integrations.core import IntegrationResult
 from quackcore.plugins.protocols import QuackPluginMetadata
 from quackcore.workflow.output import DefaultOutputWriter, OutputWriter
@@ -37,16 +37,35 @@ class BaseQuackToolPlugin(abc.ABC):
             name: The name of the tool
             version: The version of the tool
         """
+
+        # Get the filesystem service
+        self.fs = get_service()
+
         self._name = name
         self._version = version
-        self._temp_dir = tempfile.mkdtemp(prefix=f"quack_{name}_")
-        self._output_dir = os.path.join(os.getcwd(), "output")
-
-        # Ensure output directory exists
-        os.makedirs(self._output_dir, exist_ok=True)
 
         # Setup logging
-        self._logger = setup_tool_logging(name)
+        setup_tool_logging(name)
+        self._logger = get_logger(name)
+
+        # Create a temporary directory for this tool
+        temp_result = self.fs.create_temp_directory(prefix=f"quack_{name}_")
+        self._temp_dir = temp_result.data if temp_result.success else tempfile.mkdtemp(
+            prefix=f"quack_{name}_")
+
+        # Get output directory
+        cwd_result = self.fs.normalize_path(".")
+        output_path_result = self.fs.join_path(cwd_result.data, "output")
+        self._output_dir = output_path_result.data
+
+        # Ensure output directory exists safely
+        dir_result = self.fs.ensure_directory(self._output_dir)
+        if not dir_result.success:
+            # If directory creation fails, fall back to using tempfile.mkdtemp
+            fallback_dir = tempfile.mkdtemp(prefix=f"quack_{name}_output_")
+            self._logger.warning(
+                f"Failed to create output directory at {self._output_dir}, falling back to {fallback_dir}")
+            self._output_dir = fallback_dir
 
         # Initialize the plugin
         self.initialize_plugin()
@@ -145,6 +164,14 @@ class BaseQuackToolPlugin(abc.ABC):
             IntegrationResult: Result of the processing operation
         """
         try:
+            # Validate file exists
+            file_info = self.fs.get_file_info(file_path)
+            if not file_info.exists:
+                return IntegrationResult.error_result(
+                    error=f"File not found: {file_path}",
+                    message="File processing failed: input file not found"
+                )
+
             runner = FileWorkflowRunner(
                 processor=self.process_content,
                 remote_handler=self.get_remote_handler(),
@@ -182,13 +209,30 @@ class BaseQuackToolPlugin(abc.ABC):
         Get the output writer for this tool.
 
         Override this method to return a custom OutputWriter if the tool wants.
-        By default, returns a DefaultOutputWriter with the extension hint from
-        _get_output_extension().
+        By default, returns a DefaultOutputWriter which outputs JSON.
+
+        Note: To change the output extension, override the _get_output_extension() method.
+        For non-JSON formats, return a different writer like YAMLOutputWriter.
 
         Returns:
-            OutputWriter | None: The output writer to use, or None for default
+            OutputWriter | None: The output writer to use, or None for default behavior
         """
-        return DefaultOutputWriter(extension=self._get_output_extension())
+        # Return the default JSON writer
+        # Note: The extension from _get_output_extension() is not used directly,
+        # but tools should override this entire method to return appropriate writer
+        # if they want a different format
+        extension = self._get_output_extension()
+        if extension == ".yaml" or extension == ".yml":
+            try:
+                from quackcore.workflow.output import YAMLOutputWriter
+                return YAMLOutputWriter()
+            except ImportError:
+                self.logger.warning(
+                    "YAMLOutputWriter not available, falling back to JSON")
+                return DefaultOutputWriter()
+
+        # Default is JSON
+        return DefaultOutputWriter()
 
     def get_remote_handler(self) -> Any | None:
         """

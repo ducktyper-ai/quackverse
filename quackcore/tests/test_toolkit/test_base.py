@@ -50,17 +50,27 @@ class TestBaseQuackToolPlugin(unittest.TestCase):
         """
         os.unlink(self.temp_file.name)
 
-    def test_initialization(self):
+    @patch("quackcore.config.tooling.logger.setup_tool_logging")
+    @patch("quackcore.config.tooling.logger.get_logger")
+    def test_initialization(self, mock_get_logger, mock_setup_logging):
         """
         Test that initialization sets up the tool correctly.
         """
+        # Setup mock logger
+        mock_logger = MagicMock()
+        mock_get_logger.return_value = mock_logger
+
         tool = DummyQuackTool()
 
         self.assertEqual(tool.name, "dummy_tool")
         self.assertEqual(tool.version, "1.0.0")
-        self.assertIsNotNone(tool.logger)
+        self.assertEqual(tool.logger, mock_logger)
         self.assertTrue(os.path.exists(tool._temp_dir))
         self.assertTrue(os.path.exists(tool._output_dir))
+
+        # Verify the logging was set up correctly
+        mock_setup_logging.assert_called_once_with("dummy_tool")
+        mock_get_logger.assert_called_once_with("dummy_tool")
 
     def test_get_metadata(self):
         """
