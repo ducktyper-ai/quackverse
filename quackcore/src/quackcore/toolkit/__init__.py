@@ -25,7 +25,11 @@ class MyTool(IntegrationEnabledMixin[GoogleDriveService], BaseQuackToolPlugin):
 ```
 """
 
+# First import the protocol
+# Then import base which depends on the protocol
 from .base import BaseQuackToolPlugin
+
+# Import the mixins which don't have circular dependencies
 from .mixins.env_init import ToolEnvInitializerMixin
 from .mixins.integration_enabled import IntegrationEnabledMixin
 from .mixins.lifecycle import QuackToolLifecycleMixin

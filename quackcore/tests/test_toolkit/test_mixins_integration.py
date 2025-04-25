@@ -1,0 +1,265 @@
+# quackcore/tests/test_toolkit/test_mixins_integration.py
+"""
+Integration tests for QuackTool mixins.
+
+These tests verify that the mixins work correctly when combined together
+in different configurations.
+"""
+
+import os
+import tempfile
+import unittest
+from typing import Any
+from unittest.mock import MagicMock, patch
+
+from quackcore.integrations.core import IntegrationResult
+from quackcore.integrations.core.base import BaseIntegrationService
+from quackcore.toolkit import (
+    BaseQuackToolPlugin,
+    IntegrationEnabledMixin,
+    OutputFormatMixin,
+    QuackToolLifecycleMixin,
+    ToolEnvInitializerMixin,
+)
+from quackcore.workflow.output import YAMLOutputWriter
+
+
+class MockIntegrationService(BaseIntegrationService):
+    """
+    Mock implementation of BaseIntegrationService for testing.
+    """
+
+    @property
+    def name(self) -> str:
+        return "mock_service"
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.initialized = False
+        self.upload_called = False
+        self.upload_file_path = None
+        self.upload_destination = None
+
+    def initialize(self) -> None:
+        self.initialized = True
+
+    def upload_file(self, file_path: str,
+                    destination: str | None = None) -> IntegrationResult:
+        """Mock upload file method."""
+        self.upload_called = True
+        self.upload_file_path = file_path
+        self.upload_destination = destination
+        return IntegrationResult.success_result(
+            message=f"File {file_path} uploaded to {destination}"
+        )
+
+
+class CompleteQuackTool(
+    IntegrationEnabledMixin[MockIntegrationService],
+    QuackToolLifecycleMixin,
+    OutputFormatMixin,
+    ToolEnvInitializerMixin,
+    BaseQuackToolPlugin
+):
+    """
+    Complete tool implementation using all mixins for testing.
+    """
+
+    def __init__(self) -> None:
+        super().__init__("complete_tool", "1.0.0")
+        self.env_initialized = False
+        self.run_called = False
+        self.run_options = None
+
+    def initialize_plugin(self) -> None:
+        """Initialize the plugin."""
+        # Resolve the integration service
+        self._service = self.resolve_integration(MockIntegrationService)
+
+        # Initialize the environment
+        env_result = self._initialize_environment("mock_tool_env")
+        self.env_initialized = env_result.success
+
+    def process_content(self, content: Any, options: dict[str, Any]) -> dict[str, Any]:
+        """Process content with this tool."""
+        return {"content": content, "processed": True, "options": options}
+
+    def _get_output_extension(self) -> str:
+        """Override to return a custom extension."""
+        return ".yaml"
+
+    def get_output_writer(self) -> YAMLOutputWriter:
+        """Override to return a YAML writer."""
+        return YAMLOutputWriter()
+
+    def run(self, options: dict[str, Any] | None = None) -> IntegrationResult:
+        """Override run to implement custom behavior."""
+        self.run_called = True
+        self.run_options = options
+
+        # Run pre_run first
+        pre_result = self.pre_run()
+        if not pre_result.success:
+            return pre_result
+
+        # Process a sample file
+        process_result = self.process_file("sample.txt", options=options)
+        if not process_result.success:
+            return process_result
+
+        # Run post_run last
+        post_result = self.post_run()
+        if not post_result.success:
+            return post_result
+
+        return IntegrationResult.success_result(
+            message="Run completed successfully"
+        )
+
+    def upload(self, file_path: str,
+               destination: str | None = None) -> IntegrationResult:
+        """Override upload to use the integration service."""
+        if not self._service:
+            return IntegrationResult.error_result(
+                error="Integration service not available",
+                message="Cannot upload file without integration service"
+            )
+
+        return self._service.upload_file(file_path, destination)
+
+
+class TestMixinIntegration(unittest.TestCase):
+    """
+    Integration tests for mixins used together.
+    """
+
+    @patch("quackcore.integrations.core.get_integration_service")
+    @patch("importlib.import_module")
+    def setUp(self, mock_import: MagicMock, mock_get_integration: MagicMock) -> None:
+        """
+        Set up test fixtures.
+        """
+        # Create a mock service
+        self.mock_service = MockIntegrationService()
+        mock_get_integration.return_value = self.mock_service
+
+        # Create a mock module
+        self.mock_module = MagicMock()
+        self.mock_module.initialize.return_value = IntegrationResult.success_result(
+            message="Environment initialized successfully"
+        )
+        mock_import.return_value = self.mock_module
+
+        # Create a temporary file
+        self.temp_file = tempfile.NamedTemporaryFile(delete=False)
+        self.temp_file.write(b'{"test": "data"}')
+        self.temp_file.close()
+
+        # Create the tool instance
+        self.tool = CompleteQuackTool()
+
+        # Verify initialization
+        self.assertTrue(self.mock_service.initialized)
+        self.assertEqual(self.tool._service, self.mock_service)
+
+    def tearDown(self) -> None:
+        """
+        Tear down test fixtures.
+        """
+        os.unlink(self.temp_file.name)
+
+    def test_initialization(self) -> None:
+        """
+        Test that all mixins are initialized correctly.
+        """
+        # Verify properties from BaseQuackToolPlugin
+        self.assertEqual(self.tool.name, "complete_tool")
+        self.assertEqual(self.tool.version, "1.0.0")
+
+        # Verify integration service from IntegrationEnabledMixin
+        self.assertEqual(self.tool.integration, self.mock_service)
+
+        # Verify output settings from OutputFormatMixin
+        self.assertEqual(self.tool._get_output_extension(), ".yaml")
+        self.assertIsInstance(self.tool.get_output_writer(), YAMLOutputWriter)
+
+    @patch("quackcore.workflow.runners.FileWorkflowRunner")
+    def test_run_workflow(self, mock_runner: MagicMock) -> None:
+        """
+        Test the complete workflow using run method.
+        """
+        # Setup mock runner
+        mock_runner_instance = MagicMock()
+        mock_runner.return_value = mock_runner_instance
+
+        mock_result = MagicMock()
+        mock_result.success = True
+        mock_runner_instance.run.return_value = mock_result
+
+        # Run the tool with options
+        options = {"option1": "value1", "option2": "value2"}
+        result = self.tool.run(options)
+
+        # Assert the result
+        self.assertTrue(result.success)
+        self.assertIn("Run completed successfully", result.message)
+
+        # Verify run was called with correct options
+        self.assertTrue(self.tool.run_called)
+        self.assertEqual(self.tool.run_options, options)
+
+    def test_upload_via_integration(self) -> None:
+        """
+        Test uploading a file via the integration service.
+        """
+        # Upload the file
+        destination = "test_destination"
+        result = self.tool.upload(self.temp_file.name, destination)
+
+        # Assert the result
+        self.assertTrue(result.success)
+        self.assertIn("uploaded", result.message)
+
+        # Verify the service was called correctly
+        self.assertTrue(self.mock_service.upload_called)
+        self.assertEqual(self.mock_service.upload_file_path, self.temp_file.name)
+        self.assertEqual(self.mock_service.upload_destination, destination)
+
+    @patch("quackcore.integrations.core.get_integration_service")
+    def test_upload_without_service(self, mock_get_integration: MagicMock) -> None:
+        """
+        Test uploading a file when integration service is not available.
+        """
+        # Create a new tool without an integration service
+        mock_get_integration.return_value = None
+        tool = CompleteQuackTool()
+
+        # Upload the file
+        result = tool.upload(self.temp_file.name)
+
+        # Assert the result
+        self.assertFalse(result.success)
+        self.assertIn("Integration service not available", result.error)
+
+    def test_lifecycle_methods(self) -> None:
+        """
+        Test that lifecycle methods from QuackToolLifecycleMixin work.
+        """
+        # Test pre_run
+        pre_result = self.tool.pre_run()
+        self.assertTrue(pre_result.success)
+        self.assertIn("Pre-run completed", pre_result.message)
+
+        # Test post_run
+        post_result = self.tool.post_run()
+        self.assertTrue(post_result.success)
+        self.assertIn("Post-run completed", post_result.message)
+
+        # Test validate
+        validate_result = self.tool.validate()
+        self.assertTrue(validate_result.success)
+        self.assertIn("not implemented", validate_result.message)
+
+
+if __name__ == "__main__":
+    unittest.main()

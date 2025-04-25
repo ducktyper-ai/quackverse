@@ -8,6 +8,7 @@ the QuackToolPluginProtocol.
 """
 
 import abc
+import os
 import tempfile
 from logging import Logger
 from typing import Any
@@ -16,7 +17,9 @@ from quackcore.config.tooling.logger import get_logger, setup_tool_logging
 from quackcore.fs.service import get_service
 from quackcore.integrations.core import IntegrationResult
 from quackcore.plugins.protocols import QuackPluginMetadata
-from quackcore.toolkit import QuackToolPluginProtocol
+from quackcore.toolkit.protocol import (
+    QuackToolPluginProtocol,  # Import directly from protocol module
+)
 from quackcore.workflow.output import (
     DefaultOutputWriter,
     OutputWriter,
@@ -58,18 +61,31 @@ class BaseQuackToolPlugin(QuackToolPluginProtocol, abc.ABC):
         self._temp_dir = temp_result.data if temp_result.success else tempfile.mkdtemp(
             prefix=f"quack_{name}_")
 
-        # Get output directory
-        cwd_result = self.fs.normalize_path(".")
-        output_path_result = self.fs.join_path(cwd_result.data, "output")
-        self._output_dir = output_path_result.data
+        # Get output directory - safely handle cases where cwd might be invalid
+        try:
+            cwd_result = self.fs.normalize_path(".")
+            output_path_result = self.fs.join_path(cwd_result.data, "output")
+            self._output_dir = output_path_result.data
+        except (FileNotFoundError, OSError):
+            # Fallback if we can't get the current directory
+            self._output_dir = os.path.join(tempfile.gettempdir(), f"quack_{name}_output")
+            self._logger.warning(
+                f"Failed to get current directory, falling back to {self._output_dir}")
 
         # Ensure output directory exists safely
-        dir_result = self.fs.ensure_directory(self._output_dir)
-        if not dir_result.success:
-            # If directory creation fails, fall back to using tempfile.mkdtemp
+        try:
+            dir_result = self.fs.ensure_directory(self._output_dir)
+            if not dir_result.success:
+                # If directory creation fails, fall back to using tempfile.mkdtemp
+                fallback_dir = tempfile.mkdtemp(prefix=f"quack_{name}_output_")
+                self._logger.warning(
+                    f"Failed to create output directory at {self._output_dir}, falling back to {fallback_dir}")
+                self._output_dir = fallback_dir
+        except (FileNotFoundError, OSError) as e:
+            # Handle filesystem errors gracefully
             fallback_dir = tempfile.mkdtemp(prefix=f"quack_{name}_output_")
             self._logger.warning(
-                f"Failed to create output directory at {self._output_dir}, falling back to {fallback_dir}")
+                f"Error accessing filesystem: {str(e)}, falling back to {fallback_dir}")
             self._output_dir = fallback_dir
 
         # Initialize the plugin

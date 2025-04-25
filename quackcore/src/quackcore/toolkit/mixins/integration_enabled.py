@@ -44,14 +44,17 @@ class IntegrationEnabledMixin(Generic[T]):
         Returns:
             T | None: The resolved integration service, or None if not available
         """
-        if self._integration_service is None:
-            self._integration_service = get_integration_service(service_type)
-            if self._integration_service and hasattr(self._integration_service,
-                                                     "initialize"):
-                # Initialize the service if it has an initialize method
-                self._integration_service.initialize()
+        # Get the service
+        service = get_integration_service(service_type)
 
-        return self._integration_service
+        # Store the service for reuse
+        self._integration_service = service
+
+        # Initialize the service if it has an initialize method
+        if service and hasattr(service, "initialize"):
+            service.initialize()
+
+        return service
 
     def get_integration_service(self) -> T | None:
         """

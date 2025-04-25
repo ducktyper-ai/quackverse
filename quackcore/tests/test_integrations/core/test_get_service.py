@@ -72,11 +72,18 @@ class TestGetIntegrationService(unittest.TestCase):
         Test that get_integration_service returns the first matching service when multiple are found.
         """
         # Setup mock registry with multiple services
-        mock_drive_service1 = MockDriveService()
-        mock_drive_service1.name = "DriveService1"
+        class DriveService1(MockDriveService):
+            @property
+            def name(self) -> str:
+                return "DriveService1"
 
-        mock_drive_service2 = MockDriveService()
-        mock_drive_service2.name = "DriveService2"
+        class DriveService2(MockDriveService):
+            @property
+            def name(self) -> str:
+                return "DriveService2"
+
+        mock_drive_service1 = DriveService1()
+        mock_drive_service2 = DriveService2()
 
         mock_registry.get_integration_by_type.return_value = [
             mock_drive_service1,
