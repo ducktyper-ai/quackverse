@@ -1,3 +1,4 @@
+# quackcore/src/quackcore/config/tooling/loader.py
 """
 Logging setup utilities for QuackTools.
 
@@ -5,9 +6,10 @@ This module provides utilities for setting up consistent logging
 across different QuackTools.
 """
 
+import atexit
 import logging
 import sys
-import atexit
+
 from quackcore.fs.service import get_service
 
 # Track file handlers for cleanup during exit

@@ -1,3 +1,4 @@
+# quackcore/src/quackcore/toolkit/__init__.py
 """
 # ✅ Work Plan for `quackcore.toolkit`
 
