@@ -1,4 +1,3 @@
-# quackcore/tests/test_toolkit/test_toolkit_integration.py
 """
 Integration tests for the toolkit package as a whole.
 
@@ -8,7 +7,8 @@ in realistic usage scenarios.
 
 import os
 import tempfile
-from typing import Any
+from pathlib import Path
+from typing import Any, cast
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -22,6 +22,7 @@ from quackcore.toolkit.mixins.integration_enabled import IntegrationEnabledMixin
 from quackcore.toolkit.mixins.lifecycle import QuackToolLifecycleMixin
 from quackcore.toolkit.mixins.output_handler import OutputFormatMixin
 from quackcore.workflow.output import YAMLOutputWriter
+
 
 # Custom test implementations
 
@@ -40,12 +41,49 @@ class MockUploadService(BaseIntegrationService):
     def initialize(self) -> None:
         self.initialized = True
 
-    def upload_file(self, file_path: str, destination: str | None = None) -> IntegrationResult:
+    def upload_file(self, file_path: str,
+                    destination: str | None = None) -> IntegrationResult:
         """Track uploaded files."""
         self.uploads.append((file_path, destination))
         return IntegrationResult.success_result(
             message=f"Uploaded {file_path} to {destination or 'default location'}"
         )
+
+
+# Helper to create mock filesystem for tests
+def create_mock_fs() -> MagicMock:
+    """Create a mock filesystem service for testing."""
+    mock_fs = MagicMock()
+
+    # Configure successful temp directory creation
+    temp_result = MagicMock()
+    temp_result.success = True
+    temp_result.path = Path(tempfile.mkdtemp(prefix="quack_test_"))
+    mock_fs.create_temp_directory.return_value = temp_result
+
+    # Configure successful path handling
+    cwd_result = MagicMock()
+    cwd_result.success = True
+    cwd_result.path = Path(tempfile.gettempdir())
+    mock_fs.normalize_path.return_value = cwd_result
+
+    output_path_result = MagicMock()
+    output_path_result.success = True
+    output_path_result.path = Path(os.path.join(tempfile.gettempdir(), "output"))
+    mock_fs.join_path.return_value = output_path_result
+
+    # Configure successful directory creation
+    dir_result = MagicMock()
+    dir_result.success = True
+    dir_result.path = output_path_result.path
+    mock_fs.ensure_directory.return_value = dir_result
+
+    # Set up for file_info in process_file tests
+    file_info_result = MagicMock()
+    file_info_result.exists = True
+    mock_fs.get_file_info.return_value = file_info_result
+
+    return mock_fs
 
 
 class CompleteTool(
@@ -58,36 +96,21 @@ class CompleteTool(
     """A complete tool using all mixins."""
 
     def __init__(self, name: str, version: str) -> None:
-        # Patch filesystem access to avoid issues
+        # Patch get_service to avoid filesystem issues
         with patch('quackcore.fs.service.get_service') as mock_get_service, \
-             patch('os.getcwd') as mock_getcwd:
-
-            # Configure the mock
-            mock_fs = MagicMock()
+                patch('os.getcwd') as mock_getcwd, \
+                patch('quackcore.config.tooling.logger.setup_tool_logging'), \
+                patch('quackcore.config.tooling.logger.get_logger'):
+            # Configure mocks
+            mock_fs = create_mock_fs()
             mock_get_service.return_value = mock_fs
-            self.mock_fs = mock_fs
-
-            mock_fs.create_temp_directory.return_value.success = True
-            mock_fs.create_temp_directory.return_value.data = tempfile.mkdtemp(prefix=f"quack_{name}_")
-
-            mock_fs.normalize_path.return_value.success = True
-            mock_fs.normalize_path.return_value.data = tempfile.gettempdir()
-
-            mock_fs.join_path.return_value.success = True
-            mock_fs.join_path.return_value.data = os.path.join(tempfile.gettempdir(), "output")
-
-            mock_fs.ensure_directory.return_value.success = True
-            mock_fs.ensure_directory.return_value.data = os.path.join(tempfile.gettempdir(), "output")
-
             mock_getcwd.return_value = tempfile.gettempdir()
 
-            # Call parent init
+            # Initialize
             super().__init__(name, version)
 
-            # Set mocked service and file operations
-            mock_file_info = MagicMock()
-            mock_file_info.exists = True
-            mock_fs.get_file_info.return_value = mock_file_info
+            # Save mock filesystem for testing
+            self.mock_fs = mock_fs
 
         self.process_called = False
         self.processed_content = None
@@ -179,7 +202,8 @@ def complete_tool(mock_upload_service: MockUploadService) -> CompleteTool:
     """Create a complete tool with all mixins."""
     # Patch the integration service resolution
     with patch('quackcore.integrations.core.get_integration_service',
-               return_value=mock_upload_service):
+               return_value=mock_upload_service), \
+            patch('quackcore.config.tooling.logger.configure_logger'):
         tool = CompleteTool("complete_tool", "1.0.0")
         return tool
 
@@ -277,7 +301,7 @@ class TestToolkitIntegration:
         assert len(mock_upload_service.uploads) > 0
 
     def test_integration_property(self, complete_tool: CompleteTool,
-                                 mock_upload_service: MockUploadService) -> None:
+                                  mock_upload_service: MockUploadService) -> None:
         """Test that the integration property returns the service."""
         # Access the integration through the property
         service = complete_tool.integration
@@ -292,12 +316,16 @@ class TestToolkitIntegration:
         # Create a new tool without an integration service
         mock_get_integration.return_value = None
 
-        # We need to initialize the mock_upload_service for this test
-        # since we're bypassing the fixture that would normally do this
-        with patch('quackcore.fs.service.get_service'), \
-             patch('os.getcwd', return_value=tempfile.gettempdir()):
+        # We need to initialize a new tool for this test
+        with patch('quackcore.config.tooling.logger.configure_logger'), \
+                patch('quackcore.config.tooling.logger.setup_tool_logging'), \
+                patch('quackcore.config.tooling.logger.get_logger'):
             tool = CompleteTool("test_tool", "1.0.0")
 
-            # We can't call run() since it depends on the service
             # Check that the integration is None
             assert tool._upload_service is None
+
+            # Setting up a Run test for this tool would be complicated
+            # Just check the initialization is correct
+            assert tool.name == "test_tool"
+            assert tool.version == "1.0.0"

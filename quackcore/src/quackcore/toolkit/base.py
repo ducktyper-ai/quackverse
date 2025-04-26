@@ -9,6 +9,7 @@ the QuackToolPluginProtocol.
 
 import abc
 import os
+import logging
 import tempfile
 from logging import Logger
 from typing import Any
@@ -17,9 +18,8 @@ from quackcore.config.tooling.logger import get_logger, setup_tool_logging
 from quackcore.fs.service import get_service
 from quackcore.integrations.core import IntegrationResult
 from quackcore.plugins.protocols import QuackPluginMetadata
-from quackcore.toolkit.protocol import (
-    QuackToolPluginProtocol,  # Import directly from protocol module
-)
+from quackcore.toolkit.protocol import \
+    QuackToolPluginProtocol  # Import directly from protocol module
 from quackcore.workflow.output import (
     DefaultOutputWriter,
     OutputWriter,
@@ -45,51 +45,91 @@ class BaseQuackToolPlugin(QuackToolPluginProtocol, abc.ABC):
             name: The name of the tool
             version: The version of the tool
         """
+        # Set up default paths in case filesystem operations fail
+        self._temp_dir = os.path.join(tempfile.gettempdir(), f"quack_{name}_temp")
+        self._output_dir = os.path.join(tempfile.gettempdir(), f"quack_{name}_output")
+
+        # Setup logging first since it doesn't depend on filesystem
+        try:
+            setup_tool_logging(name)
+            self._logger = get_logger(name)
+        except Exception as e:
+            # If logging setup fails, create a basic logger
+            self._logger = logging.getLogger(name)
+            self._logger.setLevel(logging.INFO)
+            handler = logging.StreamHandler()
+            self._logger.addHandler(handler)
+            self._logger.warning(f"Failed to set up proper logging: {str(e)}")
 
         # Get the filesystem service
-        self.fs = get_service()
+        try:
+            self.fs = get_service()
+        except Exception as e:
+            self._logger.error(f"Failed to get filesystem service: {str(e)}")
+            raise RuntimeError(f"Failed to initialize filesystem service: {str(e)}")
 
         self._name = name
         self._version = version
 
-        # Setup logging
-        setup_tool_logging(name)
-        self._logger = get_logger(name)
-
         # Create a temporary directory for this tool
-        temp_result = self.fs.create_temp_directory(prefix=f"quack_{name}_")
-        self._temp_dir = temp_result.data if temp_result.success else tempfile.mkdtemp(
-            prefix=f"quack_{name}_")
+        try:
+            temp_result = self.fs.create_temp_directory(prefix=f"quack_{name}_")
+            if hasattr(temp_result, 'success') and temp_result.success:
+                if hasattr(temp_result, 'data'):
+                    self._temp_dir = temp_result.data
+                elif hasattr(temp_result, 'path'):
+                    self._temp_dir = str(temp_result.path)
+            else:
+                self._temp_dir = tempfile.mkdtemp(prefix=f"quack_{name}_")
+                self._logger.info(f"Created temp directory: {self._temp_dir}")
+        except Exception as e:
+            self._logger.warning(f"Error creating temp directory: {str(e)}")
+            self._temp_dir = tempfile.mkdtemp(prefix=f"quack_{name}_")
+            self._logger.info(f"Created temp directory: {self._temp_dir}")
 
-        # Get output directory - safely handle cases where cwd might be invalid
+        # Get output directory safely
         try:
             cwd_result = self.fs.normalize_path(".")
-            output_path_result = self.fs.join_path(cwd_result.data, "output")
-            self._output_dir = output_path_result.data
-        except (FileNotFoundError, OSError):
-            # Fallback if we can't get the current directory
-            self._output_dir = os.path.join(tempfile.gettempdir(), f"quack_{name}_output")
-            self._logger.warning(
-                f"Failed to get current directory, falling back to {self._output_dir}")
+            if hasattr(cwd_result, 'success') and cwd_result.success:
+                cwd_path = None
+                if hasattr(cwd_result, 'data'):
+                    cwd_path = cwd_result.data
+                elif hasattr(cwd_result, 'path'):
+                    cwd_path = str(cwd_result.path)
+
+                if cwd_path:
+                    output_path_result = self.fs.join_path(cwd_path, "output")
+                    if hasattr(output_path_result,
+                               'success') and output_path_result.success:
+                        if hasattr(output_path_result, 'data'):
+                            self._output_dir = output_path_result.data
+                        elif hasattr(output_path_result, 'path'):
+                            self._output_dir = str(output_path_result.path)
+        except Exception as e:
+            self._logger.warning(f"Error determining output directory: {str(e)}")
+            # Keep the default output directory
 
         # Ensure output directory exists safely
         try:
             dir_result = self.fs.ensure_directory(self._output_dir)
-            if not dir_result.success:
-                # If directory creation fails, fall back to using tempfile.mkdtemp
+            if not (hasattr(dir_result, 'success') and dir_result.success):
                 fallback_dir = tempfile.mkdtemp(prefix=f"quack_{name}_output_")
                 self._logger.warning(
                     f"Failed to create output directory at {self._output_dir}, falling back to {fallback_dir}")
                 self._output_dir = fallback_dir
-        except (FileNotFoundError, OSError) as e:
-            # Handle filesystem errors gracefully
+        except Exception as e:
+            self._logger.warning(f"Error creating output directory: {str(e)}")
             fallback_dir = tempfile.mkdtemp(prefix=f"quack_{name}_output_")
             self._logger.warning(
-                f"Error accessing filesystem: {str(e)}, falling back to {fallback_dir}")
+                f"Exception during directory creation: {str(e)}, falling back to {fallback_dir}")
             self._output_dir = fallback_dir
 
         # Initialize the plugin
-        self.initialize_plugin()
+        try:
+            self.initialize_plugin()
+        except Exception as e:
+            self._logger.error(f"Error initializing plugin: {str(e)}")
+            raise
 
     @property
     def name(self) -> str:

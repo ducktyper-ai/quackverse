@@ -1,4 +1,3 @@
-# quackcore/src/quackcore/toolkit/mixins/integration_enabled.py
 """
 Integration enabled mixin for QuackTool plugins.
 
@@ -6,7 +5,7 @@ This module provides a mixin that enables integration with various services
 by providing a generic interface for resolving and accessing integration services.
 """
 
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 from quackcore.integrations.core import get_integration_service
 from quackcore.integrations.core.base import BaseIntegrationService
@@ -30,7 +29,16 @@ class IntegrationEnabledMixin(Generic[T]):
         ```
     """
 
-    _integration_service: T | None = None
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """
+        Initialize the mixin.
+
+        This explicitly initializes the _integration_service to None
+        to avoid issues with class variable sharing across instances.
+        """
+        self._integration_service: T | None = None
+        # Allow other parent classes to initialize
+        super().__init__(*args, **kwargs)
 
     def resolve_integration(self, service_type: type[T]) -> T | None:
         """
