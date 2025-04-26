@@ -94,37 +94,52 @@ class FileWorkflowRunner:
         return read_result.content
 
     def run_processor(self, content: Any, options: dict[str, Any]) -> OutputResult:
-        """Run the processor function with the content and options."""
+        """
+        Run the processor function with the given content and options.
+
+        Args:
+            content: Content to process
+            options: Processing options
+
+        Returns:
+            OutputResult: Result of processing
+        """
         try:
-            # Call the processor function, which should return a dictionary
+            # Call the processor function with content and options
             result = self.processor(content, options)
 
-            # If the result is already an OutputResult, return it
+            # If result is already an OutputResult, return it
             if isinstance(result, OutputResult):
                 return result
 
-            # If the processor returns a dictionary, create an OutputResult
+            # Otherwise convert to OutputResult
             if isinstance(result, dict):
-                # Get success from the result, default to True
-                success = result.get('success', True)
-                # Check for error information
-                error = result.get('error', None)
+                # Check for success flag in result
+                success = True
+                if "success" in result:
+                    success = bool(result["success"])
 
+                # Check for error information
+                error = None
+                if not success and "error" in result:
+                    error = result["error"]
+
+                # Create OutputResult
                 return OutputResult(
                     success=success,
-                    content=result,  # Pass the entire result as content
+                    content=result,
                     raw_text=error
                 )
-
-            # If the processor returns something else, treat it as content
-            return OutputResult(
-                success=True,
-                content=result,
-                raw_text=None
-            )
+            else:
+                # For non-dict returns, assume success
+                return OutputResult(
+                    success=True,
+                    content=result,
+                    raw_text=None
+                )
         except Exception as e:
-            # If an exception occurs, return a failure result
-            self.logger.exception("Error in processor function")
+            # Log and return error
+            self.logger.exception(f"Error in processor: {e}")
             return OutputResult(
                 success=False,
                 content=None,

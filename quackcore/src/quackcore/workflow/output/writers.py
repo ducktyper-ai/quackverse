@@ -9,6 +9,7 @@ base class for writing data to different file formats, such as JSON and YAML.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -111,6 +112,45 @@ class DefaultOutputWriter(OutputWriter):
 
         return str(result.path)
 
+    def write(self, result: Any, input_path: str, options: dict[str, Any]) -> Any:
+        """
+        Write the result to a file using the FileWorkflowRunner interface.
+
+        Args:
+            result: The result to write
+            input_path: The path to the input file
+            options: Options for writing
+
+        Returns:
+            Any: Result of the write operation with success flag and output path
+        """
+        # Determine output path
+        output_dir = options.get("output_dir")
+        output_path = options.get("output_path")
+
+        if not output_path:
+            # Create output filename based on input
+            if output_dir:
+                base_name = os.path.basename(input_path)
+                file_name, _ = os.path.splitext(base_name)
+                output_path = os.path.join(output_dir, file_name)
+            else:
+                # Use input path with extension changed
+                output_path = os.path.splitext(input_path)[0]
+
+        try:
+            # Use the existing write_output method
+            actual_path = self.write_output(result, output_path)
+            return {
+                "success": True,
+                "output_path": actual_path
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
+
 
 class YAMLOutputWriter(OutputWriter):
     """
@@ -211,3 +251,42 @@ class YAMLOutputWriter(OutputWriter):
             raise RuntimeError(f"Failed to write output: {result.error}")
 
         return str(result.path)
+
+    def write(self, result: Any, input_path: str, options: dict[str, Any]) -> Any:
+        """
+        Write the result to a file using the FileWorkflowRunner interface.
+
+        Args:
+            result: The result to write
+            input_path: The path to the input file
+            options: Options for writing
+
+        Returns:
+            Any: Result of the write operation with success flag and output path
+        """
+        # Determine output path
+        output_dir = options.get("output_dir")
+        output_path = options.get("output_path")
+
+        if not output_path:
+            # Create output filename based on input
+            if output_dir:
+                base_name = os.path.basename(input_path)
+                file_name, _ = os.path.splitext(base_name)
+                output_path = os.path.join(output_dir, file_name)
+            else:
+                # Use input path with extension changed
+                output_path = os.path.splitext(input_path)[0]
+
+        try:
+            # Use the existing write_output method
+            actual_path = self.write_output(result, output_path)
+            return {
+                "success": True,
+                "output_path": actual_path
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }

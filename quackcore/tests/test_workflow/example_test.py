@@ -5,10 +5,17 @@ from typing import Any
 from quackcore.workflow.runners.file_runner import FileWorkflowRunner
 
 
-def dummy_processor(content: str, options: dict[str, Any]) -> tuple[bool, dict[str, int], str]:
-    if options.get("simulate_failure", False):
-        return False, {}, "Simulated processor failure"
-    return True, {"length": len(content)}, ""
+def dummy_processor(content: Any, options: dict[str, Any]) -> tuple[
+    bool, Any, str | None]:
+    """
+    Dummy processor function that returns different results based on options.
+
+    Returns:
+        tuple[bool, Any, str | None]: Success flag, result data, and error message
+    """
+    if options.get("simulate_failure"):
+        return False, None, "Simulated processor failure"
+    return True, {"content": content, "processed": True}, None
 
 def test_file_runner_with_local_file(tmp_path: Path) -> None:
     test_file = tmp_path / "test.txt"

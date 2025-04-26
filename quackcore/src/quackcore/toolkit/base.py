@@ -234,10 +234,14 @@ class BaseQuackToolPlugin(QuackToolPluginProtocol, abc.ABC):
                     message="File processing failed: input file not found"
                 )
 
-            # Create options dict if None
-            options_dict = options or {}
+            # Ensure options is a dictionary
+            opts = options or {}
 
-            # Initialize the runner with necessary components
+            # Add output_path to options if provided
+            if output_path:
+                opts["output_path"] = output_path
+
+            # Create runner with appropriate components
             runner = FileWorkflowRunner(
                 processor=self.process_content,
                 remote_handler=self.get_remote_handler(),
@@ -245,30 +249,35 @@ class BaseQuackToolPlugin(QuackToolPluginProtocol, abc.ABC):
             )
 
             # Run the workflow
-            result = runner.run(file_path, options_dict)
+            result = runner.run(file_path, opts)
 
+            # Handle the result
             if result.success:
                 return IntegrationResult.success_result(
                     content=result,
                     message="File processed successfully"
                 )
             else:
-                # Extract error message with proper fallbacks
-                error_message = "Unknown error"
+                # Extract error information from result
+                error_message = None
 
-                # First try to get error directly from result
+                # Try different ways to get the error message
                 if hasattr(result, "error") and result.error:
                     error_message = result.error
-                # Then look in metadata if available
                 elif hasattr(result, "metadata") and isinstance(result.metadata, dict):
-                    error_message = result.metadata.get("error_message", error_message)
+                    error_message = result.metadata.get("error_message")
+
+                # Default error if none found
+                if not error_message:
+                    error_message = "Unknown processing error"
 
                 return IntegrationResult.error_result(
                     error=error_message,
                     message="File processing failed"
                 )
+
         except Exception as e:
-            self.logger.exception("Failed to process file")
+            self.logger.exception(f"Failed to process file: {e}")
             return IntegrationResult.error_result(
                 error=str(e),
                 message="File processing failed"
