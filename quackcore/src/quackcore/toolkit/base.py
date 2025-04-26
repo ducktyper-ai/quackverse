@@ -8,8 +8,8 @@ the QuackToolPluginProtocol.
 """
 
 import abc
-import os
 import logging
+import os
 import tempfile
 from logging import Logger
 from typing import Any
@@ -18,8 +18,9 @@ from quackcore.config.tooling.logger import get_logger, setup_tool_logging
 from quackcore.fs.service import get_service
 from quackcore.integrations.core import IntegrationResult
 from quackcore.plugins.protocols import QuackPluginMetadata
-from quackcore.toolkit.protocol import \
-    QuackToolPluginProtocol  # Import directly from protocol module
+from quackcore.toolkit.protocol import (
+    QuackToolPluginProtocol,  # Import directly from protocol module
+)
 from quackcore.workflow.output import (
     DefaultOutputWriter,
     OutputWriter,

@@ -1,3 +1,4 @@
+# quackcore/tests/test_toolkit/test_toolkit_integration.py
 """
 Integration tests for the toolkit package as a whole.
 
@@ -8,7 +9,7 @@ in realistic usage scenarios.
 import os
 import tempfile
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -22,7 +23,6 @@ from quackcore.toolkit.mixins.integration_enabled import IntegrationEnabledMixin
 from quackcore.toolkit.mixins.lifecycle import QuackToolLifecycleMixin
 from quackcore.toolkit.mixins.output_handler import OutputFormatMixin
 from quackcore.workflow.output import YAMLOutputWriter
-
 
 # Custom test implementations
 
@@ -247,7 +247,7 @@ class TestToolkitIntegration:
         assert metadata.name == "complete_tool"
         assert metadata.version == "1.0.0"
 
-    @patch('quackcore.workflow.runners.FileWorkflowRunner')
+    @patch('quackcore.workflow.runners.file_runner.FileWorkflowRunner')
     def test_complete_tool_process_file(self, mock_runner: MagicMock,
                                         complete_tool: CompleteTool,
                                         sample_file: str) -> None:
@@ -273,7 +273,7 @@ class TestToolkitIntegration:
         args, kwargs = mock_runner_instance.run.call_args
         assert args[1] == options
 
-    @patch('quackcore.workflow.runners.FileWorkflowRunner')
+    @patch('quackcore.workflow.runners.file_runner.FileWorkflowRunner')
     def test_complete_tool_run(self, mock_runner: MagicMock,
                                complete_tool: CompleteTool,
                                mock_upload_service: MockUploadService) -> None:

@@ -23,7 +23,7 @@ class IntegrationEnabledMixin(Generic[T]):
     Example:
         ```python
         class MyTool(IntegrationEnabledMixin[GoogleDriveService], BaseQuackToolPlugin):
-            def _initialize_plugin(self):
+            def initialize_plugin(self):
                 self._drive = self.resolve_integration(GoogleDriveService)
                 # Now self._drive is a GoogleDriveService instance
         ```
@@ -36,8 +36,9 @@ class IntegrationEnabledMixin(Generic[T]):
         This explicitly initializes the _integration_service to None
         to avoid issues with class variable sharing across instances.
         """
+        # Set instance attribute (not class attribute)
         self._integration_service: T | None = None
-        # Allow other parent classes to initialize
+        # Call parent __init__
         super().__init__(*args, **kwargs)
 
     def resolve_integration(self, service_type: type[T]) -> T | None:
@@ -53,16 +54,28 @@ class IntegrationEnabledMixin(Generic[T]):
             T | None: The resolved integration service, or None if not available
         """
         # Get the service
-        service = get_integration_service(service_type)
+        try:
+            # Try to get the service
+            service = get_integration_service(service_type)
 
-        # Store the service for reuse
-        self._integration_service = service
+            # Check if we got a valid service
+            if service is not None:
+                # Store the service as an instance attribute
+                self._integration_service = service
 
-        # Initialize the service if it has an initialize method
-        if service and hasattr(service, "initialize"):
-            service.initialize()
+                # Initialize the service if it has an initialize method
+                if hasattr(service, "initialize"):
+                    service.initialize()
 
-        return service
+            # Return the service (which could be None)
+            return service
+        except Exception as e:
+            # Log the error if possible
+            if hasattr(self, "logger"):
+                logger = getattr(self, "logger")
+                logger.error(f"Failed to resolve integration service: {e}")
+            # Return None on error
+            return None
 
     def get_integration_service(self) -> T | None:
         """

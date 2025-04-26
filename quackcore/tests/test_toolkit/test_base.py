@@ -1,3 +1,4 @@
+# quackcore/tests/test_toolkit/test_base.py
 """
 Tests for the BaseQuackToolPlugin class.
 """
@@ -7,14 +8,12 @@ import tempfile
 import unittest
 from collections.abc import Generator
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from quackcore.fs.results import DataResult, OperationResult
-from quackcore.integrations.core import IntegrationResult
-from quackcore.plugins.protocols import QuackPluginMetadata
 from quackcore.toolkit.base import BaseQuackToolPlugin
 from quackcore.workflow.output import DefaultOutputWriter, YAMLOutputWriter
 
@@ -211,11 +210,16 @@ class UnavailableTool(BaseQuackToolPlugin):
 @pytest.fixture
 def dummy_tool() -> Generator[DummyQuackTool, None, None]:
     """Fixture that creates a DummyQuackTool for pytest-style tests."""
-    with patch('quackcore.config.tooling.logger.setup_tool_logging'), \
-            patch('quackcore.config.tooling.logger.get_logger'), \
-            patch('os.getcwd', return_value=tempfile.gettempdir()):
+    with patch(
+            'quackcore.config.tooling.logger.setup_tool_logging') as mock_setup_logging, \
+            patch('quackcore.config.tooling.logger.get_logger') as mock_get_logger:
+        mock_get_logger.return_value = MagicMock()
         tool = DummyQuackTool()
-        yield tool
+
+        # Now assert
+        mock_setup_logging.assert_called_once_with("dummy_tool")
+
+    yield tool
 
 
 class TestBaseQuackToolPlugin(unittest.TestCase):
@@ -323,7 +327,7 @@ class TestBaseQuackToolPlugin(unittest.TestCase):
             self.assertEqual(result.error, "Test exception")
             self.assertIn("Failed to initialize", result.message)
 
-    @patch("quackcore.workflow.runners.FileWorkflowRunner")
+    @patch("quackcore.workflow.runners.file_runner.FileWorkflowRunner")
     def test_process_file_success(self, mock_runner: MagicMock) -> None:
         """
         Test that process_file works correctly on success.
@@ -348,7 +352,7 @@ class TestBaseQuackToolPlugin(unittest.TestCase):
         mock_runner.assert_called_once()
         mock_runner_instance.run.assert_called_once()
 
-    @patch("quackcore.workflow.runners.FileWorkflowRunner")
+    @patch("quackcore.workflow.runners.file_runner.FileWorkflowRunner")
     def test_process_file_failure(self, mock_runner: MagicMock) -> None:
         """
         Test that process_file handles failure correctly.
@@ -373,7 +377,7 @@ class TestBaseQuackToolPlugin(unittest.TestCase):
         self.assertIn("File processing failed", result.message)
         self.assertEqual(result.error, "Test error")
 
-    @patch("quackcore.workflow.runners.FileWorkflowRunner")
+    @patch("quackcore.workflow.runners.file_runner.FileWorkflowRunner")
     def test_process_file_error_from_result(self, mock_runner: MagicMock) -> None:
         """
         Test that process_file handles failure with error property.
@@ -399,7 +403,7 @@ class TestBaseQuackToolPlugin(unittest.TestCase):
         self.assertIn("File processing failed", result.message)
         self.assertEqual(result.error, "Direct error property")
 
-    @patch("quackcore.workflow.runners.FileWorkflowRunner")
+    @patch("quackcore.workflow.runners.file_runner.FileWorkflowRunner")
     def test_process_file_exception(self, mock_runner: MagicMock) -> None:
         """
         Test that process_file handles exceptions correctly.
@@ -551,7 +555,7 @@ class TestBaseQuackToolPluginWithPytest:
     def test_dataresult_handling(self, dummy_tool: DummyQuackTool) -> None:
         """Test how the tool handles DataResult objects."""
         # Create a DataResult to pass to a Path
-        data_result = DataResult(data="test_path", success=True)
+        data_result = DataResult(data="test_path", success=True, path="test_path", format="path")
 
         # Use patch_filesystem_operations from conftest.py
         path = Path(data_result)
@@ -562,7 +566,7 @@ class TestBaseQuackToolPluginWithPytest:
     def test_operationresult_handling(self, dummy_tool: DummyQuackTool) -> None:
         """Test how the tool handles OperationResult objects."""
         # Create an OperationResult to pass to a Path
-        op_result = OperationResult(data="op_path", success=True)
+        op_result = OperationResult(data="op_path", success=True, path="op_path")
 
         # Use patch_filesystem_operations from conftest.py
         path = Path(op_result.path)

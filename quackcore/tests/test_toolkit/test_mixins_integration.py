@@ -183,7 +183,7 @@ class TestMixinIntegration(unittest.TestCase):
         self.assertEqual(self.tool._get_output_extension(), ".yaml")
         self.assertIsInstance(self.tool.get_output_writer(), YAMLOutputWriter)
 
-    @patch("quackcore.workflow.runners.FileWorkflowRunner")
+    @patch("quackcore.workflow.runners.file_runner.FileWorkflowRunner")
     def test_run_workflow(self, mock_runner: MagicMock) -> None:
         """
         Test the complete workflow using run method.
