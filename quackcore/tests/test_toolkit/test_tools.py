@@ -1,3 +1,4 @@
+# quackcore/tests/test_toolkit/test_tools.py
 """
 Test tool implementations for testing quackcore.toolkit.
 
@@ -5,21 +6,20 @@ This module provides concrete tool implementations for testing
 the toolkit components.
 """
 
-from typing import Any, Dict, List, Optional, Type, TypeVar, cast
+from typing import Any, TypeVar
 from unittest.mock import MagicMock, patch
 
 from quackcore.integrations.core import IntegrationResult
 from quackcore.integrations.core.base import BaseIntegrationService
 from quackcore.toolkit import (
-    BaseQuackToolPlugin,
     IntegrationEnabledMixin,
     OutputFormatMixin,
     QuackToolLifecycleMixin,
     ToolEnvInitializerMixin,
 )
-from quackcore.workflow.output import DefaultOutputWriter, YAMLOutputWriter
+from quackcore.workflow.output import YAMLOutputWriter
 
-from .mocks import BaseMockTool, BaseMockToolWithIntegration, MockIntegrationService
+from .mocks import BaseMockTool, MockIntegrationService
 
 
 class DummyQuackTool(BaseMockTool):
@@ -33,13 +33,13 @@ class DummyQuackTool(BaseMockTool):
     def __init__(self) -> None:
         """Initialize the dummy tool."""
         super().__init__("dummy_tool", "1.0.0")
-        self.process_calls: List[Dict[str, Any]] = []
+        self.process_calls: list[dict[str, Any]] = []
 
     def initialize_plugin(self) -> None:
         """Initialize the plugin (no-op for testing)."""
         pass
 
-    def process_content(self, content: Any, options: Dict[str, Any]) -> Dict[str, Any]:
+    def process_content(self, content: Any, options: dict[str, Any]) -> dict[str, Any]:
         """Process content by recording the call and returning modified content."""
         self.process_calls.append({"content": content, "options": options})
         return {"content": content, "options": options, "processed": True}
@@ -60,7 +60,7 @@ class YamlOutputTool(BaseMockTool):
         """Initialize the plugin (no-op for testing)."""
         pass
 
-    def process_content(self, content: Any, options: Dict[str, Any]) -> Dict[str, Any]:
+    def process_content(self, content: Any, options: dict[str, Any]) -> dict[str, Any]:
         """Process content and return as a dict for YAML serialization."""
         return {"content": content, "options": options}
 
@@ -89,7 +89,7 @@ class RemoteHandlerTool(BaseMockTool):
         """Initialize the plugin (no-op for testing)."""
         pass
 
-    def process_content(self, content: Any, options: Dict[str, Any]) -> Dict[str, Any]:
+    def process_content(self, content: Any, options: dict[str, Any]) -> dict[str, Any]:
         """Process content using the remote handler."""
         return {"content": content, "options": options}
 
@@ -113,7 +113,7 @@ class UnavailableTool(BaseMockTool):
         """Initialize the plugin (no-op for testing)."""
         pass
 
-    def process_content(self, content: Any, options: Dict[str, Any]) -> Dict[str, Any]:
+    def process_content(self, content: Any, options: dict[str, Any]) -> dict[str, Any]:
         """Process content (should never be called)."""
         return {"content": content, "options": options}
 
@@ -135,7 +135,7 @@ class IntegrationTool(IntegrationEnabledMixin[MockIntegrationService], BaseMockT
     def __init__(self) -> None:
         """Initialize the integration tool."""
         # Cache for integration service
-        self._service: Optional[MockIntegrationService] = None
+        self._service: MockIntegrationService | None = None
 
         # Patch the integration service
         with patch("quackcore.integrations.core.get_integration_service",
@@ -147,7 +147,7 @@ class IntegrationTool(IntegrationEnabledMixin[MockIntegrationService], BaseMockT
         """Initialize the plugin and resolve the integration service."""
         self._service = self.resolve_integration(MockIntegrationService)
 
-    def process_content(self, content: Any, options: Dict[str, Any]) -> Dict[str, Any]:
+    def process_content(self, content: Any, options: dict[str, Any]) -> dict[str, Any]:
         """Process content using the integration service."""
         if self._service:
             result = self._service.process(content, options)
@@ -186,7 +186,7 @@ class CompleteTool(
         """Initialize the plugin and resolve the integration service."""
         self._service = self.resolve_integration(MockIntegrationService)
 
-    def process_content(self, content: Any, options: Dict[str, Any]) -> Dict[str, Any]:
+    def process_content(self, content: Any, options: dict[str, Any]) -> dict[str, Any]:
         """Process content and track call data."""
         self.process_called = True
         self.processed_content = content
@@ -206,7 +206,7 @@ class CompleteTool(
         """Override to provide YAML writer."""
         return YAMLOutputWriter()
 
-    def run(self, options: Optional[Dict[str, Any]] = None) -> IntegrationResult:
+    def run(self, options: dict[str, Any] | None = None) -> IntegrationResult:
         """Run the full tool workflow."""
         # Ensure options is a dict
         options = options or {}

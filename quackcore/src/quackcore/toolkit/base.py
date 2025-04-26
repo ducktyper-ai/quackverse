@@ -234,13 +234,18 @@ class BaseQuackToolPlugin(QuackToolPluginProtocol, abc.ABC):
                     message="File processing failed: input file not found"
                 )
 
+            # Create options dict if None
+            options_dict = options or {}
+
+            # Initialize the runner with necessary components
             runner = FileWorkflowRunner(
                 processor=self.process_content,
                 remote_handler=self.get_remote_handler(),
                 output_writer=self.get_output_writer(),
             )
 
-            result = runner.run(file_path, options or {})
+            # Run the workflow
+            result = runner.run(file_path, options_dict)
 
             if result.success:
                 return IntegrationResult.success_result(
@@ -248,12 +253,15 @@ class BaseQuackToolPlugin(QuackToolPluginProtocol, abc.ABC):
                     message="File processed successfully"
                 )
             else:
-                # Get error message, with fallback if it doesn't exist
+                # Extract error message with proper fallbacks
                 error_message = "Unknown error"
-                if hasattr(result, "metadata") and isinstance(result.metadata, dict):
-                    error_message = result.metadata.get("error_message", error_message)
-                elif hasattr(result, "error") and result.error:
+
+                # First try to get error directly from result
+                if hasattr(result, "error") and result.error:
                     error_message = result.error
+                # Then look in metadata if available
+                elif hasattr(result, "metadata") and isinstance(result.metadata, dict):
+                    error_message = result.metadata.get("error_message", error_message)
 
                 return IntegrationResult.error_result(
                     error=error_message,

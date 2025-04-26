@@ -1,3 +1,4 @@
+# quackcore/src/quackcore/toolkit/mixins/integration_enabled.py
 """
 Integration enabled mixin for QuackTool plugins.
 
@@ -64,15 +65,18 @@ class IntegrationEnabledMixin(Generic[T]):
                 self._integration_service = service
 
                 # Initialize the service if it has an initialize method
-                if hasattr(service, "initialize"):
+                if hasattr(service, "initialize") and callable(
+                        service.initialize):
                     service.initialize()
 
-            # Return the service (which could be None)
-            return service
+                # Return the service (which could be None)
+                return service
+            # Return None on error
+            return None
         except Exception as e:
             # Log the error if possible
             if hasattr(self, "logger"):
-                logger = getattr(self, "logger")
+                logger = self.logger
                 logger.error(f"Failed to resolve integration service: {e}")
             # Return None on error
             return None

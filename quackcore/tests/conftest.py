@@ -1,233 +1,313 @@
 # quackcore/tests/conftest.py
 """
-Shared fixtures for QuackCore tests.
+Shared fixtures for QuackTool toolkit tests.
 """
 
-# Import the test helper first to set up the Python path
-
 import os
-import shutil
 import tempfile
 from collections.abc import Generator
-from pathlib import Path
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 
-# Now try to import the quackcore modules
-try:
-    from quackcore.config.models import QuackConfig
-    from quackcore.fs.results import DataResult, OperationResult
-    from quackcore.fs.service import standalone as fs_standalone
-    from quackcore.plugins.protocols import QuackPluginProtocol
-except ImportError as e:
-    print(f"Error importing quackcore modules: {e}")
-    # Emergency fallbacks if needed
-    import sys
+from quackcore.integrations.core.base import BaseIntegrationService
 
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
-    from quackcore.config.models import QuackConfig
-    from quackcore.fs.results import DataResult, OperationResult
-    from quackcore.fs.service import standalone as fs_standalone
-    from quackcore.plugins.protocols import QuackPluginProtocol
+# Import directly from the modules rather than the package to avoid circular imports
+from quackcore.toolkit.base import BaseQuackToolPlugin
+from quackcore.toolkit.mixins.integration_enabled import IntegrationEnabledMixin
 
 
-@pytest.fixture(autouse=True)
-def mock_fs_standalone():
+class MockIntegrationService(BaseIntegrationService):
     """
-    Mock the fs.standalone functionality for consistent test behavior
-    across different platforms.
-
-    This helps us handle path issues in tests by normalizing the
-    behavior of the underlying fs module.
+    Mock implementation of BaseIntegrationService for testing.
     """
-    with patch("quackcore.fs.service.standalone.normalize_path") as mock_normalize:
-        # Make normalize_path return Path objects for consistent behavior
-        mock_normalize.side_effect = lambda p: Path(os.path.abspath(str(p)))
-        yield
-
-
-@pytest.fixture(autouse=True)
-def patch_filesystem_operations():
-    """
-    Patch filesystem operations for tests.
-
-    This fixture ensures that DataResult and OperationResult objects
-    are handled correctly in path-related operations during tests.
-    """
-    # Original Path.__init__ to preserve original behavior
-    original_path_init = Path.__init__
-
-    # Patched version that handles DataResult
-    def patched_path_init(self, *args, **kwargs):
-        new_args = list(args)
-        for i, arg in enumerate(new_args):
-            if isinstance(arg, (DataResult, OperationResult)) and hasattr(arg, "data"):
-                new_args[i] = str(arg.data)
-            elif hasattr(arg, "__fspath__"):
-                try:
-                    new_args[i] = arg.__fspath__()
-                except Exception:
-                    pass
-
-        # Call original __init__ with potentially modified args
-        original_path_init(self, *new_args)
-
-    # Patch Path.__init__ to handle DataResult
-    with patch("pathlib.Path.__init__", patched_path_init):
-        yield
-
-
-@pytest.fixture
-def temp_dir() -> Generator[Path]:
-    """Create a temporary directory for tests."""
-    tmp_dir = Path(tempfile.mkdtemp())
-    try:
-        yield tmp_dir
-    finally:
-        shutil.rmtree(tmp_dir, ignore_errors=True)
-
-
-@pytest.fixture
-def test_file(temp_dir: Path) -> Generator[Path]:
-    """Create a test file with content."""
-    file_path = temp_dir / "test_file.txt"
-    with open(file_path, "w") as f:
-        f.write("test content")
-    yield file_path
-
-
-@pytest.fixture
-def test_binary_file(
-        temp_dir: Path,
-) -> Generator[Path]:
-    """Create a binary test file."""
-    file_path = temp_dir / "test_binary_file.bin"
-    with open(file_path, "wb") as f:
-        f.write(b"\x00\x01\x02\x03")
-    yield file_path
-
-
-@pytest.fixture
-def sample_config(temp_dir: Path) -> QuackConfig:
-    """Create a sample configuration."""
-    # We use string paths instead of Path objects here
-    temp_dir_str = str(temp_dir)
-    base_dir = temp_dir_str
-    output_dir = os.path.join(temp_dir_str, "output")
-
-    # Using strings for paths in the configuration
-    return QuackConfig(
-        general={
-            "project_name": "TestProject",
-            "environment": "test",
-            "debug": True,
-        },
-        paths={
-            "base_dir": base_dir,
-            "output_dir": output_dir,
-            "assets_dir": "./assets",
-            "data_dir": "./data",
-            "temp_dir": "./temp",
-        },
-        logging={
-            "level": "DEBUG",
-            "file": None,
-            "console": True,
-        },
-        integrations={
-            "google": {
-                "client_secrets_file": None,
-                "credentials_file": None,
-                "shared_folder_id": None,
-                "gmail_labels": [],
-                "gmail_days_back": 1,
-            },
-            "notion": {
-                "api_key": None,
-                "database_ids": {},
-            },
-        },
-        plugins={
-            "enabled": [],
-            "disabled": [],
-            "paths": [],
-        },
-    )
-
-
-@pytest.fixture
-def mock_env_vars(monkeypatch: MonkeyPatch) -> None:
-    """Set up environment variables for testing."""
-    monkeypatch.setenv("QUACK_ENV", "test")
-    monkeypatch.setenv("QUACK_GENERAL__DEBUG", "true")
-    monkeypatch.setenv("QUACK_LOGGING__LEVEL", "DEBUG")
-
-
-@pytest.fixture
-def mock_project_structure(temp_dir: Path) -> Path:
-    """Create a mock project structure for testing."""
-    # Create project root with marker files
-    project_root = temp_dir / "test_project"
-    project_root.mkdir()
-    (project_root / "pyproject.toml").write_text("# Mock pyproject.toml")
-
-    # Create src directory with module structure
-    src_dir = project_root / "src"
-    src_dir.mkdir()
-    (src_dir / "__init__.py").touch()
-
-    # Create module directory
-    module_dir = src_dir / "test_module"
-    module_dir.mkdir()
-    (module_dir / "__init__.py").touch()
-
-    # Create test file with some content
-    test_module_file = module_dir / "test_file.py"
-    test_module_file.write_text("def test_function():\n    return True")
-
-    # Create other standard directories
-    (project_root / "tests").mkdir()
-    (project_root / "docs").mkdir()
-    (project_root / "output").mkdir()
-    (project_root / "config").mkdir()
-
-    # Create a config file
-    config_file = project_root / "config" / "default.yaml"
-    config_file.write_text("general:\n  project_name: TestProject\n")
-
-    return project_root
-
-
-class MockPlugin(QuackPluginProtocol):
-    """Mock plugin for testing."""
 
     @property
     def name(self) -> str:
-        return "mock_plugin"
+        return "mock_service"
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.initialized = False
+
+    def initialize(self) -> None:
+        self.initialized = True
+
+
+class SimpleMockTool(BaseQuackToolPlugin):
+    """
+    Simple mock implementation of BaseQuackToolPlugin for testing fixtures.
+    """
+
+    def __init__(self) -> None:
+        # Patch filesystem access to avoid issues
+        with patch('quackcore.fs.service.get_service') as mock_get_service, \
+                patch(
+                    'quackcore.toolkit.base.setup_tool_logging') as mock_setup_logging, \
+                patch('quackcore.toolkit.base.get_logger') as mock_get_logger, \
+                patch('os.getcwd') as mock_getcwd:
+            # Configure the mock
+            mock_fs = MagicMock()
+            mock_get_service.return_value = mock_fs
+            self.mock_fs = mock_fs
+            mock_logger = MagicMock()
+            mock_get_logger.return_value = mock_logger
+
+            # Configure successful temp directory creation
+            temp_result = MagicMock()
+            temp_result.success = True
+            temp_result.data = tempfile.mkdtemp(prefix="quack_simple_mock_tool_")
+            temp_result.path = temp_result.data
+            mock_fs.create_temp_directory.return_value = temp_result
+
+            # Configure successful path handling
+            cwd_result = MagicMock()
+            cwd_result.success = True
+            cwd_result.data = tempfile.gettempdir()
+            cwd_result.path = cwd_result.data
+            mock_fs.normalize_path.return_value = cwd_result
+
+            output_path_result = MagicMock()
+            output_path_result.success = True
+            output_path_result.data = os.path.join(tempfile.gettempdir(), "output")
+            output_path_result.path = output_path_result.data
+            mock_fs.join_path.return_value = output_path_result
+
+            # Configure successful directory creation
+            dir_result = MagicMock()
+            dir_result.success = True
+            dir_result.data = output_path_result.data
+            dir_result.path = dir_result.data
+            mock_fs.ensure_directory.return_value = dir_result
+
+            # Set up for file_info in process_file tests
+            file_info_result = MagicMock()
+            file_info_result.exists = True
+            mock_fs.get_file_info.return_value = file_info_result
+
+            # Set getcwd to return a valid directory
+            mock_getcwd.return_value = tempfile.gettempdir()
+
+            # Call the parent init
+            super().__init__("simple_mock_tool", "1.0.0")
+
+            # Verify the tool logging was set up
+            mock_setup_logging.assert_called_once_with("simple_mock_tool")
+
+    def initialize_plugin(self) -> None:
+        pass
+
+    def process_content(self, content: Any, options: dict[str, Any]) -> dict[str, Any]:
+        """
+        Process content with this tool.
+
+        Returns a dictionary that FileWorkflowRunner can handle.
+        """
+        # Create a result that's compatible with FileWorkflowRunner's expectations
+        return {"processed": True, "content": content, "options": options}
 
 
 @pytest.fixture
-def mock_plugin() -> MockPlugin:
-    """Create a mock plugin for testing."""
-    return MockPlugin()
+def mock_integration_service() -> MockIntegrationService:
+    """
+    Create a mock integration service.
+    """
+    service = MockIntegrationService()
+    # Initialize the service to ensure it's ready for use
+    service.initialize()
+    return service
 
 
-def pytest_configure(config):
-    """Register custom pytest marks."""
-    config.addinivalue_line(
-        "markers", "integration: mark a test as an integration test"
-    )
+@pytest.fixture
+def simple_mock_tool() -> Generator[SimpleMockTool, None, None]:
+    """
+    Create a simple mock tool.
+    """
+    with patch('os.getcwd', return_value=tempfile.gettempdir()):
+        tool = SimpleMockTool()
+        try:
+            yield tool
+        finally:
+            # Clean up any temporary resources
+            if hasattr(tool, "_temp_dir") and os.path.exists(tool._temp_dir):
+                try:
+                    os.rmdir(tool._temp_dir)
+                except OSError:
+                    pass
 
 
-# Fix for the mock_normalize_path fixture
-@pytest.fixture(autouse=True)
-def mock_normalize_path(monkeypatch):
-    """Mock the normalize_path function to avoid filesystem access."""
+@pytest.fixture
+def temp_test_file() -> Generator[str, None, None]:
+    """
+    Create a temporary test file.
+    """
+    temp_file = tempfile.NamedTemporaryFile(delete=False)
+    temp_file.write(b'{"test": "data"}')
+    temp_file.close()
+    try:
+        yield temp_file.name
+    finally:
+        os.unlink(temp_file.name)
 
-    def mock_normalize(path):
-        return Path(os.path.abspath(str(path)))
 
-    # Fix: Use the correct import path for normalize_path
-    monkeypatch.setattr(fs_standalone, "normalize_path", mock_normalize)
+@pytest.fixture
+def mock_fs_service() -> MagicMock:
+    """
+    Create a mock filesystem service.
+    """
+    mock_fs = MagicMock()
+
+    # Configure successful result responses
+    temp_dir_result = MagicMock()
+    temp_dir_result.success = True
+    temp_dir_path = tempfile.mkdtemp(prefix="quack_test_")
+    temp_dir_result.data = temp_dir_path
+    temp_dir_result.path = temp_dir_path
+    mock_fs.create_temp_directory.return_value = temp_dir_result
+
+    cwd_result = MagicMock()
+    cwd_result.success = True
+    cwd_path = tempfile.gettempdir()
+    cwd_result.data = cwd_path
+    cwd_result.path = cwd_path
+    mock_fs.normalize_path.return_value = cwd_result
+
+    join_path_result = MagicMock()
+    join_path_result.success = True
+    join_path = os.path.join(tempfile.gettempdir(), "output")
+    join_path_result.data = join_path
+    join_path_result.path = join_path
+    mock_fs.join_path.return_value = join_path_result
+
+    dir_result = MagicMock()
+    dir_result.success = True
+    dir_result.data = os.path.join(tempfile.gettempdir(), "output")
+    dir_result.path = dir_result.data
+    mock_fs.ensure_directory.return_value = dir_result
+
+    # Add file_info result for process_file tests
+    file_info_result = MagicMock()
+    file_info_result.exists = True
+    mock_fs.get_file_info.return_value = file_info_result
+
+    return mock_fs
+
+
+@pytest.fixture
+def tool_with_mock_fs(mock_fs_service: MagicMock) -> Generator[
+    SimpleMockTool, None, None]:
+    """
+    Create a tool with a mocked filesystem service.
+    """
+    with patch('quackcore.fs.service.get_service', return_value=mock_fs_service), \
+            patch('quackcore.toolkit.base.setup_tool_logging'), \
+            patch('quackcore.toolkit.base.get_logger'), \
+            patch('os.getcwd', return_value=tempfile.gettempdir()):
+        tool = SimpleMockTool()
+        try:
+            yield tool
+        finally:
+            # Clean up temporary resources
+            if hasattr(tool, "_temp_dir") and os.path.exists(tool._temp_dir):
+                try:
+                    os.rmdir(tool._temp_dir)
+                except OSError:
+                    pass
+
+
+class TestMockClass(IntegrationEnabledMixin[MockIntegrationService],
+                    BaseQuackToolPlugin):
+    """A test class combining IntegrationEnabledMixin and BaseQuackToolPlugin."""
+
+    def __init__(self, name: str, version: str) -> None:
+        # Patch filesystem access to avoid issues
+        with patch('quackcore.fs.service.get_service') as mock_get_service, \
+                patch(
+                    'quackcore.toolkit.base.setup_tool_logging') as mock_setup_logging, \
+                patch('quackcore.toolkit.base.get_logger') as mock_get_logger, \
+                patch('os.getcwd') as mock_getcwd:
+            # Configure the mock
+            mock_fs = MagicMock()
+            mock_get_service.return_value = mock_fs
+            mock_logger = MagicMock()
+            mock_get_logger.return_value = mock_logger
+
+            # Configure successful temp directory creation
+            temp_result = MagicMock()
+            temp_result.success = True
+            temp_result.data = tempfile.mkdtemp(prefix=f"quack_{name}_")
+            temp_result.path = temp_result.data
+            mock_fs.create_temp_directory.return_value = temp_result
+
+            # Configure successful path handling
+            cwd_result = MagicMock()
+            cwd_result.success = True
+            cwd_result.data = tempfile.gettempdir()
+            cwd_result.path = cwd_result.data
+            mock_fs.normalize_path.return_value = cwd_result
+
+            output_path_result = MagicMock()
+            output_path_result.success = True
+            output_path_result.data = os.path.join(tempfile.gettempdir(), "output")
+            output_path_result.path = output_path_result.data
+            mock_fs.join_path.return_value = output_path_result
+
+            # Configure successful directory creation
+            dir_result = MagicMock()
+            dir_result.success = True
+            dir_result.data = output_path_result.data
+            dir_result.path = dir_result.data
+            mock_fs.ensure_directory.return_value = dir_result
+
+            # Set up for file_info in process_file tests
+            file_info_result = MagicMock()
+            file_info_result.exists = True
+            mock_fs.get_file_info.return_value = file_info_result
+
+            # Set getcwd to return a valid directory
+            mock_getcwd.return_value = tempfile.gettempdir()
+
+            # Call the parent init
+            super().__init__(name, version)
+
+            self.mock_fs = mock_fs
+
+            # Verify logging was set up
+            mock_setup_logging.assert_called_once_with(name)
+
+    def initialize_plugin(self) -> None:
+        """Initialize the plugin by resolving the integration service."""
+        self._service = self.resolve_integration(MockIntegrationService)
+
+    def process_content(self, content: Any, options: dict[str, Any]) -> dict[str, Any]:
+        """Process content with this tool."""
+        return {"content": content, "options": options}
+
+
+@pytest.fixture
+def integration_enabled_tool() -> Generator[TestMockClass, None, None]:
+    """
+    Create a tool with integration enabled mixin.
+    """
+    # Create a mock for the integration service
+    mock_service = MockIntegrationService()
+    # Initialize it
+    mock_service.initialize()
+
+    # Patch get_integration_service to return our mock
+    with patch('quackcore.integrations.core.get_integration_service',
+               return_value=mock_service), \
+            patch('os.getcwd', return_value=tempfile.gettempdir()):
+        tool = TestMockClass("integration_tool", "1.0.0")
+        # Explicitly set the service to make sure it's properly initialized
+        tool._service = mock_service
+        try:
+            yield tool
+        finally:
+            # Clean up temporary resources
+            if hasattr(tool, "_temp_dir") and os.path.exists(tool._temp_dir):
+                try:
+                    os.rmdir(tool._temp_dir)
+                except OSError:
+                    pass

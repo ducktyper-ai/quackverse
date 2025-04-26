@@ -1,3 +1,4 @@
+# quackcore/tests/test_toolkit/mocks.py
 """
 Mocks for testing the quackcore.toolkit module.
 
@@ -8,8 +9,7 @@ of services, filesystem operations, etc.
 
 import os
 import tempfile
-from pathlib import Path
-from typing import Any, Dict, List, Optional, TypeVar, cast
+from typing import Any, TypeVar, cast
 from unittest.mock import MagicMock, patch
 
 from quackcore.fs.results import DataResult, OperationResult
@@ -136,8 +136,8 @@ class MockIntegrationService(BaseIntegrationService):
 
     def __init__(self) -> None:
         self.initialized = False
-        self.called_methods: List[str] = []
-        self.call_args: Dict[str, List[Any]] = {}
+        self.called_methods: list[str] = []
+        self.call_args: dict[str, list[Any]] = {}
 
     def initialize(self) -> None:
         """Record that initialize was called."""
@@ -145,14 +145,14 @@ class MockIntegrationService(BaseIntegrationService):
         self.called_methods.append("initialize")
 
     def process(self, data: Any,
-                options: Optional[Dict[str, Any]] = None) -> IntegrationResult:
+                options: dict[str, Any] | None = None) -> IntegrationResult:
         """Process data with the mock service."""
         self.called_methods.append("process")
         self.call_args["process"] = [data, options]
         return mock_integration_result(success=True, message="Processed successfully",
                                        content=data)
 
-    def upload(self, data: Any, path: Optional[str] = None) -> IntegrationResult:
+    def upload(self, data: Any, path: str | None = None) -> IntegrationResult:
         """Mock uploading data to the service."""
         self.called_methods.append("upload")
         self.call_args["upload"] = [data, path]
@@ -160,7 +160,7 @@ class MockIntegrationService(BaseIntegrationService):
                                        message=f"Uploaded to {path or 'default location'}")
 
     def download(self, resource_id: str,
-                 path: Optional[str] = None) -> IntegrationResult:
+                 path: str | None = None) -> IntegrationResult:
         """Mock downloading data from the service."""
         self.called_methods.append("download")
         self.call_args["download"] = [resource_id, path]
@@ -172,7 +172,7 @@ class MockLogger:
     """Mock logger for testing."""
 
     def __init__(self) -> None:
-        self.logs: Dict[str, List[str]] = {
+        self.logs: dict[str, list[str]] = {
             "debug": [],
             "info": [],
             "warning": [],
@@ -208,9 +208,9 @@ class MockWorkflowRunner:
         self.remote_handler = remote_handler
         self.output_writer = output_writer
         self.run_called = False
-        self.run_args: List[Any] = []
+        self.run_args: list[Any] = []
 
-    def run(self, file_path: str, options: Dict[str, Any]) -> IntegrationResult:
+    def run(self, file_path: str, options: dict[str, Any]) -> IntegrationResult:
         """Mock running the workflow."""
         self.run_called = True
         self.run_args = [file_path, options]
@@ -277,7 +277,7 @@ class BaseMockToolWithIntegration(BaseMockTool):
     """
 
     def __init__(self, name: str, version: str, service_class: type[T],
-                 service_instance: Optional[T] = None) -> None:
+                 service_instance: T | None = None) -> None:
         """
         Initialize with mocked dependencies including integration service.
 

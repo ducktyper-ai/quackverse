@@ -93,29 +93,43 @@ class FileWorkflowRunner:
             raise WorkflowError(f"Failed to read file content: {read_result.error}")
         return read_result.content
 
-    def run_processor(self, content: str, options: dict[str, Any]) -> OutputResult:
-        """
-        Run the processor function on the content.
+    def run_processor(self, content: Any, options: dict[str, Any]) -> OutputResult:
+        """Run the processor function with the content and options."""
+        try:
+            # Call the processor function, which should return a dictionary
+            result = self.processor(content, options)
 
-        Args:
-            content: The file content to process.
-            options: Options for processing.
+            # If the result is already an OutputResult, return it
+            if isinstance(result, OutputResult):
+                return result
 
-        Returns:
-            OutputResult containing the processed result.
+            # If the processor returns a dictionary, create an OutputResult
+            if isinstance(result, dict):
+                # Get success from the result, default to True
+                success = result.get('success', True)
+                # Check for error information
+                error = result.get('error', None)
 
-        Raises:
-            RuntimeError: If processing fails.
-        """
-        self.logger.debug(f"Running processor with options: {options}")
-        success, result, error = self.processor(content, options)
-        if not success:
-            raise WorkflowError(f"Processing failed: {error}")
-        return OutputResult(
-            success=success,
-            content=result,
-            raw_text=error or None
-        )
+                return OutputResult(
+                    success=success,
+                    content=result,  # Pass the entire result as content
+                    raw_text=error
+                )
+
+            # If the processor returns something else, treat it as content
+            return OutputResult(
+                success=True,
+                content=result,
+                raw_text=None
+            )
+        except Exception as e:
+            # If an exception occurs, return a failure result
+            self.logger.exception("Error in processor function")
+            return OutputResult(
+                success=False,
+                content=None,
+                raw_text=str(e)
+            )
 
     def write_output(self, result: OutputResult, input_path: Path,
                      options: dict[str, Any]) -> FinalResult:

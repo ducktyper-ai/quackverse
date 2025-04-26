@@ -110,3 +110,13 @@ exclude_lines = [
     "raise NotImplementedError",
     "if TYPE_CHECKING:",
 ]
+
+# Add pytest configuration
+[tool.pytest.ini_options]
+markers = [
+    "integration: marks tests as integration tests (may require external services)",
+    "slow: marks tests as slow (may take longer to run)",
+    "e2e: marks tests as end-to-end tests (testing complete workflows)",
+    "unit: marks tests as unit tests",
+    "smoke: marks tests as smoke tests (basic functionality tests)"
+]
