@@ -49,6 +49,10 @@ class TestIntegrationEnabledMixin(unittest.TestCase):
     Test cases for IntegrationEnabledMixin using unittest.
     """
 
+    @patch(
+        "quackcore.config.tooling.logger.setup_tool_logging")  # Use the correct import path
+    @patch(
+        "quackcore.toolkit.base.setup_tool_logging")  # Also patch the imported function
     @patch("quackcore.integrations.core.get_integration_service")
     def test_resolve_integration(self, mock_get_integration: MagicMock) -> None:
         """
@@ -71,6 +75,10 @@ class TestIntegrationEnabledMixin(unittest.TestCase):
         self.assertTrue(mock_service.initialized)
         mock_get_integration.assert_called_once_with(MockIntegrationService)
 
+    @patch(
+        "quackcore.config.tooling.logger.setup_tool_logging")  # Use the correct import path
+    @patch(
+        "quackcore.toolkit.base.setup_tool_logging")  # Also patch the imported function
     @patch("quackcore.integrations.core.get_integration_service")
     def test_resolve_integration_none(self, mock_get_integration: MagicMock) -> None:
         """
@@ -91,6 +99,10 @@ class TestIntegrationEnabledMixin(unittest.TestCase):
         self.assertIsNone(result)
         mock_get_integration.assert_called_once_with(MockIntegrationService)
 
+    @patch(
+        "quackcore.config.tooling.logger.setup_tool_logging")  # Use the correct import path
+    @patch(
+        "quackcore.toolkit.base.setup_tool_logging")  # Also patch the imported function
     @patch("quackcore.integrations.core.get_integration_service")
     def test_resolve_integration_no_initialize(self,
                                                mock_get_integration: MagicMock) -> None:
@@ -113,6 +125,10 @@ class TestIntegrationEnabledMixin(unittest.TestCase):
         self.assertEqual(result, mock_service)
         mock_get_integration.assert_called_once_with(AnotherMockService)
 
+    @patch(
+        "quackcore.config.tooling.logger.setup_tool_logging")  # Use the correct import path
+    @patch(
+        "quackcore.toolkit.base.setup_tool_logging")  # Also patch the imported function
     @patch("quackcore.integrations.core.get_integration_service")
     def test_integration_property(self, mock_get_integration: MagicMock) -> None:
         """
@@ -245,6 +261,10 @@ class TestIntegrationEnabledMixinWithPytest:
     Test cases for IntegrationEnabledMixin using pytest fixtures.
     """
 
+    @patch(
+        "quackcore.config.tooling.logger.setup_tool_logging")  # Use the correct import path
+    @patch(
+        "quackcore.toolkit.base.setup_tool_logging")  # Also patch the imported function
     @patch("quackcore.integrations.core.get_integration_service")
     def test_integration_mixin_resolve(
             self,

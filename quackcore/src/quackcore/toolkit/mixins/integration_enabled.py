@@ -55,23 +55,23 @@ class IntegrationEnabledMixin(Generic[T]):
             T | None: The resolved integration service, or None if not available
         """
         try:
-            # Get the service
+            # Try to get the service
             service = get_integration_service(service_type)
 
-            # Store the service as an instance attribute
+            # Store the service regardless of whether we're going to initialize it
             self._integration_service = service
 
-            # Initialize the service if it exists and has an initialize method
+            # Initialize if the service exists and has an initialize method
             if service is not None and hasattr(service, "initialize") and callable(
-                    service.initialize):
+                    getattr(service, "initialize")):
                 service.initialize()
 
-            # Return the service (which could be None)
+            # Return the service (could be None)
             return service
         except Exception as e:
             # Log the error if possible
             if hasattr(self, "logger"):
-                logger = self.logger
+                logger = getattr(self, "logger")
                 logger.error(f"Failed to resolve integration service: {e}")
             # Return None on error
             return None

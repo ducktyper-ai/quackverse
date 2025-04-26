@@ -201,9 +201,10 @@ def mock_upload_service() -> MockUploadService:
 def complete_tool(mock_upload_service: MockUploadService) -> CompleteTool:
     """Create a complete tool with all mixins."""
     # Patch the integration service resolution
-    with patch('quackcore.integrations.core.get_integration_service',
-               return_value=mock_upload_service), \
-            patch('quackcore.config.tooling.logger.configure_logger'):
+    with patch('quackcore.config.tooling.logger.setup_tool_logging'), \
+         patch('quackcore.toolkit.base.setup_tool_logging'), \
+         patch('quackcore.integrations.core.get_integration_service',
+               return_value=mock_upload_service):
         tool = CompleteTool("complete_tool", "1.0.0")
         return tool
 

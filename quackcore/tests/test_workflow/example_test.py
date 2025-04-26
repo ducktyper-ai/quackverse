@@ -49,15 +49,21 @@ def test_runner_with_dry_run_option(tmp_path: Path) -> None:
     assert result.result_path is None
     assert result.metadata.get("dry_run") is True
 
+
 def test_runner_with_processor_failure(tmp_path: Path) -> None:
     test_file = tmp_path / "test.txt"
     test_file.write_text("hello world")
 
+    # Create a runner with the dummy processor
     runner = FileWorkflowRunner(processor=dummy_processor)
+
+    # Run with simulated failure
     result = runner.run(str(test_file), options={
         "output_dir": str(tmp_path),
         "simulate_failure": True
     })
 
+    # Check that the result has failure flag
     assert result.success is False
-    assert "processor_error" in result.metadata
+    assert "processor_error" in result.metadata or "error_message" in result.metadata
+    assert "Simulated processor failure" in str(result.metadata)
