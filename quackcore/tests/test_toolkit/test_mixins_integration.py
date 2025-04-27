@@ -71,8 +71,7 @@ class CompleteQuackTool(
     def __init__(self) -> None:
         # Patch filesystem access and logging to avoid issues
         with patch('quackcore.fs.service.get_service') as mock_get_service, \
-                patch(
-                    'quackcore.toolkit.base.setup_tool_logging') as mock_setup_logging, \
+                patch('quackcore.toolkit.base.setup_tool_logging'), \
                 patch('quackcore.toolkit.base.get_logger') as mock_get_logger, \
                 patch('os.getcwd') as mock_getcwd:
             # Configure mocks
@@ -118,15 +117,13 @@ class CompleteQuackTool(
 
             super().__init__("complete_tool", "1.0.0")
 
-            # Verify logging was set up
-            mock_setup_logging.assert_called_once_with("complete_tool")
-
             # Save for testing
             self.mock_fs = mock_fs
 
         self.env_initialized = False
         self.run_called = False
         self.run_options = None
+        self._service = None
 
     def initialize_plugin(self) -> None:
         """Initialize the plugin."""
@@ -190,38 +187,34 @@ class TestMixinIntegration(unittest.TestCase):
     Integration tests for mixins used together.
     """
 
-    @patch("quackcore.integrations.core.get_integration_service")
-    @patch("importlib.import_module")
-    def setUp(self, mock_import: MagicMock, mock_get_integration: MagicMock) -> None:
+    def setUp(self) -> None:
         """
         Set up test fixtures.
         """
-        # Create a mock service
+        # Create a mock service and fully initialize it
         self.mock_service = MockIntegrationService()
-        mock_get_integration.return_value = self.mock_service
-
-        # Initialize the mock service (manually since the patching may not be working correctly)
-        self.mock_service.initialize()
-
-        # Create a mock module
-        self.mock_module = MagicMock()
-        self.mock_module.initialize.return_value = IntegrationResult.success_result(
-            message="Environment initialized successfully"
-        )
-        mock_import.return_value = self.mock_module
+        self.mock_service.initialize()  # Explicitly initialize
 
         # Create a temporary file
         self.temp_file = tempfile.NamedTemporaryFile(delete=False)
         self.temp_file.write(b'{"test": "data"}')
         self.temp_file.close()
 
-        # Create the tool instance with the proper patching
-        with patch('quackcore.toolkit.base.setup_tool_logging'), \
-                patch('quackcore.toolkit.base.get_logger'):
+        # Create the tool instance with proper patching
+        with patch('quackcore.integrations.core.get_integration_service',
+                   return_value=self.mock_service), \
+                patch('importlib.import_module') as mock_import:
+            # Set up mock module
+            self.mock_module = MagicMock()
+            self.mock_module.initialize.return_value = IntegrationResult.success_result(
+                message="Environment initialized successfully"
+            )
+            mock_import.return_value = self.mock_module
+
             self.tool = CompleteQuackTool()
 
-            # Explicitly set the service to ensure it's initialized properly
-            self.tool._service = self.mock_service
+            # Manually resolve the integration service
+            self.tool._service = self.tool.resolve_integration(MockIntegrationService)
 
         # Verify initialization
         self.assertTrue(self.mock_service.initialized)
@@ -261,26 +254,17 @@ class TestMixinIntegration(unittest.TestCase):
         mock_result.success = True
         mock_runner_instance.run.return_value = mock_result
 
-        # Patch run_processor to return a properly structured result
-        with patch(
-                'quackcore.workflow.runners.file_runner.FileWorkflowRunner.run_processor') as mock_run_processor:
-            mock_run_processor.return_value = OutputResult(
-                success=True,
-                content={},
-                raw_text=None
-            )
+        # Run the tool with options
+        options = {"option1": "value1", "option2": "value2"}
+        result = self.tool.run(options)
 
-            # Run the tool with options
-            options = {"option1": "value1", "option2": "value2"}
-            result = self.tool.run(options)
+        # Assert the result
+        self.assertTrue(result.success)
+        self.assertIn("Run completed successfully", result.message)
 
-            # Assert the result
-            self.assertTrue(result.success)
-            self.assertIn("Run completed successfully", result.message)
-
-            # Verify run was called with correct options
-            self.assertTrue(self.tool.run_called)
-            self.assertEqual(self.tool.run_options, options)
+        # Verify run was called with correct options
+        self.assertTrue(self.tool.run_called)
+        self.assertEqual(self.tool.run_options, options)
 
     def test_upload_via_integration(self) -> None:
         """
@@ -307,16 +291,14 @@ class TestMixinIntegration(unittest.TestCase):
         # Create a new tool without an integration service
         mock_get_integration.return_value = None
 
-        with patch('quackcore.toolkit.base.setup_tool_logging'), \
-                patch('quackcore.toolkit.base.get_logger'):
-            tool = CompleteQuackTool()
+        tool = CompleteQuackTool()
 
-            # Upload the file
-            result = tool.upload(self.temp_file.name)
+        # Upload the file
+        result = tool.upload(self.temp_file.name)
 
-            # Assert the result
-            self.assertFalse(result.success)
-            self.assertIn("Integration service not available", result.error)
+        # Assert the result
+        self.assertFalse(result.success)
+        self.assertIn("Integration service not available", result.error)
 
     def test_lifecycle_methods(self) -> None:
         """

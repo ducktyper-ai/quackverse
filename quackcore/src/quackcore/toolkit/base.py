@@ -46,6 +46,10 @@ class BaseQuackToolPlugin(QuackToolPluginProtocol, abc.ABC):
             name: The name of the tool
             version: The version of the tool
         """
+        # Set name and version immediately as they may be needed for error reporting
+        self._name = name
+        self._version = version
+
         # Set up default paths in case filesystem operations fail
         self._temp_dir = os.path.join(tempfile.gettempdir(), f"quack_{name}_temp")
         self._output_dir = os.path.join(tempfile.gettempdir(), f"quack_{name}_output")
@@ -58,8 +62,9 @@ class BaseQuackToolPlugin(QuackToolPluginProtocol, abc.ABC):
             # If logging setup fails, create a basic logger
             self._logger = logging.getLogger(name)
             self._logger.setLevel(logging.INFO)
-            handler = logging.StreamHandler()
-            self._logger.addHandler(handler)
+            if not self._logger.handlers:
+                handler = logging.StreamHandler()
+                self._logger.addHandler(handler)
             self._logger.warning(f"Failed to set up proper logging: {str(e)}")
 
         # Get the filesystem service
@@ -68,9 +73,6 @@ class BaseQuackToolPlugin(QuackToolPluginProtocol, abc.ABC):
         except Exception as e:
             self._logger.error(f"Failed to get filesystem service: {str(e)}")
             raise RuntimeError(f"Failed to initialize filesystem service: {str(e)}")
-
-        self._name = name
-        self._version = version
 
         # Create a temporary directory for this tool
         try:
