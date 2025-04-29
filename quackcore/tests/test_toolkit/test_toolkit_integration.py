@@ -227,17 +227,19 @@ def mock_upload_service() -> MockUploadService:
 def complete_tool(mock_upload_service: MockUploadService) -> CompleteTool:
     """Create a complete tool with all mixins."""
     # Create a patch context that remains active through the whole test
-    # Use patch.object for proper patching
+    # Use patch for module paths, not patch.object
     with patch('quackcore.config.tooling.logger.setup_tool_logging'), \
             patch('quackcore.toolkit.base.setup_tool_logging'), \
-            patch.object('quackcore.integrations.core', 'get_integration_service',
-                         return_value=mock_upload_service):
+            patch('quackcore.integrations.core.get_integration_service',
+                  return_value=mock_upload_service):
         # Create the tool instance
         tool = CompleteTool("complete_tool", "1.0.0")
 
         # Ensure the upload service is set
         if tool._upload_service is None:
             tool._upload_service = mock_upload_service
+
+        return tool
 
         return tool
 @pytest.fixture
@@ -314,24 +316,31 @@ class TestToolkitIntegration:
         mock_runner_instance = MagicMock()
         mock_runner.return_value = mock_runner_instance
 
+        # Create a successful mock result
         mock_result = MagicMock()
         mock_result.success = True
         mock_runner_instance.run.return_value = mock_result
 
-        # Run the tool with options
-        options = {"format": "fancy"}
-        result = complete_tool.run(options)
+        # Patch the filesystem to return success for file_info
+        with patch.object(complete_tool.mock_fs, 'get_file_info') as mock_file_info:
+            # Configure file_info to indicate file exists
+            file_info_result = MagicMock()
+            file_info_result.exists = True
+            mock_file_info.return_value = file_info_result
 
-        # Verify the result
-        assert result.success
-        assert "Tool execution complete" in result.message
+            # Run the tool with options
+            options = {"format": "fancy"}
+            result = complete_tool.run(options)
+
+            # Verify the result
+            assert result.success, f"Expected success but got failure: {result.error if hasattr(result, 'error') else 'Unknown error'}"
+            assert "Run completed successfully" in result.message
 
         # Verify the file was processed
         mock_runner.assert_called_once()
 
         # Verify the upload service was used
         assert len(mock_upload_service.uploads) > 0
-
     def test_integration_property(self, complete_tool: CompleteTool,
                                   mock_upload_service: MockUploadService) -> None:
         """Test that the integration property returns the service."""

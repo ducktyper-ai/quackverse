@@ -10,7 +10,6 @@ from typing import Any, Generic, TypeVar
 
 # Import directly to ensure patching can work
 import quackcore.integrations.core
-
 from quackcore.integrations.core.base import BaseIntegrationService
 
 T = TypeVar("T", bound=BaseIntegrationService)
@@ -26,52 +25,46 @@ class IntegrationEnabledMixin(Generic[T]):
     Example:
         ```python
         class MyTool(IntegrationEnabledMixin[GoogleDriveService], BaseQuackToolPlugin):
-            def initialize_plugin(self):
+            def initialize_plugin(self) -> None:
                 self._drive = self.resolve_integration(GoogleDriveService)
-                # Now self._drive is a GoogleDriveService instance
+                # Now self._drive _and_ self._upload_service both refer to a GoogleDriveService instance
         ```
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """
-        Initialize the mixin.
-
-        This explicitly initializes the _integration_service to None
-        to avoid issues with class variable sharing across instances.
-        """
-        # Set instance attribute (not class attribute)
+        # Prepare both generic and upload‐specific attributes
         self._integration_service: T | None = None
-        # Call parent __init__
+        self._upload_service: T | None = None
         super().__init__(*args, **kwargs)
 
     def resolve_integration(self, service_type: type[T]) -> T | None:
         """
         Lazily load the integration service of the given type.
 
-        Stores the result for reuse on subsequent calls.
+        Stores the result for reuse on subsequent calls, and also exposes it
+        as `_upload_service` for tools that call `.upload_file(...)` directly.
 
         Args:
             service_type: The type of integration service to resolve
 
         Returns:
-            T | None: The resolved integration service, or None if not available
+            The resolved integration service, or None if not available
         """
-        # Use direct module reference to ensure patching works
         service = quackcore.integrations.core.get_integration_service(service_type)
 
-        # Store the service for reuse
+        # Store under the generic handle…
         self._integration_service = service
+        # …and also under the upload‐convenience handle
+        self._upload_service = service
 
-        # Initialize the service if it exists and has initialize method
-        if service is not None and hasattr(service, "initialize") and callable(
-                service.initialize):
+        # If the service wants initialization, do so
+        if service is not None and hasattr(service, "initialize") and callable(service.initialize):
             try:
                 service.initialize()
             except Exception as e:
                 if hasattr(self, "logger"):
                     self.logger.error(f"Failed to initialize integration service: {e}")
 
-        # Return the service (could be None)
         return service
 
     def get_integration_service(self) -> T | None:
@@ -79,7 +72,7 @@ class IntegrationEnabledMixin(Generic[T]):
         Get the resolved integration service.
 
         Returns:
-            T | None: The resolved integration service, or None if not resolved yet
+            The previously resolved integration service, or None
         """
         return self._integration_service
 
@@ -89,6 +82,6 @@ class IntegrationEnabledMixin(Generic[T]):
         Shortcut to get the resolved integration service.
 
         Returns:
-            T | None: The resolved integration service, or None if not resolved yet
+            The previously resolved integration service, or None
         """
         return self.get_integration_service()

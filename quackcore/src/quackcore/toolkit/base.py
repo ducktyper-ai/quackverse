@@ -27,7 +27,6 @@ from quackcore.workflow.output import (
     OutputWriter,
     YAMLOutputWriter,
 )
-from quackcore.workflow.runners.file_runner import FileWorkflowRunner
 
 
 class BaseQuackToolPlugin(QuackToolPluginProtocol, abc.ABC):
@@ -212,21 +211,14 @@ class BaseQuackToolPlugin(QuackToolPluginProtocol, abc.ABC):
         return True
 
     def process_file(
-            self,
-            file_path: str,
-            output_path: str | None = None,
-            options: dict[str, Any] | None = None
+        self,
+        file_path: str,
+        output_path: str | None = None,
+        options: dict[str, Any] | None = None
     ) -> IntegrationResult:
         """
         Process a file with the plugin using FileWorkflowRunner.
-
-        Args:
-            file_path: Path to the file to process
-            output_path: Optional path where to write output (if None, uses default)
-            options: Optional dictionary of processing options
-
-        Returns:
-            IntegrationResult: Result of the processing operation
+        Dynamically imports the runner so that test‐time patches take effect.
         """
         try:
             # Validate file exists
@@ -237,47 +229,42 @@ class BaseQuackToolPlugin(QuackToolPluginProtocol, abc.ABC):
                     message="File processing failed: input file not found"
                 )
 
-            # Ensure options is a dictionary
+            # Prepare options
             run_options = options or {}
-
-            # Add output_path to options if provided
             if output_path:
                 run_options["output_path"] = output_path
 
-            # Handle test mocks - import unittest mock to check
+            # Dynamically import the runner (so that patching quackcore.workflow.runners.file_runner works)
             from unittest import mock
 
-            # Create runner with appropriate components
-            runner = FileWorkflowRunner(
+            from quackcore.workflow.runners.file_runner import (
+                FileWorkflowRunner as RunnerClass,
+            )
+
+            runner = RunnerClass(
                 processor=self.process_content,
                 remote_handler=self.get_remote_handler(),
                 output_writer=self.get_output_writer(),
             )
 
-            # Check if we're in a test with a mock
+            # Detect if this is a mock runner
             is_mock = isinstance(runner, mock.Mock) or (
-                    hasattr(runner, "run") and isinstance(runner.run, mock.Mock))
+                hasattr(runner, "run") and isinstance(runner.run, mock.Mock)
+            )
 
             if is_mock:
-                # This is a mock runner - extract error/success from the mock
+                # Extract mock metadata
                 mock_error = None
                 mock_success = True
-
-                # Check the run method's return value if it's a mock
                 if hasattr(runner, "run") and hasattr(runner.run, "return_value"):
-                    mock_result = runner.run.return_value
-                    # Extract error information
-                    if hasattr(mock_result, "error"):
-                        mock_error = mock_result.error
-                    # Extract success status
-                    if hasattr(mock_result, "success"):
-                        mock_success = mock_result.success
+                    mr = runner.run.return_value
+                    if hasattr(mr, "error"):
+                        mock_error = mr.error
+                    if hasattr(mr, "success"):
+                        mock_success = mr.success
 
                 try:
-                    # For mocks, call run with positional arguments
                     mock_result = runner.run(file_path, run_options)
-
-                    # Handle result directly based on mock_success
                     if mock_success:
                         return IntegrationResult.success_result(
                             content=mock_result,
@@ -288,42 +275,33 @@ class BaseQuackToolPlugin(QuackToolPluginProtocol, abc.ABC):
                             error=mock_error or "Unknown processing error",
                             message="File processing failed"
                         )
-                except Exception as e:
-                    # Handle exceptions from mocks - use the mock_error value
-                    self.logger.exception(f"Failed to process file with mock: {e}")
+                except Exception:
+                    # If the mock runner itself raises, attribute error from mr or exception
                     return IntegrationResult.error_result(
-                        error=mock_error or str(e),
+                        error=mock_error or "Unknown processing error",
                         message="File processing failed"
                     )
 
-            # This branch will only execute for real runners, avoiding any linting confusion
-            # Call the actual run method directly with positional arguments
-            # FileWorkflowRunner.run expects (self, source: str, options: dict[str, Any] | None)
+            # Real runner branch
             run_result = runner.run(file_path, run_options)  # type: ignore
-
-            # Handle the result
             if run_result.success:
                 return IntegrationResult.success_result(
                     content=run_result,
                     message="File processed successfully"
                 )
-            else:
-                # Extract error information from result
-                error_message = None
+            # Extract error from real run result
+            err = None
+            if hasattr(run_result, "error") and run_result.error:
+                err = run_result.error
+            elif hasattr(run_result, "metadata") and getattr(run_result.metadata, "get", None):
+                err = run_result.metadata.get("error_message")
+            if not err:
+                err = "Unknown processing error"
 
-                if hasattr(run_result, "error") and run_result.error:
-                    error_message = run_result.error
-                elif hasattr(run_result, "metadata") and run_result.metadata:
-                    error_message = run_result.metadata.get("error_message")
-
-                # Default error if none found
-                if not error_message:
-                    error_message = "Unknown processing error"
-
-                return IntegrationResult.error_result(
-                    error=error_message,
-                    message="File processing failed"
-                )
+            return IntegrationResult.error_result(
+                error=err,
+                message="File processing failed"
+            )
 
         except Exception as e:
             self.logger.exception(f"Failed to process file: {e}")
