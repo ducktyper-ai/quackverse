@@ -13,7 +13,6 @@ import os
 from pathlib import Path
 from typing import Any
 
-from quackcore.fs.service import get_service
 from quackcore.workflow.output.base import OutputWriter
 
 # Try importing yaml, set to None if not available
@@ -89,6 +88,8 @@ class DefaultOutputWriter(OutputWriter):
             ValueError: If the data is not valid for JSON serialization
             RuntimeError: If the write operation fails
         """
+
+        from quackcore.fs.service import standalone
         # Validate the data first
         self.validate_data(data)
 
@@ -101,7 +102,7 @@ class DefaultOutputWriter(OutputWriter):
             output_path = f"{output_path}{self._extension}"
 
         # Get the filesystem service
-        fs = get_service()
+        fs = standalone
 
         # Write the data
         result = fs.write_json(output_path, data, indent=self._indent)
@@ -226,6 +227,7 @@ class YAMLOutputWriter(OutputWriter):
             RuntimeError: If the write operation fails
             ImportError: If PyYAML is not available
         """
+        from quackcore.fs.service import standalone
         # Validate the data first
         self.validate_data(data)
 
@@ -238,7 +240,7 @@ class YAMLOutputWriter(OutputWriter):
             output_path = f"{output_path}{self._extension}"
 
         # Get the filesystem service
-        fs = get_service()
+        fs = standalone
 
         # Convert data to YAML
         yaml_text = yaml.dump(data, default_flow_style=self._default_flow_style)

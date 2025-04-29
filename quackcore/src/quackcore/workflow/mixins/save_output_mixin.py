@@ -13,7 +13,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from io import StringIO
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from quackcore.workflow.output import (
     DefaultOutputWriter,
@@ -30,6 +30,8 @@ class SaveOutputMixin:
     writers to provide a consistent interface for saving data in
     different formats.
     """
+
+    _writers_cache: ClassVar[dict[str, OutputWriter]] = {}
 
     @property
     def _output_writers(self) -> dict[str, OutputWriter]:
