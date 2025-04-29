@@ -15,7 +15,6 @@ from logging import Logger
 from typing import Any
 
 from quackcore.config.tooling import setup_tool_logging
-from quackcore.fs.service import get_service
 from quackcore.integrations.core import IntegrationResult
 from quackcore.logging import get_logger
 from quackcore.plugins.protocols import QuackPluginMetadata
@@ -70,7 +69,8 @@ class BaseQuackToolPlugin(QuackToolPluginProtocol, abc.ABC):
 
         # Get the filesystem service
         try:
-            self.fs = get_service()
+            from quackcore.fs.service import standalone
+            self.fs = standalone
         except Exception as e:
             self._logger.error(f"Failed to get filesystem service: {str(e)}")
             raise RuntimeError(f"Failed to initialize filesystem service: {str(e)}")

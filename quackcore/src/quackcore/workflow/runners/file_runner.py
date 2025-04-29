@@ -86,8 +86,8 @@ class FileWorkflowRunner:
         Raises:
             WorkflowError: If reading fails.
         """
-        from quackcore.fs.service import get_service
-        fs = get_service()
+        from quackcore.fs.service import standalone
+        fs = standalone
         self.logger.debug(f"Loading content from: {input_result.path}")
         read_result = fs.read_text(str(input_result.path))
         if not read_result.success:
@@ -200,8 +200,8 @@ class FileWorkflowRunner:
                     raise WorkflowError(f"Output writer failed: {e}")
             else:
                 # Default JSON writer
-                from quackcore.fs.service import get_service
-                fs = get_service()
+                from quackcore.fs.service import standalone
+                fs = standalone
 
                 # Use temp directory if requested
                 if options.get("use_temp_dir", False):

@@ -10,7 +10,7 @@ import atexit
 import logging
 from typing import Any
 
-from quackcore.fs.service import get_service
+from quackcore.fs.service import standalone
 from quackcore.logging import LOG_LEVELS, LogLevel, configure_logger
 
 # Track file handlers for cleanup during exit
@@ -30,7 +30,7 @@ def setup_tool_logging(tool_name: str, log_level: str = "INFO") -> None:
         tool_name: The tool name, e.g. 'quackmetadata'
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
     """
-    fs = get_service()
+    fs = standalone
 
     # Normalize log level
     level_name = log_level.upper()

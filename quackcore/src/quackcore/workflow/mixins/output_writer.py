@@ -1,9 +1,9 @@
+# quackcore/src/quackcore/workflow/mixins/output_writer.py
 from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
 
-from quackcore.fs.service import get_service
 from quackcore.workflow.results import FinalResult, OutputResult
 from quackcore.workflow.runners.file_runner import WorkflowError
 
@@ -30,7 +30,8 @@ class DefaultOutputWriter:
         Raises:
             WorkflowError: If writing fails.
         """
-        fs = get_service()
+        from quackcore.fs.service import standalone
+        fs = standalone
         out_dir = options.get("output_dir", "./output")
         fs.create_directory(out_dir, exist_ok=True)
 

@@ -13,7 +13,7 @@ import re
 import time
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.fs import service as fs
+from quackcore.fs.service import standalone
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.models import ConversionDetails, ConversionMetrics
@@ -28,6 +28,7 @@ from quackcore.logging import get_logger
 
 logger = get_logger(__name__)
 
+fs = standalone
 
 def _validate_input(html_path: str, config: PandocConfig) -> int:
     """

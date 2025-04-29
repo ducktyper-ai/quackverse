@@ -1,7 +1,5 @@
 # quackcore/tests/test_workflow/mixins/test_integration_enabled.py
 
-import pytest
-from unittest.mock import MagicMock
 
 from quackcore.integrations.core.base import BaseIntegrationService
 from quackcore.workflow.mixins.integration_enabled import IntegrationEnabledMixin

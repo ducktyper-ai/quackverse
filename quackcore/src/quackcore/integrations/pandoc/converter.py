@@ -14,7 +14,6 @@ from collections.abc import Sequence
 from datetime import datetime
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.fs import service as fs
 from quackcore.fs.results import OperationResult
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.pandoc import PandocConfig
@@ -29,7 +28,6 @@ from quackcore.integrations.pandoc.protocols import (
 from quackcore.logging import get_logger
 
 logger = get_logger(__name__)
-
 
 class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
     """
@@ -77,7 +75,8 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             input_info = get_file_info(input_path)
 
             # Create output directory from the output_path (using os.path.dirname)
-            from quackcore.fs import service as fs
+            from quackcore.fs.service import standalone
+            fs = standalone
             output_dir = os.path.dirname(output_path)
             dir_result: OperationResult = fs.create_directory(output_dir, exist_ok=True)
             if not dir_result.success:
@@ -144,7 +143,8 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             IntegrationResult containing a list of successfully converted file paths (as strings).
         """
         # Use the provided output_dir, or fallback to the config value (already a string)
-        from quackcore.fs import service as fs
+        from quackcore.fs.service import standalone
+        fs = standalone
         output_directory: str = (
             output_dir if output_dir is not None else self.config.output_dir
         )
@@ -231,6 +231,8 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
         Returns:
             True if validation passes, otherwise False.
         """
+        from quackcore.fs.service import standalone
+        fs = standalone
         try:
             output_info = fs.get_file_info(output_path)
             input_info = fs.get_file_info(input_path)

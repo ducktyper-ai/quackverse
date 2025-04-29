@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from quackcore.workflow.results import FinalResult, InputResult
-from quackcore.workflow.runners.file_runner import FileWorkflowRunner, WorkflowError
+from quackcore.workflow.runners.file_runner import FileWorkflowRunner
 
 
 class StubFS:
@@ -103,7 +103,7 @@ def test_read_failure_returns_error(tmp_path: Path, patch_fs_service):
 def test_processor_exception_captured(tmp_path: Path, patch_fs_service):
     def p(content, opts): raise ValueError("fail!")
 
-    f = tmp_path / "f.txt";
+    f = tmp_path / "f.txt"
     f.write_text("x")
     runner = FileWorkflowRunner(processor=p)
     res = runner.run(str(f), options={"output_dir": str(tmp_path)})
@@ -112,7 +112,7 @@ def test_processor_exception_captured(tmp_path: Path, patch_fs_service):
 
 
 def test_use_temp_dir(tmp_path: Path, patch_fs_service):
-    f = tmp_path / "u.txt";
+    f = tmp_path / "u.txt"
     f.write_text("hi")
     runner = FileWorkflowRunner(processor=dummy_processor)
     res = runner.run(str(f), options={"use_temp_dir": True})
@@ -127,7 +127,7 @@ def test_custom_writer(monkeypatch, tmp_path: Path, patch_fs_service):
             return FinalResult(success=True, result_path=inp.with_suffix(".X"),
                                metadata={"ok": True})
 
-    f = tmp_path / "c.txt";
+    f = tmp_path / "c.txt"
     f.write_text("x")
     runner = FileWorkflowRunner(processor=dummy_processor, output_writer=W())
     res = runner.run(str(f), options={})
@@ -142,7 +142,7 @@ def test_write_error_propagates(tmp_path: Path, patch_fs_service):
     # Set the flag to make writes fail
     stub.should_fail = True
 
-    f = tmp_path / "e.txt";
+    f = tmp_path / "e.txt"
     f.write_text("x")
     runner = FileWorkflowRunner(processor=dummy_processor)
     res = runner.run(str(f), options={})

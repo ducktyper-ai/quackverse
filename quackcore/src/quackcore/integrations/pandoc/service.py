@@ -14,7 +14,6 @@ from datetime import datetime
 from typing import cast
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.fs.service import standalone
 from quackcore.integrations.core.base import BaseIntegrationService
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.pandoc.config import PandocConfig, PandocConfigProvider
@@ -30,7 +29,6 @@ from quackcore.integrations.pandoc.operations import (
 )
 from quackcore.integrations.pandoc.protocols import PandocConversionProtocol
 from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
-from quackcore.paths import service as paths
 
 logger = get_logger(__name__)
 
@@ -92,6 +90,8 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
         Returns:
             IntegrationResult: Result of initialization.
         """
+        from quackcore.fs.service import standalone
+        fs = standalone
         try:
             init_result = super().initialize()
             if not init_result.success:
@@ -122,7 +122,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             self.converter = DocumentConverter(conversion_config)
 
             # Ensure output directory exists by delegating to fs; all paths are strings.
-            result = standalone.create_directory(conversion_config.output_dir, exist_ok=True)
+            result = fs.create_directory(conversion_config.output_dir, exist_ok=True)
             if not result.success:
                 return IntegrationResult.error_result(
                     f"Failed to create output directory: {result.error}"
@@ -165,11 +165,15 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             from quackcore.paths import service as paths
             html_path = paths.resolve_project_path(html_path)
 
+            from quackcore.fs.service import standalone
+
+            fs = standalone
+
             if output_path is None and self.converter:
                 config = getattr(self.converter, "config", None)
                 if isinstance(config, PandocConfig):
                     stem = os.path.splitext(os.path.basename(html_path))[0]
-                    output_path = standalone.join_path(config.output_dir, f"{stem}.md")
+                    output_path = fs.join_path(config.output_dir, f"{stem}.md")
                 else:
                     return cast(
                         IntegrationResult[str],
@@ -223,13 +227,18 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
         try:
+            from quackcore.fs.service import standalone
+            from quackcore.paths import service as paths
+
+            fs = standalone
+
             markdown_path = paths.resolve_project_path(markdown_path)
 
             if output_path is None and self.converter:
                 config = getattr(self.converter, "config", None)
                 if isinstance(config, PandocConfig):
                     stem = os.path.splitext(os.path.basename(markdown_path))[0]
-                    output_path = standalone.join_path(config.output_dir, f"{stem}.docx")
+                    output_path = fs.join_path(config.output_dir, f"{stem}.docx")
                 else:
                     return cast(
                         IntegrationResult[str],
@@ -264,12 +273,12 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
     def convert_directory(
-        self,
-        input_dir: str,
-        output_format: str,
-        output_dir: str | None = None,
-        file_pattern: str | None = None,
-        recursive: bool = False,
+            self,
+            input_dir: str,
+            output_format: str,
+            output_dir: str | None = None,
+            file_pattern: str | None = None,
+            recursive: bool = False,
     ) -> IntegrationResult[list[str]]:
         """
         Convert all files in a directory.
@@ -291,12 +300,15 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
         try:
+            from quackcore.fs.service import standalone
+            from quackcore.paths import service as paths
+            fs = standalone
             input_dir = paths.resolve_project_path(input_dir)
-            input_dir_info = standalone.get_file_info(input_dir)
+            input_dir_info = fs.get_file_info(input_dir)
             if (
-                not input_dir_info.success
-                or not input_dir_info.exists
-                or not input_dir_info.is_dir
+                    not input_dir_info.success
+                    or not input_dir_info.exists
+                    or not input_dir_info.is_dir
             ):
                 return cast(
                     IntegrationResult[list[str]],
@@ -326,7 +338,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                     IntegrationResult.error_result("Converter not initialized"),
                 )
 
-            dir_result = standalone.create_directory(output_dir, exist_ok=True)
+            dir_result = fs.create_directory(output_dir, exist_ok=True)
             if not dir_result.success:
                 return cast(
                     IntegrationResult[list[str]],
@@ -345,7 +357,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                 )
             source_format, extension_pattern = params
 
-            find_result = standalone.find_files(input_dir, extension_pattern, recursive)
+            find_result = fs.find_files(input_dir, extension_pattern, recursive)
             if not find_result.success or not find_result.files:
                 msg = (
                     f"No matching files found in {input_dir}"
@@ -356,8 +368,10 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                     IntegrationResult[list[str]], IntegrationResult.error_result(msg)
                 )
 
+            # Convert Path objects to strings for downstream compatibility
+            file_paths: list[str] = [str(p) for p in find_result.files]
             tasks = self._create_conversion_tasks(
-                find_result.files, source_format, output_format, output_dir
+                file_paths, source_format, output_format, output_dir
             )
             if not tasks:
                 return cast(
@@ -421,15 +435,17 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
         Returns:
             list[ConversionTask]: List of conversion tasks.
         """
+        from quackcore.fs.service import standalone
+        fs = standalone
         tasks: list[ConversionTask] = []
         for file_path in files:
             try:
                 file_info: FileInfo = get_file_info(file_path, source_format)
                 stem = os.path.splitext(os.path.basename(file_path))[0]
                 if output_format == "markdown":
-                    output_file = standalone.join_path(output_dir, f"{stem}.md")
+                    output_file = fs.join_path(output_dir, f"{stem}.md")
                 else:
-                    output_file = standalone.join_path(output_dir, f"{stem}.docx")
+                    output_file = fs.join_path(output_dir, f"{stem}.docx")
                 task = ConversionTask(
                     source=file_info,
                     target_format=output_format,

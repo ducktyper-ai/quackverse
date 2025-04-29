@@ -11,13 +11,14 @@ to the quackcore.fs service.
 import time
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.fs import service as fs  # fs functions work with string paths
+from quackcore.fs.service import standalone
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.models import ConversionMetrics, FileInfo
 from quackcore.logging import get_logger
 
 logger = get_logger(__name__)
 
+fs = standalone
 
 def verify_pandoc() -> str:
     """
@@ -240,10 +241,14 @@ def get_file_info(path: str, format_hint: str | None = None) -> FileInfo:
             f"Could not convert file size to integer: {file_info.size}, using default"
         )
     modified_time: float | None = file_info.modified
+
+    # Determine format name
     if format_hint:
         format_name = format_hint
     else:
-        extension = fs.get_extension(path)
+        # Retrieve the extension result and extract its data field
+        ext_result = fs.get_extension(path)
+        extension = ext_result.data if getattr(ext_result, 'data', None) is not None else ''
         mapping: dict[str, str] = {
             "md": "markdown",
             "markdown": "markdown",
@@ -255,6 +260,7 @@ def get_file_info(path: str, format_hint: str | None = None) -> FileInfo:
             "txt": "plain",
         }
         format_name = mapping.get(extension, extension)
+
     return FileInfo(
         path=path,
         format=format_name,
@@ -262,7 +268,6 @@ def get_file_info(path: str, format_hint: str | None = None) -> FileInfo:
         modified=modified_time,
         extra_args=[],
     )
-
 
 def check_file_size(
     converted_size: int, validation_min_size: int

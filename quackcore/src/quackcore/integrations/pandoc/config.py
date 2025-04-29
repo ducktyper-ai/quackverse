@@ -17,10 +17,11 @@ from typing import Any, ClassVar
 from pydantic import BaseModel, Field, field_validator
 
 from quackcore.config.models import LoggingConfig
-from quackcore.fs import service as fs
+from quackcore.fs.service import standalone
 from quackcore.integrations.core.base import BaseConfigProvider
 from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
 
+fs = standalone
 
 class PandocOptions(BaseModel):
     """Configuration for pandoc conversion options."""

@@ -15,7 +15,6 @@ from io import StringIO
 from pathlib import Path
 from typing import Any
 
-from quackcore.fs.service import get_service
 from quackcore.workflow.output import (
     DefaultOutputWriter,
     OutputWriter,
@@ -61,6 +60,7 @@ class SaveOutputMixin:
         """
 
         def write_csv(data: Any, path: Path) -> Path:
+            from quackcore.fs.service import standalone
             if not isinstance(data, list) or not data or not isinstance(data[0], dict):
                 raise ValueError("CSV output requires a non-empty list of dictionaries")
 
@@ -72,7 +72,7 @@ class SaveOutputMixin:
 
             # Write the buffer contents to the file
             csv_content = buffer.getvalue()
-            fs = get_service()
+            fs = standalone
             result = fs.write_text(path, csv_content)
 
             if not result.success:
@@ -94,9 +94,10 @@ class SaveOutputMixin:
         """
 
         def write_text(data: Any, path: Path) -> Path:
+            from quackcore.fs.service import standalone
             # Convert output to string
             text_content = str(data)
-            fs = get_service()
+            fs = standalone
             result = fs.write_text(path, text_content)
 
             if not result.success:

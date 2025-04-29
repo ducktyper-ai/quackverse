@@ -322,12 +322,12 @@ def _check_docx_metadata(docx_path: str, source_path: str, check_links: bool) ->
     try:
         try:
             docx = importlib.import_module("docx")
-            Document = docx.Document
+            document = docx.Document
         except ImportError:
             logger.debug("python-docx not available for detailed metadata check")
             return
 
-        doc = Document(docx_path)
+        doc = document(docx_path)
         source_filename = standalone.split_path(source_path)[-1]
         source_found = False
 
