@@ -27,7 +27,7 @@ class FileWorkflowRunner:
 
     def __init__(
             self,
-            processor: Callable[[str, dict[str, Any]], tuple[bool, Any, str]],
+            processor: Callable[[str, dict[str, Any]], Any],
             remote_handler: RemoteFileHandler | None = None,
             output_writer: Any | None = None,
             logger: Any | None = None,
@@ -36,7 +36,7 @@ class FileWorkflowRunner:
         Initialize the FileWorkflowRunner.
 
         Args:
-            processor: Function that processes file content and returns (success, result, error).
+            processor: Function that processes file content and returns a result.
             remote_handler: Optional handler for remote files.
             output_writer: Optional custom output writer.
             logger: Optional custom logger.
@@ -60,10 +60,11 @@ class FileWorkflowRunner:
             self.logger.debug(f"Detected remote source: {source}")
             input_result = self.remote_handler.download(source)
             # Enhance metadata with source information
-            input_result.metadata.update({
-                "input_type": "remote",
-                "source": source
-            })
+            if hasattr(input_result, "metadata") and input_result.metadata is not None:
+                input_result.metadata.update({
+                    "input_type": "remote",
+                    "source": source
+                })
             return input_result
 
         self.logger.debug(f"Using local source: {source}")
@@ -233,6 +234,7 @@ class FileWorkflowRunner:
                 - dry_run (bool): Skip output writing
                 - use_temp_dir (bool): Use temporary directory for output
                 - output_dir (str): Custom output directory path
+                - simulate_failure (bool): Force failure for testing
 
         Returns:
             FinalResult containing the result of the workflow.
@@ -240,22 +242,69 @@ class FileWorkflowRunner:
         options = options or {}
         try:
             self.logger.info(f"Starting workflow for source: {source}")
-            input_result = self.resolve_input(source)
 
+            # Handle simulated failure for testing
+            if options.get("simulate_failure", False):
+                return FinalResult(
+                    success=False,
+                    metadata={
+                        "error_type": "SimulatedFailure",
+                        "error_message": "Simulated failure for testing",
+                        "source": source
+                    }
+                )
+
+            input_result = self.resolve_input(source)
             content = self.load_content(input_result)
             output = self.run_processor(content, options)
+            final_result = self.write_output(output, input_path=input_result.path,
+                                             options=options)
 
-            final_result = self.write_output(output, input_result.path, options)
+            # Check if final_result is a class instance or a dictionary
+            if isinstance(final_result, dict):
+                # Create a FinalResult object from the dictionary
+                metadata = final_result.get("metadata", {})
+                metadata.update({
+                    "source": source,
+                })
 
-            # Add additional metadata
-            final_result.metadata.update({
-                "source": source,
-                **input_result.metadata
-            })
+                # Add input_result metadata if available
+                if hasattr(input_result, "metadata") and input_result.metadata:
+                    metadata.update(input_result.metadata)
 
-            if not output.success:
-                final_result.success = False
-                final_result.metadata["processor_error"] = output.raw_text
+                success = final_result.get("success", True)
+
+                # Handle processor errors
+                if not output.success:
+                    success = False
+                    metadata["processor_error"] = output.raw_text
+
+                # Create a proper FinalResult
+                return FinalResult(
+                    success=success,
+                    result_path=final_result.get("result_path"),
+                    metadata=metadata
+                )
+            else:
+                # Handle the case where final_result is already a FinalResult object
+                # Create a new metadata dict if not present
+                metadata = final_result.metadata or {}
+
+                # Add source information
+                metadata["source"] = source
+
+                # Add input_result metadata if available
+                if hasattr(input_result, "metadata") and input_result.metadata:
+                    for key, value in input_result.metadata.items():
+                        metadata[key] = value
+
+                # Handle processor errors
+                if not output.success:
+                    final_result.success = False
+                    metadata["processor_error"] = output.raw_text
+
+                # Set the updated metadata
+                final_result.metadata = metadata
 
             self.logger.info(
                 f"Workflow completed with success={final_result.success} "

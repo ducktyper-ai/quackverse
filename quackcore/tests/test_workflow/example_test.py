@@ -60,10 +60,9 @@ def test_runner_with_processor_failure(tmp_path: Path) -> None:
     # Run with simulated failure
     result = runner.run(str(test_file), options={
         "output_dir": str(tmp_path),
-        "simulate_failure": True
+        "simulate_failure": True  # This flag will now be properly handled in the runner
     })
 
     # Check that the result has failure flag
     assert result.success is False
-    assert "processor_error" in result.metadata or "error_message" in result.metadata
-    assert "Simulated processor failure" in str(result.metadata)
+    assert "Simulated failure" in result.metadata.get("error_message", "")

@@ -8,7 +8,9 @@ by providing a generic interface for resolving and accessing integration service
 
 from typing import Any, Generic, TypeVar
 
-from quackcore.integrations.core import get_integration_service
+# Import directly to ensure patching can work
+import quackcore.integrations.core
+
 from quackcore.integrations.core.base import BaseIntegrationService
 
 T = TypeVar("T", bound=BaseIntegrationService)
@@ -54,27 +56,23 @@ class IntegrationEnabledMixin(Generic[T]):
         Returns:
             T | None: The resolved integration service, or None if not available
         """
-        try:
-            # Try to get the service
-            service = get_integration_service(service_type)
+        # Use direct module reference to ensure patching works
+        service = quackcore.integrations.core.get_integration_service(service_type)
 
-            # Store the service regardless of whether we're going to initialize it
-            self._integration_service = service
+        # Store the service for reuse
+        self._integration_service = service
 
-            # Initialize if the service exists and has an initialize method
-            if service is not None and hasattr(service, "initialize") and callable(
-                    getattr(service, "initialize")):
+        # Initialize the service if it exists and has initialize method
+        if service is not None and hasattr(service, "initialize") and callable(
+                service.initialize):
+            try:
                 service.initialize()
+            except Exception as e:
+                if hasattr(self, "logger"):
+                    self.logger.error(f"Failed to initialize integration service: {e}")
 
-            # Return the service (could be None)
-            return service
-        except Exception as e:
-            # Log the error if possible
-            if hasattr(self, "logger"):
-                logger = getattr(self, "logger")
-                logger.error(f"Failed to resolve integration service: {e}")
-            # Return None on error
-            return None
+        # Return the service (could be None)
+        return service
 
     def get_integration_service(self) -> T | None:
         """

@@ -24,7 +24,6 @@ from quackcore.toolkit import (
 from quackcore.workflow.output import YAMLOutputWriter
 
 # Import OutputResult from the correct location
-from quackcore.workflow.results import OutputResult
 
 
 class MockIntegrationService(BaseIntegrationService):
@@ -201,8 +200,11 @@ class TestMixinIntegration(unittest.TestCase):
         self.temp_file.close()
 
         # Create the tool instance with proper patching
-        with patch('quackcore.integrations.core.get_integration_service',
-                   return_value=self.mock_service), \
+        # Import the module directly for patching
+        import quackcore.integrations.core
+
+        with patch.object(quackcore.integrations.core, 'get_integration_service',
+                          return_value=self.mock_service), \
                 patch('importlib.import_module') as mock_import:
             # Set up mock module
             self.mock_module = MagicMock()
@@ -211,15 +213,15 @@ class TestMixinIntegration(unittest.TestCase):
             )
             mock_import.return_value = self.mock_module
 
+            # Create the tool - CompleteQuackTool needs to have _upload_service already defined
             self.tool = CompleteQuackTool()
 
-            # Manually resolve the integration service
+            # Call resolve_integration which should work now with the patching
             self.tool._service = self.tool.resolve_integration(MockIntegrationService)
 
         # Verify initialization
         self.assertTrue(self.mock_service.initialized)
         self.assertEqual(self.tool._service, self.mock_service)
-
     def tearDown(self) -> None:
         """
         Tear down test fixtures.
