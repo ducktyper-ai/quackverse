@@ -7,7 +7,7 @@ for common filesystem operations without requiring a service instance.
 """
 
 from pathlib import Path
-from typing import TypeVar
+from typing import TypeVar, cast
 
 from quackcore.fs.results import (
     DataResult,
@@ -30,14 +30,11 @@ from quackcore.fs.service.full_class import FileSystemService
 _service = None
 
 
-def get_service(self=None):
+def get_service() -> FileSystemService:
     """
     Get the global filesystem service instance.
 
     This function initializes the service on first access to avoid circular imports.
-
-    Args:
-        self: Unused parameter to satisfy property getter requirements
 
     Returns:
         FileSystemService: The global filesystem service instance
@@ -45,7 +42,7 @@ def get_service(self=None):
     global _service
     if _service is None:
         _service = create_service()
-    return _service
+    return cast(FileSystemService, _service)
 
 
 # Access the service through a property to ensure lazy initialization

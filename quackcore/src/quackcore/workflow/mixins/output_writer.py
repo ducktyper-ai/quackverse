@@ -1,4 +1,3 @@
-# quackcore/src/quackcore/workflow/mixins/output_writer.py
 from __future__ import annotations
 
 from pathlib import Path
@@ -29,12 +28,19 @@ class DefaultOutputWriter:
             FinalResult containing the path to the written file.
 
         Raises:
-            RuntimeError: If writing fails.
+            WorkflowError: If writing fails.
         """
         fs = get_service()
         out_dir = options.get("output_dir", "./output")
         fs.create_directory(out_dir, exist_ok=True)
-        out_path = Path(out_dir) / f"{input_path.stem}.json"
+
+        # Determine output format and extension
+        is_text = isinstance(result.content, str)
+        output_format = "text" if is_text else "json"
+        extension = ".txt" if is_text else ".json"
+
+        # Use the same extension as input file for text content
+        out_path = Path(out_dir) / f"{input_path.stem}{extension}"
 
         # Handle different content types
         if hasattr(result.content, "model_dump"):
@@ -43,9 +49,6 @@ class DefaultOutputWriter:
             data = result.content
         else:
             data = str(result.content)
-
-        # Determine output format
-        output_format = "json" if isinstance(data, dict) else "text"
 
         # Write as JSON or text depending on content type
         write_result = (

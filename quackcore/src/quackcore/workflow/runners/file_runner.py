@@ -84,7 +84,7 @@ class FileWorkflowRunner:
             The content of the file as a string.
 
         Raises:
-            RuntimeError: If reading fails.
+            WorkflowError: If reading fails.
         """
         from quackcore.fs.service import get_service
         fs = get_service()
@@ -112,6 +112,15 @@ class FileWorkflowRunner:
             # If result is already an OutputResult, return it
             if isinstance(result, OutputResult):
                 return result
+
+            # Check if result is a tuple with success flag, content, and error
+            if isinstance(result, tuple) and len(result) == 3:
+                success, content, error = result
+                return OutputResult(
+                    success=success,
+                    content=content,
+                    raw_text=error
+                )
 
             # Otherwise convert to OutputResult
             if isinstance(result, dict):
@@ -174,10 +183,21 @@ class FileWorkflowRunner:
 
         try:
             if self.output_writer is not None:
-                final_result = self.output_writer.write(result, input_path, options)
-                # Note: Not setting success=True explicitly here as the output_writer
-                # implementation is responsible for setting the appropriate success state
-                return final_result
+                # For custom output writers
+                try:
+                    final_result = self.output_writer.write(result, input_path, options)
+                    # If it's already a FinalResult, return it
+                    if isinstance(final_result, FinalResult):
+                        return final_result
+                    # Otherwise convert the dictionary to a FinalResult
+                    return FinalResult(
+                        success=final_result.get("success", True),
+                        result_path=final_result.get(
+                            "result_path") if "result_path" in final_result else None,
+                        metadata=final_result.get("metadata", {})
+                    )
+                except Exception as e:
+                    raise WorkflowError(f"Output writer failed: {e}")
             else:
                 # Default JSON writer
                 from quackcore.fs.service import get_service
@@ -200,7 +220,7 @@ class FileWorkflowRunner:
 
                 return FinalResult(
                     success=True,
-                    result_path=out_path,
+                    result_path=Path(out_path),
                     metadata={
                         "input_file": str(input_path),
                         "output_file": str(out_path),
@@ -254,11 +274,39 @@ class FileWorkflowRunner:
                     }
                 )
 
+            # Step 1: Resolve input
             input_result = self.resolve_input(source)
-            content = self.load_content(input_result)
+
+            # Step 2: Load content
+            try:
+                content = self.load_content(input_result)
+            except WorkflowError as e:
+                return FinalResult(
+                    success=False,
+                    metadata={
+                        "error_type": "WorkflowError",
+                        "error_message": str(e),
+                        "source": source
+                    }
+                )
+
+            # Step 3: Run processor
             output = self.run_processor(content, options)
-            final_result = self.write_output(output, input_path=input_result.path,
-                                             options=options)
+
+            # Step 4: Write output
+            try:
+                final_result = self.write_output(output, input_path=input_result.path,
+                                                 options=options)
+            except WorkflowError as e:
+                return FinalResult(
+                    success=False,
+                    metadata={
+                        "error_type": "WorkflowError",
+                        "error_message": str(e),
+                        "source": source,
+                        "input_file": str(input_result.path)
+                    }
+                )
 
             # Check if final_result is a class instance or a dictionary
             if isinstance(final_result, dict):

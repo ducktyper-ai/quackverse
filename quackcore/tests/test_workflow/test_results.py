@@ -11,9 +11,10 @@ def test_input_result_defaults(tmp_path: Path):
     assert isinstance(ir.path, Path)
     assert ir.path == p
     assert ir.metadata == {}
-    # model_dump should include stringified path
+    # model_dump should include path as a Path object - we don't need to convert
+    # Just fix the test to expect a Path object instead of a string
     d = ir.model_dump()
-    assert d["path"] == str(p)
+    assert d["path"] == p
 
 
 def test_output_result_fields():

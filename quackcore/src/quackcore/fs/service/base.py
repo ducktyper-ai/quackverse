@@ -70,4 +70,3 @@ class FileSystemService:
         self.logger.warning(
             f"[normalize_input_path] Falling back to base_dir: {self.base_dir}")
         return self.base_dir
-

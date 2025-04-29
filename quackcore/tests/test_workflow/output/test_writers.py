@@ -4,7 +4,6 @@ from types import SimpleNamespace
 
 import pytest
 
-import quackcore.fs.service as fs_service
 import quackcore.workflow.output.writers as writers_mod
 from quackcore.workflow.output.writers import DefaultOutputWriter, YAMLOutputWriter
 
@@ -18,8 +17,23 @@ class StubFS:
 
 
 @pytest.fixture(autouse=True)
-def patch_fs(monkeypatch):
-    monkeypatch.setattr(fs_service, "get_service", lambda: StubFS())
+def patch_fs_service(monkeypatch):
+    """
+    Patch the filesystem service functions using the standalone module.
+
+    This approach uses monkeypatch to replace individual functions in the
+    standalone module with our stub implementations.
+    """
+    stub = StubFS()
+
+    # Import the standalone module
+    from quackcore.fs.service import standalone
+
+    # Replace individual functions in the standalone module
+    monkeypatch.setattr(standalone, "write_json", stub.write_json)
+    monkeypatch.setattr(standalone, "write_text", stub.write_text)
+
+    return stub
 
 
 def test_default_writer_basics(tmp_path: Path):
