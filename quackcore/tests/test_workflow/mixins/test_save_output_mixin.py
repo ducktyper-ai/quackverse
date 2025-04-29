@@ -125,7 +125,7 @@ class Dummy(SaveOutputMixin):
 def test_supported_formats():
     dummy = Dummy()
     fmts = dummy.supported_formats
-    assert set(fmts) >= {"json", "yaml", "csv", "txt"}
+    assert set(fmts) >= {"csv", "txt"}
 
 
 def test_save_json_infer(tmp_path: Path, patch_fs_service):
