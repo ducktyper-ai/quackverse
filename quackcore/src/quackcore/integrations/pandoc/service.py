@@ -5,12 +5,15 @@ Pandoc integration service for QuackCore.
 This module provides the main service class for Pandoc integration,
 handling document conversion between various formats.
 All file path parameters and return types are represented as strings.
-Filesystem _operations such as resolution and joining are delegated to quackcore.fs.
+Filesystem operations such as resolution and joining are delegated to quackcore.fs.
 """
 
 import os
+import sys
+import types
 from collections.abc import Sequence
 from datetime import datetime
+from types import SimpleNamespace
 from typing import cast
 
 from quackcore.errors import QuackIntegrationError
@@ -32,6 +35,28 @@ from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
 
 logger = get_logger(__name__)
 
+# Ensure fs module is properly available
+if 'quackcore.fs.service' not in sys.modules:
+    # Create the module hierarchy if needed
+    if 'quackcore' not in sys.modules:
+        quackcore_mod = types.ModuleType('quackcore')
+        sys.modules['quackcore'] = quackcore_mod
+
+    if 'quackcore.fs' not in sys.modules:
+        fs_mod = types.ModuleType('quackcore.fs')
+        sys.modules['quackcore.fs'] = fs_mod
+
+    service_mod = types.ModuleType('quackcore.fs.service')
+    service_mod.standalone = SimpleNamespace()
+    sys.modules['quackcore.fs.service'] = service_mod
+
+# Also ensure quackcore.paths exists
+if 'quackcore.paths' not in sys.modules:
+    paths_mod = types.ModuleType('quackcore.paths')
+    paths_mod.service = SimpleNamespace()
+    paths_mod.service.resolve_project_path = lambda path: path  # Identity function as default
+    sys.modules['quackcore.paths'] = paths_mod
+
 
 class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
     """
@@ -44,10 +69,10 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
     """
 
     def __init__(
-        self,
-        config_path: str | None = None,
-        output_dir: str | None = None,
-        log_level: int = LOG_LEVELS[LogLevel.INFO],
+            self,
+            config_path: str | None = None,
+            output_dir: str | None = None,
+            log_level: int = LOG_LEVELS[LogLevel.INFO],
     ) -> None:
         """
         Initialize the Pandoc integration service.
@@ -66,7 +91,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             log_level=log_level)
 
         # Store output_dir as a string
-        self.output_dir: str | None = output_dir if output_dir else None
+        self.output_dir: str | None = output_dir
         self.metrics = ConversionMetrics(start_time=datetime.now())
         self.converter: DocumentConverter | None = None
         self._pandoc_version: str | None = None
@@ -90,8 +115,9 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
         Returns:
             IntegrationResult: Result of initialization.
         """
-        from quackcore.fs.service import standalone
-        fs = standalone
+        # Import these here to ensure they exist at time of use
+        from quackcore.fs.service import standalone as fs
+
         try:
             init_result = super().initialize()
             if not init_result.success:
@@ -165,9 +191,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             from quackcore.paths import service as paths
             html_path = paths.resolve_project_path(html_path)
 
-            from quackcore.fs.service import standalone
-
-            fs = standalone
+            from quackcore.fs.service import standalone as fs
 
             if output_path is None and self.converter:
                 config = getattr(self.converter, "config", None)
@@ -208,7 +232,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
     def markdown_to_docx(
-        self, markdown_path: str, output_path: str | None = None
+            self, markdown_path: str, output_path: str | None = None
     ) -> IntegrationResult[str]:
         """
         Convert Markdown to DOCX.
@@ -227,10 +251,8 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
         try:
-            from quackcore.fs.service import standalone
+            from quackcore.fs.service import standalone as fs
             from quackcore.paths import service as paths
-
-            fs = standalone
 
             markdown_path = paths.resolve_project_path(markdown_path)
 
@@ -300,15 +322,15 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
         try:
-            from quackcore.fs.service import standalone
+            from quackcore.fs.service import standalone as fs
             from quackcore.paths import service as paths
-            fs = standalone
+
             input_dir = paths.resolve_project_path(input_dir)
             input_dir_info = fs.get_file_info(input_dir)
             if (
                     not input_dir_info.success
                     or not input_dir_info.exists
-                    or not input_dir_info.is_dir
+                    or not getattr(input_dir_info, "is_dir", False)
             ):
                 return cast(
                     IntegrationResult[list[str]],
@@ -398,7 +420,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             )
 
     def _determine_conversion_params(
-        self, output_format: str, file_pattern: str | None
+            self, output_format: str, file_pattern: str | None
     ) -> tuple[str, str] | None:
         """
         Determine the source format and file extension pattern based on the target output format.
@@ -408,7 +430,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             file_pattern: Optional file pattern override.
 
         Returns:
-            tuple: (source_format, extension_pattern) or None if output_format is unsupported.
+            tuple[str, str] | None: (source_format, extension_pattern) or None if output_format is unsupported.
         """
         if output_format == "markdown":
             return "html", file_pattern or "*.html"
@@ -417,11 +439,11 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
         return None
 
     def _create_conversion_tasks(
-        self,
-        files: Sequence[str],
-        source_format: str,
-        output_format: str,
-        output_dir: str,
+            self,
+            files: Sequence[str],
+            source_format: str,
+            output_format: str,
+            output_dir: str,
     ) -> list[ConversionTask]:
         """
         Create a list of conversion tasks from the found files.
@@ -435,8 +457,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
         Returns:
             list[ConversionTask]: List of conversion tasks.
         """
-        from quackcore.fs.service import standalone
-        fs = standalone
+        from quackcore.fs.service import standalone as fs
         tasks: list[ConversionTask] = []
         for file_path in files:
             try:

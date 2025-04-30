@@ -6,8 +6,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from quackcore.fs.service import standalone
-
 
 # Fixtures for monkeypatching filesystem service
 @pytest.fixture(autouse=True)
@@ -15,6 +13,24 @@ def fs_stub(monkeypatch):
     """
     Stub out the quackcore.fs.service.standalone methods for file operations.
     """
+    import sys
+    import types
+
+    # Create a module structure if it doesn't exist
+    if 'quackcore.fs.service' not in sys.modules:
+        # Create the module hierarchy
+        if 'quackcore' not in sys.modules:
+            quackcore_mod = types.ModuleType('quackcore')
+            sys.modules['quackcore'] = quackcore_mod
+
+        if 'quackcore.fs' not in sys.modules:
+            fs_mod = types.ModuleType('quackcore.fs')
+            sys.modules['quackcore.fs'] = fs_mod
+
+        service_mod = types.ModuleType('quackcore.fs.service')
+        sys.modules['quackcore.fs.service'] = service_mod
+
+    # Create the stub with all necessary methods
     stub = SimpleNamespace()
     # Default get_file_info returns success, exists, size, modified
     stub.get_file_info = lambda path: SimpleNamespace(
@@ -41,7 +57,10 @@ def fs_stub(monkeypatch):
     stub.find_files = lambda dir_path, pattern, recursive=False: SimpleNamespace(
         success=True, files=["file1.html", "file2.html"]
     )
-    monkeypatch.setattr(standalone, '__dict__', stub.__dict__)
+
+    # Set the standalone attribute directly in the sys.modules
+    sys.modules['quackcore.fs.service'].standalone = stub
+
     return stub
 
 

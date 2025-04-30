@@ -1,7 +1,7 @@
 # quackcore/tests/test_integrations/pandoc/operations/test_utils.py
 import time
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -123,24 +123,24 @@ def test_validate_html_structure(mock_bs4):
 
 def test_validate_docx_structure(mock_docx):
     """Test validation of DOCX document structure."""
-    # Valid DOCX
-    valid, errors = validate_docx_structure("test.docx")
-    assert valid
-    assert not errors
+    with patch('sys.modules', {'docx': mock_docx}):
+        # Valid DOCX
+        valid, errors = validate_docx_structure("test.docx")
+        assert valid
+        assert not errors
 
-    # Empty DOCX
-    mock_docx.Document.return_value.paragraphs = []
-    invalid, errors = validate_docx_structure("empty.docx")
-    assert not invalid
-    assert "no paragraphs" in errors[0].lower()
+        # Empty DOCX
+        mock_docx.Document.return_value.paragraphs = []
+        valid, errors = validate_docx_structure("empty.docx")
+        assert not valid
+        assert "no paragraphs" in errors[0].lower()
 
-    # ImportError handling
-    if 'docx' in pytest.importorskip("sys").modules:
-        pytest.importorskip("sys").modules.pop('docx')
-    valid, errors = validate_docx_structure("test.docx")
-    assert valid  # Falls back to True if module not available
-    assert not errors
-
+    # Test with docx not installed - ensure docx is not in modules
+    with patch.dict('sys.modules', {}, clear=True):  # Clear modules
+        # This should skip validation and return true when docx module is not available
+        valid, errors = validate_docx_structure("test.docx")
+        assert valid
+        assert not errors
 
 def test_check_file_size():
     """Test validation of file size."""

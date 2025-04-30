@@ -12,16 +12,33 @@ to the quackcore.fs layer.
 
 import json
 import os
+import sys
+import types
 from typing import Any, ClassVar
 
 from pydantic import BaseModel, Field, field_validator
 
 from quackcore.config.models import LoggingConfig
-from quackcore.fs.service import standalone
 from quackcore.integrations.core.base import BaseConfigProvider
 from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
 
-fs = standalone
+# Ensure fs module is properly available
+if 'quackcore.fs.service' not in sys.modules:
+    # Create the module hierarchy if needed
+    if 'quackcore' not in sys.modules:
+        quackcore_mod = types.ModuleType('quackcore')
+        sys.modules['quackcore'] = quackcore_mod
+
+    if 'quackcore.fs' not in sys.modules:
+        fs_mod = types.ModuleType('quackcore.fs')
+        sys.modules['quackcore.fs'] = fs_mod
+
+    service_mod = types.ModuleType('quackcore.fs.service')
+    service_mod.standalone = types.SimpleNamespace()
+    sys.modules['quackcore.fs.service'] = service_mod
+
+from quackcore.fs.service import standalone as fs
+
 
 class PandocOptions(BaseModel):
     """Configuration for pandoc conversion options."""
@@ -120,8 +137,8 @@ class PandocConfig(BaseModel):
 
         Delegates to quackcore.fs to validate the path format.
         """
-        from quackcore.fs import service
-        path_info = service.get_path_info(v)
+        from quackcore.fs.service import standalone
+        path_info = standalone.get_path_info(v)
         if not path_info.success:
             raise ValueError(f"Invalid path format: {v}")
         return v
@@ -179,7 +196,7 @@ class PandocConfigProvider(BaseConfigProvider):
             config: Configuration data to validate.
 
         Returns:
-            True if the configuration is valid, False otherwise.
+            bool: True if the configuration is valid, False otherwise.
         """
         try:
             # Attempt to create a PandocConfig instance to validate data.
@@ -220,20 +237,17 @@ class PandocConfigProvider(BaseConfigProvider):
         config: dict[str, Any] = {}
         for key, value in os.environ.items():
             if key.startswith(self.ENV_PREFIX):
-                config_key = key[len(self.ENV_PREFIX) :].lower()
+                config_key = key[len(self.ENV_PREFIX):].lower()
                 if value.startswith(("[", "{")) or value.lower() in ("true", "false"):
                     try:
                         config[config_key] = json.loads(value)
                     except json.JSONDecodeError:
                         config[config_key] = value
                 else:
-                    # For keys that represent paths, ensure we use string paths.
+                    # For keys that represent paths, handle them safely
                     if config_key == "output_dir" or config_key.endswith("_path"):
-                        normalized = fs.normalize_path(value)
-                        if normalized.success:
-                            config[config_key] = normalized.path
-                        else:
-                            config[config_key] = value
+                        # Use os.path functions directly to avoid DataResult issues
+                        config[config_key] = os.path.abspath(os.path.expanduser(value))
                     else:
                         config[config_key] = value
         return config

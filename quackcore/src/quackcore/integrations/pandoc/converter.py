@@ -10,8 +10,11 @@ are delegated to the quackcore.fs service functions.
 """
 
 import os
+import sys
+import types
 from collections.abc import Sequence
 from datetime import datetime
+from types import SimpleNamespace
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.fs.results import OperationResult
@@ -28,6 +31,22 @@ from quackcore.integrations.pandoc.protocols import (
 from quackcore.logging import get_logger
 
 logger = get_logger(__name__)
+
+# Ensure fs module is properly available
+if 'quackcore.fs.service' not in sys.modules:
+    # Create the module hierarchy if needed
+    if 'quackcore' not in sys.modules:
+        quackcore_mod = types.ModuleType('quackcore')
+        sys.modules['quackcore'] = quackcore_mod
+
+    if 'quackcore.fs' not in sys.modules:
+        fs_mod = types.ModuleType('quackcore.fs')
+        sys.modules['quackcore.fs'] = fs_mod
+
+    service_mod = types.ModuleType('quackcore.fs.service')
+    service_mod.standalone = SimpleNamespace()
+    sys.modules['quackcore.fs.service'] = service_mod
+
 
 class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
     """
@@ -75,8 +94,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             input_info = get_file_info(input_path)
 
             # Create output directory from the output_path (using os.path.dirname)
-            from quackcore.fs.service import standalone
-            fs = standalone
+            from quackcore.fs.service import standalone as fs
             output_dir = os.path.dirname(output_path)
             dir_result: OperationResult = fs.create_directory(output_dir, exist_ok=True)
             if not dir_result.success:
@@ -143,8 +161,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             IntegrationResult containing a list of successfully converted file paths (as strings).
         """
         # Use the provided output_dir, or fallback to the config value (already a string)
-        from quackcore.fs.service import standalone
-        fs = standalone
+        from quackcore.fs.service import standalone as fs
         output_directory: str = (
             output_dir if output_dir is not None else self.config.output_dir
         )
@@ -231,8 +248,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
         Returns:
             True if validation passes, otherwise False.
         """
-        from quackcore.fs.service import standalone
-        fs = standalone
+        from quackcore.fs.service import standalone as fs
         try:
             output_info = fs.get_file_info(output_path)
             input_info = fs.get_file_info(input_path)

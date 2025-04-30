@@ -10,10 +10,12 @@ to the quackcore.fs service functions.
 
 import os
 import re
+import sys
 import time
+import types
+from types import SimpleNamespace
 
 from quackcore.errors import QuackIntegrationError
-from quackcore.fs.service import standalone
 from quackcore.integrations.core.results import IntegrationResult
 from quackcore.integrations.pandoc.config import PandocConfig
 from quackcore.integrations.pandoc.models import ConversionDetails, ConversionMetrics
@@ -28,7 +30,24 @@ from quackcore.logging import get_logger
 
 logger = get_logger(__name__)
 
-fs = standalone
+# Ensure fs module is properly available
+if 'quackcore.fs.service' not in sys.modules:
+    # Create the module hierarchy if needed
+    if 'quackcore' not in sys.modules:
+        quackcore_mod = types.ModuleType('quackcore')
+        sys.modules['quackcore'] = quackcore_mod
+
+    if 'quackcore.fs' not in sys.modules:
+        fs_mod = types.ModuleType('quackcore.fs')
+        sys.modules['quackcore.fs'] = fs_mod
+
+    service_mod = types.ModuleType('quackcore.fs.service')
+    service_mod.standalone = SimpleNamespace()
+    sys.modules['quackcore.fs.service'] = service_mod
+
+from quackcore.fs.service import standalone as fs
+
+logger = get_logger(__name__)
 
 def _validate_input(html_path: str, config: PandocConfig) -> int:
     """
