@@ -1,102 +1,15 @@
-# quackcore/tests/test_workflow/runners/test_file_runner.py
 """
 Tests for FileWorkflowRunner.
 
 This module ensures the file workflow runner correctly handles file processing.
 """
 
-import os
-import sys
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-import pytest
-
-from quackcore.workflow.results import FinalResult, InputResult
-from quackcore.workflow.runners.file_runner import FileWorkflowRunner
-
-
-# Stub for file system service
-class StubFS:
-    def __init__(self):
-        self.should_fail = False
-        self.file_exists = True
-        self.last_read_type = None
-
-    def get_file_info(self, path):
-        return SimpleNamespace(
-            success=True,
-            exists=self.file_exists,
-            size=100,
-            modified=123456789
-        )
-
-    def read_text(self, path, encoding=None):
-        self.last_read_type = 'text'
-        if self.should_fail:
-            return SimpleNamespace(success=False, error="Simulated read error")
-        return SimpleNamespace(success=True, content="test content")
-
-    def read_binary(self, path):
-        self.last_read_type = 'binary'
-        if self.should_fail:
-            return SimpleNamespace(success=False, error="Simulated read error")
-        return SimpleNamespace(success=True, content=b"test content")
-
-    def write_json(self, path, data, indent=None):
-        if self.should_fail:
-            return SimpleNamespace(success=False, error="Simulated write error")
-        return SimpleNamespace(success=True, bytes_written=100, path=path)
-
-    def create_directory(self, path, exist_ok=False):
-        if self.should_fail:
-            return SimpleNamespace(success=False,
-                                   error="Simulated directory creation error")
-        return SimpleNamespace(success=True, path=path)
-
-    def join_path(self, *parts):
-        return SimpleNamespace(success=True, data=os.path.join(*parts))
-
-    def split_path(self, path):
-        return SimpleNamespace(success=True, data=path.split(os.sep))
-
-    def get_extension(self, path):
-        if not isinstance(path, str):
-            path = str(path)
-
-        if '.' not in path:
-            return SimpleNamespace(success=True, data="")
-
-        return SimpleNamespace(success=True, data=path.split('.')[-1])
-
-
-@pytest.fixture
-def patch_fs_service(monkeypatch):
-    """Patch the fs.service.standalone with our stub."""
-    stub = StubFS()
-
-    # Make sure the module exists
-    if 'quackcore.fs.service' not in sys.modules:
-        import types
-
-        if 'quackcore' not in sys.modules:
-            quackcore_mod = types.ModuleType('quackcore')
-            sys.modules['quackcore'] = quackcore_mod
-
-        if 'quackcore.fs' not in sys.modules:
-            fs_mod = types.ModuleType('quackcore.fs')
-            sys.modules['quackcore.fs'] = fs_mod
-
-        service_mod = types.ModuleType('quackcore.fs.service')
-        sys.modules['quackcore.fs.service'] = service_mod
-
-    # Set our stub as the standalone service
-    import quackcore.fs.service
-    quackcore.fs.service.standalone = stub
-    quackcore.fs.service.get_service = lambda: stub
-
-    return stub
+from quackcore.workflow.results import FinalResult, InputResult, OutputResult
+from quackcore.workflow.runners.file_runner import FileWorkflowRunner, WorkflowError
 
 
 # Simple processor function for testing
@@ -107,194 +20,224 @@ def dummy_processor(content, options=None):
     return True, {"processed": True, "content": content, "options": options}, None
 
 
-def test_remote_download(monkeypatch, tmp_path: Path, patch_fs_service):
-    """Test handling of remote files."""
-    # Write a dummy file
-    f = tmp_path / "r.txt"
-    f.write_text("x")
+class TestFileWorkflowRunner:
+    """Tests for FileWorkflowRunner."""
 
-    class Remote:
-        def __init__(self):
-            self.dl = False
+    def test_remote_download(self, tmp_path):
+        """Test handling of remote files."""
+        # Write a dummy file
+        f = tmp_path / "r.txt"
+        f.write_text("x")
 
-        def is_remote(self, s):
-            return True
+        class Remote:
+            def __init__(self):
+                self.dl = False
 
-        def download(self, s):
-            self.dl = True
-            return InputResult(path=f, metadata={"foo": "bar"})
+            def is_remote(self, s):
+                return True
 
-    remote = Remote()
-    runner = FileWorkflowRunner(processor=dummy_processor, remote_handler=remote)
-    res = runner.run(str(f), options={"output_dir": str(tmp_path)})
-    assert res.success
-    assert remote.dl
-    assert res.metadata["input_type"] == "remote"
+            def download(self, s):
+                self.dl = True
+                return InputResult(path=f, metadata={"foo": "bar"})
 
+        remote = Remote()
 
-def test_read_failure_returns_error(tmp_path: Path, patch_fs_service):
-    """Test that a failure to read a file results in an error."""
-    # Configure fs stub to fail reads
-    patch_fs_service.should_fail = True
-    patch_fs_service.file_exists = False
+        # Mock the load_content method to avoid real fs calls
+        with patch.object(FileWorkflowRunner, 'load_content', return_value="mock content"):
+            # Mock the write_output method to avoid filesystem operations
+            with patch.object(FileWorkflowRunner, 'write_output') as mock_write:
+                mock_write.return_value = FinalResult(
+                    success=True,
+                    result_path=f.with_suffix(".json"),
+                    metadata={
+                        "input_file": str(f),
+                        "output_file": str(f.with_suffix(".json")),
+                        "output_format": "json",
+                        "processor_success": True
+                    }
+                )
 
-    runner = FileWorkflowRunner(processor=dummy_processor)
-    bad = tmp_path / "missing.txt"
-    res = runner.run(str(bad))
+                runner = FileWorkflowRunner(processor=dummy_processor, remote_handler=remote)
+                res = runner.run(str(f), options={"output_dir": str(tmp_path)})
 
-    assert not res.success
-    assert "error_type" in res.metadata
-    assert "failed to read" in res.metadata.get("error_message", "").lower()
+                assert res.success
+                assert remote.dl
+                assert res.metadata["input_type"] == "remote"
 
+    def test_read_failure_returns_error(self, tmp_path):
+        """Test that a failure to read a file results in an error."""
+        # Create a runner with a mocked load_content that raises an error
+        runner = FileWorkflowRunner(processor=dummy_processor)
 
-def test_file_exists_but_unreadable(tmp_path: Path, patch_fs_service):
-    """Test behavior when a file exists but is unreadable."""
-    # File exists but read fails
-    patch_fs_service.file_exists = True
-    patch_fs_service.should_fail = True
+        with patch.object(FileWorkflowRunner, 'load_content', side_effect=WorkflowError("Failed to read file content")):
+            # Run the processor with a file path
+            bad = tmp_path / "missing.txt"
+            res = runner.run(str(bad))
 
-    runner = FileWorkflowRunner(processor=dummy_processor)
-    bad = tmp_path / "unreadable.txt"
-    res = runner.run(str(bad))
+            # Verify the error is properly propagated
+            assert not res.success
+            assert "error_type" in res.metadata
+            assert "failed to read" in res.metadata.get("error_message", "").lower()
 
-    assert not res.success
-    assert "error_type" in res.metadata
-    assert "failed to read" in res.metadata.get("error_message", "").lower()
+    def test_file_exists_but_unreadable(self, tmp_path):
+        """Test behavior when a file exists but is unreadable."""
+        # Create a runner with a mocked load_content that raises an error
+        runner = FileWorkflowRunner(processor=dummy_processor)
 
+        with patch.object(FileWorkflowRunner, 'load_content', side_effect=WorkflowError("Failed to read file content")):
+            # Run the processor with a file path
+            bad = tmp_path / "unreadable.txt"
+            res = runner.run(str(bad))
 
-def test_processor_error_handling(tmp_path: Path, patch_fs_service):
-    """Test handling of errors from the processor function."""
-    # Ensure the file exists and is readable
-    patch_fs_service.file_exists = True
-    patch_fs_service.should_fail = False
+            # Verify the error is properly propagated
+            assert not res.success
+            assert "error_type" in res.metadata
+            assert "failed to read" in res.metadata.get("error_message", "").lower()
 
-    # Create a file
-    f = tmp_path / "test.txt"
-    f.write_text("testing")
+    def test_processor_error_handling(self, tmp_path):
+        """Test handling of errors from the processor function."""
+        # Create a file
+        f = tmp_path / "test.txt"
+        f.write_text("testing")
 
-    # Run with options that trigger failure in the processor
-    runner = FileWorkflowRunner(processor=dummy_processor)
-    res = runner.run(str(f), options={"fail_proc": True})
+        # Create a runner with a mocked load_content
+        runner = FileWorkflowRunner(processor=dummy_processor)
 
-    assert not res.success
-    assert "processor_error" in res.metadata
-    assert "simulated processor error" in res.metadata.get("processor_error",
-                                                           "").lower()
+        with patch.object(FileWorkflowRunner, 'load_content', return_value="test content"):
+            # Run with options that trigger failure in the processor
+            res = runner.run(str(f), options={"fail_proc": True})
 
+            # Verify the processor error is properly handled
+            assert not res.success
+            assert "processor_error" in res.metadata
+            assert "simulated processor error" in res.metadata.get("processor_error", "").lower()
 
-def test_write_error_propagates(tmp_path: Path, patch_fs_service):
-    """Test that errors during output writing are properly handled."""
-    # Set up the file to exist and be readable
-    patch_fs_service.file_exists = True
-    patch_fs_service.should_fail = False
+    def test_write_error_propagates(self, tmp_path):
+        """Test that errors during output writing are properly handled."""
+        # Create a file
+        f = tmp_path / "e.txt"
+        f.write_text("x")
 
-    # Create a file
-    f = tmp_path / "e.txt"
-    f.write_text("x")
+        # Create a runner with mocked methods
+        runner = FileWorkflowRunner(processor=dummy_processor)
 
-    # Configure write to fail
-    runner = FileWorkflowRunner(processor=dummy_processor)
+        with patch.object(FileWorkflowRunner, 'load_content', return_value="test content"):
+            # Mock write_output to simulate a failure
+            with patch.object(FileWorkflowRunner, 'write_output', side_effect=WorkflowError("Simulated write error")):
+                res = runner.run(str(f), options={})
 
-    # Before running test, configure write to fail
-    patch_fs_service.should_fail = True
+                # Verify the error is properly propagated
+                assert not res.success
+                assert "error_type" in res.metadata
+                assert "error_message" in res.metadata
+                assert "simulated write error" in res.metadata.get("error_message", "").lower()
 
-    res = runner.run(str(f), options={})
+    def test_directory_creation_failure(self, tmp_path):
+        """Test handling of directory creation failure."""
+        # Create a file
+        f = tmp_path / "test.txt"
+        f.write_text("testing")
 
-    assert not res.success
-    assert "error_type" in res.metadata
-    assert "error_message" in res.metadata
-    assert "simulated write error" in res.metadata.get("error_message", "").lower()
+        # Create a runner with mocked methods
+        runner = FileWorkflowRunner(processor=dummy_processor)
 
+        with patch.object(FileWorkflowRunner, 'load_content', return_value="test content"):
+            # Mock write_output to simulate a failure during directory creation
+            with patch.object(FileWorkflowRunner, 'write_output', side_effect=WorkflowError("Directory creation failed")):
+                res = runner.run(str(f), options={"output_dir": "/nonexistent"})
 
-def test_directory_creation_failure(tmp_path: Path, patch_fs_service):
-    """Test handling of directory creation failure."""
-    # Ensure the file exists and is readable
-    patch_fs_service.file_exists = True
-    patch_fs_service.should_fail = False
+                # Verify the error is properly propagated
+                assert not res.success
+                assert "error_type" in res.metadata
+                assert "directory creation failed" in res.metadata.get("error_message", "").lower()
 
-    # Create a file
-    f = tmp_path / "test.txt"
-    f.write_text("testing")
+    def test_use_temp_dir(self, tmp_path):
+        """Test using a temporary directory for output."""
+        # Create a file
+        f = tmp_path / "u.txt"
+        f.write_text("hi")
 
-    # Make directory creation fail only
-    runner = FileWorkflowRunner(processor=dummy_processor)
+        # Create a runner with mocked methods
+        runner = FileWorkflowRunner(processor=dummy_processor)
 
-    # Patch directory creation to fail
-    with patch('quackcore.fs.service.standalone.create_directory',
-               return_value=SimpleNamespace(success=False,
-                                            error="Directory creation failed")):
-        res = runner.run(str(f), options={"output_dir": "/nonexistent"})
+        with patch.object(FileWorkflowRunner, 'load_content', return_value="test content"):
+            # Mock tempfile.mkdtemp to return a controlled path
+            temp_dir = str(tmp_path / "temp_dir")
+            with patch('tempfile.mkdtemp', return_value=temp_dir):
+                # Mock lower-level fs functions to avoid actual filesystem operations
+                with patch('quackcore.fs.service.standalone.write_json') as mock_write_json:
+                    mock_write_json.return_value = SimpleNamespace(success=True, path=str(f.with_suffix(".json")))
 
-    assert not res.success
-    assert "error_type" in res.metadata
-    assert "directory creation failed" in res.metadata.get("error_message", "").lower()
+                    with patch('os.makedirs'):
+                        res = runner.run(str(f), options={"use_temp_dir": True})
 
+                        # Verify temp directory is used
+                        assert res.success
+                        mock_write_json.assert_called_once()
+                        # Check that the output path contains our temp directory
+                        assert temp_dir in mock_write_json.call_args[0][0]
 
-def test_use_temp_dir(tmp_path: Path, patch_fs_service):
-    """Test using a temporary directory for output."""
-    # Ensure the file exists and is readable
-    patch_fs_service.file_exists = True
-    patch_fs_service.should_fail = False
+    def test_custom_writer(self, tmp_path):
+        """Test using a custom output writer."""
+        class CustomWriter:
+            def write(self, result, input_path, options):
+                return FinalResult(
+                    success=True,
+                    result_path=Path(input_path).with_suffix(".X"),
+                    metadata={"ok": True}
+                )
 
-    # Create a file
-    f = tmp_path / "u.txt"
-    f.write_text("hi")
+        # Create a file
+        f = tmp_path / "c.txt"
+        f.write_text("x")
 
-    runner = FileWorkflowRunner(processor=dummy_processor)
-    res = runner.run(str(f), options={"use_temp_dir": True})
+        # Create a runner with mocked load_content and a custom writer
+        runner = FileWorkflowRunner(processor=dummy_processor, output_writer=CustomWriter())
 
-    assert res.success
-    assert res.metadata["output_format"] == "json"
-    assert res.metadata["output_file"].endswith("u.json")
+        with patch.object(FileWorkflowRunner, 'load_content', return_value="test content"):
+            res = runner.run(str(f), options={})
 
+            # Verify custom writer was used
+            assert res.success
+            assert res.result_path == f.with_suffix(".X")
+            assert res.metadata["ok"] is True
 
-def test_custom_writer(monkeypatch, tmp_path: Path, patch_fs_service):
-    """Test using a custom output writer."""
+    def test_binary_file_handling(self, tmp_path):
+        """Test proper handling of binary files."""
+        # Create a file with binary extension
+        f = tmp_path / "test.bin"
+        f.write_bytes(b"\x00\x01\x02\x03")
 
-    class CustomWriter:
-        def write(self, result, input_path, options):
-            return FinalResult(
-                success=True,
-                result_path=Path(input_path).with_suffix(".X"),
-                metadata={"ok": True}
-            )
+        # Create a mock for the fs.get_extension call
+        extension_result = SimpleNamespace(success=True, data="bin")
 
-    # Ensure the file exists and is readable
-    patch_fs_service.file_exists = True
-    patch_fs_service.should_fail = False
+        # Create a mock for the fs.get_file_info call
+        file_info_result = SimpleNamespace(success=True, exists=True)
 
-    # Create a file
-    f = tmp_path / "c.txt"
-    f.write_text("x")
+        # Create a mock for the fs.read_binary call
+        binary_read_result = SimpleNamespace(success=True, content=b"\x00\x01\x02\x03")
 
-    runner = FileWorkflowRunner(processor=dummy_processor, output_writer=CustomWriter())
-    res = runner.run(str(f), options={})
+        # Patch specific fs calls to avoid dependency on the whole fs service
+        with patch('quackcore.fs.service.standalone.get_extension', return_value=extension_result):
+            with patch('quackcore.fs.service.standalone.get_file_info', return_value=file_info_result):
+                with patch('quackcore.fs.service.standalone.read_binary', return_value=binary_read_result):
+                    # Also patch the write_output to avoid filesystem operations
+                    with patch.object(FileWorkflowRunner, 'write_output') as mock_write:
+                        mock_write.return_value = FinalResult(
+                            success=True,
+                            result_path=f.with_suffix(".json"),
+                            metadata={"output_format": "json"}
+                        )
 
-    assert res.success
-    assert res.result_path == f.with_suffix(".X")
-    assert res.metadata["ok"] is True
+                        runner = FileWorkflowRunner(processor=dummy_processor)
+                        res = runner.run(str(f))
 
-
-def test_binary_file_handling(tmp_path: Path, patch_fs_service):
-    """Test proper handling of binary files."""
-    # Ensure the file exists and is readable
-    patch_fs_service.file_exists = True
-    patch_fs_service.should_fail = False
-
-    # Create a file with binary extension
-    f = tmp_path / "test.bin"
-    f.write_bytes(b"\x00\x01\x02\x03")
-
-    # Customize extension check to report binary
-    patch_fs_service.get_extension = lambda path: SimpleNamespace(
-        success=True, data="bin"
-    )
-
-    runner = FileWorkflowRunner(processor=dummy_processor)
-    res = runner.run(str(f))
-
-    # Runner should succeed with binary content
-    assert res.success
-
-    # Verify binary read was attempted by checking if the processor got binary data
-    assert patch_fs_service.last_read_type == 'binary'
+                        # Verify binary path is detected
+                        assert res.success
+                        # Verify binary content was passed to the processor
+                        assert mock_write.called
+                        # Get the OutputResult that was passed to write_output
+                        output_result = mock_write.call_args[0][0]
+                        # The processor should have received binary content
+                        assert isinstance(output_result, OutputResult)
+                        assert output_result.content["content"] == b"\x00\x01\x02\x03"

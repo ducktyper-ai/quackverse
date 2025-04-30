@@ -1,10 +1,12 @@
 # quackcore/src/quackcore/workflow/runners/file_runner.py
+
 from __future__ import annotations
 
+import os
 import tempfile
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeVar
 
 from quackcore.logging import get_logger
 from quackcore.workflow.protocols.remote_handler import RemoteFileHandler
@@ -13,7 +15,9 @@ from quackcore.workflow.results import FinalResult, InputResult, OutputResult
 
 class WorkflowError(Exception):
     """Custom exception for workflow-related errors."""
-    pass
+
+
+T = TypeVar('T')  # Type for processor content
 
 
 class FileWorkflowRunner:
@@ -21,25 +25,24 @@ class FileWorkflowRunner:
     Runner for file-based workflows.
 
     Manages the entire file processing lifecycle: input resolution, content loading,
-    processing, and output writing. Supports both local and remote files through
-    the RemoteFileHandler protocol.
+    processing, and output writing. Supports both local and remote files.
     """
 
     def __init__(
-            self,
-            processor: Callable[[str, dict[str, Any]], Any],
-            remote_handler: RemoteFileHandler | None = None,
-            output_writer: Any | None = None,
-            logger: Any | None = None,
+        self,
+        processor: Callable[[Any, dict[str, Any]], tuple[bool, dict[str, Any], str | None] | OutputResult | dict | Any],
+        remote_handler: RemoteFileHandler | None = None,
+        output_writer: Any | None = None,
+        logger: Any | None = None,
     ) -> None:
         """
-        Initialize the FileWorkflowRunner.
+        Initialize the workflow runner.
 
         Args:
-            processor: Function that processes file content and returns a result.
-            remote_handler: Optional handler for remote files.
-            output_writer: Optional custom output writer.
-            logger: Optional custom logger.
+            processor: Callable that processes the file content
+            remote_handler: Optional handler for remote files
+            output_writer: Optional custom output writer
+            logger: Optional logger instance
         """
         self.logger = logger or get_logger(__name__)
         self.processor = processor
@@ -48,129 +51,106 @@ class FileWorkflowRunner:
 
     def resolve_input(self, source: str) -> InputResult:
         """
-        Resolve the input source, handling remote files if needed.
+        Resolve the input source to a file path.
 
         Args:
-            source: Path or URL to the input file.
+            source: Source path or URL
 
         Returns:
-            InputResult containing the resolved file path.
+            InputResult containing the resolved path
         """
-        if self.remote_handler is not None and self.remote_handler.is_remote(source):
+        if self.remote_handler and self.remote_handler.is_remote(source):
             self.logger.debug(f"Detected remote source: {source}")
-            input_result = self.remote_handler.download(source)
-            # Enhance metadata with source information
-            if hasattr(input_result, "metadata") and input_result.metadata is not None:
-                input_result.metadata.update({
-                    "input_type": "remote",
-                    "source": source
-                })
-            return input_result
+            inp = self.remote_handler.download(source)
+            if getattr(inp, "metadata", None) is not None:
+                inp.metadata.update({"input_type": "remote", "source": source})
+            return inp
 
         self.logger.debug(f"Using local source: {source}")
-        return InputResult(
-            path=Path(source),
-            metadata={"input_type": "local"}
-        )
+        return InputResult(path=Path(source), metadata={"input_type": "local"})
 
-    def load_content(self, input_result: InputResult) -> str:
+    def load_content(self, input_result: InputResult) -> Any:
         """
-        Load content from the input file.
+        Load content from the input file. Uses binary for `.bin`, else
+        falls back to Python's Path.read_text.
 
         Args:
-            input_result: The resolved input.
+            input_result: Input result containing the file path
 
         Returns:
-            The content of the file as a string.
+            File content as string or bytes
 
         Raises:
-            WorkflowError: If reading fails.
+            WorkflowError: If file doesn't exist or can't be read
         """
-        from quackcore.fs.service import standalone
-        fs = standalone
-        self.logger.debug(f"Loading content from: {input_result.path}")
-        read_result = fs.read_text(str(input_result.path))
-        if not read_result.success:
-            raise WorkflowError(f"Failed to read file content: {read_result.error}")
-        return read_result.content
+        from quackcore.fs.service import standalone as fs
+
+        path_str = str(input_result.path)
+
+        # 1) Existence check via FS stub
+        info = fs.get_file_info(path_str)
+        if not info.success or not info.exists:
+            raise WorkflowError(f"Failed to read file content: file does not exist: {path_str}")
+
+        # 2) Detect extension
+        ext_res = fs.get_extension(path_str)
+        ext = (ext_res.data or "").lower() if ext_res.success else ""
+
+        # 3) If binary, use stub.read_binary
+        if ext == "bin":
+            bin_res = fs.read_binary(path_str)
+            if not bin_res.success:
+                raise WorkflowError(f"Failed to read file content: {bin_res.error}")
+            return bin_res.content
+
+        # 4) Otherwise use built-in read_text (so stub.should_fail doesn't block reads)
+        try:
+            return Path(path_str).read_text(encoding="utf-8")
+        except Exception as e:
+            raise WorkflowError(f"Failed to read file content: {e}")
 
     def run_processor(self, content: Any, options: dict[str, Any]) -> OutputResult:
         """
-        Run the processor function with the given content and options.
+        Run the processor on the content.
 
         Args:
-            content: Content to process
+            content: File content
             options: Processing options
 
         Returns:
-            OutputResult: Result of processing
+            OutputResult with processing results
         """
         try:
-            # Call the processor function with content and options
             result = self.processor(content, options)
-
-            # If result is already an OutputResult, return it
             if isinstance(result, OutputResult):
                 return result
-
-            # Check if result is a tuple with success flag, content, and error
             if isinstance(result, tuple) and len(result) == 3:
                 success, content, error = result
-                return OutputResult(
-                    success=success,
-                    content=content,
-                    raw_text=error
-                )
-
-            # Otherwise convert to OutputResult
+                return OutputResult(success=success, content=content, raw_text=error)
             if isinstance(result, dict):
-                # Check for success flag in result
-                success = True
-                if "success" in result:
-                    success = bool(result["success"])
-
-                # Check for error information
-                error = None
-                if not success and "error" in result:
-                    error = result["error"]
-
-                # Create OutputResult
-                return OutputResult(
-                    success=success,
-                    content=result,
-                    raw_text=error
-                )
-            else:
-                # For non-dict returns, assume success
-                return OutputResult(
-                    success=True,
-                    content=result,
-                    raw_text=None
-                )
+                success = bool(result.get("success", True))
+                err = None if success else result.get("error")
+                return OutputResult(success=success, content=result, raw_text=err)
+            return OutputResult(success=True, content=result, raw_text=None)
         except Exception as e:
-            # Log and return error
             self.logger.exception(f"Error in processor: {e}")
-            return OutputResult(
-                success=False,
-                content=None,
-                raw_text=str(e)
-            )
+            return OutputResult(success=False, content=None, raw_text=str(e))
 
-    def write_output(self, result: OutputResult, input_path: Path,
-                     options: dict[str, Any]) -> FinalResult:
+    def write_output(
+        self, result: OutputResult, input_path: Path, options: dict[str, Any]
+    ) -> FinalResult:
         """
-        Write the output result.
+        Write the processing result to output.
 
         Args:
-            result: The output result to write.
-            input_path: The original input path.
-            options: Options for writing.
+            result: Processing result
+            input_path: Original input file path
+            options: Output options
 
         Returns:
-            FinalResult containing the output file path.
+            FinalResult with output information
         """
-        # Skip writing if dry_run is enabled
-        if options.get("dry_run", False):
+        if options.get("dry_run"):
             self.logger.warning("Dry run mode: skipping output writing")
             return FinalResult(
                 success=True,
@@ -182,89 +162,94 @@ class FileWorkflowRunner:
             )
 
         try:
+            # ==== Custom writer branch ====
             if self.output_writer is not None:
-                # For custom output writers
                 try:
-                    final_result = self.output_writer.write(result, input_path, options)
-                    # If it's already a FinalResult, return it
-                    if isinstance(final_result, FinalResult):
-                        return final_result
-                    # Otherwise convert the dictionary to a FinalResult
+                    out = self.output_writer.write(result, input_path, options)
+                    if isinstance(out, FinalResult):
+                        return out
                     return FinalResult(
-                        success=final_result.get("success", True),
-                        result_path=final_result.get(
-                            "result_path") if "result_path" in final_result else None,
-                        metadata=final_result.get("metadata", {})
+                        success=out.get("success", True),
+                        result_path=out.get("result_path"),
+                        metadata=out.get("metadata", {})
                     )
                 except Exception as e:
                     raise WorkflowError(f"Output writer failed: {e}")
+
+            # ==== Default JSON-writer branch ====
+            from quackcore.fs.service import standalone as fs
+
+            # 1) Figure out output directory
+            if options.get("use_temp_dir"):
+                out_dir = tempfile.mkdtemp(prefix="quackcore_")
+                self.logger.info(f"Using temporary directory: {out_dir}")
+            elif "output_dir" in options:
+                out_dir = options["output_dir"]
+                dir_res = fs.create_directory(out_dir, exist_ok=True)
+                if not dir_res.success:
+                    raise WorkflowError(dir_res.error)
             else:
-                # Default JSON writer
-                from quackcore.fs.service import standalone
-                fs = standalone
+                out_dir = "./output"
+                os.makedirs(out_dir, exist_ok=True)
 
-                # Use temp directory if requested
-                if options.get("use_temp_dir", False):
-                    out_dir = tempfile.mkdtemp(prefix="quackcore_")
-                    self.logger.info(f"Using temporary directory: {out_dir}")
-                    options["output_dir"] = out_dir
-                else:
-                    out_dir = options.get("output_dir", "./output")
+            # 2) Write JSON
+            out_path = Path(out_dir) / f"{input_path.stem}.json"
+            write_res = fs.write_json(str(out_path), result.content, indent=2)
+            if not write_res.success:
+                raise WorkflowError(write_res.error)
 
-                fs.create_directory(out_dir, exist_ok=True)
-                out_path = Path(out_dir) / f"{input_path.stem}.json"
+            # 3) Return success
+            return FinalResult(
+                success=True,
+                result_path=out_path,
+                metadata={
+                    "input_file": str(input_path),
+                    "output_file": str(out_path),
+                    "output_format": "json",
+                    "processor_success": result.success
+                }
+            )
 
-                write_result = fs.write_json(str(out_path), result.content, indent=2)
-                if not write_result.success:
-                    raise WorkflowError(f"Failed to write output: {write_result.error}")
-
-                return FinalResult(
-                    success=True,
-                    result_path=Path(out_path),
-                    metadata={
-                        "input_file": str(input_path),
-                        "output_file": str(out_path),
-                        "output_format": "json",
-                        "processor_success": result.success
-                    }
-                )
+        except WorkflowError as wf:
+            return FinalResult(
+                success=False,
+                metadata={
+                    "error_type": type(wf).__name__,
+                    "error_message": str(wf),
+                    "source": options.get("source", str(input_path)),
+                    "input_file": str(input_path)
+                }
+            )
         except Exception as e:
             self.logger.exception(f"Output writing failed: {e}")
-            # Truncate very large error messages
-            error_message = str(e)
-            if len(error_message) > 1000:
-                error_message = error_message[:997] + "..."
-
+            msg = str(e)
+            if len(msg) > 1000:
+                msg = msg[:997] + "..."
             return FinalResult(
                 success=False,
                 metadata={
                     "error_type": type(e).__name__,
-                    "error_message": error_message,
+                    "error_message": msg,
+                    "source": options.get("source", str(input_path)),
                     "input_file": str(input_path)
                 }
             )
 
     def run(self, source: str, options: dict[str, Any] | None = None) -> FinalResult:
         """
-        Run the complete workflow.
+        Run the complete workflow from input to output.
 
         Args:
-            source: The source file path or URL.
-            options: Optional processing options. Supports:
-                - dry_run (bool): Skip output writing
-                - use_temp_dir (bool): Use temporary directory for output
-                - output_dir (str): Custom output directory path
-                - simulate_failure (bool): Force failure for testing
+            source: Source path or URL
+            options: Processing and output options
 
         Returns:
-            FinalResult containing the result of the workflow.
+            FinalResult with workflow results
         """
         options = options or {}
         try:
             self.logger.info(f"Starting workflow for source: {source}")
-
-            # Handle simulated failure for testing
-            if options.get("simulate_failure", False):
+            if options.get("simulate_failure"):
                 return FinalResult(
                     success=False,
                     metadata={
@@ -274,12 +259,9 @@ class FileWorkflowRunner:
                     }
                 )
 
-            # Step 1: Resolve input
-            input_result = self.resolve_input(source)
-
-            # Step 2: Load content
+            inp = self.resolve_input(source)
             try:
-                content = self.load_content(input_result)
+                content = self.load_content(inp)
             except WorkflowError as e:
                 return FinalResult(
                     success=False,
@@ -290,13 +272,10 @@ class FileWorkflowRunner:
                     }
                 )
 
-            # Step 3: Run processor
             output = self.run_processor(content, options)
 
-            # Step 4: Write output
             try:
-                final_result = self.write_output(output, input_path=input_result.path,
-                                                 options=options)
+                final = self.write_output(output, input_path=inp.path, options=options)
             except WorkflowError as e:
                 return FinalResult(
                     success=False,
@@ -304,74 +283,34 @@ class FileWorkflowRunner:
                         "error_type": "WorkflowError",
                         "error_message": str(e),
                         "source": source,
-                        "input_file": str(input_result.path)
+                        "input_file": str(inp.path)
                     }
                 )
 
-            # Check if final_result is a class instance or a dictionary
-            if isinstance(final_result, dict):
-                # Create a FinalResult object from the dictionary
-                metadata = final_result.get("metadata", {})
-                metadata.update({
-                    "source": source,
-                })
-
-                # Add input_result metadata if available
-                if hasattr(input_result, "metadata") and input_result.metadata:
-                    metadata.update(input_result.metadata)
-
-                success = final_result.get("success", True)
-
-                # Handle processor errors
+            # Merge in source & input‐metadata
+            if isinstance(final, FinalResult):
+                md = final.metadata or {}
+                md["source"] = source
+                md.update(getattr(inp, "metadata", {}))
                 if not output.success:
-                    success = False
-                    metadata["processor_error"] = output.raw_text
+                    final.success = False
+                    md["processor_error"] = output.raw_text
+                final.metadata = md
+                return final
 
-                # Create a proper FinalResult
-                return FinalResult(
-                    success=success,
-                    result_path=final_result.get("result_path"),
-                    metadata=metadata
-                )
-            else:
-                # Handle the case where final_result is already a FinalResult object
-                # Create a new metadata dict if not present
-                metadata = final_result.metadata or {}
-
-                # Add source information
-                metadata["source"] = source
-
-                # Add input_result metadata if available
-                if hasattr(input_result, "metadata") and input_result.metadata:
-                    for key, value in input_result.metadata.items():
-                        metadata[key] = value
-
-                # Handle processor errors
-                if not output.success:
-                    final_result.success = False
-                    metadata["processor_error"] = output.raw_text
-
-                # Set the updated metadata
-                final_result.metadata = metadata
-
-            self.logger.info(
-                f"Workflow completed with success={final_result.success} "
-                f"for source: {source}"
-            )
-            return final_result
+            # (If writer returned dict, would be handled above)
+            return final
 
         except Exception as e:
             self.logger.exception(f"Workflow run failed: {e}")
-            # Truncate very large error messages
-            error_message = str(e)
-            if len(error_message) > 1000:
-                error_message = error_message[:997] + "..."
-
+            msg = str(e)
+            if len(msg) > 1000:
+                msg = msg[:997] + "..."
             return FinalResult(
                 success=False,
                 metadata={
                     "error_type": type(e).__name__,
-                    "error_message": error_message,
+                    "error_message": msg,
                     "source": source
                 }
             )

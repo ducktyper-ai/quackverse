@@ -25,7 +25,6 @@ class CliOptions(BaseModel):
     and control runtime behavior like logging and debugging.
     """
 
-    # Instead of using pathlib.Path, we use str here.
     config_path: str | None = Field(
         default=None, description="Path to configuration file"
     )
@@ -51,8 +50,8 @@ def resolve_cli_args(args: Sequence[str]) -> dict[str, object]:
     """
     Parse common CLI arguments into a dictionary.
 
-    This function is useful for libraries that want to handle standard
-    QuackCore CLI arguments without using a full argument parser.
+    CLI overrides are parsed, and positional arguments are collected under the
+    empty string key "".
 
     Args:
         args: Sequence of command-line arguments
@@ -61,32 +60,71 @@ def resolve_cli_args(args: Sequence[str]) -> dict[str, object]:
         Dictionary of parsed arguments
     """
     result: dict[str, object] = {}
+    pos: list[str] = []
     i = 0
+    separator = False
+    # Long option names treated as boolean flags
+    flag_names = {"debug", "verbose", "quiet", "no-color", "help", "version"}
+
     while i < len(args):
         arg = args[i]
+        # After '--', everything is positional
+        if separator:
+            pos.append(arg)
+            i += 1
+            continue
+        # Handle '--' separator
+        if arg == "--":
+            separator = True
+            i += 1
+            continue
+        # Long options: --name or --name=value
         if arg.startswith("--"):
-            name = arg[2:]
-            if "=" in name:
-                name, value = name.split("=", 1)
+            name_val = arg[2:]
+            # --name=value
+            if "=" in name_val:
+                name, value = name_val.split("=", 1)
                 result[name] = value
                 i += 1
                 continue
-            if name in ("debug", "verbose", "quiet", "no-color"):
+            name = name_val
+            # Boolean flag
+            if name in flag_names:
                 result[name] = True
                 i += 1
                 continue
+            # Option with separate value
             if i + 1 < len(args) and not args[i + 1].startswith("--"):
                 result[name] = args[i + 1]
                 i += 2
                 continue
+            # Fallback to boolean
             result[name] = True
             i += 1
             continue
-        elif arg.startswith("-") and len(arg) == 2:
-            flag_map = {"d": "debug", "v": "verbose", "q": "quiet"}
-            name = flag_map.get(arg[1], arg[1])
-            result[name] = True
-            i += 1
+        # Short options: -abc or -a
+        if (
+            arg.startswith("-")
+            and len(arg) > 1
+            and not arg.startswith("--")
+            and all(c.isalpha() for c in arg[1:])
+        ):
+            chars = list(arg[1:])
+            # Process all but last as flags
+            for c in chars[:-1]:
+                result[c] = True
+            last = chars[-1]
+            # Last char consumes the next token as its value, if present
+            if i + 1 < len(args):
+                result[last] = args[i + 1]
+                i += 2
+            else:
+                result[last] = True
+                i += 1
             continue
+        # Positional argument
+        pos.append(arg)
         i += 1
+    if pos:
+        result[""] = pos
     return result

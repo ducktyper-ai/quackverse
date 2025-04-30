@@ -6,7 +6,6 @@ This module exports the FileSystemService class and provides utility functions
 for common filesystem operations without requiring a service instance.
 """
 
-from pathlib import Path
 from typing import TypeVar, cast
 
 from quackcore.fs.results import (
