@@ -9,11 +9,8 @@ Filesystem _operations such as resolution and joining are delegated to quackcore
 """
 
 import os
-import sys
-import types
 from collections.abc import Sequence
 from datetime import datetime
-from types import SimpleNamespace
 from typing import cast
 
 from quackcore.errors import QuackIntegrationError
@@ -34,29 +31,6 @@ from quackcore.integrations.pandoc.protocols import PandocConversionProtocol
 from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
 
 logger = get_logger(__name__)
-
-# Ensure fs module is properly available
-if 'quackcore.fs.service' not in sys.modules:
-    # Create the module hierarchy if needed
-    if 'quackcore' not in sys.modules:
-        quackcore_mod = types.ModuleType('quackcore')
-        sys.modules['quackcore'] = quackcore_mod
-
-    if 'quackcore.fs' not in sys.modules:
-        fs_mod = types.ModuleType('quackcore.fs')
-        sys.modules['quackcore.fs'] = fs_mod
-
-    service_mod = types.ModuleType('quackcore.fs.service')
-    service_mod.standalone = SimpleNamespace()
-    sys.modules['quackcore.fs.service'] = service_mod
-
-# Also ensure quackcore.paths exists
-if 'quackcore.paths' not in sys.modules:
-    paths_mod = types.ModuleType('quackcore.paths')
-    paths_mod.service = SimpleNamespace()
-    paths_mod.service.resolve_project_path = lambda \
-            path: path  # Identity function as default
-    sys.modules['quackcore.paths'] = paths_mod
 
 
 class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
@@ -84,6 +58,8 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             log_level: Logging level
         """
         config_provider = PandocConfigProvider(log_level)
+
+        # Initialize parent class
         super().__init__(
             config_provider=config_provider,
             auth_provider=None,
@@ -96,6 +72,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
         self.metrics = ConversionMetrics(start_time=datetime.now())
         self.converter: DocumentConverter | None = None
         self._pandoc_version: str | None = None
+        self._config_loaded = False
 
     @property
     def name(self) -> str:
@@ -120,6 +97,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
         from quackcore.fs.service import standalone as fs
 
         try:
+            # Call parent initialization
             init_result = super().initialize()
             if not init_result.success:
                 return init_result
@@ -128,6 +106,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             config_dict = self.config or {}
             try:
                 conversion_config = PandocConfig(**config_dict)
+                self._config_loaded = True
             except Exception as e:
                 logger.error(f"Invalid configuration: {str(e)}")
                 return IntegrationResult.error_result(
@@ -138,6 +117,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             if self.output_dir:
                 conversion_config.output_dir = self.output_dir
 
+            # Verify Pandoc installation
             try:
                 self._pandoc_version = verify_pandoc()
             except QuackIntegrationError as e:
@@ -146,14 +126,21 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                     f"Pandoc verification failed: {str(e)}"
                 )
 
+            # Create converter instance
             self.converter = DocumentConverter(conversion_config)
 
-            # Ensure output directory exists by delegating to fs; all paths are strings.
-            dir_result = fs.create_directory(conversion_config.output_dir,
-                                             exist_ok=True)
-            if not dir_result.success:
+            # Ensure output directory exists
+            try:
+                dir_result = fs.create_directory(conversion_config.output_dir,
+                                                 exist_ok=True)
+                if not dir_result.success:
+                    return IntegrationResult.error_result(
+                        f"Failed to create output directory: {dir_result.error}"
+                    )
+            except Exception as dir_err:
+                logger.error(f"Failed to create output directory: {str(dir_err)}")
                 return IntegrationResult.error_result(
-                    f"Failed to create output directory: {dir_result.error}"
+                    f"Failed to create output directory: {str(dir_err)}"
                 )
 
             self._initialized = True
@@ -191,37 +178,53 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
         try:
             # Use paths service to resolve project paths
             from quackcore.paths import service as paths
-            html_path = paths.resolve_project_path(html_path)
+
+            try:
+                html_path = paths.resolve_project_path(html_path)
+            except Exception as e:
+                # If path resolution fails, use the original path
+                logger.warning(f"Failed to resolve project path: {str(e)}")
 
             from quackcore.fs.service import standalone as fs
 
-            if output_path is None and self.converter:
+            # Handle output path
+            if output_path is None and self.converter and hasattr(self.converter,
+                                                                  "config"):
                 config = getattr(self.converter, "config", None)
                 if isinstance(config, PandocConfig):
-                    # Extract the basename from the path using fs.split_path
-                    split_result = fs.split_path(html_path)
-                    if not split_result.success:
+                    # Extract the basename from the path
+                    try:
+                        split_result = fs.split_path(html_path)
+                        if not split_result.success:
+                            return cast(
+                                IntegrationResult[str],
+                                IntegrationResult.error_result(
+                                    f"Failed to extract filename from path: {split_result.error}"
+                                ),
+                            )
+
+                        # Get the filename and remove extension
+                        filename = split_result.data[-1]
+                        stem = os.path.splitext(filename)[0]
+
+                        # Join with output directory
+                        join_result = fs.join_path(config.output_dir, f"{stem}.md")
+                        if not join_result.success:
+                            return cast(
+                                IntegrationResult[str],
+                                IntegrationResult.error_result(
+                                    f"Failed to join output path: {join_result.error}"
+                                ),
+                            )
+
+                        output_path = join_result.data
+                    except Exception as path_err:
                         return cast(
                             IntegrationResult[str],
                             IntegrationResult.error_result(
-                                f"Failed to extract filename from path: {split_result.error}"
+                                f"Failed to determine output path: {str(path_err)}"
                             ),
                         )
-
-                    # Get the filename from the path components (last element)
-                    stem = os.path.splitext(split_result.data[-1])[0]
-
-                    # Join the output directory with the filename
-                    join_result = fs.join_path(config.output_dir, f"{stem}.md")
-                    if not join_result.success:
-                        return cast(
-                            IntegrationResult[str],
-                            IntegrationResult.error_result(
-                                f"Failed to join output path: {join_result.error}"
-                            ),
-                        )
-
-                    output_path = join_result.data
                 else:
                     return cast(
                         IntegrationResult[str],
@@ -230,7 +233,12 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                         ),
                     )
             elif output_path:
-                output_path = paths.resolve_project_path(output_path)
+                # Resolve output path if provided
+                try:
+                    output_path = paths.resolve_project_path(output_path)
+                except Exception as e:
+                    # If resolution fails, use the original path
+                    logger.warning(f"Failed to resolve output path: {str(e)}")
             else:
                 return cast(
                     IntegrationResult[str],
@@ -278,35 +286,51 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             from quackcore.fs.service import standalone as fs
             from quackcore.paths import service as paths
 
-            markdown_path = paths.resolve_project_path(markdown_path)
+            # Resolve markdown path
+            try:
+                markdown_path = paths.resolve_project_path(markdown_path)
+            except Exception as e:
+                # If resolution fails, use the original path
+                logger.warning(f"Failed to resolve project path: {str(e)}")
 
-            if output_path is None and self.converter:
+            # Handle output path
+            if output_path is None and self.converter and hasattr(self.converter,
+                                                                  "config"):
                 config = getattr(self.converter, "config", None)
                 if isinstance(config, PandocConfig):
-                    # Extract the basename from the path using fs.split_path
-                    split_result = fs.split_path(markdown_path)
-                    if not split_result.success:
+                    # Extract the basename from the path
+                    try:
+                        split_result = fs.split_path(markdown_path)
+                        if not split_result.success:
+                            return cast(
+                                IntegrationResult[str],
+                                IntegrationResult.error_result(
+                                    f"Failed to extract filename from path: {split_result.error}"
+                                ),
+                            )
+
+                        # Get the filename and remove extension
+                        filename = split_result.data[-1]
+                        stem = os.path.splitext(filename)[0]
+
+                        # Join with output directory
+                        join_result = fs.join_path(config.output_dir, f"{stem}.docx")
+                        if not join_result.success:
+                            return cast(
+                                IntegrationResult[str],
+                                IntegrationResult.error_result(
+                                    f"Failed to join output path: {join_result.error}"
+                                ),
+                            )
+
+                        output_path = join_result.data
+                    except Exception as path_err:
                         return cast(
                             IntegrationResult[str],
                             IntegrationResult.error_result(
-                                f"Failed to extract filename from path: {split_result.error}"
+                                f"Failed to determine output path: {str(path_err)}"
                             ),
                         )
-
-                    # Get the filename from the path components (last element)
-                    stem = os.path.splitext(split_result.data[-1])[0]
-
-                    # Join the output directory with the filename
-                    join_result = fs.join_path(config.output_dir, f"{stem}.docx")
-                    if not join_result.success:
-                        return cast(
-                            IntegrationResult[str],
-                            IntegrationResult.error_result(
-                                f"Failed to join output path: {join_result.error}"
-                            ),
-                        )
-
-                    output_path = join_result.data
                 else:
                     return cast(
                         IntegrationResult[str],
@@ -315,7 +339,12 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                         ),
                     )
             elif output_path:
-                output_path = paths.resolve_project_path(output_path)
+                # Resolve output path if provided
+                try:
+                    output_path = paths.resolve_project_path(output_path)
+                except Exception as e:
+                    # If resolution fails, use the original path
+                    logger.warning(f"Failed to resolve output path: {str(e)}")
             else:
                 return cast(
                     IntegrationResult[str],
@@ -371,12 +400,19 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             from quackcore.fs.service import standalone as fs
             from quackcore.paths import service as paths
 
-            input_dir = paths.resolve_project_path(input_dir)
+            # Resolve input directory path
+            try:
+                input_dir = paths.resolve_project_path(input_dir)
+            except Exception as e:
+                # If resolution fails, use the original path
+                logger.warning(f"Failed to resolve project path: {str(e)}")
+
+            # Check if input directory exists
             input_dir_info = fs.get_file_info(input_dir)
             if (
                     not input_dir_info.success
                     or not input_dir_info.exists
-                    or not input_dir_info.is_dir
+                    or not getattr(input_dir_info, 'is_dir', False)
             ):
                 return cast(
                     IntegrationResult[list[str]],
@@ -385,14 +421,17 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                     ),
                 )
 
-            if self.converter:
+            # Determine output directory
+            if self.converter and hasattr(self.converter, "config"):
                 config = getattr(self.converter, "config", None)
                 if isinstance(config, PandocConfig):
-                    output_dir = (
-                        paths.resolve_project_path(output_dir)
-                        if output_dir
-                        else config.output_dir
-                    )
+                    if output_dir:
+                        try:
+                            output_dir = paths.resolve_project_path(output_dir)
+                        except Exception as e:
+                            logger.warning(f"Failed to resolve output path: {str(e)}")
+                    else:
+                        output_dir = config.output_dir
                 else:
                     return cast(
                         IntegrationResult[list[str]],
@@ -406,6 +445,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                     IntegrationResult.error_result("Converter not initialized"),
                 )
 
+            # Create output directory if it doesn't exist
             dir_result = fs.create_directory(output_dir, exist_ok=True)
             if not dir_result.success:
                 return cast(
@@ -415,6 +455,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                     ),
                 )
 
+            # Determine conversion parameters based on output format
             params = self._determine_conversion_params(output_format, file_pattern)
             if params is None:
                 return cast(
@@ -425,19 +466,27 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                 )
             source_format, extension_pattern = params
 
+            # Find matching files in the directory
             find_result = fs.find_files(input_dir, extension_pattern, recursive)
-            if not find_result.success or not find_result.files:
-                msg = (
-                    f"No matching files found in {input_dir}"
-                    if find_result.success
-                    else f"Failed to find files: {find_result.error}"
-                )
+            if not find_result.success:
                 return cast(
-                    IntegrationResult[list[str]], IntegrationResult.error_result(msg)
+                    IntegrationResult[list[str]],
+                    IntegrationResult.error_result(
+                        f"Failed to find files: {getattr(find_result, 'error', 'Unknown error')}"
+                    ),
+                )
+            if not find_result.files:
+                return cast(
+                    IntegrationResult[list[str]],
+                    IntegrationResult.error_result(
+                        f"No matching files found in {input_dir}"
+                    ),
                 )
 
             # Convert Path objects to strings for downstream compatibility
             file_paths: list[str] = [str(p) for p in find_result.files]
+
+            # Create conversion tasks for each file
             tasks = self._create_conversion_tasks(
                 file_paths, source_format, output_format, output_dir
             )
@@ -449,6 +498,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                     ),
                 )
 
+            # Perform batch conversion
             if self.converter:
                 return self.converter.convert_batch(tasks, output_dir)
             else:
@@ -505,8 +555,10 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
         """
         from quackcore.fs.service import standalone as fs
         tasks: list[ConversionTask] = []
+
         for file_path in files:
             try:
+                # Get file information
                 file_info: FileInfo = get_file_info(file_path, source_format)
 
                 # Extract the base filename safely
@@ -516,22 +568,17 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                         f"Failed to split path '{file_path}': {split_result.error}")
                     continue
 
-                stem = os.path.splitext(split_result.data[-1])[0]
+                # Get the filename and stem
+                filename = split_result.data[-1]
+                stem = os.path.splitext(filename)[0]
 
-                # Create the output file path by joining the output directory with the new filename
-                join_result = None
-                if output_format == "markdown":
-                    join_result = fs.join_path(output_dir, f"{stem}.md")
-                else:
-                    join_result = fs.join_path(output_dir, f"{stem}.docx")
+                # Determine output file extension
+                extension = ".md" if output_format == "markdown" else ".docx"
 
-                if not join_result.success:
-                    logger.warning(
-                        f"Failed to create output path for '{file_path}': {join_result.error}")
-                    continue
+                # Create the output file path
+                output_file = os.path.join(output_dir, f"{stem}{extension}")
 
-                output_file = join_result.data
-
+                # Create the conversion task
                 task = ConversionTask(
                     source=file_info,
                     target_format=output_format,
@@ -540,6 +587,7 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
                 tasks.append(task)
             except Exception as e:
                 logger.warning(f"Skipping file {file_path}: {str(e)}")
+
         return tasks
 
     def is_pandoc_available(self) -> bool:
@@ -550,6 +598,11 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
             bool: True if pandoc is available, False otherwise.
         """
         try:
+            # If we already have a cached version, return True
+            if self._pandoc_version:
+                return True
+
+            # Otherwise, try to verify pandoc
             verify_pandoc()
             return True
         except (QuackIntegrationError, ImportError, OSError):
@@ -578,6 +631,6 @@ class PandocIntegration(BaseIntegrationService, PandocConversionProtocol):
         Returns:
             ConversionMetrics: Current conversion metrics.
         """
-        if self.converter:
+        if self.converter and hasattr(self.converter, "metrics"):
             return getattr(self.converter, "metrics", self.metrics)
         return self.metrics

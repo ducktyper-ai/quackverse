@@ -11,7 +11,7 @@ import sys
 import time
 import types
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -33,21 +33,23 @@ def fs_stub(monkeypatch):
             fs_mod = types.ModuleType('quackcore.fs')
             sys.modules['quackcore.fs'] = fs_mod
 
+        # Create the service module
         service_mod = types.ModuleType('quackcore.fs.service')
         sys.modules['quackcore.fs.service'] = service_mod
-
-    # Now get the module
-    import quackcore.fs.service as fs_service
 
     # Create the stub with all necessary methods
     stub = SimpleNamespace()
 
     # Create a DataResult-like object to return from operations
     class DataResult:
-        def __init__(self, success=True, data=None, error=None):
+        def __init__(self, success=True, data=None, error=None, path="/dummy/path",
+                     message=None, format=None):
             self.success = success
             self.data = data
             self.error = error
+            self.path = path  # Always provide a path to avoid validation errors
+            self.message = message or ""
+            self.format = format or ""
 
     # Default get_file_info returns success, exists, size, modified
     stub.get_file_info = lambda path: SimpleNamespace(
@@ -90,17 +92,35 @@ def fs_stub(monkeypatch):
                                                     path=os.path.abspath(p))
     stub.normalize_path_with_info = stub.normalize_path
 
-    # Size formatting
-    stub.get_file_size_str = lambda size: f"{size}B"
+    # Convert file size to string
+    stub.get_file_size_str = lambda size: DataResult(
+        success=True,
+        data=f"{size}B",
+        path="/dummy/path",
+        format="size_string"
+    )
 
     # File finding
     stub.find_files = lambda dir_path, pattern, recursive=False: SimpleNamespace(
         success=True, files=["file1.html", "file2.html"]
     )
 
-    # Set the standalone attribute
-    fs_service.standalone = stub
+    # Add additional methods needed for other tests
+    stub.write_json = lambda path, content, indent=None: SimpleNamespace(
+        success=True, path=path, bytes_written=100
+    )
 
+    stub.read_binary = lambda path: SimpleNamespace(
+        success=True, content=b"binary content"
+    )
+
+    stub.resolve_path = lambda path: SimpleNamespace(
+        success=True, path=os.path.abspath(path) if path else "/dummy/path"
+    )
+
+    # Set the standalone attribute directly in the module
+    # This is the critical change - we need to directly set the attribute on the module
+    sys.modules['quackcore.fs.service'].standalone = stub
     return stub
 
 
@@ -124,15 +144,22 @@ def mock_paths_service(monkeypatch):
     Mock the paths service for resolving project paths.
     """
     mock = MagicMock()
-    mock.resolve_project_path = lambda path: path  # Just return the path unchanged
+    # Define the resolve_project_path method to just return the path unchanged
+    mock.resolve_project_path = lambda path: path
 
-    # Create a temp module if it doesn't exist
+    # Create a proper paths module structure
     if 'quackcore.paths' not in sys.modules:
-        temp_module = types.ModuleType('quackcore.paths')
-        sys.modules['quackcore.paths'] = temp_module
-        temp_module.service = mock
-    else:
-        monkeypatch.setattr('quackcore.paths.service', mock)
+        paths_mod = types.ModuleType('quackcore.paths')
+        sys.modules['quackcore.paths'] = paths_mod
+
+    # Add necessary functions directly to the module
+    sys.modules['quackcore.paths'].service = mock
+    sys.modules['quackcore.paths'].resolve_path = lambda path: os.path.abspath(
+        path) if path else "/dummy/path"
+    sys.modules['quackcore.paths'].expand_user_vars = lambda path: os.path.expanduser(
+        path) if path and isinstance(path, str) and path.startswith('~') else path
+    sys.modules['quackcore.paths'].read_yaml = lambda path: SimpleNamespace(
+        success=True, data={})
 
     return mock
 

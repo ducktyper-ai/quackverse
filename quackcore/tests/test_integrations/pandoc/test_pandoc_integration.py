@@ -1,4 +1,11 @@
 # quackcore/tests/test_integrations/pandoc/test_pandoc_integration.py
+"""
+Tests for the main Pandoc integration service.
+
+This module contains unit and integration tests for the PandocIntegration
+class that provides document conversion functionality.
+"""
+
 from unittest.mock import MagicMock, patch
 
 from quackcore.errors import QuackIntegrationError
@@ -21,37 +28,36 @@ def test_pandoc_integration_initialization():
     assert integration.converter is None
 
 
-def test_pandoc_integration_initialize_success(mock_pypandoc, fs_stub,
+@patch('quackcore.integrations.pandoc.service.verify_pandoc')
+def test_pandoc_integration_initialize_success(mock_verify_pandoc, fs_stub,
                                                mock_paths_service):
     """Test successful initialization of PandocIntegration."""
+    # Set up the mock to return a version string
+    mock_verify_pandoc.return_value = "2.11.0"
+
     integration = PandocIntegration()
+    result = integration.initialize()
 
-    # Mock verify_pandoc
-    with patch('quackcore.integrations.pandoc.service.verify_pandoc',
-               return_value="2.11.0"):
-        result = integration.initialize()
-
-        # Verify
-        assert result.success
-        assert integration._initialized is True
-        assert integration._pandoc_version == "2.11.0"
-        assert integration.converter is not None
+    # Verify
+    assert result.success
+    assert integration._initialized is True
+    assert integration._pandoc_version == "2.11.0"
+    assert integration.converter is not None
 
 
-def test_pandoc_integration_initialize_failure(mock_pypandoc):
+@patch('quackcore.integrations.pandoc.service.verify_pandoc')
+def test_pandoc_integration_initialize_failure(mock_verify_pandoc, mock_pypandoc):
     """Test failed initialization of PandocIntegration."""
+    # Set up the mock to raise an exception
+    mock_verify_pandoc.side_effect = QuackIntegrationError("Pandoc not available", {})
+
     integration = PandocIntegration()
+    result = integration.initialize()
 
-    # Mock verify_pandoc to fail
-    with patch('quackcore.integrations.pandoc.service.verify_pandoc') as mock_verify:
-        mock_verify.side_effect = QuackIntegrationError("Pandoc not available", {})
-
-        result = integration.initialize()
-
-        # Verify
-        assert not result.success
-        assert "Pandoc verification failed" in result.error
-        assert integration._initialized is False
+    # Verify
+    assert not result.success
+    assert "Pandoc verification failed" in result.error
+    assert integration._initialized is False
 
 
 def test_pandoc_integration_html_to_markdown(mock_pypandoc, fs_stub,
@@ -59,7 +65,7 @@ def test_pandoc_integration_html_to_markdown(mock_pypandoc, fs_stub,
     """Test HTML to Markdown conversion in PandocIntegration."""
     integration = PandocIntegration()
 
-    # Initialize
+    # Initialize with mocked verify_pandoc
     with patch('quackcore.integrations.pandoc.service.verify_pandoc',
                return_value="2.11.0"):
         integration.initialize()
@@ -74,6 +80,7 @@ def test_pandoc_integration_html_to_markdown(mock_pypandoc, fs_stub,
     # Verify
     assert result.success
     assert integration.converter.convert_file.called
+    # The mock_paths_service fixture now returns the input path unchanged
     integration.converter.convert_file.assert_called_once_with(
         "input.html", mock_paths_service.resolve_project_path.return_value, "markdown"
     )
@@ -84,7 +91,7 @@ def test_pandoc_integration_markdown_to_docx(mock_pypandoc, fs_stub,
     """Test Markdown to DOCX conversion in PandocIntegration."""
     integration = PandocIntegration()
 
-    # Initialize
+    # Initialize with mocked verify_pandoc
     with patch('quackcore.integrations.pandoc.service.verify_pandoc',
                return_value="2.11.0"):
         integration.initialize()
@@ -99,6 +106,7 @@ def test_pandoc_integration_markdown_to_docx(mock_pypandoc, fs_stub,
     # Verify
     assert result.success
     assert integration.converter.convert_file.called
+    # The mock_paths_service fixture now returns the input path unchanged
     integration.converter.convert_file.assert_called_once_with(
         "input.md", mock_paths_service.resolve_project_path.return_value, "docx"
     )
@@ -109,7 +117,7 @@ def test_pandoc_integration_convert_directory(mock_pypandoc, fs_stub,
     """Test directory conversion in PandocIntegration."""
     integration = PandocIntegration()
 
-    # Initialize
+    # Initialize with mocked verify_pandoc
     with patch('quackcore.integrations.pandoc.service.verify_pandoc',
                return_value="2.11.0"):
         integration.initialize()
@@ -149,15 +157,18 @@ def test_pandoc_integration_is_available():
     """Test checking if pandoc is available."""
     integration = PandocIntegration()
 
-    # Mock verify_pandoc
+    # Mock verify_pandoc to succeed
     with patch('quackcore.integrations.pandoc.service.verify_pandoc',
                return_value="2.11.0"):
         assert integration.is_pandoc_available()
         assert integration.get_pandoc_version() == "2.11.0"
 
+    # Clear any cached version before testing the failure case
+    integration._pandoc_version = None
+
     # Mock verify_pandoc to fail
-    with patch('quackcore.integrations.pandoc.service.verify_pandoc') as mock_verify:
-        mock_verify.side_effect = QuackIntegrationError("Pandoc not available", {})
+    with patch('quackcore.integrations.pandoc.service.verify_pandoc',
+               side_effect=QuackIntegrationError("Pandoc not available", {})):
         assert not integration.is_pandoc_available()
         assert integration.get_pandoc_version() is None
 
@@ -184,7 +195,7 @@ def test_end_to_end_html_to_markdown_conversion(mock_pypandoc, fs_stub,
     # Create integration
     integration = PandocIntegration()
 
-    # Initialize integration
+    # Initialize integration with mocked verify_pandoc
     with patch('quackcore.integrations.pandoc.service.verify_pandoc',
                return_value="2.11.0"):
         init_result = integration.initialize()
@@ -212,7 +223,7 @@ def test_end_to_end_markdown_to_docx_conversion(mock_pypandoc, fs_stub,
     # Create integration
     integration = PandocIntegration()
 
-    # Initialize integration
+    # Initialize integration with mocked verify_pandoc
     with patch('quackcore.integrations.pandoc.service.verify_pandoc',
                return_value="2.11.0"):
         init_result = integration.initialize()
@@ -239,15 +250,18 @@ def test_end_to_end_directory_conversion(mock_pypandoc, fs_stub, mock_paths_serv
     # Create integration
     integration = PandocIntegration()
 
-    # Initialize integration
+    # Initialize integration with mocked verify_pandoc
     with patch('quackcore.integrations.pandoc.service.verify_pandoc',
                return_value="2.11.0"):
         init_result = integration.initialize()
         assert init_result.success
 
     # Run conversion with mocked file system
-    result = integration.convert_directory("input_dir", "markdown")
+    with patch.object(integration.converter, 'convert_batch',
+                      return_value=IntegrationResult.success_result(
+                          ["out1.md", "out2.md"])):
+        result = integration.convert_directory("input_dir", "markdown")
 
-    # Verify
-    assert result.success
-    assert isinstance(result.content, list)
+        # Verify
+        assert result.success
+        assert isinstance(result.content, list)

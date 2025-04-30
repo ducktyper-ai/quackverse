@@ -11,6 +11,7 @@ to the quackcore.fs service.
 import sys
 import time
 import types
+from typing import Any
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.integrations.pandoc.config import PandocConfig
@@ -48,8 +49,8 @@ def verify_pandoc() -> str:
         QuackIntegrationError: If pandoc is not installed.
     """
     try:
-        import pypandoc
-
+        import importlib
+        pypandoc = importlib.import_module('pypandoc')
         version = pypandoc.get_pandoc_version()
         logger.info(f"Found pandoc version: {version}")
         return version
@@ -123,7 +124,12 @@ def validate_html_structure(
     """
     errors: list[str] = []
     try:
-        from bs4 import BeautifulSoup
+        # Attempt to import BeautifulSoup
+        try:
+            from bs4 import BeautifulSoup
+        except ImportError:
+            errors.append("HTML validation error: bs4 module not installed")
+            return False, errors
 
         soup = BeautifulSoup(content, "html.parser")
         if not soup.find("body"):
@@ -164,13 +170,12 @@ def validate_docx_structure(
     """
     errors: list[str] = []
     try:
-        docx_module = None
+        # Attempt to import docx module
         try:
-            import docx
-            docx_module = docx
+            import docx as docx_module
         except ImportError:
             logger.warning("python-docx module is not installed")
-            return True, []
+            return True, []  # Return valid if docx module not available
 
         doc = docx_module.Document(docx_path)
         if len(doc.paragraphs) == 0:
@@ -192,10 +197,111 @@ def validate_docx_structure(
         return len(errors) == 0, errors
     except ImportError:
         logger.warning("python-docx module is not installed")
-        return True, []
+        return True, []  # Return valid if docx module not available
     except Exception as e:
         errors.append(f"DOCX validation error: {str(e)}")
         return False, errors
+
+
+def safe_convert_to_int(value: Any, default: int = 0) -> int:
+    """
+    Safely convert a value to an integer with fallback to default.
+
+    Args:
+        value: The value to convert.
+        default: Default value if conversion fails.
+
+    Returns:
+        int: Converted integer or default value.
+    """
+    if value is None:
+        return default
+
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        logger.warning(
+            f"Could not convert value to integer: {value}, using default {default}")
+        return default
+
+
+def get_size_str_wrapper(size: int) -> str:
+    """
+    Wrapper for fs.get_file_size_str that handles errors and returns a string.
+
+    Args:
+        size: Size in bytes
+
+    Returns:
+        str: Human-readable size string
+    """
+    try:
+        result = fs.get_file_size_str(size)
+        if hasattr(result, 'data') and result.success:
+            return result.data
+        return f"{size}B"
+    except Exception as e:
+        logger.warning(f"Error getting file size string: {e}")
+        return f"{size}B"
+
+
+def check_file_size(
+        converted_size: int | None, validation_min_size: int | None
+) -> tuple[bool, list[str]]:
+    """
+    Check if the converted file meets the minimum file size.
+
+    Args:
+        converted_size: Size of the converted file.
+        validation_min_size: Minimum file size threshold.
+
+    Returns:
+        tuple: (is_valid, list of error messages).
+    """
+    errors: list[str] = []
+    converted_size_int = safe_convert_to_int(converted_size, 0)
+    validation_min_size_int = safe_convert_to_int(validation_min_size, 0)
+
+    if validation_min_size_int > 0 and converted_size_int < validation_min_size_int:
+        converted_size_str = get_size_str_wrapper(converted_size_int)
+        min_size_str = get_size_str_wrapper(validation_min_size_int)
+        errors.append(
+            f"Converted file size ({converted_size_str}) is below the minimum threshold ({min_size_str})"
+        )
+        return False, errors
+    return True, errors
+
+
+def check_conversion_ratio(
+        converted_size: int | None, original_size: int | None, threshold: float | None
+) -> tuple[bool, list[str]]:
+    """
+    Check if the converted file size is not drastically smaller than the original.
+
+    Args:
+        converted_size: Size of the converted file.
+        original_size: Size of the original file.
+        threshold: Minimum ratio threshold.
+
+    Returns:
+        tuple: (is_valid, list of error messages).
+    """
+    errors: list[str] = []
+    converted_size_int = safe_convert_to_int(converted_size, 0)
+    original_size_int = safe_convert_to_int(original_size, 0)
+    threshold_float = float(threshold) if threshold is not None else 0.1
+
+    if original_size_int > 0:
+        conversion_ratio = converted_size_int / original_size_int
+        if conversion_ratio < threshold_float:
+            converted_size_str = get_size_str_wrapper(converted_size_int)
+            original_size_str = get_size_str_wrapper(original_size_int)
+            errors.append(
+                f"Conversion error: Converted file size ({converted_size_str}) is less than "
+                f"{threshold_float * 100:.0f}% of the original file size ({original_size_str}) (ratio: {conversion_ratio:.2f})."
+            )
+            return False, errors
+    return True, errors
 
 
 def track_metrics(
@@ -224,16 +330,19 @@ def track_metrics(
         logger.info(f"Conversion time for {filename}: {duration:.2f} seconds")
 
     if config.metrics.track_file_sizes:
-        original_size_int = int(original_size) if original_size is not None else 0
-        converted_size_int = int(converted_size) if converted_size is not None else 0
+        original_size_int = safe_convert_to_int(original_size, 0)
+        converted_size_int = safe_convert_to_int(converted_size, 0)
         ratio = converted_size_int / original_size_int if original_size_int > 0 else 0
         metrics.file_sizes[filename] = {
             "original": original_size_int,
             "converted": converted_size_int,
             "ratio": ratio,
         }
-        original_size_str = fs.get_file_size_str(original_size_int)
-        converted_size_str = fs.get_file_size_str(converted_size_int)
+
+        # Handle file size strings safely
+        original_size_str = get_size_str_wrapper(original_size_int)
+        converted_size_str = get_size_str_wrapper(converted_size_int)
+
         logger.info(
             f"File size change for {filename}: {original_size_str} -> {converted_size_str}"
         )
@@ -256,39 +365,46 @@ def get_file_info(path: str, format_hint: str | None = None) -> FileInfo:
     file_info = fs.get_file_info(path)
     if not file_info.success or not file_info.exists:
         raise QuackIntegrationError(f"File not found: {path}")
-    try:
-        file_size: int = int(file_info.size) if file_info.size is not None else 0
-    except (TypeError, ValueError):
-        file_size = 1024
-        logger.warning(
-            f"Could not convert file size to integer: {file_info.size}, using default"
-        )
+
+    # Convert file size to integer safely
+    file_size = safe_convert_to_int(file_info.size, 0)
     modified_time: float | None = file_info.modified
 
     # Determine format name
     if format_hint:
         format_name = format_hint
     else:
-        # Retrieve the extension result and extract its data field
-        ext_result = fs.get_extension(path)
-        if not ext_result.success:
-            logger.warning(f"Failed to get extension for {path}: {ext_result.error}")
-            # Default to 'unknown' if we can't get the extension
-            extension = "unknown"
-        else:
-            extension = ext_result.data
+        try:
+            # Get extension safely
+            ext_result = fs.get_extension(path)
+            extension = ""
 
-        mapping: dict[str, str] = {
-            "md": "markdown",
-            "markdown": "markdown",
-            "html": "html",
-            "htm": "html",
-            "docx": "docx",
-            "doc": "docx",
-            "pdf": "pdf",
-            "txt": "plain",
-        }
-        format_name = mapping.get(extension, extension)
+            if hasattr(ext_result, 'success') and ext_result.success and hasattr(
+                    ext_result, 'data'):
+                extension = ext_result.data
+            else:
+                # Fallback extension extraction if get_extension not working correctly
+                extension = path.split('.')[-1] if isinstance(path,
+                                                              str) and '.' in path else ""
+
+            # Map the extension to a format name
+            mapping: dict[str, str] = {
+                "md": "markdown",
+                "markdown": "markdown",
+                "html": "html",
+                "htm": "html",
+                "docx": "docx",
+                "doc": "docx",
+                "pdf": "pdf",
+                "txt": "plain",
+            }
+            format_name = mapping.get(extension, extension)
+        except Exception as e:
+            logger.warning(f"Error getting file extension: {e}. Using fallback.")
+            # Fallback to extension from path
+            extension = path.split('.')[-1] if isinstance(path,
+                                                          str) and '.' in path else "unknown"
+            format_name = extension
 
     return FileInfo(
         path=path,
@@ -297,62 +413,3 @@ def get_file_info(path: str, format_hint: str | None = None) -> FileInfo:
         modified=modified_time,
         extra_args=[],
     )
-
-
-def check_file_size(
-        converted_size: int | None, validation_min_size: int | None
-) -> tuple[bool, list[str]]:
-    """
-    Check if the converted file meets the minimum file size.
-
-    Args:
-        converted_size: Size of the converted file.
-        validation_min_size: Minimum file size threshold.
-
-    Returns:
-        tuple: (is_valid, list of error messages).
-    """
-    errors: list[str] = []
-    converted_size_int = int(converted_size) if converted_size is not None else 0
-    validation_min_size_int = (
-        int(validation_min_size) if validation_min_size is not None else 0
-    )
-    if validation_min_size_int > 0 and converted_size_int < validation_min_size_int:
-        converted_size_str = fs.get_file_size_str(converted_size_int)
-        min_size_str = fs.get_file_size_str(validation_min_size_int)
-        errors.append(
-            f"Converted file size ({converted_size_str}) is below the minimum threshold ({min_size_str})"
-        )
-        return False, errors
-    return True, errors
-
-
-def check_conversion_ratio(
-        converted_size: int | None, original_size: int | None, threshold: float | None
-) -> tuple[bool, list[str]]:
-    """
-    Check if the converted file size is not drastically smaller than the original.
-
-    Args:
-        converted_size: Size of the converted file.
-        original_size: Size of the original file.
-        threshold: Minimum ratio threshold.
-
-    Returns:
-        tuple: (is_valid, list of error messages).
-    """
-    errors: list[str] = []
-    converted_size_int = int(converted_size) if converted_size is not None else 0
-    original_size_int = int(original_size) if original_size is not None else 0
-    threshold_float = float(threshold) if threshold is not None else 0.1
-    if original_size_int > 0:
-        conversion_ratio = converted_size_int / original_size_int
-        if conversion_ratio < threshold_float:
-            converted_size_str = fs.get_file_size_str(converted_size_int)
-            original_size_str = fs.get_file_size_str(original_size_int)
-            errors.append(
-                f"Conversion error: Converted file size ({converted_size_str}) is less than "
-                f"{threshold_float * 100:.0f}% of the original file size ({original_size_str}) (ratio: {conversion_ratio:.2f})."
-            )
-            return False, errors
-    return True, errors
