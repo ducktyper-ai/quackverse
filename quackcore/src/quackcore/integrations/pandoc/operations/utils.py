@@ -1,10 +1,10 @@
 # quackcore/src/quackcore/integrations/pandoc/operations/utils.py
 """
-Utility functions for pandoc operations.
+Utility functions for pandoc _operations.
 
-This module provides helper functions for pandoc conversion operations,
+This module provides helper functions for pandoc conversion _operations,
 such as validation, metrics tracking, and pandoc installation verification.
-All file path values are handled as strings. Filesystem operations are delegated
+All file path values are handled as strings. Filesystem _operations are delegated
 to the quackcore.fs service.
 """
 
@@ -48,9 +48,7 @@ def verify_pandoc() -> str:
         QuackIntegrationError: If pandoc is not installed.
     """
     try:
-        # Use importlib to handle import errors better
-        from importlib import import_module
-        pypandoc = import_module('pypandoc')
+        import pypandoc
 
         version = pypandoc.get_pandoc_version()
         logger.info(f"Found pandoc version: {version}")
@@ -98,7 +96,7 @@ def prepare_pandoc_args(
 
     # Convert resource paths to strings.
     for res_path in pandoc_opts.resource_path:
-        args.append(f"--resource-path={res_path}")
+        args.append(f"--resource-path={str(res_path)}")
 
     if source_format == "html" and target_format == "markdown":
         args.extend(config.html_to_md_extra_args)
@@ -121,7 +119,7 @@ def validate_html_structure(
         check_links: Whether to check links.
 
     Returns:
-        tuple[bool, list[str]]: (is_valid, list of error messages).
+        tuple: (is_valid, list of error messages).
     """
     errors: list[str] = []
     try:
@@ -162,13 +160,19 @@ def validate_docx_structure(
         check_links: Whether to check links.
 
     Returns:
-        tuple[bool, list[str]]: (is_valid, list of error messages).
+        tuple: (is_valid, list of error messages).
     """
     errors: list[str] = []
     try:
-        from docx import Document
+        docx_module = None
+        try:
+            import docx
+            docx_module = docx
+        except ImportError:
+            logger.warning("python-docx module is not installed")
+            return True, []
 
-        doc = Document(docx_path)
+        doc = docx_module.Document(docx_path)
         if len(doc.paragraphs) == 0:
             errors.append("DOCX document has no paragraphs")
             return False, errors
@@ -228,9 +232,8 @@ def track_metrics(
             "converted": converted_size_int,
             "ratio": ratio,
         }
-        # Don't use fs.get_file_size_str which uses DataResult and might fail
-        original_size_str = f"{original_size_int} bytes"
-        converted_size_str = f"{converted_size_int} bytes"
+        original_size_str = fs.get_file_size_str(original_size_int)
+        converted_size_str = fs.get_file_size_str(converted_size_int)
         logger.info(
             f"File size change for {filename}: {original_size_str} -> {converted_size_str}"
         )
@@ -268,7 +271,13 @@ def get_file_info(path: str, format_hint: str | None = None) -> FileInfo:
     else:
         # Retrieve the extension result and extract its data field
         ext_result = fs.get_extension(path)
-        extension = ext_result.data if hasattr(ext_result, 'data') else ''
+        if not ext_result.success:
+            logger.warning(f"Failed to get extension for {path}: {ext_result.error}")
+            # Default to 'unknown' if we can't get the extension
+            extension = "unknown"
+        else:
+            extension = ext_result.data
+
         mapping: dict[str, str] = {
             "md": "markdown",
             "markdown": "markdown",
@@ -301,7 +310,7 @@ def check_file_size(
         validation_min_size: Minimum file size threshold.
 
     Returns:
-        tuple[bool, list[str]]: (is_valid, list of error messages).
+        tuple: (is_valid, list of error messages).
     """
     errors: list[str] = []
     converted_size_int = int(converted_size) if converted_size is not None else 0
@@ -309,14 +318,14 @@ def check_file_size(
         int(validation_min_size) if validation_min_size is not None else 0
     )
     if validation_min_size_int > 0 and converted_size_int < validation_min_size_int:
-        # Don't use fs.get_file_size_str which uses DataResult and might fail
-        converted_size_str = f"{converted_size_int} bytes"
-        min_size_str = f"{validation_min_size_int} bytes"
+        converted_size_str = fs.get_file_size_str(converted_size_int)
+        min_size_str = fs.get_file_size_str(validation_min_size_int)
         errors.append(
             f"Converted file size ({converted_size_str}) is below the minimum threshold ({min_size_str})"
         )
         return False, errors
     return True, errors
+
 
 def check_conversion_ratio(
         converted_size: int | None, original_size: int | None, threshold: float | None
@@ -330,7 +339,7 @@ def check_conversion_ratio(
         threshold: Minimum ratio threshold.
 
     Returns:
-        tuple[bool, list[str]]: (is_valid, list of error messages).
+        tuple: (is_valid, list of error messages).
     """
     errors: list[str] = []
     converted_size_int = int(converted_size) if converted_size is not None else 0
@@ -339,9 +348,8 @@ def check_conversion_ratio(
     if original_size_int > 0:
         conversion_ratio = converted_size_int / original_size_int
         if conversion_ratio < threshold_float:
-            # Don't use fs.get_file_size_str which uses DataResult and might fail
-            converted_size_str = f"{converted_size_int} bytes"
-            original_size_str = f"{original_size_int} bytes"
+            converted_size_str = fs.get_file_size_str(converted_size_int)
+            original_size_str = fs.get_file_size_str(original_size_int)
             errors.append(
                 f"Conversion error: Converted file size ({converted_size_str}) is less than "
                 f"{threshold_float * 100:.0f}% of the original file size ({original_size_str}) (ratio: {conversion_ratio:.2f})."

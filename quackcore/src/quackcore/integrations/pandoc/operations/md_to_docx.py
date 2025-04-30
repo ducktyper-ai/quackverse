@@ -98,7 +98,7 @@ def _validate_markdown_input(markdown_path: str) -> int:
 
 
 def _convert_markdown_to_docx_once(
-    markdown_path: str, output_path: str, config: PandocConfig
+        markdown_path: str, output_path: str, config: PandocConfig
 ) -> None:
     """
     Perform a single conversion attempt from Markdown to DOCX using pandoc.
@@ -115,8 +115,28 @@ def _convert_markdown_to_docx_once(
         config, "markdown", "docx", config.md_to_docx_extra_args
     )
 
-    # Get the parent directory of the output file by splitting and joining parts
-    parent_dir = standalone.join_path(*standalone.split_path(output_path)[:-1])
+    # Get the parent directory of the output file
+    split_result = standalone.split_path(output_path)
+    if not split_result.success:
+        raise QuackIntegrationError(
+            f"Failed to split output path: {split_result.error}",
+            {"path": output_path, "operation": "split_path"},
+        )
+
+    # Extract all path components except the last one (filename)
+    path_components = split_result.data[:-1]
+
+    # Join the path components to get the parent directory
+    join_result = standalone.join_path(*path_components)
+    if not join_result.success:
+        raise QuackIntegrationError(
+            f"Failed to join path components: {join_result.error}",
+            {"components": path_components, "operation": "join_path"},
+        )
+
+    parent_dir = join_result.data
+
+    # Create the parent directory
     dir_result = standalone.create_directory(parent_dir, exist_ok=True)
     if not dir_result.success:
         raise QuackIntegrationError(
@@ -176,10 +196,10 @@ def _get_conversion_output(output_path: str, start_time: float) -> tuple[float, 
 
 
 def convert_markdown_to_docx(
-    markdown_path: str,
-    output_path: str,
-    config: PandocConfig,
-    metrics: ConversionMetrics | None = None,
+        markdown_path: str,
+        output_path: str,
+        config: PandocConfig,
+        metrics: ConversionMetrics | None = None,
 ) -> IntegrationResult[tuple[str, ConversionDetails]]:
     """
     Convert a Markdown file to DOCX.
@@ -193,8 +213,14 @@ def convert_markdown_to_docx(
     Returns:
         IntegrationResult[tuple[str, ConversionDetails]]: Result of the conversion.
     """
-    # Get file name from the input path using standalone.split_path
-    filename: str = standalone.split_path(markdown_path)[-1]
+    # Get file name from the input path
+    split_result = standalone.split_path(markdown_path)
+    if not split_result.success:
+        return IntegrationResult.error_result(
+            f"Failed to split input path: {split_result.error}"
+        )
+
+    filename: str = split_result.data[-1]
 
     if metrics is None:
         metrics = ConversionMetrics()
@@ -277,7 +303,7 @@ def convert_markdown_to_docx(
 
 
 def validate_conversion(
-    output_path: str, input_path: str, original_size: int, config: PandocConfig
+        output_path: str, input_path: str, original_size: int, config: PandocConfig
 ) -> list[str]:
     """
     Validate the converted DOCX document.
@@ -317,7 +343,7 @@ def validate_conversion(
     if not valid_ratio:
         validation_errors.extend(ratio_errors)
 
-    if validation.verify_structure and standalone.get_file_info(output_path).exists:
+    if validation.verify_structure and output_info.exists:
         is_valid, structure_errors = validate_docx_structure(
             output_path, validation.check_links
         )
@@ -347,28 +373,35 @@ def _check_docx_metadata(docx_path: str, source_path: str, check_links: bool) ->
             return
 
         doc = document(docx_path)
-        source_filename = standalone.split_path(source_path)[-1]
+
+        # Get source filename
+        split_result = standalone.split_path(source_path)
+        if not split_result.success:
+            logger.debug(f"Failed to split source path: {split_result.error}")
+            return
+
+        source_filename = split_result.data[-1]
         source_found = False
 
         if hasattr(doc, "core_properties"):
             core_props = doc.core_properties
 
             if (
-                hasattr(core_props, "title")
-                and core_props.title
-                and source_filename in str(core_props.title)
+                    hasattr(core_props, "title")
+                    and core_props.title
+                    and source_filename in str(core_props.title)
             ):
                 source_found = True
             elif (
-                hasattr(core_props, "comments")
-                and core_props.comments
-                and source_filename in str(core_props.comments)
+                    hasattr(core_props, "comments")
+                    and core_props.comments
+                    and source_filename in str(core_props.comments)
             ):
                 source_found = True
             elif (
-                hasattr(core_props, "subject")
-                and core_props.subject
-                and source_filename in str(core_props.subject)
+                    hasattr(core_props, "subject")
+                    and core_props.subject
+                    and source_filename in str(core_props.subject)
             ):
                 source_found = True
 

@@ -111,9 +111,10 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
                     input_path, output_path, self.config, self.metrics
                 )
                 if result.success and result.content:
-                    # Assume result.content is a list of output file paths (as strings)
+                    # Unpack the returned tuple
+                    output_path_str = result.content[0]
                     return IntegrationResult.success_result(
-                        result.content[0],
+                        output_path_str,
                         message=f"Successfully converted {input_path} to Markdown",
                     )
                 return IntegrationResult.error_result(
@@ -128,8 +129,10 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
                     input_path, output_path, self.config, self.metrics
                 )
                 if result.success and result.content:
+                    # Unpack the returned tuple
+                    output_path_str = result.content[0]
                     return IntegrationResult.success_result(
-                        result.content[0],
+                        output_path_str,
                         message=f"Successfully converted {input_path} to DOCX",
                     )
                 return IntegrationResult.error_result(
@@ -186,14 +189,32 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
                 if task.output_path is not None:
                     output_path = task.output_path
                 else:
-                    # Assume task.source.path is a string representing the file path.
-                    base_name, _ = os.path.splitext(task.source.path)
+                    # Get the file name safely using fs.split_path
+                    split_result = fs.split_path(task.source.path)
+                    if not split_result.success:
+                        logger.error(f"Failed to split path: {split_result.error}")
+                        failed_files.append(task.source.path)
+                        continue
+
+                    # Extract the filename and stem
+                    filename = split_result.data[-1]
+                    base_name, _ = os.path.splitext(filename)
+
+                    # Create the extension based on target format
                     ext = (
                         ".md"
                         if task.target_format == "markdown"
                         else f".{task.target_format}"
                     )
-                    output_path = os.path.join(output_directory, base_name + ext)
+
+                    # Join the path components
+                    join_result = fs.join_path(output_directory, base_name + ext)
+                    if not join_result.success:
+                        logger.error(f"Failed to join path: {join_result.error}")
+                        failed_files.append(task.source.path)
+                        continue
+
+                    output_path = join_result.data
 
                 result = self.convert_file(
                     task.source.path, output_path, task.target_format
@@ -268,7 +289,14 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
                 f"Conversion size change: {input_size} → {output_size} bytes ({size_change_percentage:.1f}%)"
             )
 
-            ext = fs.get_extension(output_path)
+            # Get file extension
+            ext_result = fs.get_extension(output_path)
+            if not ext_result.success:
+                logger.error(f"Failed to get extension: {ext_result.error}")
+                return False
+
+            ext = ext_result.data
+
             if ext in ("md", "markdown"):
                 try:
                     read_result = fs.read_text(output_path, encoding="utf-8")

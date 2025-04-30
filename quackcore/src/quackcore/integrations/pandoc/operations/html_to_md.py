@@ -229,7 +229,13 @@ def convert_html_to_markdown(
     Returns:
         IntegrationResult containing a tuple of (output_path, ConversionDetails).
     """
-    filename = os.path.basename(html_path)
+    # Get the basename safely
+    split_result = fs.split_path(html_path)
+    if not split_result.success:
+        return IntegrationResult.error_result(
+            f"Failed to split input path: {split_result.error}"
+        )
+    filename = split_result.data[-1]  # Get the last component which is the filename
 
     if metrics is None:
         metrics = ConversionMetrics()
@@ -386,12 +392,13 @@ def validate_conversion(
                 if config.validation.verify_structure:
                     validation_errors.append("No headers found in converted markdown")
 
-        source_file_name = os.path.basename(input_path)
-        if config.validation.check_links and source_file_name not in content:
-            logger.debug(
-                f"Source file reference missing in markdown output: {source_file_name}"
-            )
+        # Get source filename safely
+        split_result = fs.split_path(input_path)
+        if split_result.success:
+            source_file_name = split_result.data[-1]
+            if config.validation.check_links and source_file_name not in content:
+                logger.debug(
+                    f"Source file reference missing in markdown output: {source_file_name}"
+                )
     except Exception as e:
         validation_errors.append(f"Error reading output file: {str(e)}")
-
-    return validation_errors

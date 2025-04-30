@@ -36,45 +36,70 @@ def fs_stub(monkeypatch):
         service_mod = types.ModuleType('quackcore.fs.service')
         sys.modules['quackcore.fs.service'] = service_mod
 
+    # Now get the module
+    import quackcore.fs.service as fs_service
+
     # Create the stub with all necessary methods
     stub = SimpleNamespace()
 
-    # Enhanced split_path that returns a real list, not a DataResult
-    stub.split_path = lambda path: path.split(os.sep)
+    # Create a DataResult-like object to return from operations
+    class DataResult:
+        def __init__(self, success=True, data=None, error=None):
+            self.success = success
+            self.data = data
+            self.error = error
 
     # Default get_file_info returns success, exists, size, modified
     stub.get_file_info = lambda path: SimpleNamespace(
         success=True, exists=True, size=100, modified=time.time(), is_dir=False
     )
-    stub.create_directory = lambda path, exist_ok: SimpleNamespace(success=True)
-    # match os.path.join signature: first arg required, then *paths
-    stub.join_path = lambda a, *parts: os.path.join(a, *parts)
-    stub.write_text = lambda path, content, encoding=None: SimpleNamespace(
-        success=True, bytes_written=len(content)
+
+    # Create directory operation with result
+    stub.create_directory = lambda path, exist_ok=True: SimpleNamespace(success=True)
+
+    # String path handling with DataResult style returns
+    stub.join_path = lambda *parts: DataResult(success=True, data=os.path.join(*parts))
+
+    # Split path into components with DataResult style return
+    stub.split_path = lambda path: DataResult(
+        success=True,
+        data=path.split(os.sep) if isinstance(path, str) else [str(path)]
     )
+
+    # Text file operations
+    stub.write_text = lambda path, content, encoding=None: SimpleNamespace(
+        success=True, bytes_written=len(content) if isinstance(content, str) else 0
+    )
+
+    # Reading content from files
     stub.read_text = lambda path, encoding=None: SimpleNamespace(
         success=True, content="<html><body><h1>Title</h1><p>Content</p></body></html>"
         if path.endswith('.html') else "# Title\n\nContent"
     )
-    stub.get_extension = lambda path: SimpleNamespace(data=path.split('.')[-1])
+
+    # Get file extension
+    stub.get_extension = lambda path: DataResult(
+        success=True,
+        data=path.split('.')[-1] if isinstance(path, str) and '.' in path else ""
+    )
+
+    # Path validation and normalization
     stub.get_path_info = lambda path: SimpleNamespace(success=True)
     stub.is_valid_path = lambda path: True
     stub.normalize_path = lambda p: SimpleNamespace(success=True,
                                                     path=os.path.abspath(p))
     stub.normalize_path_with_info = stub.normalize_path
+
+    # Size formatting
     stub.get_file_size_str = lambda size: f"{size}B"
+
+    # File finding
     stub.find_files = lambda dir_path, pattern, recursive=False: SimpleNamespace(
         success=True, files=["file1.html", "file2.html"]
     )
-    # Add the missing write_json method
-    stub.write_json = lambda path, content, indent=None: SimpleNamespace(
-        success=True, bytes_written=100, path=path
-    )
-    # Add expand_user_vars method
-    stub.expand_user_vars = lambda path: path.replace("~", os.path.expanduser("~"))
 
-    # Set the standalone attribute in sys.modules
-    sys.modules['quackcore.fs.service'].standalone = stub
+    # Set the standalone attribute
+    fs_service.standalone = stub
 
     return stub
 
@@ -93,8 +118,6 @@ def mock_pypandoc(monkeypatch):
 
 
 # Fixture for path service
-# Updates for conftest.py mock_paths_service fixture
-
 @pytest.fixture
 def mock_paths_service(monkeypatch):
     """
@@ -103,16 +126,13 @@ def mock_paths_service(monkeypatch):
     mock = MagicMock()
     mock.resolve_project_path = lambda path: path  # Just return the path unchanged
 
-    # Create a module hierarchy if it doesn't exist
+    # Create a temp module if it doesn't exist
     if 'quackcore.paths' not in sys.modules:
         temp_module = types.ModuleType('quackcore.paths')
         sys.modules['quackcore.paths'] = temp_module
-
-        # Set service directly as an attribute
         temp_module.service = mock
     else:
-        # Use setattr to directly assign the mock object to the service attribute
-        monkeypatch.setattr(sys.modules['quackcore.paths'], 'service', mock)
+        monkeypatch.setattr('quackcore.paths.service', mock)
 
     return mock
 
