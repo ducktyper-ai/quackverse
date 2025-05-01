@@ -20,20 +20,23 @@ from quackcore.config.models import LoggingConfig
 from quackcore.integrations.core.base import BaseConfigProvider
 from quackcore.logging import LOG_LEVELS, LogLevel, get_logger
 
-# Import filesystem service - handle potential import error
+logger = get_logger(__name__)
+
+# Import fs module with error handling
 try:
     from quackcore.fs.service import standalone as fs
 except ImportError:
-    import types
-
-    # Create dummy fs service if not available
-    fs = types.SimpleNamespace()
-    fs.is_valid_path = lambda path: True
-    fs.normalize_path = lambda path: types.SimpleNamespace(success=True, path=path)
-    fs.normalize_path_with_info = fs.normalize_path
-    fs.expand_user_vars = lambda path: path if not path or not isinstance(path,
-                                                                          str) else os.path.expanduser(
-        path)
+    logger.error("Could not import quackcore.fs.service")
+    from types import SimpleNamespace
+    # Create a minimal fs stub if the module isn't available (for tests)
+    fs = SimpleNamespace(
+        is_valid_path=lambda path: True,
+        normalize_path=lambda path: SimpleNamespace(success=True, path=path),
+        normalize_path_with_info=lambda path: SimpleNamespace(success=True, path=path),
+        get_path_info=lambda path: SimpleNamespace(success=True),
+        expand_user_vars=lambda path: path if not path or not isinstance(path, str) else os.path.expanduser(path),
+        read_yaml=lambda path: SimpleNamespace(success=True, data={})
+    )
 
 
 class PandocOptions(BaseModel):

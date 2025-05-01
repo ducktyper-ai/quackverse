@@ -33,26 +33,21 @@ from quackcore.logging import get_logger
 
 logger = get_logger(__name__)
 
-# Import the fs service - handle potential import errors
+# Import fs module with error handling
 try:
     from quackcore.fs.service import standalone as fs
 except ImportError:
-    import types
-
-    # Create a dummy fs service if not available
-    fs = types.SimpleNamespace()
-    fs.get_file_info = lambda path: types.SimpleNamespace(success=True, exists=True,
-                                                          size=100)
-    fs.create_directory = lambda path, exist_ok=True: types.SimpleNamespace(
-        success=True)
-    fs.join_path = lambda *parts: types.SimpleNamespace(success=True,
-                                                        data=os.path.join(*parts))
-    fs.split_path = lambda path: types.SimpleNamespace(success=True,
-                                                       data=path.split(os.sep))
-    fs.get_extension = lambda path: types.SimpleNamespace(success=True,
-                                                          data=path.split('.')[-1])
-    fs.read_text = lambda path, encoding=None: types.SimpleNamespace(success=True,
-                                                                     content="")
+    logger.error("Could not import quackcore.fs.service")
+    from types import SimpleNamespace
+    # Create a minimal fs stub if the module isn't available (for tests)
+    fs = SimpleNamespace(
+        get_file_info=lambda path: SimpleNamespace(success=True, exists=True, size=100),
+        create_directory=lambda path, exist_ok=True: SimpleNamespace(success=True),
+        join_path=lambda *parts: SimpleNamespace(success=True, data=os.path.join(*parts)),
+        split_path=lambda path: SimpleNamespace(success=True, data=path.split(os.sep) if isinstance(path, str) else []),
+        get_extension=lambda path: SimpleNamespace(success=True, data=path.split('.')[-1] if isinstance(path, str) and '.' in path else ""),
+        read_text=lambda path, encoding=None: SimpleNamespace(success=True, content="")
+    )
 
 
 class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
@@ -136,8 +131,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
 
                 if result.success and result.content:
                     # Unpack the returned tuple to get the output path string
-                    output_path_str = result.content[0] if isinstance(result.content,
-                                                                      tuple) else result.content
+                    output_path_str = result.content[0] if isinstance(result.content, tuple) else result.content
                     return IntegrationResult.success_result(
                         output_path_str,
                         message=f"Successfully converted {input_path} to Markdown",
@@ -158,8 +152,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
 
                 if result.success and result.content:
                     # Unpack the returned tuple to get the output path string
-                    output_path_str = result.content[0] if isinstance(result.content,
-                                                                      tuple) else result.content
+                    output_path_str = result.content[0] if isinstance(result.content, tuple) else result.content
                     return IntegrationResult.success_result(
                         output_path_str,
                         message=f"Successfully converted {input_path} to DOCX",
@@ -306,15 +299,11 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             input_info = fs.get_file_info(input_path)
 
             # Check if files exist
-            if not getattr(output_info, 'success', False) or not getattr(output_info,
-                                                                         'exists',
-                                                                         False):
+            if not getattr(output_info, 'success', False) or not getattr(output_info, 'exists', False):
                 logger.error(f"Output file does not exist: {output_path}")
                 return False
 
-            if not getattr(input_info, 'success', False) or not getattr(input_info,
-                                                                        'exists',
-                                                                        False):
+            if not getattr(input_info, 'success', False) or not getattr(input_info, 'exists', False):
                 logger.error(f"Input file does not exist: {input_path}")
                 return False
 
@@ -323,8 +312,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             output_size = safe_convert_to_int(getattr(output_info, 'size', 0), 0)
 
             # Calculate size change
-            size_change_percentage = (
-                        output_size / input_size * 100) if input_size > 0 else 0
+            size_change_percentage = (output_size / input_size * 100) if input_size > 0 else 0
             logger.debug(
                 f"Conversion size change: {input_size} → {output_size} bytes ({size_change_percentage:.1f}%)"
             )
@@ -332,8 +320,7 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
             # Get file extension
             try:
                 ext_result = fs.get_extension(output_path)
-                ext = getattr(ext_result, 'data', '') if getattr(ext_result, 'success',
-                                                                 False) else ''
+                ext = getattr(ext_result, 'data', '') if getattr(ext_result, 'success', False) else ''
             except Exception as e:
                 logger.error(f"Failed to get extension: {e}")
                 ext = output_path.split('.')[-1] if '.' in output_path else ''
@@ -367,16 +354,3 @@ class DocumentConverter(DocumentConverterProtocol, BatchConverterProtocol):
         except Exception as e:
             logger.error(f"Error during validation: {str(e)}")
             return False
-
-
-def create_converter(config: PandocConfig) -> DocumentConverter:
-    """
-    Create a document converter instance.
-
-    Args:
-        config: The Pandoc conversion configuration.
-
-    Returns:
-        A new DocumentConverter instance.
-    """
-    return DocumentConverter(config)

@@ -7,10 +7,8 @@ using pandoc with optimized settings and error handling.
 """
 
 import importlib
-import sys
+import os
 import time
-import types
-from types import SimpleNamespace
 
 from quackcore.errors import QuackIntegrationError
 from quackcore.integrations.core.results import IntegrationResult
@@ -28,22 +26,20 @@ from quackcore.logging import get_logger
 
 logger = get_logger(__name__)
 
-# Ensure fs module is properly available
-if 'quackcore.fs.service' not in sys.modules:
-    # Create the module hierarchy if needed
-    if 'quackcore' not in sys.modules:
-        quackcore_mod = types.ModuleType('quackcore')
-        sys.modules['quackcore'] = quackcore_mod
-
-    if 'quackcore.fs' not in sys.modules:
-        fs_mod = types.ModuleType('quackcore.fs')
-        sys.modules['quackcore.fs'] = fs_mod
-
-    service_mod = types.ModuleType('quackcore.fs.service')
-    service_mod.standalone = SimpleNamespace()
-    sys.modules['quackcore.fs.service'] = service_mod
-
-from quackcore.fs.service import standalone as fs
+# Import fs module with error handling
+try:
+    from quackcore.fs.service import standalone as fs
+except ImportError:
+    logger.error("Could not import quackcore.fs.service")
+    from types import SimpleNamespace
+    # Create a minimal fs stub if the module isn't available (for tests)
+    fs = SimpleNamespace(
+        get_file_info=lambda path: SimpleNamespace(success=False, exists=False, error="Module not available"),
+        create_directory=lambda path, exist_ok=True: SimpleNamespace(success=True),
+        join_path=lambda *parts: SimpleNamespace(success=True, data=os.path.join(*parts)),
+        split_path=lambda path: SimpleNamespace(success=True, data=path.split(os.sep) if isinstance(path, str) else []),
+        read_text=lambda path, encoding=None: SimpleNamespace(success=True, content="# Test Content")
+    )
 
 
 def _validate_markdown_input(markdown_path: str) -> int:
@@ -60,23 +56,23 @@ def _validate_markdown_input(markdown_path: str) -> int:
         QuackIntegrationError: If the input file is missing or empty.
     """
     file_info = fs.get_file_info(markdown_path)
-    if not file_info.success or not file_info.exists:
+    if not getattr(file_info, 'success', False) or not getattr(file_info, 'exists', False):
         raise QuackIntegrationError(
             f"Input file not found: {markdown_path}",
             {"path": markdown_path, "format": "markdown"},
         )
 
     # Convert file size to integer safely
-    original_size = safe_convert_to_int(file_info.size, 0)
+    original_size = safe_convert_to_int(getattr(file_info, 'size', 0), 0)
 
     try:
         read_result = fs.read_text(markdown_path, encoding="utf-8")
-        if not read_result.success:
+        if not getattr(read_result, 'success', False):
             raise QuackIntegrationError(
-                f"Could not read Markdown file: {read_result.error}",
+                f"Could not read Markdown file: {getattr(read_result, 'error', 'Unknown error')}",
                 {"path": markdown_path},
             )
-        markdown_content = read_result.content
+        markdown_content = getattr(read_result, 'content', '')
         if not markdown_content.strip():
             raise QuackIntegrationError(
                 f"Markdown file is empty: {markdown_path}",
@@ -114,9 +110,9 @@ def _convert_markdown_to_docx_once(
     try:
         # Get the parent directory of the output file
         split_result = fs.split_path(output_path)
-        if not split_result.success:
+        if not getattr(split_result, 'success', False):
             raise QuackIntegrationError(
-                f"Failed to split output path: {split_result.error}",
+                f"Failed to split output path: {getattr(split_result, 'error', 'Unknown error')}",
                 {"path": output_path, "operation": "split_path"},
             )
 
@@ -128,18 +124,18 @@ def _convert_markdown_to_docx_once(
             parent_dir = "."  # Default to current directory if no parent path
         else:
             join_result = fs.join_path(*path_components)
-            if not join_result.success:
+            if not getattr(join_result, 'success', False):
                 raise QuackIntegrationError(
-                    f"Failed to join path components: {join_result.error}",
+                    f"Failed to join path components: {getattr(join_result, 'error', 'Unknown error')}",
                     {"components": path_components, "operation": "join_path"},
                 )
             parent_dir = join_result.data
 
         # Create the parent directory
         dir_result = fs.create_directory(parent_dir, exist_ok=True)
-        if not dir_result.success:
+        if not getattr(dir_result, 'success', False):
             raise QuackIntegrationError(
-                f"Failed to create output directory: {dir_result.error}",
+                f"Failed to create output directory: {getattr(dir_result, 'error', 'Unknown error')}",
                 {"path": parent_dir, "operation": "create_directory"},
             )
 
@@ -187,13 +183,15 @@ def _get_conversion_output(output_path: str, start_time: float) -> tuple[float, 
     conversion_time: float = time.time() - start_time
     output_info = fs.get_file_info(output_path)
 
-    # For test compatibility, don't raise error if file doesn't exist
-    if not output_info.success:
+    if not getattr(output_info, 'success', False):
         logger.warning(f"Failed to get info for converted file: {output_path}")
-        return conversion_time, 0
+        raise QuackIntegrationError(
+            f"Failed to get info for converted file: {getattr(output_info, 'error', 'Unknown error')}",
+            {"path": output_path}
+        )
 
     # Convert output size to integer safely
-    output_size = safe_convert_to_int(output_info.size, 0)
+    output_size = safe_convert_to_int(getattr(output_info, 'size', 0), 0)
     return conversion_time, output_size
 
 
@@ -216,13 +214,16 @@ def convert_markdown_to_docx(
         IntegrationResult[tuple[str, ConversionDetails]]: Result of the conversion.
     """
     # Get file name from the input path
-    split_result = fs.split_path(markdown_path)
-    if not split_result.success:
-        return IntegrationResult.error_result(
-            f"Failed to split input path: {split_result.error}"
-        )
-
-    filename: str = split_result.data[-1]
+    try:
+        split_result = fs.split_path(markdown_path)
+        if getattr(split_result, 'success', False):
+            filename = split_result.data[-1]
+        else:
+            # Fallback if split_path fails
+            filename = os.path.basename(markdown_path)
+    except Exception:
+        # Simple fallback
+        filename = markdown_path
 
     if metrics is None:
         metrics = ConversionMetrics()
@@ -327,12 +328,12 @@ def validate_conversion(
     validation = config.validation
 
     output_info = fs.get_file_info(output_path)
-    if not output_info.success or not output_info.exists:
+    if not getattr(output_info, 'success', False) or not getattr(output_info, 'exists', False):
         validation_errors.append(f"Output file does not exist: {output_path}")
         return validation_errors
 
     # Convert output size to integer safely
-    output_size = safe_convert_to_int(output_info.size, 0)
+    output_size = safe_convert_to_int(getattr(output_info, 'size', 0), 0)
 
     valid_size, size_errors = check_file_size(output_size, validation.min_file_size)
     if not valid_size:
@@ -344,7 +345,7 @@ def validate_conversion(
     if not valid_ratio:
         validation_errors.extend(ratio_errors)
 
-    if validation.verify_structure and output_info.exists:
+    if validation.verify_structure and getattr(output_info, 'exists', False):
         is_valid, structure_errors = validate_docx_structure(
             output_path, validation.check_links
         )
@@ -377,8 +378,8 @@ def _check_docx_metadata(docx_path: str, source_path: str, check_links: bool) ->
 
         # Get source filename
         split_result = fs.split_path(source_path)
-        if not split_result.success:
-            logger.debug(f"Failed to split source path: {split_result.error}")
+        if not getattr(split_result, 'success', False):
+            logger.debug(f"Failed to split source path: {getattr(split_result, 'error', 'Unknown error')}")
             return
 
         source_filename = split_result.data[-1]
