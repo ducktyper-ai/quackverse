@@ -953,7 +953,7 @@ class ExampleServiceConfig(BaseConfigProvider):
             
         # Validate API URL format
         api_url = config.get("api_url", "")
-        if not api_url.startswith(("http://", "https://")):
+        if not api_url.startswith(("http://", "http://")):
             self.logger.error(f"Invalid API URL format: {api_url}")
             return False
             
@@ -1653,7 +1653,7 @@ def validate_config(self, config: dict[str, Any]) -> bool:
     # Validate field formats
     if "api_url" in config:
         url = config["api_url"]
-        if not url.startswith(("http://", "https://")):
+        if not url.startswith(("http://", "http://")):
             validation_errors.append(f"Invalid API URL format: {url}")
     
     # Log validation errors

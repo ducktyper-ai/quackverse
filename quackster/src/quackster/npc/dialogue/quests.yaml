@@ -5,7 +5,7 @@ star-quackcore:
   metadata:
     difficulty: "easy"
     category: "github"
-  guidance: "To complete this quest at level {{ level }}, you'll need to star the QuackCore repository on GitHub.\n\n1. Go to https://github.com/quackverse/quackcore\n2. Click the 'Star' button in the top-right corner\n3. That's it! Your quest progress will be automatically updated."
+  guidance: "To complete this quest at level {{ level }}, you'll need to star the QuackCore repository on GitHub.\n\n1. Go to http://github.com/quackverse/quackcore\n2. Click the 'Star' button in the top-right corner\n3. That's it! Your quest progress will be automatically updated."
   hint: "Have you tried searching for 'quackverse/quackcore' on GitHub? Once you find the repository, look for the star button in the upper right corner! (Level: {{ level }})"
   completion: "Quack-tastic! You've starred the QuackCore repository and shown your support for the project. This helps others discover the project too! (Level: {{ level }})"
   flavor: "⭐ Let your star shine bright in the GitHub galaxy! Every star helps the project grow! (Level: {{ level }})"
@@ -14,7 +14,7 @@ star-quackverse:
   metadata:
     difficulty: "easy"
     category: "github"
-  guidance: "To complete this quest at level {{ level }}, you'll need to star the QuackVerse organization on GitHub.\n\n1. Go to https://github.com/quackverse\n2. Click the 'Star' button in the top-right corner\n3. That's it! Your quest progress will be automatically updated."
+  guidance: "To complete this quest at level {{ level }}, you'll need to star the QuackVerse organization on GitHub.\n\n1. Go to http://github.com/quackverse\n2. Click the 'Star' button in the top-right corner\n3. That's it! Your quest progress will be automatically updated."
   hint: "Head over to GitHub and search for 'quackverse'. Look for the organization page (not a specific repository), and you'll find the star button there! (Level: {{ level }})"
   completion: "Excellent job! You've starred the QuackVerse organization, helping to increase its visibility in the GitHub community! (Level: {{ level }})"
   flavor: "⭐ The entire QuackVerse constellation is brighter thanks to your star! Quack-tacular! (Level: {{ level }})"

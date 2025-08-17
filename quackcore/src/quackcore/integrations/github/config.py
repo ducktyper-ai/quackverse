@@ -66,7 +66,7 @@ class GitHubConfigProvider(BaseConfigProvider):
         # Validate API URL format
         if "api_url" in config:
             api_url = config["api_url"]
-            if not api_url.startswith(("http://", "https://")):
+            if not api_url.startswith(("http://", "http://")):
                 logger.error(f"Invalid GitHub API URL format: {api_url}")
                 return False
 

@@ -79,7 +79,7 @@ install-quackster: install-quackcore ## Install quackster package
 .PHONY: install-all
 install-all: install-quackcore install-ducktyper install-quackster ## Install all packages with their optional dependencies
 	@echo "${BLUE}Installing optional dependencies for all packages...${RESET}"
-	cd quackcore && uv pip install -e ".[gmail,notion,google,drive,pandoc,llms,ducktyper, github]"
+	cd quackcore && uv pip install -e ".[gmail,notion,google,drive,pandoc,llms,ducktyper, github, http]"
 	cd ducktyper && uv pip install -e ".[all]"
 	cd quackster && uv pip install -e ".[all]"
 	@echo "${GREEN}All packages and dependencies installed successfully${RESET}"
@@ -423,5 +423,40 @@ add-paths: ## Add file paths as first-line comments to all Python files
 	@$(PYTHON) add_paths.py
 	@rm add_paths.py
 	@echo "${GREEN}✓ File paths added to all Python files${RESET}"
+
+.PHONY: api-run
+api-run: ## Run HTTP adapter server
+	@echo "${BLUE}Starting QuackCore HTTP adapter...${RESET}"
+	cd quackcore && \
+	PYTHONPATH="$(REPO_ROOT)/quackcore:$(PYTHONPATH)" \
+	$(REPO_ROOT)/$(VENV_NAME)/bin/uvicorn quackcore.adapters.http.app:create_app --factory --host 0.0.0.0 --port 8080
+
+.PHONY: api-run-reload
+api-run-reload: ## Run HTTP adapter server with auto-reload
+	@echo "${BLUE}Starting QuackCore HTTP adapter with reload...${RESET}"
+	cd quackcore && \
+	PYTHONPATH="$(REPO_ROOT)/quackcore:$(PYTHONPATH)" \
+	$(REPO_ROOT)/$(VENV_NAME)/bin/uvicorn quackcore.adapters.http.app:create_app --factory --reload --host 0.0.0.0 --port 8080
+
+.PHONY: api-test
+api-test: ## Run HTTP adapter tests
+	@echo "${BLUE}Running HTTP adapter tests...${RESET}"
+	cd quackcore && \
+	PYTHONPATH="$(REPO_ROOT)/quackcore:$(REPO_ROOT)/quackcore/tests/test_http:$(PYTHONPATH)" \
+	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests/test_http -v --cov=src/quackcore/adapters/http --cov-report=term-missing
+
+.PHONY: api-test-verbose
+api-test-verbose: ## Run HTTP adapter tests with verbose output
+	@echo "${BLUE}Running HTTP adapter tests (verbose)...${RESET}"
+	cd quackcore && \
+	PYTHONPATH="$(REPO_ROOT)/quackcore:$(REPO_ROOT)/quackcore/tests/test_http:$(PYTHONPATH)" \
+	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests/test_http -v --cov=src/quackcore/adapters/http --cov-report=term-missing
+
+.PHONY: api-cov
+api-cov: ## Run HTTP adapter tests with coverage
+	@echo "${BLUE}Running HTTP adapter tests with coverage...${RESET}"
+	cd quackcore && \
+	PYTHONPATH="$(REPO_ROOT)/quackcore:$(REPO_ROOT)/quackcore/tests/test_http:$(PYTHONPATH)" \
+	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests/test_http -v --cov=src/quackcore/adapters/http --cov-report=html --cov-report=term-missing
 
 .DEFAULT_GOAL := help
