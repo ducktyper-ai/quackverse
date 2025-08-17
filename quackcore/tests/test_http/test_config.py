@@ -1,4 +1,4 @@
-# File: quackcore/tests_http/test_config.py
+# quackcore/tests_http/test_config.py
 """
 Tests for HTTP adapter configuration.
 """
@@ -71,4 +71,3 @@ def test_config_serialization():
     config2 = HttpAdapterConfig(**data)
     assert config2.auth_token == "test"
     assert config2.max_workers == 2
-

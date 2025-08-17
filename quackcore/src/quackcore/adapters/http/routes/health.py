@@ -1,4 +1,4 @@
-# File: quackcore/src/quackcore/adapters/http/routes/health.py
+# quackcore/src/quackcore/adapters/http/routes/health.py
 """
 Health check routes.
 """
@@ -10,12 +10,11 @@ router = APIRouter()
 
 @router.get("/live")
 def health_live():
-    """Liveness check."""
+    """Liveness check - no auth required."""
     return {"ok": True}
 
 
 @router.get("/ready")
 def health_ready():
-    """Readiness check."""
+    """Readiness check - no auth required."""
     return {"ok": True}
-

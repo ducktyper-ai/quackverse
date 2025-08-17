@@ -1,4 +1,4 @@
-# File: quackcore/tests_http/test_routes_jobs.py
+# quackcore/tests_http/test_routes_jobs.py
 """
 Tests for job routes.
 """
@@ -49,6 +49,7 @@ def test_post_jobs_with_idempotency_header(test_client, auth_headers):
         "params": {"input_path": "/test"}
     }, headers=headers)
 
+    # Make second request immediately
     response2 = test_client.post("/jobs", json={
         "op": "quackmedia.slice_video",
         "params": {"input_path": "/test"}
@@ -75,7 +76,7 @@ def test_get_job_status_success(test_client, auth_headers):
 
     job_id = create_response.json()["job_id"]
 
-    # Get status
+    # Get status immediately (should exist)
     status_response = test_client.get(f"/jobs/{job_id}", headers=auth_headers)
     assert status_response.status_code == 200
 
@@ -101,6 +102,7 @@ def test_job_lifecycle(test_client, auth_headers):
 
     while time.time() - start_time < max_wait:
         status_response = test_client.get(f"/jobs/{job_id}", headers=auth_headers)
+        assert status_response.status_code == 200  # Should always find the job
         data = status_response.json()
 
         if data["status"] in ["done", "error"]:

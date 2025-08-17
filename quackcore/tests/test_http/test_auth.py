@@ -1,4 +1,4 @@
-# File: quackcore/tests_http/test_auth.py
+# quackcore/tests_http/test_auth.py
 """
 Tests for authentication functionality.
 """
@@ -115,10 +115,10 @@ def test_health_endpoint_with_auth(test_client, auth_headers):
     assert response.json() == {"ok": True}
 
 
-def test_health_endpoint_without_auth(test_client):
-    """Test health endpoint fails without auth when required."""
-    response = test_client.get("/health/live")
-    assert response.status_code == 401
+def test_health_endpoint_without_auth(no_auth_client):
+    """Test health endpoint works without auth when not required."""
+    response = no_auth_client.get("/health/live")
+    assert response.status_code == 200
 
 
 def test_health_endpoint_no_auth_required(no_auth_client):

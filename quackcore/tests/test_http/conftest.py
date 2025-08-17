@@ -1,4 +1,4 @@
-# File: quackcore/tests_http/conftest.py
+# quackcore/tests_http/conftest.py
 """
 Test configuration for HTTP adapter tests.
 """
@@ -8,6 +8,15 @@ from fastapi.testclient import TestClient
 
 from quackcore.adapters.http.config import HttpAdapterConfig
 from quackcore.adapters.http.app import create_app
+from quackcore.adapters.http.jobs import clear_jobs
+
+
+@pytest.fixture(autouse=True)
+def clear_job_state():
+    """Clear job state before each test."""
+    clear_jobs()
+    yield
+    clear_jobs()
 
 
 @pytest.fixture

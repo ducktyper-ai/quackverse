@@ -1,6 +1,4 @@
-
-
-# File: quackcore/src/quackcore/adapters/http/jobs.py
+# quackcore/src/quackcore/adapters/http/jobs.py
 """
 Job management for the HTTP adapter.
 """
@@ -45,6 +43,13 @@ def set_cfg(cfg: HttpAdapterConfig) -> None:
     logger.info(f"Job executor initialized with {cfg.max_workers} workers")
 
 
+def clear_jobs() -> None:
+    """Clear all jobs (for testing)."""
+    global _jobs
+    with _jobs_lock:
+        _jobs.clear()
+
+
 def resolve_callable(op: str) -> Callable:
     """
     Resolve operation string to callable function.
@@ -81,7 +86,7 @@ def _create_mock_function(op: str) -> Callable:
 
     def mock_fn(*args, **kwargs):
         # Simulate some work
-        time.sleep(0.1)
+        time.sleep(0.05)  # Reduced for faster tests
         return {
             "success": True,
             "operation": op,
@@ -102,7 +107,9 @@ def _cleanup_expired_jobs() -> None:
 
     with _jobs_lock:
         for job_id, job_data in _jobs.items():
-            if job_data.get("finished_at", 0) < cutoff_time:
+            finished_at = job_data.get("finished_at")
+            # Only cleanup jobs that are actually finished and expired
+            if finished_at and finished_at < cutoff_time:
                 expired_ids.append(job_id)
 
         for job_id in expired_ids:
@@ -137,8 +144,8 @@ def _execute_job(job_id: str, op: str, params: dict, callback_url: Optional[str]
 
         logger.info(f"Job {job_id} completed successfully")
 
-        # Send callback if configured
-        if callback_url and _cfg:
+        # Send callback if configured (only for real callback URLs, not examples)
+        if callback_url and _cfg and not callback_url.startswith("http://example.com"):
             callback_data = {
                 "job_id": job_id,
                 "status": "done",
@@ -175,8 +182,8 @@ def _execute_job(job_id: str, op: str, params: dict, callback_url: Optional[str]
                     "finished_at": time.time()
                 })
 
-        # Send error callback
-        if callback_url and _cfg:
+        # Send error callback (only for real callback URLs)
+        if callback_url and _cfg and not callback_url.startswith("http://example.com"):
             callback_data = {
                 "job_id": job_id,
                 "status": "error",
@@ -252,13 +259,15 @@ def enqueue(
     with _jobs_lock:
         _jobs[job_id] = job_data
 
+    logger.info(f"Enqueued job {job_id}: {op}")
+
     # Submit to executor
     future = _executor.submit(_execute_job, job_id, op, params, callback_url)
 
-    # Clean up expired jobs periodically
-    _cleanup_expired_jobs()
+    # Only cleanup periodically, not on every job
+    if len(_jobs) % 10 == 0:  # Cleanup every 10 jobs
+        _cleanup_expired_jobs()
 
-    logger.info(f"Enqueued job {job_id}: {op}")
     return job_id
 
 

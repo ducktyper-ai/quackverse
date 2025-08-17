@@ -1,4 +1,4 @@
-# File: quackcore/src/quackcore/adapters/http/service.py
+# quackcore/src/quackcore/adapters/http/service.py
 """
 Service utilities for running the HTTP adapter.
 """

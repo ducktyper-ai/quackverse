@@ -1,5 +1,4 @@
-
-# File: quackcore/src/quackcore/adapters/http/config.py
+# quackcore/src/quackcore/adapters/http/config.py
 """
 Configuration for the HTTP adapter.
 """
@@ -8,7 +7,6 @@ from typing import List, Optional
 from pydantic import BaseModel, AnyHttpUrl
 
 from quackcore.config.tooling.base import QuackToolConfigModel
-from ...config.tooling.base import QuackToolConfigModel
 
 
 class HttpAdapterConfig(QuackToolConfigModel):

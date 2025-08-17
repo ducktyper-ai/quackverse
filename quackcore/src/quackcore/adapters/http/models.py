@@ -1,4 +1,4 @@
-# File: quackcore/src/quackcore/adapters/http/models.py
+# quackcore/src/quackcore/adapters/http/models.py
 """
 Request/Response models for the HTTP adapter.
 """

@@ -1,4 +1,4 @@
-# File: quackcore/src/quackcore/adapters/http/routes/quackmedia.py
+# quackcore/src/quackcore/adapters/http/routes/quackmedia.py
 """
 QuackMedia convenience routes (synchronous).
 """

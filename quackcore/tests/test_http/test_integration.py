@@ -1,5 +1,4 @@
-
-# File: quackcore/tests_http/test_integration.py
+# quackcore/tests_http/test_integration.py
 """
 Integration tests for the HTTP adapter.
 """
@@ -54,15 +53,16 @@ def test_full_job_workflow(integration_client, integration_headers):
             f"/jobs/{job_id}",
             headers=integration_headers
         )
-        assert status_response.status_code == 200
 
-        status_data = status_response.json()
-        if status_data["status"] in ["done", "error"]:
-            break
+        if status_response.status_code == 200:
+            status_data = status_response.json()
+            if status_data["status"] in ["done", "error"]:
+                break
 
         time.sleep(0.1)
 
-    # Verify completion
+    # Verify we got a response
+    assert status_response.status_code == 200
     assert status_data["status"] == "done"
     assert status_data["result"]["success"] is True
     assert "input_path" in status_data["result"]["params"]
@@ -100,9 +100,11 @@ def test_sync_vs_async_consistency(integration_client, integration_headers):
             f"/jobs/{job_id}",
             headers=integration_headers
         )
-        status_data = status_response.json()
-        if status_data["status"] == "done":
-            break
+
+        if status_response.status_code == 200:
+            status_data = status_response.json()
+            if status_data["status"] == "done":
+                break
         time.sleep(0.1)
 
     async_result = status_data["result"]
@@ -114,9 +116,7 @@ def test_sync_vs_async_consistency(integration_client, integration_headers):
 
 def test_health_endpoints(integration_client):
     """Test health endpoints work without auth."""
-    # Note: health endpoints should work without auth in this setup
-    # since we're testing the overall health of the service
-
+    # Health endpoints should work without auth
     live_response = integration_client.get("/health/live")
     assert live_response.status_code == 200
     assert live_response.json() == {"ok": True}

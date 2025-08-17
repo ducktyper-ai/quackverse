@@ -1,4 +1,4 @@
-# File: quackcore/tests_http/test_jobs.py
+# quackcore/tests_http/test_jobs.py
 """
 Tests for job management functionality.
 """
@@ -80,16 +80,17 @@ def test_enqueue_and_get_status(job_config):
     assert job_id is not None
     assert len(job_id) == 36  # UUID4 length
 
-    # Get initial status
+    # Get initial status (should exist immediately after enqueue)
     status = get_status(job_id)
     assert status is not None
     assert status["job_id"] == job_id
     assert status["status"] in ["queued", "running", "done"]
 
-    # Wait a bit and check if job completes
-    time.sleep(0.5)
+    # Wait a bit for job to complete
+    time.sleep(0.2)
 
     final_status = get_status(job_id)
+    assert final_status is not None
     assert final_status["status"] in ["running", "done"]
 
 
@@ -100,8 +101,10 @@ def test_enqueue_with_idempotency(job_config):
     params = {"input_path": "/test"}
     key = "test-key-123"
 
-    # Enqueue same job twice
+    # Enqueue first job
     job_id1 = enqueue("quackmedia.slice_video", params, idempotency_key=key)
+
+    # Enqueue same job again immediately (before first one finishes)
     job_id2 = enqueue("quackmedia.slice_video", params, idempotency_key=key)
 
     # Should return same job ID

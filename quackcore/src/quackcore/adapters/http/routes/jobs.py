@@ -1,4 +1,4 @@
-# File: quackcore/src/quackcore/adapters/http/routes/jobs.py
+# quackcore/src/quackcore/adapters/http/routes/jobs.py
 """
 Job management routes.
 """

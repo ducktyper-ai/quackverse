@@ -1,4 +1,4 @@
-# File: quackcore/src/quackcore/adapters/http/app.py
+# quackcore/src/quackcore/adapters/http/app.py
 """
 FastAPI application factory.
 """
