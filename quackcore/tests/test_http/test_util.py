@@ -1,4 +1,4 @@
-# quackcore/tests_http/test_util.py
+# quackcore/tests/test_http/test_util.py
 """
 Tests for utility functions.
 """

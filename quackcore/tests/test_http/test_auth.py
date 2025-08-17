@@ -1,4 +1,4 @@
-# quackcore/tests_http/test_auth.py
+# quackcore/tests/test_http/test_auth.py
 """
 Tests for authentication functionality.
 """

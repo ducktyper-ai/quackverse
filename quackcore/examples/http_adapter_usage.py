@@ -1,4 +1,4 @@
-# File: examples/http_adapter_usage.py
+# quackcore/examples/http_adapter_usage.py
 """
 Example of how to use the HTTP adapter with QuackCore's config system.
 """

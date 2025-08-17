@@ -1,4 +1,4 @@
-# quackcore/tests_http/test_jobs.py
+# quackcore/tests/test_http/test_jobs.py
 """
 Tests for job management functionality.
 """

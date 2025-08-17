@@ -1,4 +1,4 @@
-# quackcore/tests_http/test_routes_quackmedia.py
+# quackcore/tests/test_http/test_routes_quackmedia.py
 """
 Tests for QuackMedia routes.
 """

@@ -1,4 +1,4 @@
-# quackcore/tests_http/test_routes_jobs.py
+# quackcore/tests/test_http/test_routes_jobs.py
 """
 Tests for job routes.
 """

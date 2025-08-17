@@ -1,4 +1,4 @@
-# quackcore/tests_http/test_config.py
+# quackcore/tests/test_http/test_config.py
 """
 Tests for HTTP adapter configuration.
 """

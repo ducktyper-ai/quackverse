@@ -1,4 +1,4 @@
-# quackcore/tests_http/test_integration.py
+# quackcore/tests/test_http/test_integration.py
 """
 Integration tests for the HTTP adapter.
 """
