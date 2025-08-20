@@ -22,7 +22,7 @@ The QuackCore HTTP Adapter provides an optional FastAPI-based REST API that expo
 Install QuackCore with the HTTP adapter:
 
 ```bash
-pip install quackcore[http]
+pip install quack-core[http]
 ```
 
 This installs the following additional dependencies:
@@ -62,7 +62,7 @@ make api-run
 Or directly with uvicorn:
 
 ```bash
-uvicorn quackcore.adapters.http.app:create_app --factory --host 0.0.0.0 --port 8080
+uvicorn quack-core.adapters.http.app:create_app --factory --host 0.0.0.0 --port 8080
 ```
 
 ### 3. Basic Usage
@@ -93,7 +93,7 @@ curl -H "Authorization: Bearer your-secret-token" \
      -X POST http://localhost:8080/jobs \
      -H "Content-Type: application/json" \
      -d '{
-       "op": "quackmedia.slice_video",
+       "op": "quack-media.slice_video",
        "params": {
          "input_path": "/path/to/video.mp4",
          "output_path": "/path/to/output.mp4",
@@ -127,7 +127,7 @@ Response:
   "status": "done",
   "result": {
     "success": true,
-    "operation": "quackmedia.slice_video",
+    "operation": "quack-media.slice_video",
     "output_path": "/path/to/output.mp4"
   },
   "error": null
@@ -177,7 +177,7 @@ Both return `{"ok": true}` with 200 status.
 Request body:
 ```json
 {
-  "op": "quackmedia.slice_video",
+  "op": "quack-media.slice_video",
   "params": {"input_path": "/in.mp4", "output_path": "/out.mp4"},
   "callback_url": "https://optional-webhook.com/callback",
   "idempotency_key": "optional-unique-key"
@@ -360,8 +360,8 @@ quackcore/src/quackcore/adapters/http/
 
 ```python
 OP_TABLE = {
-    "quackmedia.slice_video": ("quackcore.quackmedia", "slice_video"),
-    "your_module.new_operation": ("quackcore.your_module", "new_operation"),
+    "quack-media.slice_video": ("quack-core.quack-media", "slice_video"),
+    "your_module.new_operation": ("quack-core.your_module", "new_operation"),
 }
 ```
 
@@ -394,7 +394,7 @@ This enables development and testing without requiring all dependencies.
    - Body:
      ```json
      {
-       "op": "quackmedia.slice_video",
+       "op": "quack-media.slice_video",
        "params": {
          "input_path": "{{$node.previous.json.file_path}}",
          "output_path": "/processed/{{$node.previous.json.filename}}"
@@ -453,7 +453,7 @@ class QuackCoreClient:
     async def slice_video_sync(self, **params) -> Dict[str, Any]:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{self.base_url}/quackmedia/slice",
+                f"{self.base_url}/quack-media/slice",
                 json=params,
                 headers=self.headers
             )
@@ -462,7 +462,7 @@ class QuackCoreClient:
 
 # Usage
 client = QuackCoreClient("http://localhost:8080", "your-token")
-job_id = await client.create_job("quackmedia.slice_video", {
+job_id = await client.create_job("quack-media.slice_video", {
     "input_path": "/input.mp4",
     "output_path": "/output.mp4",
     "start": "00:01:00",
@@ -578,7 +578,7 @@ server {
 
 **"HTTP adapter requires FastAPI" Error**
 ```bash
-pip install quackcore[http]
+pip install quack-core[http]
 ```
 
 **Jobs stuck in "queued" status**
@@ -602,7 +602,7 @@ Enable debug logging:
 
 ```python
 import logging
-logging.getLogger("quackcore.adapters.http").setLevel(logging.DEBUG)
+logging.getLogger("quack-core.adapters.http").setLevel(logging.DEBUG)
 ```
 
 Check job status programmatically:

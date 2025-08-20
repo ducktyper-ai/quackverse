@@ -383,7 +383,7 @@ setuptools.setup(
     name="my-quacktool",
     # ...
     entry_points={
-        "quackcore.plugins": [
+        "quack-core.plugins": [
             "my-plugin=my_quacktool.plugin:create_plugin",
         ],
     },
@@ -1110,7 +1110,7 @@ class MyPlugin:
         """Initialize the plugin."""
         # Check QuackCore version
         try:
-            quackcore_version = importlib.metadata.version("quackcore")
+            quackcore_version = importlib.metadata.version("quack-core")
             if version.parse(quackcore_version) < version.parse("1.0.0"):
                 print(f"Warning: This plugin requires QuackCore 1.0.0 or higher. "
                       f"Current version: {quackcore_version}")

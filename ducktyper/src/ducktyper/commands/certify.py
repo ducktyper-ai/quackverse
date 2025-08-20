@@ -455,7 +455,7 @@ def verify_github_contributions(user_info: dict) -> bool:
             return False
 
         # Verify contributions to QuackVerse repos
-        repos = ["tests-ai/tests", "tests-ai/quackcore",
+        repos = ["tests-ai/tests", "tests-ai/quack-core",
                  "tests-ai/quackster"]
 
         for repo in repos:

@@ -112,7 +112,7 @@ code_review_event = XPEvent(
     id="code-review-123",
     label="Completed Code Review",
     points=25,
-    metadata={"repo": "quackverse/quackcore", "pr_number": 42}
+    metadata={"repo": "quackverse/quack-core", "pr_number": 42}
 )
 ```
 
@@ -163,7 +163,7 @@ github_quest = Quest(
     description="Star the main repository on GitHub",
     reward_xp=50,
     badge_id="github-collaborator",
-    github_check={"repo": "quackverse/quackcore", "action": "star"},
+    github_check={"repo": "quackverse/quack-core", "action": "star"},
 )
 ```
 
@@ -231,7 +231,7 @@ if certificates.has_earned_certificate(user, "python-basics"):
 The QuackCore teaching module is part of the larger QuackCore package. Install it using pip:
 
 ```bash
-pip install quackcore
+pip install quack-core
 ```
 
 ### Basic Usage
@@ -532,7 +532,7 @@ from quackcore.teaching.core import quests, utils
 all_quests = quests.get_all_quests()
 
 # Get a specific quest
-star_quest = quests.get_quest("star-quackcore")
+star_quest = quests.get_quest("star-quack-core")
 
 # Get quests for a specific user
 user = utils.load_progress()
@@ -549,7 +549,7 @@ from quackcore.teaching.core import quests, utils
 user = utils.load_progress()
 
 # Check if specific quest is completed
-if user.has_completed_quest("star-quackcore"):
+if user.has_completed_quest("star-quack-core"):
     print("Repository already starred!")
 else:
     print("Star the repository to complete this quest.")
@@ -1809,10 +1809,10 @@ class GitHubLearningProgram:
         # Define steps in the program
         steps = [
             {
-                "quest_id": "star-quackcore",
+                "quest_id": "star-quack-core",
                 "description": "Star the QuackCore repository",
                 "instructions": "Go to https://github.com/quackverse/quackcore and click the star button",
-                "verification": lambda: self.github_teaching.ensure_starred("quackverse/quackcore")
+                "verification": lambda: self.github_teaching.ensure_starred("quackverse/quack-core")
             },
             {
                 "quest_id": "open-pr",
@@ -1966,7 +1966,7 @@ if not github_api._get_github_client():
 # Test GitHub _operations directly
 user = utils.load_progress()
 if user.github_username:
-    has_starred = github_api.has_starred_repo(user.github_username, "quackverse/quackcore")
+    has_starred = github_api.has_starred_repo(user.github_username, "quackverse/quack-core")
     print(f"Has starred repository: {has_starred}")
     
     has_pr = github_api.has_opened_pr(user.github_username, "quackverse")
@@ -2217,7 +2217,7 @@ from quackcore.teaching.core import utils
 user = utils.load_progress()
 
 # Check completion status
-if user.has_completed_quest("star-quackcore"):
+if user.has_completed_quest("star-quack-core"):
     print("QuackCore repository already starred!")
 else:
     print("Star the QuackCore repository to complete this quest.")
@@ -2278,7 +2278,7 @@ Add XP to a user from completing a quest.
 from quackcore.teaching.core import xp, utils
 
 user = utils.load_progress()
-xp.add_xp_from_quest(user, "star-quackcore", 50)
+xp.add_xp_from_quest(user, "star-quack-core", 50)
 utils.save_progress(user)
 ```
 
@@ -2427,7 +2427,7 @@ Get a specific quest by ID.
 ```python
 from quackcore.teaching.core import quests
 
-quest = quests.get_quest("star-quackcore")
+quest = quests.get_quest("star-quack-core")
 if quest:
     print(f"{quest.name}: {quest.description} (+{quest.reward_xp} XP)")
 ```

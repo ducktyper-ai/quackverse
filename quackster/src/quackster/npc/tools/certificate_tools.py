@@ -33,7 +33,7 @@ def get_certificate_info(user_memory: UserMemory) -> CertificateListOutput:
             "description": "Completed the introductory QuackVerse curriculum",
             "earned": certificates.has_earned_certificate(user, "quackverse-basics"),
             "requirements": [
-                "Complete the 'star-quackcore' quest",
+                "Complete the 'star-quack-core' quest",
                 "Complete the 'run-tests' quest",
                 "Complete the 'complete-tutorial' quest",
                 "Earn at least 100 XP",
@@ -41,7 +41,7 @@ def get_certificate_info(user_memory: UserMemory) -> CertificateListOutput:
             # Calculate progress based on user_memory
             "progress": sum(
                 [
-                    1 if "star-quackcore" in user_memory.completed_quests else 0,
+                    1 if "star-quack-core" in user_memory.completed_quests else 0,
                     1 if "run-tests" in user_memory.completed_quests else 0,
                     1 if "complete-tutorial" in user_memory.completed_quests else 0,
                     1 if user_memory.xp >= 100 else 0,

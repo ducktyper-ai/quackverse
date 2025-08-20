@@ -46,7 +46,7 @@ Whether you're building a simple CLI tool or a complex application with multiple
 The `quackcore.cli` module is part of the main `quackcore` package. To use it, you need to have QuackCore installed:
 
 ```bash
-pip install quackcore
+pip install quack-core
 ```
 
 ### Basic Usage

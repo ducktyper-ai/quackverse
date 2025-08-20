@@ -269,7 +269,7 @@ class GamificationService:
 
         Args:
             pr_number: GitHub pull request number.
-            repo: Repository name (e.g., 'quackverse/quackcore').
+            repo: Repository name (e.g., 'quackverse/quack-core').
 
         Returns:
             Result of the gamification event.
@@ -283,7 +283,7 @@ class GamificationService:
 
         result = self.handle_event(event)
 
-        if repo.lower() == "quackverse/quackcore":
+        if repo.lower() == "quackverse/quack-core":
             if not self.progress.has_completed_quest("open-pr"):
                 quest_result = self.complete_quest("open-pr")
                 result.completed_quests.extend(quest_result.completed_quests)
@@ -342,9 +342,9 @@ class GamificationService:
 
         result = self.handle_event(event)
 
-        if repo.lower() == "quackverse/quackcore":
-            if not self.progress.has_completed_quest("star-quackcore"):
-                quest_result = self.complete_quest("star-quackcore")
+        if repo.lower() == "quackverse/quack-core":
+            if not self.progress.has_completed_quest("star-quack-core"):
+                quest_result = self.complete_quest("star-quack-core")
                 result.completed_quests.extend(quest_result.completed_quests)
                 result.earned_badges.extend(quest_result.earned_badges)
                 if quest_result.message:

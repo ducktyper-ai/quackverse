@@ -5,8 +5,8 @@ star-quackcore:
   metadata:
     difficulty: "easy"
     category: "github"
-  guidance: "To complete this quest at level {{ level }}, you'll need to star the QuackCore repository on GitHub.\n\n1. Go to http://github.com/quackverse/quackcore\n2. Click the 'Star' button in the top-right corner\n3. That's it! Your quest progress will be automatically updated."
-  hint: "Have you tried searching for 'quackverse/quackcore' on GitHub? Once you find the repository, look for the star button in the upper right corner! (Level: {{ level }})"
+  guidance: "To complete this quest at level {{ level }}, you'll need to star the QuackCore repository on GitHub.\n\n1. Go to http://github.com/quackverse/quack-core\n2. Click the 'Star' button in the top-right corner\n3. That's it! Your quest progress will be automatically updated."
+  hint: "Have you tried searching for 'quackverse/quack-core' on GitHub? Once you find the repository, look for the star button in the upper right corner! (Level: {{ level }})"
   completion: "Quack-tastic! You've starred the QuackCore repository and shown your support for the project. This helps others discover the project too! (Level: {{ level }})"
   flavor: "⭐ Let your star shine bright in the GitHub galaxy! Every star helps the project grow! (Level: {{ level }})"
 

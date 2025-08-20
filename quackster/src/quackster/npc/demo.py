@@ -220,7 +220,7 @@ EXAMPLE QUESTIONS:
   What's my level?
   How many badges do I have?
   What quests are available?
-  How do I complete the star-quackcore quest?
+  How do I complete the star-quack-core quest?
   What should I do next?
   Tell me about certificates
   I just starred the repository!

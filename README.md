@@ -101,7 +101,7 @@ make test
 Run tests for specific packages:
 
 ```bash
-make test-quackcore
+make test-quack-core
 make test-ducktyper
 make test-quackster
 ```

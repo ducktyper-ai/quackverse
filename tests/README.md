@@ -50,7 +50,7 @@ This will run all tests in all packages with coverage reporting.
 ### Running Tests for a Specific Package
 
 ```bash
-make test-quackcore
+make test-quack-core
 make test-ducktyper
 make test-quackster
 ```
@@ -93,7 +93,7 @@ For cross-package integration tests, fixtures are imported and re-exported in `t
 Write unit tests in the appropriate package's tests directory:
 
 ```python
-# quackcore/tests/test_example.py
+# quack-core/tests/test_example.py
 def test_example_functionality():
     # Test code here
     assert True

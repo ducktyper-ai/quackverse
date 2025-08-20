@@ -14,7 +14,7 @@ def check_package(package_name):
         print(f"✅ {package_name} is installed at: {package_path}")
 
         # Check expected submodules
-        if package_name == 'quackcore':
+        if package_name == 'quack-core':
             submodules = ["config", "fs", "plugins"]
             for submodule in submodules:
                 try:
@@ -42,7 +42,7 @@ def main():
         print(f"  - {path}")
 
     print("\nChecking packages...")
-    packages = ["quackcore", "ducktyper", "quackster"]
+    packages = ["quack-core", "ducktyper", "quackster"]
     all_ok = True
 
     for package in packages:

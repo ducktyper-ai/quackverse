@@ -269,7 +269,7 @@ def has_earned_certificate(user: UserProgress, course_id: str) -> bool:
         True if the user has earned a certificate, False otherwise.
     """
     if course_id == "quackverse-basics":
-        required_quests = ["star-quackcore", "run-tests", "complete-tutorial"]
+        required_quests = ["star-quack-core", "run-tests", "complete-tutorial"]
         for quest_id in required_quests:
             if not user.has_completed_quest(quest_id):
                 return False

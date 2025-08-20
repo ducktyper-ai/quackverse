@@ -18,7 +18,7 @@ def _verify_star_quackcore(user: UserProgress) -> bool:
     """Verify if the user has starred the QuackCore repository."""
     if not user.github_username:
         return False
-    return github_api.has_starred_repo(user.github_username, "quackverse/quackcore")
+    return github_api.has_starred_repo(user.github_username, "quackverse/quack-core")
 
 
 def _verify_star_quackverse(user: UserProgress) -> bool:
@@ -60,13 +60,13 @@ def _verify_daily_streak(user: UserProgress) -> bool:
 # Define all available quests
 _QUESTS: dict[str, Quest] = {
     # GitHub quests
-    "star-quackcore": Quest(
-        id="star-quackcore",
+    "star-quack-core": Quest(
+        id="star-quack-core",
         name="Star QuackCore",
         description="Star the QuackCore repository on GitHub",
         reward_xp=50,
         badge_id="github-collaborator",
-        github_check={"repo": "quackverse/quackcore", "action": "star"},
+        github_check={"repo": "quackverse/quack-core", "action": "star"},
     ),
     "star-quackverse": Quest(
         id="star-quackverse",
@@ -118,7 +118,7 @@ _QUESTS: dict[str, Quest] = {
 }
 
 # Add verification functions to quests
-_QUESTS["star-quackcore"].verify_func = _verify_star_quackcore
+_QUESTS["star-quack-core"].verify_func = _verify_star_quackcore
 _QUESTS["star-quackverse"].verify_func = _verify_star_quackverse
 _QUESTS["open-pr"].verify_func = _verify_first_pr
 _QUESTS["merged-pr"].verify_func = _verify_merged_pr

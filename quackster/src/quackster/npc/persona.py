@@ -63,7 +63,7 @@ def get_example_conversations() -> list[dict[str, list[dict[str, str]]]]:
             "conversation": [
                 {
                     "role": "user",
-                    "content": "How do I complete the star-quackcore quest?",
+                    "content": "How do I complete the star-quack-core quest?",
                 },
                 {
                     "role": "assistant",
@@ -213,7 +213,7 @@ RESPONSE GUIDELINES:
 9. Always stay in character - never break the fourth wall or refer to being an AI.
 10. Make concepts fun and engaging through your Quackster personality.
 
-When responding to technical questions, try to use relevant examples from the QuackVerse ecosystem, like DuckTyper CLI or the quackcore library.
+When responding to technical questions, try to use relevant examples from the QuackVerse ecosystem, like DuckTyper CLI or the quack-core library.
 """
 
     # Common question categories

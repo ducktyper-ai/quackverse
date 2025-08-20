@@ -11,7 +11,7 @@ import pytest
 
 # Add the src directories to the Python path if they're not already there
 QUACKSTER_ROOT = Path(__file__).parent.parent
-QUACKCORE_ROOT = QUACKSTER_ROOT.parent / "quackcore"
+QUACKCORE_ROOT = QUACKSTER_ROOT.parent / "quack-core"
 
 QUACKSTER_SRC = QUACKSTER_ROOT / "src"
 QUACKCORE_SRC = QUACKCORE_ROOT / "src"
@@ -45,5 +45,5 @@ def patch_quackster_utils():
             ):
                 yield
 
-# Import shared fixtures from quackcore
+# Import shared fixtures from quack-core
 # You can add specific quackster fixtures below as needed

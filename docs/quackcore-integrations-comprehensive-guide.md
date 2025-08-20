@@ -694,7 +694,7 @@ For this to work, your package must define entry points in its `setup.py` or `py
 setup(
     # ...
     entry_points={
-        "quackcore.integrations": [
+        "quack-core.integrations": [
             "my_service = my_package.my_module:create_integration",
         ],
     },
@@ -1319,11 +1319,11 @@ setup(
     version="1.0.0",
     packages=find_packages(),
     install_requires=[
-        "quackcore>=1.0.0",
+        "quack-core>=1.0.0",
         "requests>=2.25.0",
     ],
     entry_points={
-        "quackcore.integrations": [
+        "quack-core.integrations": [
             "example_service = example_service_integration:create_integration",
         ],
     },
@@ -2472,7 +2472,7 @@ setup(
     version="1.0.0",
     packages=["my_integration"],
     entry_points={
-        "quackcore.integrations": [
+        "quack-core.integrations": [
             "my_service = my_integration:create_integration",
         ],
     },

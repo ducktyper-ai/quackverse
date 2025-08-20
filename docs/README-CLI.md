@@ -56,7 +56,7 @@ The `utils.py` module provides helpers for:
 The CLI bootstrapper is included with QuackCore:
 
 ```bash
-pip install quackcore
+pip install quack-core
 ```
 
 ## Basic Usage

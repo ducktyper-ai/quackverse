@@ -12,7 +12,7 @@ import pytest
 REPO_ROOT = Path(__file__).parent.parent.parent
 
 # Add all src directories to Python path
-PACKAGES = ["quackcore", "ducktyper", "quackster"]
+PACKAGES = ["quack-core", "ducktyper", "quackster"]
 for package in PACKAGES:
     package_src = REPO_ROOT / package / "src"
     if package_src.exists() and str(package_src.parent) not in sys.path:
@@ -20,7 +20,7 @@ for package in PACKAGES:
 
 # Import fixtures from individual packages
 try:
-    # Import fixtures from quackcore
+    # Import fixtures from quack-core
     from quackcore.tests.conftest import (
         temp_dir,
         test_file,
@@ -31,7 +31,7 @@ try:
         mock_plugin,
     )
 except ImportError as e:
-    print(f"Warning: Unable to import quackcore fixtures: {e}")
+    print(f"Warning: Unable to import quack-core fixtures: {e}")
 
 try:
     # Import fixtures from quackster

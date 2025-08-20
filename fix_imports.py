@@ -1,6 +1,6 @@
 # fix_imports.py
 """
-Script to fix imports in quackcore test files.
+Script to fix imports in quack-core test files.
 """
 
 import os
@@ -13,7 +13,7 @@ def fix_imports(file_path):
     with open(file_path, 'r') as f:
         content = f.read()
 
-    # Replace 'from tests.quackcore.' with 'from tests.'
+    # Replace 'from tests.quack-core.' with 'from tests.'
     content = content.replace('from ducktyper.src.ducktyper.', 'from ducktyper.')
     content = content.replace('import src.ducktyper.', 'import ducktyper.')
 
@@ -42,7 +42,7 @@ def find_and_fix_test_files(directory):
 
 
 if __name__ == "__main__":
-    # Get the quackcore tests directory
+    # Get the quack-core tests directory
     quackcore_tests_dir = Path("ducktyper/src/ducktyper")
 
     if not quackcore_tests_dir.exists():

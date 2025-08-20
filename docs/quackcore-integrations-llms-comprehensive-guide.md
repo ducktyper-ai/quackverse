@@ -58,7 +58,7 @@ The design follows a clean hierarchical structure, with common functionality abs
 The `quackcore.integrations.llms` module is part of the QuackCore library. You should have it already installed if you're developing a QuackTool. If not, you can install it via pip:
 
 ```bash
-pip install quackcore
+pip install quack-core
 ```
 
 To use specific LLM providers, you'll need to install their Python clients:

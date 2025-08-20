@@ -352,7 +352,7 @@ def get_quest_info(quest_id: str) -> dict[str, Any]:
         }
 
     guidance = {
-        "star-quackcore": (
+        "star-quack-core": (
             "To complete this quest, you'll need to star the QuackCore repository on GitHub.\n\n"
             "1. Go to https://github.com/quackverse/quackcore\n"
             "2. Click the 'Star' button in the top-right corner\n"

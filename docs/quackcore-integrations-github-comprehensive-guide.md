@@ -16,7 +16,7 @@ The `quackcore.integrations.github` module provides a robust, Pythonic interface
 
 ```bash
 # If you've installed QuackCore, you already have access to the GitHub integration
-pip install quackcore
+pip install quack-core
 ```
 
 ### Obtaining a GitHub Token
@@ -39,7 +39,7 @@ There are two primary ways to configure the GitHub integration:
 export GITHUB_TOKEN="your_github_token_here"
 
 # Then, in your code
-from quackcore.integrations.core import registry
+from quack-core.integrations.core import registry
 github = registry.get_integration("GitHub")
 github.initialize()  # Will use the token from environment variable
 ```
@@ -841,11 +841,11 @@ import logging
 from quackcore.logging import get_logger
 
 # Set logging level to DEBUG for the GitHub integration
-logger = get_logger("quackcore.integrations.github")
+logger = get_logger("quack-core.integrations.github")
 logger.setLevel(logging.DEBUG)
 
 # Or set it for all QuackCore modules
-quackcore_logger = get_logger("quackcore")
+quackcore_logger = get_logger("quack-core")
 quackcore_logger.setLevel(logging.DEBUG)
 ```
 
