@@ -60,36 +60,16 @@ install-quackcore: ## Install quackcore package
 	@# Verify installation
 	@$(PYTHON) -c "import quackcore; print(f'quackcore installed at: {quackcore.__file__}')"
 
-.PHONY: install-ducktyper
-install-ducktyper: install-quackcore ## Install ducktyper package
-	@echo "${BLUE}Installing ducktyper package...${RESET}"
-	cd ducktyper && uv pip install -e .
-	@echo "${GREEN}ducktyper installed successfully${RESET}"
-	@# Verify installation
-	@$(PYTHON) -c "import ducktyper; print(f'ducktyper installed at: {ducktyper.__file__}')"
-
-.PHONY: install-quackster
-install-quackster: install-quackcore ## Install quackster package
-	@echo "${BLUE}Installing quackster package...${RESET}"
-	cd quackster && uv pip install -e .
-	@echo "${GREEN}quackster installed successfully${RESET}"
-	@# Verify installation
-	@$(PYTHON) -c "import quackster; print(f'quackster installed at: {quackster.__file__}')"
-
 .PHONY: install-all
-install-all: install-quackcore install-ducktyper install-quackster ## Install all packages with their optional dependencies
+install-all: install-quackcore ## Install all packages with their optional dependencies
 	@echo "${BLUE}Installing optional dependencies for all packages...${RESET}"
-	cd quackcore && uv pip install -e ".[gmail,notion,google,drive,pandoc,llms,ducktyper, github, http]"
-	cd ducktyper && uv pip install -e ".[all]"
-	cd quackster && uv pip install -e ".[all]"
+	cd quackcore && uv pip install -e ".[gmail,notion,google,drive,pandoc,llms, github, http]"
 	@echo "${GREEN}All packages and dependencies installed successfully${RESET}"
 
 .PHONY: install-dev
 install-dev: ## Install development dependencies for all packages
 	@echo "${BLUE}Installing development tools...${RESET}"
 	cd quackcore && uv pip install -e ".[dev]"
-	cd ducktyper && uv pip install -e ".[dev]"
-	cd quackster && uv pip install -e ".[dev]"
 	uv pip install -e ".[dev]"
 	@echo "${GREEN}Development dependencies installed successfully${RESET}"
 
@@ -230,11 +210,6 @@ test: ## Run tests with coverage
 	cd quackcore && \
 	PYTHONPATH="$(REPO_ROOT)/quackcore:$(REPO_ROOT)/quackcore/tests:$(PYTHONPATH)" \
 	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests -v --cov=src --cov-report=term-missing && \
-	cd ../ducktyper && \
-	PYTHONPATH="$(REPO_ROOT)/ducktyper:$(REPO_ROOT)/ducktyper/tests:$(PYTHONPATH)" \
-	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests -v --cov=src --cov-report=term-missing && \
-	cd ../quackster && \
-	PYTHONPATH="$(REPO_ROOT)/quackster:$(REPO_ROOT)/quackster/tests:$(PYTHONPATH)" \
 	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests -v --cov=src --cov-report=term-missing
 
 .PHONY: test-quackcore
@@ -244,26 +219,12 @@ test-quackcore: ## Run only quackcore tests
 	PYTHONPATH="$(REPO_ROOT)/quackcore:$(REPO_ROOT)/quackcore/tests:$(PYTHONPATH)" \
 	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests -v --cov=src --cov-report=term-missing
 
-.PHONY: test-ducktyper
-test-ducktyper: ## Run only ducktyper tests
-	@echo "${BLUE}Running ducktyper tests...${RESET}"
-	cd ducktyper && \
-	PYTHONPATH="$(REPO_ROOT)/ducktyper:$(REPO_ROOT)/ducktyper/tests:$(PYTHONPATH)" \
-	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests -v --cov=src --cov-report=term-missing
-
-.PHONY: test-quackster
-test-quackster: ## Run only quackster tests
-	@echo "${BLUE}Running quackster tests...${RESET}"
-	cd quackster && \
-	PYTHONPATH="$(REPO_ROOT)/quackster:$(REPO_ROOT)/quackster/tests:$(PYTHONPATH)" \
-	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests -v --cov=src --cov-report=term-missing
-
 .PHONY: test-integration
 test-integration: ## Run only integration tests
 	@echo "${BLUE}Running integration tests...${RESET}"
-	PYTHONPATH="$(REPO_ROOT)/quackcore:$(REPO_ROOT)/ducktyper:$(REPO_ROOT)/quackster:$(PYTHONPATH)" \
+	PYTHONPATH="$(REPO_ROOT)/quackcore:$(PYTHONPATH)" \
 	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests/integration $(PYTEST_ARGS) \
-		--cov=quackcore/src --cov=ducktyper/src --cov=quackster/src --cov-report=term-missing
+		--cov=quackcore/src --cov-report=term-missing
 
 .PHONY: test-module
 test-module: ## Run only integration tests with coverage
@@ -273,16 +234,16 @@ test-module: ## Run only integration tests with coverage
 .PHONY: format
 format: ## Format code with Ruff and isort
 	@echo "${BLUE}Formatting code...${RESET}"
-	$(PYTHON) -m ruff check quackcore/src/ quackcore/tests/ ducktyper/src/ ducktyper/tests/ quackster/src/ quackster/tests/ examples/ --fix
+	$(PYTHON) -m ruff check quackcore/src/ quackcore/tests/ examples/ --fix
 	$(PYTHON) -m ruff format .
 	$(PYTHON) -m isort .
 
 .PHONY: lint
 lint: ## Run linters
 	@echo "${BLUE}Running linters...${RESET}"
-	$(PYTHON) -m ruff check quackcore/src/ quackcore/tests/ ducktyper/src/ ducktyper/tests/ quackster/src/ quackster/tests/ examples/
-	$(PYTHON) -m ruff format --check quackcore/src/ quackcore/tests/ ducktyper/src/ ducktyper/tests/ quackster/src/ quackster/tests/ examples/
-	$(PYTHON) -m mypy quackcore/src/ quackcore/tests/ ducktyper/src/ ducktyper/tests/ quackster/src/ quackster/tests/ examples/
+	$(PYTHON) -m ruff check quackcore/src/ quackcore/tests/ examples/
+	$(PYTHON) -m ruff format --check quackcore/src/ quackcore/tests/ examples/
+	$(PYTHON) -m mypy quackcore/src/ quackcore/tests/ examples/
 
 .PHONY: clean
 clean: ## Clean build artifacts and cache
@@ -293,16 +254,12 @@ clean: ## Clean build artifacts and cache
 	find . -type f -name "*.pyc" -delete
 	# Clean subpackages
 	cd quackcore && rm -rf build/ dist/ *.egg-info
-	cd ducktyper && rm -rf build/ dist/ *.egg-info
-	cd quackster && rm -rf build/ dist/ *.egg-info
 	@echo "${GREEN}Cleaned all build artifacts and cache.${RESET}"
 
 .PHONY: build
 build: clean format lint test ## Build all packages for distribution
 	@echo "${BLUE}Building packages for distribution...${RESET}"
 	cd quackcore && uv pip build
-	cd ducktyper && uv pip build
-	cd quackster && uv pip build
 	@echo "${GREEN}Packages built successfully. Distribution files in respective dist/ directories.${RESET}"
 
 .PHONY: publish
@@ -310,14 +267,10 @@ publish: build ## Publish packages to PyPI
 	@echo "${BLUE}Publishing packages to PyPI...${RESET}"
 	@echo "${YELLOW}This will publish the following packages:${RESET}"
 	@echo "  - quackcore"
-	@echo "  - ducktyper"
-	@echo "  - quackster"
 	@echo "${YELLOW}Are you sure you want to continue? (y/n)${RESET}"
 	@read -p " " yn; \
 	if [ "$$yn" = "y" ]; then \
 		cd quackcore && uv pip publish --repository pypi; \
-		cd ../ducktyper && uv pip publish --repository pypi; \
-		cd ../quackster && uv pip publish --repository pypi; \
 		echo "${GREEN}All packages published successfully!${RESET}"; \
 	else \
 		echo "${YELLOW}Publishing cancelled.${RESET}"; \

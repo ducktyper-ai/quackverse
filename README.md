@@ -11,14 +11,10 @@ Whether you're automating metadata extraction, building AI agents, exploring tok
 | Tool | Description |
 |------|-------------|
 | [`quackcore`](https://github.com/ducktyper-ai/quackverse/tree/main/quackcore) | The shared foundation for all QuackTools — infrastructure, integrations, protocols |
-| [`ducktyper`](https://github.com/ducktyper-ai/quackverse/tree/main/ducktyper) | The unified CLI experience to run, learn from, and interact with QuackTools |
-| [`quackster`](https://github.com/ducktyper-ai/quackverse/tree/main/quackster) | Teaching and learning components for the QuackVerse ecosystem |
 | [`quacktools/*`](https://github.com/ducktyper-ai) | Modular tools for AI workflows — metadata, prompt engineering, token inspection, and more |
 | `quackdata` | Data manipulation tools (coming soon) |
-| `quackmedia` | Media production tools (coming soon) |
 | `quackcloud` | Cloud infrastructure (coming soon) |
 | `quackdocs/` | Canonical docs, specs, and implementation guides (coming soon) |
-| `quackbrand/` | Mascots, design assets, and licensing guidelines |
 
 ---
 
@@ -102,8 +98,6 @@ Run tests for specific packages:
 
 ```bash
 make test-quack-core
-make test-ducktyper
-make test-quackster
 ```
 
 ### Code Quality
