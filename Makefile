@@ -27,7 +27,7 @@ help: ## Show this help message
 	@echo '${YELLOW}Development Guide${RESET}'
 	@echo ''
 	@echo '${YELLOW}Installation Options:${RESET}'
-	@echo '  Tutorial:    ${GREEN}make install-tutorial${RESET}   - Install quackcore'
+	@echo '  Quackcore:    ${GREEN}make install-tutorial${RESET}   - Install quackcore'
 	@echo '  All:        ${GREEN}make install-all${RESET}        - Install both packages'
 	@echo '  Development:${GREEN}make install-dev${RESET}        - Development tools'
 	@echo ''
