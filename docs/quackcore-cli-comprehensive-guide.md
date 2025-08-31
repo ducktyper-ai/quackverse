@@ -28,7 +28,7 @@
 
 ## Introduction
 
-The `quackcore.cli` package provides a comprehensive set of utilities for building command-line interface (CLI) applications that integrate with the QuackVerse ecosystem. This package ensures a consistent user experience across all QuackTools by providing standardized components for:
+The `quack_core.cli` package provides a comprehensive set of utilities for building command-line interface (CLI) applications that integrate with the QuackVerse ecosystem. This package ensures a consistent user experience across all QuackTools by providing standardized components for:
 
 - Command-line argument handling
 - Configuration management
@@ -37,13 +37,13 @@ The `quackcore.cli` package provides a comprehensive set of utilities for buildi
 - Error handling
 - Terminal operations
 
-Whether you're building a simple CLI tool or a complex application with multiple commands, `quackcore.cli` provides the foundation you need to create professional-grade tools that adhere to QuackVerse standards.
+Whether you're building a simple CLI tool or a complex application with multiple commands, `quack_core.cli` provides the foundation you need to create professional-grade tools that adhere to QuackVerse standards.
 
 ## Getting Started
 
 ### Installation
 
-The `quackcore.cli` module is part of the main `quackcore` package. To use it, you need to have QuackCore installed:
+The `quack_core.cli` module is part of the main `quackcore` package. To use it, you need to have QuackCore installed:
 
 ```bash
 pip install quack-core
@@ -55,7 +55,7 @@ Here's a minimal example of creating a QuackTool using the QuackCore CLI framewo
 
 ```python
 #!/usr/bin/env python3
-from quackcore.cli import init_cli_env, print_success
+from quack_core.cli import init_cli_env, print_success
 
 def main():
     # Initialize the CLI environment
@@ -99,7 +99,7 @@ The context object is created during bootstrap and is immutable, ensuring that y
 #### Example: Working with the CLI Context
 
 ```python
-from quackcore.cli import init_cli_env
+from quack_core.cli import init_cli_env
 
 def my_command(ctx):
     # Access configuration
@@ -138,7 +138,7 @@ You can use this class with the `from_cli_options` function to initialize the CL
 
 ```python
 import argparse
-from quackcore.cli import CliOptions, from_cli_options
+from quack_core.cli import CliOptions, from_cli_options
 
 def parse_args():
     parser = argparse.ArgumentParser(description="My QuackTool")
@@ -170,7 +170,7 @@ Alternatively, you can use the utility function `resolve_cli_args` to parse comm
 
 ```python
 import sys
-from quackcore.cli import resolve_cli_args, CliOptions, from_cli_options
+from quack_core.cli import resolve_cli_args, CliOptions, from_cli_options
 
 def main():
     # Parse CLI arguments
@@ -199,7 +199,7 @@ The bootstrap process sets up the CLI environment, including configuration loadi
 #### Example: Bootstrapping with Different Parameters
 
 ```python
-from quackcore.cli import init_cli_env
+from quack_core.cli import init_cli_env
 
 # Basic initialization with default settings
 ctx = init_cli_env()
@@ -239,8 +239,8 @@ Key features of the logging system:
 #### Example: Setting Up Logging
 
 ```python
-from quackcore.cli import setup_logging
-from quackcore.cli.options import LogLevel
+from quack_core.cli import setup_logging
+from quack_core.cli.options import LogLevel
 
 # Set up logging with explicit parameters
 root_logger, get_logger = setup_logging(
@@ -261,7 +261,7 @@ root_logger.warning("This is a warning message")
 In most cases, you don't need to call `setup_logging` directly, as it's handled by `init_cli_env`. Instead, you use the logger provided by the context:
 
 ```python
-from quackcore.cli import init_cli_env
+from quack_core.cli import init_cli_env
 
 def main():
     ctx = init_cli_env(app_name="my-quacktool")
@@ -285,7 +285,7 @@ The main configuration functions:
 #### Example: Working with Configuration
 
 ```python
-from quackcore.cli import load_config, find_project_root
+from quack_core.cli import load_config, find_project_root
 from pathlib import Path
 
 # Find the project root
@@ -304,7 +304,7 @@ config = load_config(cli_overrides={"database": {"port": 5432}})
 As with logging, you typically don't need to call these functions directly, as they're handled by `init_cli_env`. Instead, you access the configuration through the context:
 
 ```python
-from quackcore.cli import init_cli_env
+from quack_core.cli import init_cli_env
 
 def main():
     ctx = init_cli_env()
@@ -338,7 +338,7 @@ QuackCore CLI includes utilities for formatting text output in CLI applications,
 #### Example: Formatting Text
 
 ```python
-from quackcore.cli import colorize, print_error, print_success, table
+from quack_core.cli import colorize, print_error, print_success, table
 
 # Colorize text
 highlighted = colorize("Important information", fg="blue", bold=True)
@@ -383,7 +383,7 @@ QuackCore CLI provides functions for interactive CLI features like prompts, conf
 #### Example: User Input
 
 ```python
-from quackcore.cli import confirm, ask, ask_choice, with_spinner
+from quack_core.cli import confirm, ask, ask_choice, with_spinner
 import time
 
 # Get confirmation
@@ -440,7 +440,7 @@ QuackCore CLI includes classes and functions for displaying progress information
 #### Example: Progress Reporting
 
 ```python
-from quackcore.cli import ProgressReporter, show_progress
+from quack_core.cli import ProgressReporter, show_progress
 import time
 
 # Using ProgressReporter directly
@@ -475,8 +475,8 @@ QuackCore CLI provides utilities for handling and formatting errors in CLI appli
 #### Example: Error Handling
 
 ```python
-from quackcore.cli import handle_errors, get_cli_info, format_cli_error
-from quackcore.errors import QuackError
+from quack_core.cli import handle_errors, get_cli_info, format_cli_error
+from quack_core.errors import QuackError
 
 # Use the handle_errors decorator to catch exceptions
 @handle_errors(error_types=QuackError, title="Database Error", exit_code=1)
@@ -508,7 +508,7 @@ except Exception as e:
 Sometimes you want to make sure only one instance of your CLI application is running:
 
 ```python
-from quackcore.cli import ensure_single_instance
+from quack_core.cli import ensure_single_instance
 
 def main():
     # Ensure this is the only instance running
@@ -533,7 +533,7 @@ QuackCore CLI provides functions for working with terminal capabilities, such as
 #### Example: Terminal Utilities
 
 ```python
-from quackcore.cli import get_terminal_size, supports_color, truncate_text
+from quack_core.cli import get_terminal_size, supports_color, truncate_text
 
 # Get terminal dimensions
 columns, lines = get_terminal_size()
@@ -555,7 +555,7 @@ print(truncated)  # "This is a very long text that..."
 
 ### Creating a Basic QuackTool
 
-Let's create a simple QuackTool that demonstrates the basic concepts of the `quackcore.cli` module:
+Let's create a simple QuackTool that demonstrates the basic concepts of the `quack_core.cli` module:
 
 ```python
 #!/usr/bin/env python3
@@ -564,7 +564,7 @@ hello_quack.py - A simple QuackTool example
 """
 
 import sys
-from quackcore.cli import (
+from quack_core.cli import (
     init_cli_env, 
     print_success, 
     print_error, 
@@ -572,7 +572,7 @@ from quackcore.cli import (
     ask,
     handle_errors
 )
-from quackcore.errors import QuackError
+from quack_core.errors import QuackError
 
 @handle_errors(error_types=Exception, title="Hello Quack Error", exit_code=1)
 def main():
@@ -626,7 +626,7 @@ config_example.py - Demonstrates configuration capabilities
 import argparse
 import sys
 from pathlib import Path
-from quackcore.cli import (
+from quack_core.cli import (
     init_cli_env,
     CliOptions,
     from_cli_options,
@@ -693,7 +693,7 @@ interactive_example.py - Demonstrates interactive features
 """
 
 import time
-from quackcore.cli import (
+from quack_core.cli import (
     init_cli_env,
     ask,
     ask_choice,
@@ -788,7 +788,7 @@ progress_example.py - Demonstrates progress reporting
 
 import time
 import random
-from quackcore.cli import (
+from quack_core.cli import (
     init_cli_env,
     ProgressReporter,
     show_progress,
@@ -899,7 +899,7 @@ logger.info("Application started")
 
 ✅ **Best Practice:**
 ```python
-from quackcore.cli import init_cli_env
+from quack_core.cli import init_cli_env
 
 # Do this instead
 ctx = init_cli_env(app_name="my-app")
@@ -919,7 +919,7 @@ print("\033[32mSuccess: Operation completed\033[0m")
 
 ✅ **Best Practice:**
 ```python
-from quackcore.cli import print_error, print_success
+from quack_core.cli import print_error, print_success
 
 # Do this instead
 print_error("Connection failed")
@@ -946,8 +946,8 @@ def connect():
 
 ✅ **Best Practice:**
 ```python
-from quackcore.cli import handle_errors
-from quackcore.errors import QuackError
+from quack_core.cli import handle_errors
+from quack_core.errors import QuackError
 
 # Do this instead
 @handle_errors(error_types=Exception, title="Connection Error", exit_code=1)
@@ -974,7 +974,7 @@ def load_my_config():
 
 ✅ **Best Practice:**
 ```python
-from quackcore.cli import init_cli_env
+from quack_core.cli import init_cli_env
 
 # Do this instead
 ctx = init_cli_env(config_path="config.yaml")
@@ -998,7 +998,7 @@ print()  # Final newline
 
 ✅ **Best Practice:**
 ```python
-from quackcore.cli import ProgressReporter
+from quack_core.cli import ProgressReporter
 
 # Do this instead
 reporter = ProgressReporter(total=100, desc="Processing")
@@ -1043,7 +1043,7 @@ ctx = init_cli_env(app_name="tool")
 Use the error handling utilities to ensure errors are properly caught, formatted, and logged.
 
 ```python
-from quackcore.cli import handle_errors
+from quack_core.cli import handle_errors
 
 @handle_errors(error_types=(ConnectionError, TimeoutError), title="Network Error")
 def fetch_data(url):
@@ -1056,7 +1056,7 @@ def fetch_data(url):
 Always provide feedback for operations that take more than a second or two.
 
 ```python
-from quackcore.cli import with_spinner, ProgressReporter
+from quack_core.cli import with_spinner, ProgressReporter
 
 @with_spinner(desc="Fetching data")
 def fetch_data():
@@ -1122,7 +1122,7 @@ def process_command(ctx, command_name):
 Always handle terminal size gracefully, especially when displaying tables or other formatted output.
 
 ```python
-from quackcore.cli import get_terminal_size, table
+from quack_core.cli import get_terminal_size, table
 
 def display_results(results):
     # Get current terminal size

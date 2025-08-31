@@ -64,14 +64,14 @@
 
 ## Introduction
 
-The `quackcore.fs` module offers a robust, consistent, and developer‑friendly filesystem abstraction for the QuackVerse ecosystem. It standardizes all operations through result objects, improves error handling, and adds advanced features like atomic writes, structured data support, checksums, and more—making it a superior alternative to Python’s built‑in `pathlib`, `os`, and `shutil`.
+The `quack_core.fs` module offers a robust, consistent, and developer‑friendly filesystem abstraction for the QuackVerse ecosystem. It standardizes all operations through result objects, improves error handling, and adds advanced features like atomic writes, structured data support, checksums, and more—making it a superior alternative to Python’s built‑in `pathlib`, `os`, and `shutil`.
 
 ---
 
 ## Getting Started
 
 ```python
-from quackcore.fs import service as fs
+from quack_core.fs import service as fs
 
 # Read text
 result = fs.read_text("config.txt")
@@ -404,7 +404,7 @@ print(f"Total: {fs.get_file_size_str(usage['total']).data}")
 ### Directory Synchronization
 
 ```python
-from quackcore.fs import service as fs
+from quack_core.fs import service as fs
 
 class DirectorySynchronizer:
     def __init__(self, source_dir: str, target_dir: str):
@@ -452,7 +452,7 @@ class DirectorySynchronizer:
 ### File Locking Utility
 
 ```python
-from quackcore.fs import service as fs
+from quack_core.fs import service as fs
 import os, time, random
 from datetime import datetime, timedelta
 
@@ -651,7 +651,7 @@ class FileSystemRepository(Generic[T]):
 ### Factory Pattern
 
 ```python
-from quackcore.fs import service as fs
+from quack_core.fs import service as fs
 
 class FileHandlerFactory:
     def __init__(self):
@@ -743,7 +743,7 @@ class FileObserver:
 
 ```python
 import logging
-from quackcore.fs import service as fs
+from quack_core.fs import service as fs
 logger = logging.getLogger(__name__)
 
 def safe_read_config(path, default=None):
@@ -774,9 +774,9 @@ def safe_read_config(path, default=None):
 
 ---
 
-## Transitioning from `pathlib` to `quackcore.fs`
+## Transitioning from `pathlib` to `quack_core.fs`
 
-| Task                   | `pathlib`                          | `quackcore.fs`                                            |
+| Task                   | `pathlib`                          | `quack_core.fs`                                            |
 |------------------------|------------------------------------|------------------------------------------------------------|
 | Create a path         | `Path("a/b")`                      | `fs.join_path("a","b").data`                              |
 | Check exists           | `path.exists()`                    | `fs.path_exists(path).data`                               |
@@ -795,7 +795,7 @@ def safe_read_config(path, default=None):
 ### Example 1: Config File Management
 
 ```python
-from quackcore.fs import service as fs
+from quack_core.fs import service as fs
 import logging
 logger = logging.getLogger(__name__)
 
@@ -835,7 +835,7 @@ class ConfigManager:
 ### Example 2: Log Rotation Tool
 
 ```python
-from quackcore.fs import service as fs
+from quack_core.fs import service as fs
 from datetime import datetime
 import logging
 
@@ -886,7 +886,7 @@ class LogRotator:
 ### Example 3: File Backup Tool
 
 ```python
-from quackcore.fs import service as fs
+from quack_core.fs import service as fs
 from datetime import datetime
 import logging
 
@@ -974,7 +974,7 @@ class BackupTool:
 
 - **Verbose logging**:  
   ```python
-  from quackcore.logging import get_logger, LogLevel
+  from quack_core.logging import get_logger, LogLevel
   logger = get_logger(__name__); logger.setLevel(LogLevel.DEBUG)
   ```
 - **Inspect full result**:  
@@ -996,8 +996,8 @@ class BackupTool:
 
 ```python
 from unittest.mock import patch, MagicMock
-from quackcore.fs import service as fs
-from quackcore.fs.results import DataResult
+from quack_core.fs import service as fs
+from quack_core.fs.results import DataResult
 
 def read_config(p):
     r=fs.read_yaml(p)
@@ -1013,7 +1013,7 @@ with patch('quack-core.fs.service.read_yaml') as mock_ry:
 ### Using a Fake FileSystemService
 
 ```python
-from quackcore.fs.results import ReadResult, WriteResult, FileInfoResult, DataResult
+from quack_core.fs.results import ReadResult, WriteResult, FileInfoResult, DataResult
 from pathlib import Path
 
 class FakeFS:
@@ -1047,7 +1047,7 @@ assert rl(fake,"t.txt")=="Hello"
 
 ```python
 import pytest
-from quackcore.fs import service as fs
+from quack_core.fs import service as fs
 
 @pytest.fixture
 def temp_dir():
@@ -1071,12 +1071,12 @@ def test_file_ops(temp_dir):
 
 - **Custom Service**:  
   ```python
-  from quackcore.fs import create_service
+  from quack_core.fs import create_service
   fs_service = create_service(base_dir="/app/data")
   ```
 - **Plugin**:  
   ```python
-  from quackcore.fs.plugin import create_plugin
+  from quack_core.fs.plugin import create_plugin
   fs_plugin = create_plugin()
   ```
 
@@ -1084,7 +1084,7 @@ def test_file_ops(temp_dir):
 
 ## Comparison with Standard Library
 
-| Operation              | `pathlib`                                 | `quackcore.fs`                                         |
+| Operation              | `pathlib`                                 | `quack_core.fs`                                         |
 |------------------------|-------------------------------------------|---------------------------------------------------------|
 | Read text              | `Path("f.txt").read_text()`               | `fs.read_text("f.txt").content`                        |
 | Write text             | `Path("f.txt").write_text("c")`           | `fs.write_text("f.txt","c")`                           |
@@ -1106,7 +1106,7 @@ def test_file_ops(temp_dir):
 - **Ensure parent directories** exist before writing.  
 - **Use atomic writes** for critical data.  
 - **Handle errors gracefully** via result objects, not only exceptions.  
-- **Avoid mixing** direct `os`/`pathlib` calls with `quackcore.fs`.  
+- **Avoid mixing** direct `os`/`pathlib` calls with `quack_core.fs`.  
 
 ---
 
@@ -1155,11 +1155,11 @@ def test_file_ops(temp_dir):
 
 ## Conclusion
 
-`quackcore.fs` streamlines and enhances filesystem interactions with:
+`quack_core.fs` streamlines and enhances filesystem interactions with:
 
 - **Consistent result objects** for all operations  
 - **Advanced features**: atomic writes, structured data, checksums, disk usage  
 - **Clear error handling** and logging integration  
 - **Powerful patterns** for real‑world tasks  
 
-Adopting `quackcore.fs` ensures safer, more maintainable, and feature‑rich filesystem code in your QuackTools. Happy coding in the QuackVerse!
+Adopting `quack_core.fs` ensures safer, more maintainable, and feature‑rich filesystem code in your QuackTools. Happy coding in the QuackVerse!

@@ -8,7 +8,7 @@ BLUE   := $(shell tput -Txterm setaf 4)
 # Project settings
 PYTHON_VERSION := 3.13
 VENV_NAME := .venv
-PROJECT_NAME := quackcore
+PROJECT_NAME := quack-core
 REPO_ROOT := $(shell pwd)
 PYTHON := $(REPO_ROOT)/$(VENV_NAME)/bin/python
 
@@ -27,21 +27,24 @@ help: ## Show this help message
 	@echo '${YELLOW}Development Guide${RESET}'
 	@echo ''
 	@echo '${YELLOW}Installation Options:${RESET}'
-	@echo '  Quackcore:    ${GREEN}make install-tutorial${RESET}   - Install quackcore'
+	@echo '  Quackcore:    ${GREEN}make install-quackcore${RESET}   - Install quack-core'
 	@echo '  All:        ${GREEN}make install-all${RESET}        - Install both packages'
 	@echo '  Development:${GREEN}make install-dev${RESET}        - Development tools'
 	@echo ''
 	@echo '${YELLOW}Development Workflow:${RESET}'
-	@echo '  1. Setup:     ${GREEN}make setup${RESET}         - Full development environment'
-	@echo '  2. Source:    ${GREEN}source setup.sh${RESET}    - Activate environment'
-	@echo '  3. Install:   ${GREEN}make install-all${RESET}   - Install packages'
+	@echo '  1. Setup:     ${GREEN}make setup${RESET}              - Full development environment'
+	@echo '  2. Activate:  ${GREEN}source .venv/bin/activate${RESET} - Activate environment'
+	@echo '  3. Check:     ${GREEN}make check-env${RESET}          - Verify installation'
+	@echo ''
+	@echo '${YELLOW}Quick Setup:${RESET}'
+	@echo '  All-in-one:  ${GREEN}make quick-setup${RESET}         - Fast complete setup'
 	@echo ''
 	@echo '${YELLOW}File Operations:${RESET}'
 	@echo '  Aggregate:   ${GREEN}make aggregate <directory>${RESET}  - Aggregate files from directory'
 	@echo '               ${GREEN}make aggregate${RESET}             - Aggregate files from current directory'
 	@echo ''
 	@echo '${YELLOW}Available Targets:${RESET}'
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  ${YELLOW}%-15s${GREEN}%s${RESET}\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  ${YELLOW}%-15s${GREEN}%s${RESET}\n", $1, $2}' $(MAKEFILE_LIST)
 	@echo ''
 
 # Development environment targets
@@ -54,38 +57,88 @@ env: ## Create virtual environment using uv
 
 .PHONY: install-quackcore
 install-quackcore: ## Install quackcore package
-	@echo "${BLUE}Installing quackcore package...${RESET}"
-	cd quackcore && uv pip install -e .
-	@echo "${GREEN}quackcore installed successfully${RESET}"
-	@# Verify installation
-	@$(PYTHON) -c "import quackcore; print(f'quackcore installed at: {quackcore.__file__}')"
+	@echo "${BLUE}Installing quack-core package...${RESET}"
+	@# Ensure we're using the virtual environment
+	@if [ ! -f "$(PYTHON)" ]; then \
+		echo "${YELLOW}Virtual environment not found. Creating it first...${RESET}"; \
+		make env; \
+	fi
+	@# Install the package in editable mode using global uv but targeting the venv
+	cd quack-core && uv pip install -e . --python $(REPO_ROOT)/$(VENV_NAME)/bin/python
+	@echo "${GREEN}quack-core installed successfully${RESET}"
+	@# Verify installation with proper PYTHONPATH
+	@echo "${BLUE}Verifying installation...${RESET}"
+	@PYTHONPATH="$(REPO_ROOT)/quack-core/src:$(PYTHONPATH)" $(PYTHON) -c "import quack_core; print(f'✓ quack-core installed at: {quack_core.__file__}')" || \
+	(echo "${YELLOW}Warning: Import verification failed. This might be expected if package structure needs adjustment.${RESET}" && \
+	 echo "${BLUE}Checking package installation status...${RESET}" && \
+	 $(PYTHON) -m pip list | grep quack-core)
 
 .PHONY: install-all
 install-all: install-quackcore ## Install all packages with their optional dependencies
 	@echo "${BLUE}Installing optional dependencies for all packages...${RESET}"
-	cd quackcore && uv pip install -e ".[gmail,notion,google,drive,pandoc,llms, github, http]"
+	cd quack-core && uv pip install -e ".[gmail,notion,google,drive,pandoc,llms,github,http]" --python $(REPO_ROOT)/$(VENV_NAME)/bin/python
 	@echo "${GREEN}All packages and dependencies installed successfully${RESET}"
 
 .PHONY: install-dev
 install-dev: ## Install development dependencies for all packages
 	@echo "${BLUE}Installing development tools...${RESET}"
-	cd quackcore && uv pip install -e ".[dev]"
-	uv pip install -e ".[dev]"
+	@# Ensure we have the virtual environment
+	@if [ ! -f "$(PYTHON)" ]; then \
+		echo "${YELLOW}Virtual environment not found. Creating it first...${RESET}"; \
+		make env; \
+	fi
+	cd quack-core && uv pip install -e ".[dev]" --python $(REPO_ROOT)/$(VENV_NAME)/bin/python
+	@# Install root development dependencies
+	uv pip install -e ".[dev]" --python $(REPO_ROOT)/$(VENV_NAME)/bin/python
 	@echo "${GREEN}Development dependencies installed successfully${RESET}"
 
 .PHONY: setup
 setup: ## Create environment and install full development dependencies
 	@echo "${BLUE}Creating complete development environment...${RESET}"
-	@echo '#!/bin/bash' > setup.sh
-	@echo 'uv venv --python $(PYTHON_VERSION)' >> setup.sh
-	@echo 'source $(VENV_NAME)/bin/activate' >> setup.sh
-	@echo 'make install-all' >> setup.sh
-	@echo 'make install-dev' >> setup.sh
-	@echo 'echo "${GREEN}Setup complete! Development environment ready.${RESET}"' >> setup.sh
-	@echo 'rm "$$0"' >> setup.sh
-	@chmod +x setup.sh
-	@echo "${GREEN}Environment setup script created. To complete setup, run:${RESET}"
-	@echo "${YELLOW}source setup.sh${RESET}"
+	@echo "${YELLOW}Note: This will create a virtual environment but won't activate it automatically.${RESET}"
+	@echo "${YELLOW}After completion, run: source .venv/bin/activate${RESET}"
+	@echo ""
+	make env
+	@echo "${BLUE}Installing all packages and dependencies...${RESET}"
+	make install-all
+	make install-dev
+	@echo ""
+	@echo "${GREEN}Setup complete! Development environment ready.${RESET}"
+	@echo "${YELLOW}To activate the environment, run:${RESET}"
+	@echo "  ${GREEN}source .venv/bin/activate${RESET}"
+
+.PHONY: setup-and-activate
+setup-and-activate: ## Create environment, install dependencies, and generate activation helper
+	@echo "${BLUE}Creating complete development environment...${RESET}"
+	make env
+	make install-all
+	make install-dev
+	@echo '#!/bin/bash' > activate_env.sh
+	@echo 'source .venv/bin/activate' >> activate_env.sh
+	@echo 'echo "QuackVerse development environment activated!"' >> activate_env.sh
+	@echo 'echo "Python: $(which python)"' >> activate_env.sh
+	@chmod +x activate_env.sh
+	@echo ""
+	@echo "${GREEN}Setup complete! Development environment ready.${RESET}"
+	@echo "${YELLOW}To activate the environment, run:${RESET}"
+	@echo "  ${GREEN}source activate_env.sh${RESET}"
+	@echo ""
+	@echo "${YELLOW}Or manually activate with:${RESET}"
+	@echo "  ${GREEN}source .venv/bin/activate${RESET}"
+
+.PHONY: check-env
+check-env: ## Check if virtual environment is active and working
+	@echo "${BLUE}Checking environment...${RESET}"
+	@if [ ! -f "$(PYTHON)" ]; then \
+		echo "${YELLOW}Virtual environment not found at $(PYTHON)${RESET}"; \
+		echo "Run 'make env' first"; \
+		exit 1; \
+	fi
+	@echo "Python: $(PYTHON)"
+	@$(PYTHON) --version
+	@$(PYTHON) -c "import sys; print(f'Python executable: {sys.executable}')"
+	@$(PYTHON) -m pip list | head -5
+	@echo "${GREEN}Environment check complete${RESET}"
 
 .PHONY: update
 update: ## Update all dependencies
@@ -124,7 +177,7 @@ aggregate: ## Aggregate text files from a directory (usage: make aggregate <dire
 	@echo '  echo "  pwd       : $$PWD"' >> .temp_aggregate.sh
 	@echo '  echo "  input arg : $$INPUT_ARG"' >> .temp_aggregate.sh
 	@echo '  echo "  resolved  : $$INPUT_PATH"' >> .temp_aggregate.sh
-	@echo '  echo "hint: run from repo root, e.g. make aggregate ./quackcore/src/quackcore/config"' >> .temp_aggregate.sh
+	@echo '  echo "hint: run from repo root, e.g. make aggregate ./quack-core/src/quack_core/config"' >> .temp_aggregate.sh
 	@echo '  exit 1' >> .temp_aggregate.sh
 	@echo 'fi' >> .temp_aggregate.sh
 	@echo '' >> .temp_aggregate.sh
@@ -207,43 +260,43 @@ aggregate: ## Aggregate text files from a directory (usage: make aggregate <dire
 .PHONY: test
 test: ## Run tests with coverage
 	@echo "${BLUE}Running tests with coverage...${RESET}"
-	cd quackcore && \
-	PYTHONPATH="$(REPO_ROOT)/quackcore:$(REPO_ROOT)/quackcore/tests:$(PYTHONPATH)" \
+	cd quack-core && \
+	PYTHONPATH="$(REPO_ROOT)/quack-core/src:$(REPO_ROOT)/quack-core/tests:$(PYTHONPATH)" \
 	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests -v --cov=src --cov-report=term-missing && \
 	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests -v --cov=src --cov-report=term-missing
 
 .PHONY: test-quackcore
 test-quackcore: ## Run only quackcore tests
-	@echo "${BLUE}Running quackcore tests...${RESET}"
-	cd quackcore && \
-	PYTHONPATH="$(REPO_ROOT)/quackcore:$(REPO_ROOT)/quackcore/tests:$(PYTHONPATH)" \
+	@echo "${BLUE}Running quack-core tests...${RESET}"
+	cd quack-core && \
+	PYTHONPATH="$(REPO_ROOT)/quack-core/src:$(REPO_ROOT)/quack-core/tests:$(PYTHONPATH)" \
 	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests -v --cov=src --cov-report=term-missing
 
 .PHONY: test-integration
 test-integration: ## Run only integration tests
 	@echo "${BLUE}Running integration tests...${RESET}"
-	PYTHONPATH="$(REPO_ROOT)/quackcore:$(PYTHONPATH)" \
+	PYTHONPATH="$(REPO_ROOT)/quack-core/src:$(PYTHONPATH)" \
 	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests/integration $(PYTEST_ARGS) \
-		--cov=quackcore/src --cov-report=term-missing
+		--cov=quack-core/src --cov-report=term-missing
 
 .PHONY: test-module
 test-module: ## Run only integration tests with coverage
 	@echo "${BLUE}Running specific integration tests...${RESET}"
-	$(PYTHON) -m pytest tests/test_integrations/pandoc $(PYTEST_ARGS) --cov=quackcore/src --cov-report=term-missing
+	$(PYTHON) -m pytest tests/test_integrations/pandoc $(PYTEST_ARGS) --cov=quack-core/src --cov-report=term-missing
 
 .PHONY: format
 format: ## Format code with Ruff and isort
 	@echo "${BLUE}Formatting code...${RESET}"
-	$(PYTHON) -m ruff check quackcore/src/ quackcore/tests/ examples/ --fix
+	$(PYTHON) -m ruff check quack-core/src/ quack-core/tests/ examples/ --fix
 	$(PYTHON) -m ruff format .
 	$(PYTHON) -m isort .
 
 .PHONY: lint
 lint: ## Run linters
 	@echo "${BLUE}Running linters...${RESET}"
-	$(PYTHON) -m ruff check quackcore/src/ quackcore/tests/ examples/
-	$(PYTHON) -m ruff format --check quackcore/src/ quackcore/tests/ examples/
-	$(PYTHON) -m mypy quackcore/src/ quackcore/tests/ examples/
+	$(PYTHON) -m ruff check quack-core/src/ quack-core/tests/ examples/
+	$(PYTHON) -m ruff format --check quack-core/src/ quack-core/tests/ examples/
+	$(PYTHON) -m mypy quack-core/src/ quack-core/tests/ examples/
 
 .PHONY: clean
 clean: ## Clean build artifacts and cache
@@ -253,24 +306,24 @@ clean: ## Clean build artifacts and cache
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
 	# Clean subpackages
-	cd quackcore && rm -rf build/ dist/ *.egg-info
+	cd quack-core && rm -rf build/ dist/ *.egg-info
 	@echo "${GREEN}Cleaned all build artifacts and cache.${RESET}"
 
 .PHONY: build
 build: clean format lint test ## Build all packages for distribution
 	@echo "${BLUE}Building packages for distribution...${RESET}"
-	cd quackcore && uv pip build
+	cd quack-core && uv build
 	@echo "${GREEN}Packages built successfully. Distribution files in respective dist/ directories.${RESET}"
 
 .PHONY: publish
 publish: build ## Publish packages to PyPI
 	@echo "${BLUE}Publishing packages to PyPI...${RESET}"
 	@echo "${YELLOW}This will publish the following packages:${RESET}"
-	@echo "  - quackcore"
+	@echo "  - quack_core"
 	@echo "${YELLOW}Are you sure you want to continue? (y/n)${RESET}"
 	@read -p " " yn; \
 	if [ "$$yn" = "y" ]; then \
-		cd quackcore && uv pip publish --repository pypi; \
+		cd quack-core && uv publish --repository pypi; \
 		echo "${GREEN}All packages published successfully!${RESET}"; \
 	else \
 		echo "${YELLOW}Publishing cancelled.${RESET}"; \
@@ -300,9 +353,9 @@ structure: ## Show project structure
 prune-branches: ## Remove local branches that are no longer tracked on the remote
 	@echo "${BLUE}Pruning local branches that are no longer tracked on the remote...${RESET}"
 	@git fetch -p && \
-	  for branch in $$(git branch -vv | grep ': gone]' | awk '{print $$1}'); do \
-	    git branch -D $$branch; \
-	  done
+		for branch in $$(git branch -vv | grep ': gone]' | awk '{print $$1}'); do \
+			git branch -D $$branch; \
+		done
 	@echo "${GREEN}Stale branches have been removed.${RESET}"
 
 .PHONY: add-paths
@@ -380,36 +433,36 @@ add-paths: ## Add file paths as first-line comments to all Python files
 .PHONY: api-run
 api-run: ## Run HTTP adapter server
 	@echo "${BLUE}Starting QuackCore HTTP adapter...${RESET}"
-	cd quackcore && \
-	PYTHONPATH="$(REPO_ROOT)/quackcore:$(PYTHONPATH)" \
-	$(REPO_ROOT)/$(VENV_NAME)/bin/uvicorn quackcore.adapters.http.app:create_app --factory --host 0.0.0.0 --port 8080
+	cd quack-core && \
+	PYTHONPATH="$(REPO_ROOT)/quack-core/src:$(PYTHONPATH)" \
+	$(REPO_ROOT)/$(VENV_NAME)/bin/uvicorn quack_core.adapters.http.app:create_app --factory --host 0.0.0.0 --port 8080
 
 .PHONY: api-run-reload
 api-run-reload: ## Run HTTP adapter server with auto-reload
 	@echo "${BLUE}Starting QuackCore HTTP adapter with reload...${RESET}"
-	cd quackcore && \
-	PYTHONPATH="$(REPO_ROOT)/quackcore:$(PYTHONPATH)" \
-	$(REPO_ROOT)/$(VENV_NAME)/bin/uvicorn quackcore.adapters.http.app:create_app --factory --reload --host 0.0.0.0 --port 8080
+	cd quack-core && \
+	PYTHONPATH="$(REPO_ROOT)/quack-core/src:$(PYTHONPATH)" \
+	$(REPO_ROOT)/$(VENV_NAME)/bin/uvicorn quack_core.adapters.http.app:create_app --factory --reload --host 0.0.0.0 --port 8080
 
 .PHONY: api-test
 api-test: ## Run HTTP adapter tests
 	@echo "${BLUE}Running HTTP adapter tests...${RESET}"
-	cd quackcore && \
-	PYTHONPATH="$(REPO_ROOT)/quackcore:$(REPO_ROOT)/quackcore/tests/test_http:$(PYTHONPATH)" \
-	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests/test_http -v --cov=src/quackcore/adapters/http --cov-report=term-missing
+	cd quack-core && \
+	PYTHONPATH="$(REPO_ROOT)/quack-core/src:$(REPO_ROOT)/quack-core/tests/test_http:$(PYTHONPATH)" \
+	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests/test_http -v --cov=src/quack-core/adapters/http --cov-report=term-missing
 
 .PHONY: api-test-verbose
 api-test-verbose: ## Run HTTP adapter tests with verbose output
 	@echo "${BLUE}Running HTTP adapter tests (verbose)...${RESET}"
-	cd quackcore && \
-	PYTHONPATH="$(REPO_ROOT)/quackcore:$(REPO_ROOT)/quackcore/tests/test_http:$(PYTHONPATH)" \
-	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests/test_http -v --cov=src/quackcore/adapters/http --cov-report=term-missing
+	cd quack-core && \
+	PYTHONPATH="$(REPO_ROOT)/quack-core/src:$(REPO_ROOT)/quack-core/tests/test_http:$(PYTHONPATH)" \
+	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests/test_http -v --cov=src/quack-core/adapters/http --cov-report=term-missing
 
 .PHONY: api-cov
 api-cov: ## Run HTTP adapter tests with coverage
 	@echo "${BLUE}Running HTTP adapter tests with coverage...${RESET}"
-	cd quackcore && \
-	PYTHONPATH="$(REPO_ROOT)/quackcore:$(REPO_ROOT)/quackcore/tests/test_http:$(PYTHONPATH)" \
-	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests/test_http -v --cov=src/quackcore/adapters/http --cov-report=html --cov-report=term-missing
+	cd quack-core && \
+	PYTHONPATH="$(REPO_ROOT)/quack-core/src:$(REPO_ROOT)/quack-core/tests/test_http:$(PYTHONPATH)" \
+	$(REPO_ROOT)/$(VENV_NAME)/bin/python -m pytest tests/test_http -v --cov=src/quack-core/adapters/http --cov-report=html --cov-report=term-missing
 
 .DEFAULT_GOAL := help

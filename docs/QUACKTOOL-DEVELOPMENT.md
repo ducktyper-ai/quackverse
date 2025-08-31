@@ -21,7 +21,7 @@ QuackTools are plugins that extend QuackCore's functionality. To create a QuackT
 ### Basic QuackTool Implementation
 
 ```python
-from quackcore.plugins.protocols import QuackPluginProtocol
+from quack_core.plugins.protocols import QuackPluginProtocol
 
 class MyQuackTool(QuackPluginProtocol):
     @property
@@ -31,7 +31,7 @@ class MyQuackTool(QuackPluginProtocol):
     # Add your tool's functionality here
 
 def create_plugin() -> QuackPluginProtocol:
-    """This factory function is discovered by QuackCore."""
+    """This factory function is discovered by quack_core."""
     return MyQuackTool()
 ```
 
@@ -45,7 +45,7 @@ QuackCore discovers plugins through:
 
 ```python
 # Manual registration example
-from quackcore.plugins import registry
+from quack_core.plugins import registry
 registry.register(MyQuackTool())
 ```
 
@@ -58,7 +58,7 @@ Now, let's explore how to use the three main integrations: Google Drive, Gmail, 
 ### Initializing Google Drive
 
 ```python
-from quackcore.integrations.google.drive import GoogleDriveService
+from quack_core.integrations.google.drive import GoogleDriveService
 
 class MyDriveQuackTool(QuackPluginProtocol):
     @property
@@ -149,7 +149,7 @@ def create_folder(self, folder_name: str, parent_id: str = None) -> str:
 ### Initializing Gmail
 
 ```python
-from quackcore.integrations.google.mail import GoogleMailService
+from quack_core.integrations.google.mail import GoogleMailService
 
 class MyMailQuackTool(QuackPluginProtocol):
     @property
@@ -204,8 +204,8 @@ def download_email(self, message_id: str) -> str:
 ### Initializing LLM Service
 
 ```python
-from quackcore.integrations.llms import LLMIntegration
-from quackcore.integrations.llms.models import ChatMessage, LLMOptions, RoleType
+from quack_core.integrations.llms import LLMIntegration
+from quack_core.integrations.llms.models import ChatMessage, LLMOptions, RoleType
 
 class MyLLMQuackTool(QuackPluginProtocol):
     @property
@@ -358,7 +358,7 @@ custom:
 ### Loading Configuration in Your QuackTool
 
 ```python
-from quackcore.config import load_config, QuackConfig
+from quack_core.config import load_config, QuackConfig
 
 class ConfiguredQuackTool(QuackPluginProtocol):
     @property
@@ -503,7 +503,7 @@ def process_large_files(self, folder_id):
 Use QuackCore's logging system for consistent logs:
 
 ```python
-from quackcore.logging import get_logger
+from quack_core.logging import get_logger
 
 logger = get_logger(__name__)
 

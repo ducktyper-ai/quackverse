@@ -1,6 +1,6 @@
 # QuackCore Google Mail Integration Documentation
 
-The **quackcore.integrations.google.mail** module enables your QuackTools to interact with Gmail. It abstracts the complexity of Google OAuth2 authentication, email listing, downloading messages (including handling attachments), and error management. This guide explains the module’s architecture, configuration options, common usage patterns with detailed code examples, and troubleshooting advice.
+The **quack_core.integrations.google.mail** module enables your QuackTools to interact with Gmail. It abstracts the complexity of Google OAuth2 authentication, email listing, downloading messages (including handling attachments), and error management. This guide explains the module’s architecture, configuration options, common usage patterns with detailed code examples, and troubleshooting advice.
 
 ---
 
@@ -112,7 +112,7 @@ Below are detailed code snippets to help you quickly start using the Google Mail
 Create an integration instance either via the factory method or by directly instantiating the service:
 
 ```python
-from quackcore.integrations.google.mail import create_integration
+from quack_core.integrations.google.mail import create_integration
 
 # Option 1: Using the factory function (default configuration)
 google_mail_service = create_integration()

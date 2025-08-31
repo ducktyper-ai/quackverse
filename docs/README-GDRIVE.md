@@ -28,7 +28,7 @@ pip install "quackcore[drive]"
 ### Basic Usage
 
 ```python
-from quackcore.integrations.google.drive import GoogleDriveService
+from quack_core.integrations.google.drive import GoogleDriveService
 
 # Initialize the service
 drive = GoogleDriveService(
@@ -79,7 +79,7 @@ google_drive:
 Then initialize the service without parameters:
 
 ```python
-from quackcore.integrations.google.drive import GoogleDriveService
+from quack_core.integrations.google.drive import GoogleDriveService
 
 drive = GoogleDriveService()
 drive.initialize()
@@ -106,8 +106,8 @@ You can also configure the integration using environment variables:
 If you're building a custom application with QuackCore, you can register the Google Drive integration:
 
 ```python
-from quackcore.integrations import registry
-from quackcore.integrations.google.drive import GoogleDriveService
+from quack_core.integrations import registry
+from quack_core.integrations.google.drive import GoogleDriveService
 
 # Register the integration
 drive_service = GoogleDriveService()

@@ -16,7 +16,7 @@ You should add logic to `integrations/` if:
 ## When *Not* to Use
 Avoid putting code here if:
 - It belongs to a published or user-facing tool (put that in `src/quackmedia`, `src/quackcloud`, etc.)
-- It is core infrastructure (that belongs in `quackcore.integrations.core`)
+- It is core infrastructure (that belongs in `quack_core.integrations.core`)
 
 ## Example Layout
 ```

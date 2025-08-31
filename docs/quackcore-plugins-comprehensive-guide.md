@@ -42,13 +42,13 @@
 
 ## Introduction
 
-QuackCore is a plugin-based framework designed for building modular and extensible applications. The `quackcore.plugins` module provides the foundation for creating, discovering, and managing plugins within the QuackVerse ecosystem.
+QuackCore is a plugin-based framework designed for building modular and extensible applications. The `quack_core.plugins` module provides the foundation for creating, discovering, and managing plugins within the QuackVerse ecosystem.
 
 This documentation will guide you through the process of creating, registering, and using plugins with QuackCore, helping you build your own QuackTools as part of the QuackVerse.
 
 ### What is a QuackTool?
 
-A QuackTool is a plugin that extends the functionality of QuackCore. QuackTools are modular components that can be easily added or removed from a QuackCore application. By building a QuackTool, you're contributing to the QuackVerse ecosystem, allowing others to benefit from your code.
+A QuackTool is a plugin that extends the functionality of quack_core. QuackTools are modular components that can be easily added or removed from a QuackCore application. By building a QuackTool, you're contributing to the QuackVerse ecosystem, allowing others to benefit from your code.
 
 ### Why Use Plugins?
 
@@ -94,7 +94,7 @@ QuackCore defines several plugin types, each serving a different purpose:
 All plugins must implement the `QuackPluginProtocol`, which requires a `name` property. This is the simplest form of a plugin:
 
 ```python
-from quackcore.plugins.protocols import QuackPluginProtocol
+from quack_core.plugins.protocols import QuackPluginProtocol
 
 class MyPlugin:
     """A simple QuackCore plugin."""
@@ -118,7 +118,7 @@ def create_plugin() -> QuackPluginProtocol:
 A Command Plugin provides executable commands. It must implement the `CommandPluginProtocol`:
 
 ```python
-from quackcore.plugins.protocols import CommandPluginProtocol
+from quack_core.plugins.protocols import CommandPluginProtocol
 from typing import Any, Callable
 
 class MyCommandPlugin:
@@ -162,7 +162,7 @@ class MyCommandPlugin:
 A Workflow Plugin provides executable workflows, which are typically more complex than commands. It must implement the `WorkflowPluginProtocol`:
 
 ```python
-from quackcore.plugins.protocols import WorkflowPluginProtocol
+from quack_core.plugins.protocols import WorkflowPluginProtocol
 from typing import Any, Callable
 
 class MyWorkflowPlugin:
@@ -222,7 +222,7 @@ class MyWorkflowPlugin:
 An Extension Plugin extends the functionality of other plugins. It must implement the `ExtensionPluginProtocol`:
 
 ```python
-from quackcore.plugins.protocols import ExtensionPluginProtocol
+from quack_core.plugins.protocols import ExtensionPluginProtocol
 from typing import Any, Callable
 
 class MyExtensionPlugin:
@@ -260,7 +260,7 @@ class MyExtensionPlugin:
 A Provider Plugin provides services to other plugins. It must implement the `ProviderPluginProtocol`:
 
 ```python
-from quackcore.plugins.protocols import ProviderPluginProtocol
+from quack_core.plugins.protocols import ProviderPluginProtocol
 from typing import Any
 
 class MyProviderPlugin:
@@ -317,7 +317,7 @@ class LoggerService:
 A Configurable Plugin can be configured with external settings. It must implement the `ConfigurablePluginProtocol`:
 
 ```python
-from quackcore.plugins.protocols import ConfigurablePluginProtocol, QuackPluginProtocol
+from quack_core.plugins.protocols import ConfigurablePluginProtocol, QuackPluginProtocol
 from typing import Any
 
 class MyConfigurablePlugin:
@@ -392,7 +392,7 @@ setuptools.setup(
 
 ```toml
 # pyproject.toml
-[project.entry-points."quackcore.plugins"]
+[project.entry-points."quack_core.plugins"]
 my-plugin = "my_quacktool.plugin:create_plugin"
 ```
 
@@ -403,7 +403,7 @@ The entry point must point to a callable that returns a plugin instance.
 You can also load plugins from specific module paths:
 
 ```python
-from quackcore.plugins import loader
+from quack_core.plugins import loader
 
 # Load a single plugin
 plugin = loader.load_plugin("my_quacktool.plugin")
@@ -427,7 +427,7 @@ Example implementation:
 ```python
 # my_quacktool/plugin.py
 from my_quacktool.plugins import MyPlugin
-from quackcore.plugins.protocols import QuackPluginProtocol
+from quack_core.plugins.protocols import QuackPluginProtocol
 
 def create_plugin() -> QuackPluginProtocol:
     """Factory function to create a plugin instance."""
@@ -441,7 +441,7 @@ If no factory function is found, QuackCore will look for a class named `MockPlug
 The Plugin Registry manages registered plugins and provides access to them. QuackCore provides a global registry instance that you can use:
 
 ```python
-from quackcore.plugins import registry
+from quack_core.plugins import registry
 ```
 
 ### Registering Plugins
@@ -449,7 +449,7 @@ from quackcore.plugins import registry
 You can register plugins with the registry:
 
 ```python
-from quackcore.plugins import registry
+from quack_core.plugins import registry
 from my_quacktool.plugins import MyPlugin
 
 # Register a single plugin
@@ -517,7 +517,7 @@ result = registry.execute_workflow("process-data", data=[{"foo": "bar"}])
 Use `QuackPluginError` for plugin-related errors and provide meaningful error messages:
 
 ```python
-from quackcore.errors import QuackPluginError
+from quack_core.errors import QuackPluginError
 
 try:
     plugin = loader.load_plugin("non_existent_module")
@@ -530,7 +530,7 @@ except QuackPluginError as e:
 If your plugin depends on other plugins, check for their existence at runtime:
 
 ```python
-from quackcore.plugins import registry
+from quack_core.plugins import registry
 
 class MyPlugin:
     """A plugin that depends on other plugins."""
@@ -556,7 +556,7 @@ When testing plugins, create a separate test registry to avoid affecting the glo
 
 ```python
 import unittest
-from quackcore.plugins import PluginRegistry
+from quack_core.plugins import PluginRegistry
 from my_quacktool.plugins import MyPlugin
 
 class TestMyPlugin(unittest.TestCase):
@@ -600,7 +600,7 @@ def create_plugin() -> QuackPluginProtocol:
 For configurable plugins, provide a way to configure them from external sources:
 
 ```python
-from quackcore.plugins.protocols import ConfigurablePluginProtocol
+from quack_core.plugins.protocols import ConfigurablePluginProtocol
 
 class MyConfigurablePlugin:
     """A configurable plugin."""
@@ -627,7 +627,7 @@ class MyConfigurablePlugin:
 You can compose multiple plugin types to create more complex plugins:
 
 ```python
-from quackcore.plugins.protocols import (
+from quack_core.plugins.protocols import (
     CommandPluginProtocol,
     ProviderPluginProtocol,
     QuackPluginProtocol,
@@ -737,7 +737,7 @@ class Service2:
            self.other_plugin = OtherPlugin()
    
    # Good
-   from quackcore.plugins import registry
+   from quack_core.plugins import registry
    
    class MyPlugin:
        def __init__(self):
@@ -802,7 +802,7 @@ Here's a complete example of a basic QuackTool:
 
 ```python
 # my_quacktool/plugin.py
-from quackcore.plugins.protocols import CommandPluginProtocol
+from quack_core.plugins.protocols import CommandPluginProtocol
 from typing import Any, Callable
 
 class MyQuackTool:
@@ -851,7 +851,7 @@ Here's an example of a more advanced QuackTool that uses multiple plugin types:
 
 ```python
 # advanced_quacktool/plugin.py
-from quackcore.plugins.protocols import (
+from quack_core.plugins.protocols import (
     CommandPluginProtocol,
     ConfigurablePluginProtocol,
     ProviderPluginProtocol,
@@ -1006,7 +1006,7 @@ When building complex QuackTools, you may need to manage dependencies between pl
 Check for dependencies at runtime and provide meaningful error messages:
 
 ```python
-from quackcore.plugins import registry
+from quack_core.plugins import registry
 
 class MyPlugin:
     """A plugin with dependencies."""
@@ -1041,7 +1041,7 @@ class MyPlugin:
 Handle optional dependencies gracefully:
 
 ```python
-from quackcore.plugins import registry
+from quack_core.plugins import registry
 
 class MyPlugin:
     """A plugin with optional dependencies."""
@@ -1123,7 +1123,7 @@ class MyPlugin:
 For advanced use cases, you might want to dynamically load plugins based on configuration or user input:
 
 ```python
-from quackcore.plugins import loader, registry
+from quack_core.plugins import loader, registry
 from typing import List
 
 def load_plugins_from_config(config: dict) -> List[str]:
@@ -1163,7 +1163,7 @@ For development environments, implementing plugin hot-reloading can be useful:
 ```python
 import importlib
 import sys
-from quackcore.plugins import registry
+from quack_core.plugins import registry
 
 def reload_plugin(plugin_name: str) -> bool:
     """
@@ -1235,8 +1235,8 @@ def reload_plugin(plugin_name: str) -> bool:
 
 - **load_plugin(module_path)**: Loads a plugin from a module path
 - **load_plugins(modules)**: Loads multiple plugins from module paths
-- **load_entry_points(group="quackcore.plugins")**: Loads plugins from entry points
-- **discover_plugins(entry_point_group="quackcore.plugins", additional_modules=None)**: Discovers plugins from entry points and additional modules
+- **load_entry_points(group="quack_core.plugins")**: Loads plugins from entry points
+- **discover_plugins(entry_point_group="quack_core.plugins", additional_modules=None)**: Discovers plugins from entry points and additional modules
 
 #### Plugin Registry
 
@@ -1297,7 +1297,7 @@ A good QuackTool follows the single responsibility principle and has a clear, fo
 
 ```python
 # quack_etl/plugin.py
-from quackcore.plugins.protocols import CommandPluginProtocol
+from quack_core.plugins.protocols import CommandPluginProtocol
 from typing import Any, Callable, List, Dict
 
 class QuackETL:
@@ -1429,7 +1429,7 @@ def create_plugin() -> CommandPluginProtocol:
 
 ```python
 # quack_auth/plugin.py
-from quackcore.plugins.protocols import ProviderPluginProtocol
+from quack_core.plugins.protocols import ProviderPluginProtocol
 from typing import Any, Dict, Optional, List
 
 class QuackAuth:
@@ -1614,7 +1614,7 @@ QuackTools can interact in several ways:
 The most common way for QuackTools to interact is through the registry:
 
 ```python
-from quackcore.plugins import registry
+from quack_core.plugins import registry
 
 class DataVisualizationPlugin:
     """A plugin for data visualization that depends on quack-etl."""
@@ -1680,7 +1680,7 @@ class DataVisualizationPlugin:
 Extension plugins are designed specifically to extend other plugins:
 
 ```python
-from quackcore.plugins.protocols import ExtensionPluginProtocol
+from quack_core.plugins.protocols import ExtensionPluginProtocol
 from typing import Any, Callable, Dict, List
 
 class ETLExtensionPlugin:
@@ -1724,7 +1724,7 @@ class ETLExtensionPlugin:
 Plugins can provide services that other plugins can consume:
 
 ```python
-from quackcore.plugins import registry
+from quack_core.plugins import registry
 
 class DataAnalysisPlugin:
     """A plugin for data analysis that uses the quack-auth service."""
@@ -1793,7 +1793,7 @@ class DataAnalysisPlugin:
 Plugins can create composite commands that use multiple plugins:
 
 ```python
-from quackcore.plugins import registry
+from quack_core.plugins import registry
 
 def analyze_and_visualize(data_source: str, analysis_type: str, visualization_type: str, **options) -> Dict:
     """
@@ -1870,7 +1870,7 @@ For more complex interactions, you can implement an event system:
 
 ```python
 # First, create an event bus plugin
-from quackcore.plugins.protocols import ProviderPluginProtocol
+from quack_core.plugins.protocols import ProviderPluginProtocol
 from typing import Any, Callable, Dict, List, Set
 
 class EventBusPlugin:
@@ -1944,7 +1944,7 @@ def create_plugin() -> ProviderPluginProtocol:
 Then, plugins can communicate through the event bus:
 
 ```python
-from quackcore.plugins import registry
+from quack_core.plugins import registry
 
 class DataLoggerPlugin:
     """A plugin that logs data events."""

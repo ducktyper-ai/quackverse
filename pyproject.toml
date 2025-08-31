@@ -47,7 +47,7 @@ exclude = [
 
 # Shared configuration for all subpackages
 [tool.hatch.build.targets.wheel]
-packages = ["quackcore", "ducktyper", "quackster"]
+packages = ["quack_core", "ducktyper", "quackster"]
 
 # Define no source package since this is a monorepo metapackage
 [tool.hatch.build.targets.sdist]
@@ -103,6 +103,6 @@ warn_return_any = true
 strict_optional = true
 
 [tool.pytest.ini_options]
-testpaths = ["quackcore/tests", "ducktyper/tests", "quackster/tests"]
+testpaths = ["quack-core/tests", "ducktyper/tests", "quackster/tests"]
 python_files = ["test_*.py"]
 filterwarnings = ["error"]

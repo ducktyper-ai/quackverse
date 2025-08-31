@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `quackcore.config` module provides a robust configuration management system for QuackCore applications and plugins. It allows you to:
+The `quack_core.config` module provides a robust configuration management system for QuackCore applications and plugins. It allows you to:
 
 - Load configuration from YAML files
 - Override configuration with environment variables
@@ -30,7 +30,7 @@ This guide will help you understand how to use the configuration system effectiv
 The simplest way to use QuackCore's configuration system is to import the global `config` instance:
 
 ```python
-from quackcore.config import config
+from quack_core.config import config
 
 # Access configuration values
 log_level = config.logging.level
@@ -40,7 +40,7 @@ base_dir = config.paths.base_dir
 config.setup_logging()
 ```
 
-The global `config` instance is automatically loaded when the `quackcore.config` module is imported, searching for configuration files in standard locations.
+The global `config` instance is automatically loaded when the `quack_core.config` module is imported, searching for configuration files in standard locations.
 
 ## Configuration Models
 
@@ -59,7 +59,7 @@ If you need to extend the configuration with your own settings, you can create a
 
 ```python
 from pydantic import BaseModel, Field
-from quackcore.config import config, merge_configs
+from quack_core.config import config, merge_configs
 
 class MyToolConfig(BaseModel):
     max_threads: int = Field(default=4, description="Maximum number of threads")
@@ -67,7 +67,7 @@ class MyToolConfig(BaseModel):
     api_url: str = Field(default="https://api.example.com", description="API URL")
 
 # Load your tool's configuration from a YAML file
-from quackcore.config.loader import load_yaml_config
+from quack_core.config.loader import load_yaml_config
 tool_config = load_yaml_config("my_tool_config.yaml")
 
 # Merge with the global config
@@ -94,7 +94,7 @@ By default, the global `config` instance is loaded from:
 3. Project root (using heuristics to find `quack_config.yaml` or `config/quack_config.yaml`)
 
 ```python
-from quackcore.config import config
+from quack_core.config import config
 # config is already loaded and ready to use
 ```
 
@@ -103,7 +103,7 @@ from quackcore.config import config
 You can load configuration from a specific file:
 
 ```python
-from quackcore.config import load_config
+from quack_core.config import load_config
 
 # Load from a specific file
 my_config = load_config("/path/to/my/config.yaml")
@@ -140,7 +140,7 @@ There are several ways to access configuration values:
 ### Direct Access
 
 ```python
-from quackcore.config import config
+from quack_core.config import config
 
 # Access values directly
 log_level = config.logging.level
@@ -161,7 +161,7 @@ log_level = config_dict["logging"]["level"]
 ### Path-based Access
 
 ```python
-from quackcore.config.utils import get_config_value
+from quack_core.config.utils import get_config_value
 
 # Access by path
 log_level = get_config_value(config, "logging.level")
@@ -185,7 +185,7 @@ cache_size = config.get_custom("my_tool.cache_size", 1024)
 QuackCore supports environment-specific configuration through the `QUACK_ENV` environment variable and environment-specific YAML files:
 
 ```python
-from quackcore.config.utils import load_env_config
+from quack_core.config.utils import load_env_config
 
 # Load environment-specific configuration
 # If QUACK_ENV=production, this will look for production.yaml in the config directory
@@ -205,7 +205,7 @@ Example directory structure:
 QuackCore provides utilities for working with paths in configuration:
 
 ```python
-from quackcore.config.utils import normalize_paths
+from quack_core.config.utils import normalize_paths
 
 # Normalize all paths in the configuration (convert relative paths to absolute)
 config = normalize_paths(config)
@@ -220,7 +220,7 @@ output_dir = config.paths.output_dir  # Now an absolute path based on base_dir
 The `custom` field in `QuackConfig` allows you to add your own configuration values:
 
 ```python
-from quackcore.config import config, merge_configs
+from quack_core.config import config, merge_configs
 
 # Add custom configuration
 custom_config = {
@@ -265,7 +265,7 @@ class MyToolConfig(BaseModel):
 Use `validate_required_config` to ensure all required configuration values are present:
 
 ```python
-from quackcore.config.utils import validate_required_config
+from quack_core.config.utils import validate_required_config
 
 required_keys = [
     "integrations.notion.api_key",
@@ -319,11 +319,11 @@ The global `config` instance is shared across your application. If you modify it
 
 ```python
 # BAD: Modifying the global config directly
-from quackcore.config import config
+from quack_core.config import config
 config.logging.level = "DEBUG"  # This affects the whole application!
 
 # GOOD: Create a local copy before modifying
-from quackcore.config import config, merge_configs
+from quack_core.config import config, merge_configs
 my_config = merge_configs(config, {"logging": {"level": "DEBUG"}})
 ```
 
@@ -351,7 +351,7 @@ Always normalize paths to ensure they work correctly:
 data_file = f"{config.paths.data_dir}/my_data.csv"
 
 # GOOD: Normalize paths first
-from quackcore.config.utils import normalize_paths
+from quack_core.config.utils import normalize_paths
 config = normalize_paths(config)
 data_file = config.paths.data_dir / "my_data.csv"  # Now a Path object that works correctly
 ```
@@ -365,7 +365,7 @@ Don't hard-code paths to configuration files:
 config = load_config("/etc/quack/config.yaml")
 
 # GOOD: Use the standard loading mechanism
-from quackcore.config import config  # Uses the standard search paths
+from quack_core.config import config  # Uses the standard search paths
 
 # Or if you need a specific file:
 config_path = os.environ.get("MY_TOOL_CONFIG", "my_tool_config.yaml")
@@ -382,7 +382,7 @@ api_key = config.get_custom("my_tool.api_key")
 # If api_key is None or invalid, this might cause problems later
 
 # GOOD: Validate configuration upfront
-from quackcore.config.utils import validate_required_config
+from quack_core.config.utils import validate_required_config
 missing = validate_required_config(config, ["custom.my_tool.api_key"])
 if missing:
     raise ValueError(f"Missing required configuration: {', '.join(missing)}")

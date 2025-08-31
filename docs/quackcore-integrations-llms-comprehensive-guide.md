@@ -3,7 +3,7 @@
 ## Table of Contents
 
 1. [Introduction](#introduction)
-2. [Overview of `quackcore.integrations.llms`](#overview-of-quackcoreintegrationsllms)
+2. [Overview of `quack_core.integrations.llms`](#overview-of-quackcoreintegrationsllms)
 3. [Getting Started](#getting-started)
    - [Installation](#installation)
    - [Basic Usage](#basic-usage)
@@ -35,11 +35,11 @@
 
 ## Introduction
 
-The `quackcore.integrations.llms` module provides a standardized interface for interacting with various Large Language Model (LLM) providers. It's designed to be easy to use while offering advanced capabilities like provider fallbacks, streaming responses, and token counting.
+The `quack_core.integrations.llms` module provides a standardized interface for interacting with various Large Language Model (LLM) providers. It's designed to be easy to use while offering advanced capabilities like provider fallbacks, streaming responses, and token counting.
 
 This module is an essential component for QuackTool developers who need to incorporate LLM capabilities into their applications. It abstracts away the complexities of dealing with different LLM APIs, allowing you to focus on building your tools rather than wrestling with integration details.
 
-## Overview of `quackcore.integrations.llms`
+## Overview of `quack_core.integrations.llms`
 
 The module consists of several key components:
 
@@ -55,7 +55,7 @@ The design follows a clean hierarchical structure, with common functionality abs
 
 ### Installation
 
-The `quackcore.integrations.llms` module is part of the QuackCore library. You should have it already installed if you're developing a QuackTool. If not, you can install it via pip:
+The `quack_core.integrations.llms` module is part of the QuackCore library. You should have it already installed if you're developing a QuackTool. If not, you can install it via pip:
 
 ```bash
 pip install quack-core
@@ -79,7 +79,7 @@ pip install requests
 Here's a simple example to get started with the LLM integration:
 
 ```python
-from quackcore.integrations.llms import LLMIntegration, ChatMessage, RoleType, LLMOptions
+from quack_core.integrations.llms import LLMIntegration, ChatMessage, RoleType, LLMOptions
 
 # Initialize the LLM integration service
 llm_service = LLMIntegration()
@@ -115,8 +115,8 @@ The `LLMIntegration` class is the main entry point for using LLMs in your QuackT
 You can initialize the service with default settings or customize it:
 
 ```python
-from quackcore.integrations.llms import LLMIntegration
-from quackcore.logging import LogLevel
+from quack_core.integrations.llms import LLMIntegration
+from quack_core.logging import LogLevel
 
 # Default initialization
 llm_service = LLMIntegration()
@@ -203,8 +203,8 @@ The module provides specific clients for different LLM providers. These handle t
 The `OpenAIClient` integrates with OpenAI's API:
 
 ```python
-from quackcore.integrations.llms.clients import OpenAIClient
-from quackcore.integrations.llms import ChatMessage, RoleType
+from quack_core.integrations.llms.clients import OpenAIClient
+from quack_core.integrations.llms import ChatMessage, RoleType
 
 # Create the client directly
 openai_client = OpenAIClient(
@@ -229,8 +229,8 @@ if result.success:
 The `AnthropicClient` integrates with Anthropic's API:
 
 ```python
-from quackcore.integrations.llms.clients import AnthropicClient
-from quackcore.integrations.llms import ChatMessage, RoleType, LLMOptions
+from quack_core.integrations.llms.clients import AnthropicClient
+from quack_core.integrations.llms import ChatMessage, RoleType, LLMOptions
 
 # Create the client directly
 anthropic_client = AnthropicClient(
@@ -261,8 +261,8 @@ if result.success:
 The `OllamaClient` integrates with locally running Ollama server:
 
 ```python
-from quackcore.integrations.llms.clients import OllamaClient
-from quackcore.integrations.llms import ChatMessage, RoleType
+from quack_core.integrations.llms.clients import OllamaClient
+from quack_core.integrations.llms import ChatMessage, RoleType
 
 # Create the client for a local Ollama server
 ollama_client = OllamaClient(
@@ -286,8 +286,8 @@ if result.success:
 The `MockLLMClient` is useful for testing without actual API calls:
 
 ```python
-from quackcore.integrations.llms.clients import MockLLMClient
-from quackcore.integrations.llms import ChatMessage, RoleType
+from quack_core.integrations.llms.clients import MockLLMClient
+from quack_core.integrations.llms import ChatMessage, RoleType
 
 # Create a mock client with predefined responses
 mock_client = MockLLMClient(
@@ -312,7 +312,7 @@ mock_client.set_responses(["New response 1", "New response 2"])
 Chat messages are the building blocks of conversations with LLMs:
 
 ```python
-from quackcore.integrations.llms import ChatMessage, RoleType
+from quack_core.integrations.llms import ChatMessage, RoleType
 
 # Different types of messages
 system_message = ChatMessage(
@@ -350,7 +350,7 @@ conversation = [
 `LLMOptions` allows you to customize LLM requests:
 
 ```python
-from quackcore.integrations.llms import LLMOptions
+from quack_core.integrations.llms import LLMOptions
 
 # Create options with default values
 default_options = LLMOptions()
@@ -437,7 +437,7 @@ export QUACK_LLM_DEFAULT_PROVIDER="anthropic"
 You can count tokens to estimate costs and stay within model limits:
 
 ```python
-from quackcore.integrations.llms import LLMIntegration, ChatMessage, RoleType
+from quack_core.integrations.llms import LLMIntegration, ChatMessage, RoleType
 
 # Initialize the service
 llm_service = LLMIntegration()
@@ -467,7 +467,7 @@ if result.success:
 You can receive responses in chunks for a better user experience:
 
 ```python
-from quackcore.integrations.llms import LLMIntegration, ChatMessage, RoleType, LLMOptions
+from quack_core.integrations.llms import LLMIntegration, ChatMessage, RoleType, LLMOptions
 import sys
 
 # Initialize the service
@@ -498,7 +498,7 @@ print("\n\nStreaming complete!")
 You can define functions for the LLM to call:
 
 ```python
-from quackcore.integrations.llms import (
+from quack_core.integrations.llms import (
     LLMIntegration, ChatMessage, RoleType, LLMOptions,
     FunctionDefinition, ToolDefinition
 )
@@ -560,8 +560,8 @@ if result.success:
 You can register custom LLM clients:
 
 ```python
-from quackcore.integrations.llms import register_llm_client
-from quackcore.integrations.llms.clients.base import LLMClient
+from quack_core.integrations.llms import register_llm_client
+from quack_core.integrations.llms.clients.base import LLMClient
 
 # Create a custom LLM client
 class MyCustomLLMClient(LLMClient):
@@ -577,7 +577,7 @@ class MyCustomLLMClient(LLMClient):
 register_llm_client("my_custom", MyCustomLLMClient)
 
 # Now you can use it with the integration service
-from quackcore.integrations.llms import LLMIntegration
+from quack_core.integrations.llms import LLMIntegration
 custom_service = LLMIntegration(provider="my_custom")
 custom_service.initialize()
 ```
@@ -587,7 +587,7 @@ custom_service.initialize()
 You can configure custom fallback behavior:
 
 ```python
-from quackcore.integrations.llms import FallbackConfig, LLMIntegration
+from quack_core.integrations.llms import FallbackConfig, LLMIntegration
 
 # Define custom fallback configuration
 fallback_config = FallbackConfig(
@@ -609,8 +609,8 @@ llm_service.initialize()
 The module provides consistent error handling with specialized error types:
 
 ```python
-from quackcore.integrations.llms import LLMIntegration, ChatMessage, RoleType
-from quackcore.errors import QuackApiError, QuackIntegrationError
+from quack_core.integrations.llms import LLMIntegration, ChatMessage, RoleType
+from quack_core.errors import QuackApiError, QuackIntegrationError
 
 # Initialize the service
 llm_service = LLMIntegration()

@@ -1,11 +1,11 @@
-# tests/integration/test_ducktyper_quackcore.py
+# tests/integration/test_ducktyper_quack_core.py
 import pytest
-from quackcore.plugins.registry import list_plugins, get_plugin
+from quack_core.plugins.registry import list_plugins, get_plugin
 from ducktyper.commands.list_cmd import list_tools
 
 
 def test_ducktyper_can_list_quackcore_plugins():
-    """Test that DuckTyper can list plugins from QuackCore."""
+    """Test that DuckTyper can list plugins from quack_core."""
     # Get plugins directly from QuackCore
     direct_plugins = list_plugins()
 

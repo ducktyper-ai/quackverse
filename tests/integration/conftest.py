@@ -21,7 +21,7 @@ for package in PACKAGES:
 # Import fixtures from individual packages
 try:
     # Import fixtures from quack-core
-    from quackcore.tests.conftest import (
+    from quack_core.tests.conftest import (
         temp_dir,
         test_file,
         test_binary_file,

@@ -21,7 +21,7 @@
 
 ## Introduction
 
-The `quackcore.integrations.core` module provides a robust framework for connecting QuackCore to external services and platforms. This guide will walk you through the fundamentals and advanced concepts needed to build effective, maintainable integrations.
+The `quack_core.integrations.core` module provides a robust framework for connecting QuackCore to external services and platforms. This guide will walk you through the fundamentals and advanced concepts needed to build effective, maintainable integrations.
 
 **What is an integration?**
 
@@ -32,7 +32,7 @@ In QuackCore, an integration is a self-contained module that connects the core s
 - Interact with external APIs
 - Handle responses and errors consistently
 
-This guide is intended for developers who want to create new integrations for QuackCore. By following these patterns, your integrations will maintain consistency with the rest of the ecosystem and be easily discoverable by users.
+This guide is intended for developers who want to create new integrations for quack_core. By following these patterns, your integrations will maintain consistency with the rest of the ecosystem and be easily discoverable by users.
 
 ## Core Concepts
 
@@ -643,7 +643,7 @@ The integration registry provides a central system for discovering and accessing
 ### Using the Registry
 
 ```python
-from quackcore.integrations.core import registry
+from quack_core.integrations.core import registry
 
 # Get a specific integration by name
 my_service = registry.get_integration("MyService")
@@ -669,7 +669,7 @@ print(f"Available integrations: {', '.join(available_integrations)}")
 You can manually register integrations:
 
 ```python
-from quackcore.integrations.core import registry
+from quack_core.integrations.core import registry
 from my_module.integrations import MyCustomIntegration
 
 # Create and register an integration
@@ -703,7 +703,7 @@ setup(
 
 ```toml
 # pyproject.toml
-[project.entry-points."quackcore.integrations"]
+[project.entry-points."quack_core.integrations"]
 my_service = "my_package.my_module:create_integration"
 ```
 
@@ -732,7 +732,7 @@ from typing import Any
 
 import requests
 
-from quackcore.integrations.core import BaseAuthProvider, AuthResult
+from quack_core.integrations.core import BaseAuthProvider, AuthResult
 
 
 class ExampleServiceAuth(BaseAuthProvider):
@@ -929,7 +929,7 @@ class ExampleServiceAuth(BaseAuthProvider):
 # config.py
 from typing import Any
 
-from quackcore.integrations.core import BaseConfigProvider
+from quack_core.integrations.core import BaseConfigProvider
 
 
 class ExampleServiceConfig(BaseConfigProvider):
@@ -1076,7 +1076,7 @@ class ExampleServiceClient:
 # service.py
 from typing import Any, Dict, List, Optional
 
-from quackcore.integrations.core import (
+from quack_core.integrations.core import (
     AuthProviderProtocol,
     BaseIntegrationService, 
     ConfigProviderProtocol,
@@ -1286,7 +1286,7 @@ class ExampleServiceIntegration(BaseIntegrationService):
 
 ```python
 # __init__.py
-from quackcore.integrations.core import registry
+from quack_core.integrations.core import registry
 
 from .service import ExampleServiceIntegration
 
@@ -1354,7 +1354,7 @@ from typing import Any, Dict, Optional
 
 import requests
 
-from quackcore.integrations.core import BaseAuthProvider, AuthResult
+from quack_core.integrations.core import BaseAuthProvider, AuthResult
 
 
 class OAuthProvider(BaseAuthProvider):
@@ -1676,13 +1676,13 @@ from typing import Any, Dict, List, Optional
 import boto3
 from botocore.exceptions import ClientError
 
-from quackcore.integrations.core import (
+from quack_core.integrations.core import (
     BaseIntegrationService,
     ConfigProviderProtocol,
     IntegrationResult,
     StorageIntegrationProtocol,
 )
-from quackcore.integrations.core.protocols import AuthProviderProtocol
+from quack_core.integrations.core.protocols import AuthProviderProtocol
 
 
 class S3Integration(BaseIntegrationService, StorageIntegrationProtocol):
@@ -1996,7 +1996,7 @@ Unit tests should test individual components in isolation:
 import unittest
 from unittest.mock import MagicMock, patch
 
-from quackcore.integrations.core import IntegrationResult
+from quack_core.integrations.core import IntegrationResult
 
 from myintegration.service import MyServiceIntegration
 
@@ -2098,7 +2098,7 @@ Integration tests verify interactions with actual external services:
 import os
 import unittest
 
-from quackcore.integrations.core import registry
+from quack_core.integrations.core import registry
 
 from myintegration.service import MyServiceIntegration
 
@@ -2484,7 +2484,7 @@ setup(
 You can also load integrations from modules:
 
 ```python
-from quackcore.integrations.core import registry
+from quack_core.integrations.core import registry
 
 # Load integrations from a module
 integrations = registry.load_integration_module("my_integration.service")
@@ -2495,7 +2495,7 @@ integrations = registry.load_integration_module("my_integration.service")
 For testing or special cases, register manually:
 
 ```python
-from quackcore.integrations.core import registry
+from quack_core.integrations.core import registry
 from my_integration.service import MyServiceIntegration
 
 # Create integration instance
@@ -2516,7 +2516,7 @@ if registry.is_registered("MyService"):
 You can access integrations through the registry:
 
 ```python
-from quackcore.integrations.core import registry
+from quack_core.integrations.core import registry
 
 # Get integration by name
 storage = registry.get_integration("S3Storage")
@@ -2588,8 +2588,8 @@ Enable debug logging to see detailed information:
 
 ```python
 import logging
-from quackcore.logging import LogLevel, LOG_LEVELS
-from quackcore.integrations.core import registry
+from quack_core.logging import LogLevel, LOG_LEVELS
+from quack_core.integrations.core import registry
 
 # Enable debug logging
 logging.basicConfig(level=logging.DEBUG)
@@ -2609,8 +2609,8 @@ Yes, you can define new protocols by extending the base protocols:
 
 ```python
 from typing import Protocol, runtime_checkable
-from quackcore.integrations.core.protocols import IntegrationProtocol
-from quackcore.integrations.core.results import IntegrationResult
+from quack_core.integrations.core.protocols import IntegrationProtocol
+from quack_core.integrations.core.results import IntegrationResult
 
 @runtime_checkable
 class MessagingIntegrationProtocol(IntegrationProtocol, Protocol):

@@ -62,7 +62,7 @@ pip install quack-core
 ## Basic Usage
 
 ```python
-from quackcore.cli import init_cli_env, print_success
+from quack_core.cli import init_cli_env, print_success
 
 # Initialize CLI environment
 ctx = init_cli_env(
@@ -88,7 +88,7 @@ print_success(f"Successfully loaded project: {project_name}")
 ```python
 import typer
 from typing import Annotated
-from quackcore.cli import init_cli_env, print_error
+from quack_core.cli import init_cli_env, print_error
 
 app = typer.Typer()
 
@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
 ```python
 import click
-from quackcore.cli import init_cli_env, print_success
+from quack_core.cli import init_cli_env, print_success
 
 @click.command()
 @click.option("--debug", is_flag=True, help="Enable debug mode")
@@ -126,7 +126,7 @@ if __name__ == "__main__":
 
 ```python
 import argparse
-from quackcore.cli import init_cli_env, print_success
+from quack_core.cli import init_cli_env, print_success
 
 def main():
     parser = argparse.ArgumentParser(description="My CLI App")
@@ -157,7 +157,7 @@ if __name__ == "__main__":
 ### Progress Reporting
 
 ```python
-from quackcore.cli import show_progress
+from quack_core.cli import show_progress
 import time
 
 # Simple progress bar
@@ -165,7 +165,7 @@ for i in show_progress(range(100), desc="Processing"):
     time.sleep(0.1)
 
 # Custom progress reporter
-from quackcore.cli import ProgressReporter
+from quack_core.cli import ProgressReporter
 
 reporter = ProgressReporter(total=100, desc="Downloading")
 reporter.start()
@@ -181,7 +181,7 @@ reporter.finish("Download complete!")
 ### Interactive Prompts
 
 ```python
-from quackcore.cli import ask, confirm, ask_choice
+from quack_core.cli import ask, confirm, ask_choice
 
 # Simple input
 name = ask("What's your name?", required=True)
@@ -204,7 +204,7 @@ role = ask_choice(
 ### Tables and Formatting
 
 ```python
-from quackcore.cli import table, dict_to_table
+from quack_core.cli import table, dict_to_table
 
 # Simple table
 headers = ["Name", "Role", "Status"]

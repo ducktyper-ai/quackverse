@@ -32,7 +32,7 @@ src/quackdata/
 QuackData registers integrations via the `quackcore` plugin interface:
 
 ```python
-from quackcore.integrations.core import register_plugin
+from quack_core.integrations.core import register_plugin
 
 @register_plugin("sqlite")
 def register_sqlite():

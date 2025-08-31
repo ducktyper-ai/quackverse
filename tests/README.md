@@ -104,7 +104,7 @@ def test_example_functionality():
 Write integration tests that span multiple packages in the root-level integration tests:
 
 ```python
-# tests/integration/test_ducktyper_quackcore.py
+# tests/integration/test_ducktyper_quack_core.py
 def test_ducktyper_uses_quackcore():
     # Test code that uses both packages
     assert True

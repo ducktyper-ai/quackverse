@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `quackcore.integrations.github` module provides a robust, Pythonic interface to the GitHub API, designed specifically for QuackCore applications. It allows you to interact with GitHub repositories, manage pull requests, handle issues, and includes specialized features for teaching workflows like managing assignments and grading.
+The `quack_core.integrations.github` module provides a robust, Pythonic interface to the GitHub API, designed specifically for QuackCore applications. It allows you to interact with GitHub repositories, manage pull requests, handle issues, and includes specialized features for teaching workflows like managing assignments and grading.
 
 ## Installation and Setup
 
@@ -65,8 +65,8 @@ Then, in your code:
 
 ```python
 import os
-from quackcore.integrations.core import registry
-from quackcore.config import load_config
+from quack_core.integrations.core import registry
+from quack_core.config import load_config
 
 # Set the path to your config file
 os.environ["QUACK_CONFIG"] = "path/to/quack_config.yaml"
@@ -81,7 +81,7 @@ github.initialize()
 ### Getting the Integration
 
 ```python
-from quackcore.integrations.core import registry
+from quack_core.integrations.core import registry
 
 # Get the GitHub integration from the registry
 github = registry.get_integration("GitHub")
@@ -581,7 +581,7 @@ if review_result:
 You can use the GitHub integration alongside other QuackCore integrations:
 
 ```python
-from quackcore.integrations.core import registry
+from quack_core.integrations.core import registry
 
 # Get GitHub integration
 github = registry.get_integration("GitHub")
@@ -615,7 +615,7 @@ if repo_result.success:
 You can create a custom-configured integration:
 
 ```python
-from quackcore.integrations.github import (
+from quack_core.integrations.github import (
     GitHubIntegration,
     GitHubAuthProvider,
     GitHubConfigProvider
@@ -718,7 +718,7 @@ export GITHUB_TOKEN="your_github_token_here"
 
 # In your code
 import os
-from quackcore.integrations.core import registry
+from quack_core.integrations.core import registry
 
 # Token will be automatically picked up from environment
 github = registry.get_integration("GitHub")
@@ -776,7 +776,7 @@ import os
 print(f"Token set in environment: {'GITHUB_TOKEN' in os.environ}")
 
 # Check token permissions by trying a simple operation
-from quackcore.integrations.github import GitHubClient
+from quack_core.integrations.github import GitHubClient
 client = GitHubClient(token=os.environ.get("GITHUB_TOKEN", ""))
 try:
     user = client.get_user()
@@ -823,11 +823,11 @@ else:
 
 ```python
 # Print available integrations
-from quackcore.integrations.core import registry
+from quack_core.integrations.core import registry
 print(f"Available integrations: {registry.list_integrations()}")
 
 # Manually register the integration if needed
-from quackcore.integrations.github import GitHubIntegration
+from quack_core.integrations.github import GitHubIntegration
 integration = GitHubIntegration()
 registry.register(integration)
 ```
@@ -838,7 +838,7 @@ For detailed logging information:
 
 ```python
 import logging
-from quackcore.logging import get_logger
+from quack_core.logging import get_logger
 
 # Set logging level to DEBUG for the GitHub integration
 logger = get_logger("quack-core.integrations.github")

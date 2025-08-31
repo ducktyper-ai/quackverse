@@ -22,7 +22,7 @@
 
 ## Overview
 
-The `quackcore.integrations.google.drive` module provides a robust interface for integrating Google Drive operations into QuackTools. It covers everything from file uploads/downloads, folder management, setting file permissions, and listing files, all wrapped in a standardized integration service using custom error handling with `IntegrationResult`.
+The `quack_core.integrations.google.drive` module provides a robust interface for integrating Google Drive operations into QuackTools. It covers everything from file uploads/downloads, folder management, setting file permissions, and listing files, all wrapped in a standardized integration service using custom error handling with `IntegrationResult`.
 
 Key features include:
 
@@ -74,7 +74,7 @@ Before performing any operations, you must initialize the Google Drive service. 
 
 ```python
 # Import the integration entry point
-from quackcore.integrations.google.drive import create_integration
+from quack_core.integrations.google.drive import create_integration
 
 # Create a Google Drive integration instance
 drive_integration = create_integration()
@@ -276,7 +276,7 @@ else:
 #### Example Use
 
 ```python
-from quackcore.integrations.google.drive.utils.query import build_query
+from quack_core.integrations.google.drive.utils.query import build_query
 
 query_string = build_query(folder_id="folder_id_here", pattern="*.pdf")
 print("Query:", query_string)
@@ -293,7 +293,7 @@ print("Query:", query_string)
 #### Example Decorator Usage
 
 ```python
-from quackcore.integrations.google.drive.utils.api import with_exponential_backoff
+from quack_core.integrations.google.drive.utils.api import with_exponential_backoff
 
 @with_exponential_backoff
 def sample_api_call():
@@ -374,7 +374,7 @@ Every operation returns an instance of `IntegrationResult` which contains:
 The data models (`DriveFile`, `DriveFolder`, and `DrivePermission`) are based on Pydantic. You can extend these models to include extra metadata if needed:
 
 ```python
-from quackcore.integrations.google.drive.models import DriveFile
+from quack_core.integrations.google.drive.models import DriveFile
 from pydantic import Field
 
 class ExtendedDriveFile(DriveFile):
@@ -470,7 +470,7 @@ graph TD;
 
 ## Authentication and Token Management
 
-Authentication is the first key step when using the Google Drive integration. The module uses an internal class called `GoogleAuthProvider` (located under `quackcore.integrations.google.auth`) to handle all authentication tasks. This provider implements the OAuth 2.0 flow required by the Google API and is responsible for:
+Authentication is the first key step when using the Google Drive integration. The module uses an internal class called `GoogleAuthProvider` (located under `quack_core.integrations.google.auth`) to handle all authentication tasks. This provider implements the OAuth 2.0 flow required by the Google API and is responsible for:
 
 - **Reading Client Secrets:** The client secrets file contains your application's client ID and secret provided by the Google API Console.
 - **Handling Credentials:** The credentials file is used to store the access token (and refresh token) so that repeated authentications are not needed. If a token is expired, the provider will refresh it using the refresh token.
@@ -502,7 +502,7 @@ Authentication is the first key step when using the Google Drive integration. Th
 Below is a sample snippet that shows how the Google Drive integration is initialized. The authentication flow is triggered as part of the initialization process:
 
 ```python
-from quackcore.integrations.google.drive import create_integration
+from quack_core.integrations.google.drive import create_integration
 
 # Create an integration instance, optionally providing paths for client secrets and credentials
 drive_integration = create_integration()
@@ -584,7 +584,7 @@ When you initialize the `GoogleDriveService`, it calls an internal method `_init
    - If you provide values for `client_secrets_file`, `credentials_file`, or `shared_folder_id` directly when instantiating the service, these values are used immediately.
    - Example:
      ```python
-     from quackcore.integrations.google.drive.service import GoogleDriveService
+     from quack_core.integrations.google.drive.service import GoogleDriveService
 
      drive_service = GoogleDriveService(
          client_secrets_file="config/client_secrets.json",
@@ -617,7 +617,7 @@ To override the default settings, create your own configuration file and provide
 Pass the configuration file path during service instantiation:
 
 ```python
-from quackcore.integrations.google.drive.service import GoogleDriveService
+from quack_core.integrations.google.drive.service import GoogleDriveService
 
 drive_service = GoogleDriveService(config_path="config/my_drive_config.json")
 init_result = drive_service.initialize()

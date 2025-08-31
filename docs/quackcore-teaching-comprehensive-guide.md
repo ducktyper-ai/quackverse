@@ -1,6 +1,6 @@
 # QuackCore Teaching Module Documentation
 
-Welcome to the QuackCore Teaching Module documentation! This guide will help you understand and use the powerful gamified education system built into QuackCore.
+Welcome to the QuackCore Teaching Module documentation! This guide will help you understand and use the powerful gamified education system built into quack_core.
 
 ## Table of Contents
 
@@ -58,7 +58,7 @@ By the end of this documentation, you'll be comfortable using all aspects of the
 The QuackCore Teaching Module consists of several interconnected components that work together to create a comprehensive educational experience:
 
 ```
-quackcore.teaching
+quack_core.teaching
 ├── core - Core gamification models and services
 │   ├── models.py - Data models for XP, badges, quests, etc.
 │   ├── xp.py - XP management and level calculations
@@ -105,7 +105,7 @@ The XP (Experience Points) system is the foundation of the gamification features
 #### XP Event Example
 
 ```python
-from quackcore.teaching.core.models import XPEvent
+from quack_core.teaching.core.models import XPEvent
 
 # Create an XP event
 code_review_event = XPEvent(
@@ -129,7 +129,7 @@ Badges are achievements that users can earn by reaching certain milestones, comp
 #### Badge Example
 
 ```python
-from quackcore.teaching.core.models import Badge
+from quack_core.teaching.core.models import Badge
 
 # Define a badge
 contributor_badge = Badge(
@@ -154,7 +154,7 @@ Quests are specific challenges that users can complete to earn XP and badges. Th
 #### Quest Example
 
 ```python
-from quackcore.teaching.core.models import Quest
+from quack_core.teaching.core.models import Quest
 
 # Define a quest
 github_quest = Quest(
@@ -180,7 +180,7 @@ The user progress system tracks a user's XP, completed events, quests, and earne
 #### User Progress Example
 
 ```python
-from quackcore.teaching.core import utils
+from quack_core.teaching.core import utils
 
 # Load user progress
 user_progress = utils.load_progress()
@@ -204,7 +204,7 @@ The certificate system allows you to create verifiable proof of course completio
 #### Certificate Example
 
 ```python
-from quackcore.teaching.core import certificates, utils
+from quack_core.teaching.core import certificates, utils
 
 # Load user progress
 user = utils.load_progress()
@@ -239,8 +239,8 @@ pip install quack-core
 Here's a simple example of using the teaching module to track user progress:
 
 ```python
-from quackcore.teaching import xp, utils
-from quackcore.teaching.core.models import XPEvent
+from quack_core.teaching import xp, utils
+from quack_core.teaching.core.models import XPEvent
 
 # Load user progress
 user = utils.load_progress()
@@ -263,8 +263,8 @@ utils.save_progress(user)
 #### Tracking Tutorial Completion
 
 ```python
-from quackcore.teaching import xp, quests, utils
-from quackcore.teaching.core.models import XPEvent
+from quack_core.teaching import xp, quests, utils
+from quack_core.teaching.core.models import XPEvent
 
 def mark_tutorial_complete(tutorial_id, tutorial_name):
     # Load user progress
@@ -300,8 +300,8 @@ def mark_tutorial_complete(tutorial_id, tutorial_name):
 #### Creating a GitHub-Connected Learning Path
 
 ```python
-from quackcore.teaching import badges, quests, utils
-from quackcore.teaching.core.gamification_service import GamificationService
+from quack_core.teaching import badges, quests, utils
+from quack_core.teaching.core.gamification_service import GamificationService
 
 def setup_github_learning_path(repo_name):
     # Initialize gamification service
@@ -345,7 +345,7 @@ The User Progress system is the central component that tracks all user achieveme
 #### Loading and Saving Progress
 
 ```python
-from quackcore.teaching.core import utils
+from quack_core.teaching.core import utils
 
 # Load existing progress or create new if none exists
 user = utils.load_progress()
@@ -361,7 +361,7 @@ utils.save_progress(user)
 #### Custom GitHub Username
 
 ```python
-from quackcore.teaching.core import utils
+from quack_core.teaching.core import utils
 
 # Set a custom GitHub username
 user = utils.load_progress()
@@ -374,7 +374,7 @@ utils.save_progress(user)
 #### Backup and Reset
 
 ```python
-from quackcore.teaching.core import utils
+from quack_core.teaching.core import utils
 
 # Backup current progress
 utils.backup_progress("before_big_change")
@@ -393,8 +393,8 @@ The XP system handles experience points, which contribute to user levels and pro
 #### Adding XP
 
 ```python
-from quackcore.teaching.core import xp, utils
-from quackcore.teaching.core.models import XPEvent
+from quack_core.teaching.core import xp, utils
+from quack_core.teaching.core.models import XPEvent
 
 # Load user
 user = utils.load_progress()
@@ -427,7 +427,7 @@ utils.save_progress(user)
 #### Quest-Based XP
 
 ```python
-from quackcore.teaching.core import xp, utils
+from quack_core.teaching.core import xp, utils
 
 # Add XP from a completed quest
 user = utils.load_progress()
@@ -438,7 +438,7 @@ utils.save_progress(user)
 #### Calculating XP Requirements
 
 ```python
-from quackcore.teaching.core import utils
+from quack_core.teaching.core import utils
 
 user = utils.load_progress()
 
@@ -465,8 +465,8 @@ Badges are achievements that users can earn to showcase their progress and skill
 #### Defining Badges
 
 ```python
-from quackcore.teaching.core.models import Badge
-from quackcore.teaching.core import badges
+from quack_core.teaching.core.models import Badge
+from quack_core.teaching.core import badges
 
 # Define a custom badge
 custom_badge = Badge(
@@ -485,7 +485,7 @@ github_badge = badges.get_badge("github-collaborator")
 #### Awarding Badges
 
 ```python
-from quackcore.teaching.core import badges, utils
+from quack_core.teaching.core import badges, utils
 
 # Load user progress
 user = utils.load_progress()
@@ -503,7 +503,7 @@ utils.save_progress(user)
 #### Checking Badge Progress
 
 ```python
-from quackcore.teaching.core import badges, utils
+from quack_core.teaching.core import badges, utils
 
 user = utils.load_progress()
 
@@ -526,7 +526,7 @@ Quests are challenges that users can complete to earn XP and badges.
 #### Accessing Quests
 
 ```python
-from quackcore.teaching.core import quests, utils
+from quack_core.teaching.core import quests, utils
 
 # Get all available quests
 all_quests = quests.get_all_quests()
@@ -544,7 +544,7 @@ available = user_quests["available"]
 #### Checking Quest Completion
 
 ```python
-from quackcore.teaching.core import quests, utils
+from quack_core.teaching.core import quests, utils
 
 user = utils.load_progress()
 
@@ -565,7 +565,7 @@ if newly_completed:
 #### Completing Quests Manually
 
 ```python
-from quackcore.teaching.core import quests, utils
+from quack_core.teaching.core import quests, utils
 
 user = utils.load_progress()
 
@@ -582,7 +582,7 @@ utils.save_progress(user)
 #### Getting Quest Suggestions
 
 ```python
-from quackcore.teaching.core import quests, utils
+from quack_core.teaching.core import quests, utils
 
 user = utils.load_progress()
 
@@ -600,7 +600,7 @@ Certificates provide formal recognition for course completion or achievements.
 #### Creating Certificates
 
 ```python
-from quackcore.teaching.core import certificates, utils
+from quack_core.teaching.core import certificates, utils
 
 user = utils.load_progress()
 
@@ -628,7 +628,7 @@ else:
 #### Verifying Certificates
 
 ```python
-from quackcore.teaching.core import certificates
+from quack_core.teaching.core import certificates
 
 # Parse a certificate from a shared string
 cert_string = "eyJpZCI6I..."  # Received certificate string
@@ -663,8 +663,8 @@ Quackster is an interactive teaching assistant (NPC) that helps guide users thro
 #### Basic Integration
 
 ```python
-from quackcore.teaching.npc import run_npc_session
-from quackcore.teaching.npc.schema import TeachingNPCInput
+from quack_core.teaching.npc import run_npc_session
+from quack_core.teaching.npc.schema import TeachingNPCInput
 
 def handle_user_query(user_text, github_username=None):
     # Create input for Quackster
@@ -691,8 +691,8 @@ print(result["response"])
 #### Maintaining Conversation Context
 
 ```python
-from quackcore.teaching.npc import run_npc_session
-from quackcore.teaching.npc.schema import TeachingNPCInput
+from quack_core.teaching.npc import run_npc_session
+from quack_core.teaching.npc.schema import TeachingNPCInput
 
 class QuacksterChat:
     def __init__(self, github_username=None):
@@ -735,7 +735,7 @@ print(response2.response_text)
 
 ```python
 import os
-from quackcore.teaching.npc.schema import QuacksterProfile
+from quack_core.teaching.npc.schema import QuacksterProfile
 
 # Set environment variables for customization
 os.environ["QUACK_NPC_TONE"] = "enthusiastic"
@@ -808,7 +808,7 @@ The QuackCore teaching module includes features for integrating with GitHub for 
 #### Setting Up GitHub Integration
 
 ```python
-from quackcore.teaching.github import create_teaching_integration
+from quack_core.teaching.github import create_teaching_integration
 
 # Create the teaching integration
 github_teaching = create_teaching_integration()
@@ -839,7 +839,7 @@ def submit_assignment(forked_repo, base_repo, branch, title):
 #### Automated Grading
 
 ```python
-from quackcore.teaching.github import create_teaching_integration
+from quack_core.teaching.github import create_teaching_integration
 
 def grade_submission(repo, pr_number):
     github_teaching = create_teaching_integration()
@@ -897,8 +897,8 @@ The academy module provides traditional Learning Management System (LMS) feature
 #### Setting Up a Course
 
 ```python
-from quackcore.teaching.academy import service
-from quackcore.teaching.academy import Course, CourseModule, ModuleItem, ItemType
+from quack_core.teaching.academy import service
+from quack_core.teaching.academy import Course, CourseModule, ModuleItem, ItemType
 
 # Initialize the quackster service
 service.initialize()
@@ -953,8 +953,8 @@ if result.success:
 #### Managing Assignments
 
 ```python
-from quackcore.teaching.academy import service
-from quackcore.teaching.academy import Assignment, AssignmentType, AssignmentStatus
+from quack_core.teaching.academy import service
+from quack_core.teaching.academy import Assignment, AssignmentType, AssignmentStatus
 
 # Create an assignment
 assignment = Assignment.create(
@@ -985,7 +985,7 @@ else:
 #### Grading Student Work
 
 ```python
-from quackcore.teaching.academy.grading import GradingCriteria, GradingCriterion, GradeResult
+from quack_core.teaching.academy.grading import GradingCriteria, GradingCriterion, GradeResult
 
 # Define grading criteria
 criteria = GradingCriteria.create(
@@ -1050,7 +1050,7 @@ The Gamification Service integrates all teaching components to provide a unified
 #### Basic Usage
 
 ```python
-from quackcore.teaching.core.gamification_service import GamificationService
+from quack_core.teaching.core.gamification_service import GamificationService
 
 # Create service instance (loads user progress automatically)
 service = GamificationService()
@@ -1076,8 +1076,8 @@ print(event_result.message)  # Displays achievement message
 #### Handling Multiple Events
 
 ```python
-from quackcore.teaching.core.gamification_service import GamificationService
-from quackcore.teaching.core.models import XPEvent
+from quack_core.teaching.core.gamification_service import GamificationService
+from quack_core.teaching.core.models import XPEvent
 
 def track_project_completion(user_project):
     # Create service
@@ -1121,7 +1121,7 @@ def track_project_completion(user_project):
 #### Handling GitHub Interactions
 
 ```python
-from quackcore.teaching.core.gamification_service import GamificationService
+from quack_core.teaching.core.gamification_service import GamificationService
 
 def handle_github_workflow(repo, pr_number, action):
     # Create service
@@ -1152,7 +1152,7 @@ def handle_github_workflow(repo, pr_number, action):
 #### Course and Learning Integrations
 
 ```python
-from quackcore.teaching.core.gamification_service import GamificationService
+from quack_core.teaching.core.gamification_service import GamificationService
 
 def track_learning_progress(course_id, module_id=None, assignment_id=None):
     # Create service
@@ -1199,7 +1199,7 @@ def track_learning_progress(course_id, module_id=None, assignment_id=None):
 Track user actions as discrete events with unique IDs to avoid duplicate XP awards:
 
 ```python
-from quackcore.teaching.core.models import XPEvent
+from quack_core.teaching.core.models import XPEvent
 
 # Generate a unique event ID based on user and action
 def create_unique_event(user_id, action, item_id=None):
@@ -1350,8 +1350,8 @@ utils.save_progress(user)
 **Good Practice**:
 ```python
 # DO THIS INSTEAD
-from quackcore.teaching.core.models import XPEvent
-from quackcore.teaching.core import xp, utils
+from quack_core.teaching.core.models import XPEvent
+from quack_core.teaching.core import xp, utils
 
 user = utils.load_progress()
 event = XPEvent(id="unique-event-id", label="Descriptive Label", points=50)
@@ -1439,7 +1439,7 @@ def handle_course_completion(user, course_id):
 **Good Practice**:
 ```python
 # DO THIS INSTEAD - Use the integrated service
-from quackcore.teaching.core.gamification_service import GamificationService
+from quack_core.teaching.core.gamification_service import GamificationService
 
 def handle_course_completion(course_id, course_name):
     service = GamificationService()
@@ -1497,9 +1497,9 @@ Here's how you might implement a CLI tool that includes gamification:
 import argparse
 import sys
 
-from quackcore.teaching import xp, utils, badges, quests
-from quackcore.teaching.core.models import XPEvent
-from quackcore.teaching.core.gamification_service import GamificationService
+from quack_core.teaching import xp, utils, badges, quests
+from quack_core.teaching.core.models import XPEvent
+from quack_core.teaching.core.gamification_service import GamificationService
 
 def main():
     parser = argparse.ArgumentParser(description="MyCoolTool - Now with gamification!")
@@ -1608,9 +1608,9 @@ Here's an example of how to integrate the teaching module into a web application
 
 ```python
 from flask import Flask, request, jsonify, session
-from quackcore.teaching.core.gamification_service import GamificationService
-from quackcore.teaching.npc import run_npc_session
-from quackcore.teaching.npc.schema import TeachingNPCInput
+from quack_core.teaching.core.gamification_service import GamificationService
+from quack_core.teaching.npc import run_npc_session
+from quack_core.teaching.npc.schema import TeachingNPCInput
 import os
 
 app = Flask(__name__)
@@ -1764,8 +1764,8 @@ if __name__ == '__main__':
 Here's how to build a learning system that integrates with GitHub:
 
 ```python
-from quackcore.teaching.github import create_teaching_integration
-from quackcore.teaching.core.gamification_service import GamificationService
+from quack_core.teaching.github import create_teaching_integration
+from quack_core.teaching.core.gamification_service import GamificationService
 import time
 
 class GitHubLearningProgram:
@@ -1957,7 +1957,7 @@ else:
 
 ```python
 # Debug GitHub verification issues
-from quackcore.teaching.core import github_api
+from quack_core.teaching.core import github_api
 
 # Check if GitHub integration is working
 if not github_api._get_github_client():
@@ -1987,7 +1987,7 @@ else:
 
 ```python
 # Debug quest completion
-from quackcore.teaching.core import quests, utils
+from quack_core.teaching.core import quests, utils
 
 user = utils.load_progress()
 
@@ -2017,9 +2017,9 @@ if quest and quest.verify_func:
 - Check if tools are being executed correctly
 
 ```python
-from quackcore.teaching.npc import run_npc_session
-from quackcore.teaching.npc.schema import TeachingNPCInput
-from quackcore.teaching.npc import memory
+from quack_core.teaching.npc import run_npc_session
+from quack_core.teaching.npc.schema import TeachingNPCInput
+from quack_core.teaching.npc import memory
 
 # Debug NPC responses
 def debug_npc_response(user_input):
@@ -2056,7 +2056,7 @@ def debug_npc_response(user_input):
 
 ```python
 import os
-from quackcore.teaching.core import utils
+from quack_core.teaching.core import utils
 
 # Debug progress saving
 def verify_progress_saving():
@@ -2123,7 +2123,7 @@ Represents an activity or accomplishment that awards XP to a user.
 
 **Example**:
 ```python
-from quackcore.teaching.core.models import XPEvent
+from quack_core.teaching.core.models import XPEvent
 
 event = XPEvent(
     id="complete-tutorial-123",
@@ -2146,7 +2146,7 @@ Represents an achievement that can be earned by a user.
 
 **Example**:
 ```python
-from quackcore.teaching.core.models import Badge
+from quack_core.teaching.core.models import Badge
 
 badge = Badge(
     id="python-master",
@@ -2172,7 +2172,7 @@ Represents a specific challenge that users can complete to earn XP and badges.
 
 **Example**:
 ```python
-from quackcore.teaching.core.models import Quest
+from quack_core.teaching.core.models import Quest
 
 quest = Quest(
     id="first-python-program",
@@ -2211,7 +2211,7 @@ Tracks a user's XP, completed events, quests, and earned badges.
 
 **Example**:
 ```python
-from quackcore.teaching.core import utils
+from quack_core.teaching.core import utils
 
 # Load progress
 user = utils.load_progress()
@@ -2245,8 +2245,8 @@ Add XP to a user from an XP event.
 
 **Example**:
 ```python
-from quackcore.teaching.core import xp, utils
-from quackcore.teaching.core.models import XPEvent
+from quack_core.teaching.core import xp, utils
+from quack_core.teaching.core.models import XPEvent
 
 user = utils.load_progress()
 event = XPEvent(id="unique-id", label="Event Description", points=25)
@@ -2275,7 +2275,7 @@ Add XP to a user from completing a quest.
 
 **Example**:
 ```python
-from quackcore.teaching.core import xp, utils
+from quack_core.teaching.core import xp, utils
 
 user = utils.load_progress()
 xp.add_xp_from_quest(user, "star-quack-core", 50)
@@ -2292,7 +2292,7 @@ Get all available badges.
 
 **Example**:
 ```python
-from quackcore.teaching.core import badges
+from quack_core.teaching.core import badges
 
 all_badges = badges.get_all_badges()
 print(f"Total badges available: {len(all_badges)}")
@@ -2309,7 +2309,7 @@ Get a specific badge by ID.
 
 **Example**:
 ```python
-from quackcore.teaching.core import badges
+from quack_core.teaching.core import badges
 
 badge = badges.get_badge("github-collaborator")
 if badge:
@@ -2327,7 +2327,7 @@ Get all badges earned by a user.
 
 **Example**:
 ```python
-from quackcore.teaching.core import badges, utils
+from quack_core.teaching.core import badges, utils
 
 user = utils.load_progress()
 earned_badges = badges.get_user_badges(user)
@@ -2348,7 +2348,7 @@ Award a badge to a user if they don't already have it.
 
 **Example**:
 ```python
-from quackcore.teaching.core import badges, utils
+from quack_core.teaching.core import badges, utils
 
 user = utils.load_progress()
 if badges.award_badge(user, "github-collaborator"):
@@ -2370,7 +2370,7 @@ Get the next badges a user could earn.
 
 **Example**:
 ```python
-from quackcore.teaching.core import badges, utils
+from quack_core.teaching.core import badges, utils
 
 user = utils.load_progress()
 next_badges = badges.get_next_badges(user)
@@ -2391,7 +2391,7 @@ Calculate a user's progress toward a specific badge.
 
 **Example**:
 ```python
-from quackcore.teaching.core import badges, utils
+from quack_core.teaching.core import badges, utils
 
 user = utils.load_progress()
 progress = badges.get_badge_progress(user, "duck-expert")
@@ -2408,7 +2408,7 @@ Get all available quests.
 
 **Example**:
 ```python
-from quackcore.teaching.core import quests
+from quack_core.teaching.core import quests
 
 all_quests = quests.get_all_quests()
 print(f"Total quests available: {len(all_quests)}")
@@ -2425,7 +2425,7 @@ Get a specific quest by ID.
 
 **Example**:
 ```python
-from quackcore.teaching.core import quests
+from quack_core.teaching.core import quests
 
 quest = quests.get_quest("star-quack-core")
 if quest:
@@ -2443,7 +2443,7 @@ Get all quests for a user, categorized by completion status.
 
 **Example**:
 ```python
-from quackcore.teaching.core import quests, utils
+from quack_core.teaching.core import quests, utils
 
 user = utils.load_progress()
 user_quests = quests.get_user_quests(user)
@@ -2462,7 +2462,7 @@ Check which quests a user has newly completed.
 
 **Example**:
 ```python
-from quackcore.teaching.core import quests, utils
+from quack_core.teaching.core import quests, utils
 
 user = utils.load_progress()
 newly_completed = quests.check_quest_completion(user)
@@ -2485,7 +2485,7 @@ Mark a quest as completed for a user and award XP and badges.
 
 **Example**:
 ```python
-from quackcore.teaching.core import quests, utils
+from quack_core.teaching.core import quests, utils
 
 user = utils.load_progress()
 if quests.complete_quest(user, "run-tests", forced=True):
@@ -2506,7 +2506,7 @@ Check for newly completed quests and update user progress.
 
 **Example**:
 ```python
-from quackcore.teaching.core import quests, utils
+from quack_core.teaching.core import quests, utils
 
 user = utils.load_progress()
 newly_completed = quests.apply_completed_quests(user)
@@ -2527,7 +2527,7 @@ Get suggested quests for a user to complete next.
 
 **Example**:
 ```python
-from quackcore.teaching.core import quests, utils
+from quack_core.teaching.core import quests, utils
 
 user = utils.load_progress()
 suggested = quests.get_suggested_quests(user)
@@ -2552,7 +2552,7 @@ Create a digital certificate for course completion.
 
 **Example**:
 ```python
-from quackcore.teaching.core import certificates, utils
+from quack_core.teaching.core import certificates, utils
 
 user = utils.load_progress()
 cert = certificates.create_certificate(
@@ -2574,7 +2574,7 @@ Verify a certificate's authenticity.
 
 **Example**:
 ```python
-from quackcore.teaching.core import certificates
+from quack_core.teaching.core import certificates
 
 # Verify a certificate
 if certificates.verify_certificate(cert):
@@ -2594,7 +2594,7 @@ Convert a certificate to a shareable string format.
 
 **Example**:
 ```python
-from quackcore.teaching.core import certificates
+from quack_core.teaching.core import certificates
 
 # Convert to shareable string
 cert_string = certificates.certificate_to_string(cert)
@@ -2612,7 +2612,7 @@ Convert a certificate string back to dictionary format.
 
 **Example**:
 ```python
-from quackcore.teaching.core import certificates
+from quack_core.teaching.core import certificates
 
 # Parse a certificate from a string
 try:
@@ -2633,7 +2633,7 @@ Format a certificate as a markdown string for display or sharing.
 
 **Example**:
 ```python
-from quackcore.teaching.core import certificates
+from quack_core.teaching.core import certificates
 
 # Format for display
 markdown = certificates.format_certificate_markdown(cert)
@@ -2652,7 +2652,7 @@ Check if a user has earned a certificate for a specific course.
 
 **Example**:
 ```python
-from quackcore.teaching.core import certificates, utils
+from quack_core.teaching.core import certificates, utils
 
 user = utils.load_progress()
 if certificates.has_earned_certificate(user, "python-basics"):
@@ -2671,7 +2671,7 @@ Load user progress from the progress file.
 
 **Example**:
 ```python
-from quackcore.teaching.core import utils
+from quack_core.teaching.core import utils
 
 user = utils.load_progress()
 print(f"Loaded user progress: Level {user.get_level()} with {user.xp} XP")
@@ -2688,7 +2688,7 @@ Save user progress to the progress file.
 
 **Example**:
 ```python
-from quackcore.teaching.core import utils
+from quack_core.teaching.core import utils
 
 user = utils.load_progress()
 # Make changes to user progress
@@ -2708,7 +2708,7 @@ Create new user progress.
 
 **Example**:
 ```python
-from quackcore.teaching.core import utils
+from quack_core.teaching.core import utils
 
 # Create fresh progress
 new_user = utils.create_new_progress()
@@ -2723,7 +2723,7 @@ Reset user progress by deleting the progress file.
 
 **Example**:
 ```python
-from quackcore.teaching.core import utils
+from quack_core.teaching.core import utils
 
 if utils.reset_progress():
     print("Progress reset successfully")
@@ -2742,7 +2742,7 @@ Create a backup of the user progress file.
 
 **Example**:
 ```python
-from quackcore.teaching.core import utils
+from quack_core.teaching.core import utils
 
 # Create a backup
 if utils.backup_progress("before_changes"):

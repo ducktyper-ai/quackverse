@@ -2,9 +2,9 @@
 
 ## Introduction
 
-The `quackcore.paths` module provides sophisticated project structure detection and path resolution utilities for QuackCore projects. While `quackcore.fs` focuses on file operations, `quackcore.paths` understands the semantic meaning of paths within a project context, making it easier to work with project files regardless of where your code is running from.
+The `quack_core.paths` module provides sophisticated project structure detection and path resolution utilities for QuackCore projects. While `quack_core.fs` focuses on file operations, `quack_core.paths` understands the semantic meaning of paths within a project context, making it easier to work with project files regardless of where your code is running from.
 
-This documentation will guide you through the concepts, features, and best practices for effectively leveraging the power of `quackcore.paths` in your QuackTools.
+This documentation will guide you through the concepts, features, and best practices for effectively leveraging the power of `quack_core.paths` in your QuackTools.
 
 ## Table of Contents
 
@@ -22,7 +22,7 @@ This documentation will guide you through the concepts, features, and best pract
   - [Directory Type Detection](#directory-type-detection)
   - [Module Inference](#module-inference)
 - [Integration with QuackCore](#integration-with-quackcore)
-  - [Using with quackcore.fs](#using-with-quackcore-fs)
+  - [Using with quack_core.fs](#using-with-quackcore-fs)
   - [Plugin System](#plugin-system)
 - [Best Practices](#best-practices)
 - [Common Patterns](#common-patterns)
@@ -36,10 +36,10 @@ QuackCore Paths is part of the QuackCore package. If you've installed QuackCore,
 
 ### Basic Usage
 
-The quickest way to start using the `quackcore.paths` module is through the global resolver instance:
+The quickest way to start using the `quack_core.paths` module is through the global resolver instance:
 
 ```python
-from quackcore.paths import resolver
+from quack_core.paths import resolver
 
 # Find project root
 project_root = resolver._get_project_root()
@@ -96,10 +96,10 @@ The `ProjectDirectory` class represents a specific directory within a project an
 
 ### Finding Project Roots
 
-The `quackcore.paths` module provides robust utilities for finding the root directory of a project:
+The `quack_core.paths` module provides robust utilities for finding the root directory of a project:
 
 ```python
-from quackcore.paths import resolver, find_project_root
+from quack_core.paths import resolver, find_project_root
 
 # Using the global resolver
 project_root = resolver._get_project_root()
@@ -121,10 +121,10 @@ The module identifies project roots by looking for common marker files (like `py
 
 ### Resolving Project Paths
 
-Resolving paths relative to the project root is one of the key features of `quackcore.paths`:
+Resolving paths relative to the project root is one of the key features of `quack_core.paths`:
 
 ```python
-from quackcore.paths import resolver, resolve_project_path
+from quack_core.paths import resolver, resolve_project_path
 
 # Resolve a relative path from the project root
 config_path = resolver._resolve_project_path("config/settings.yaml")
@@ -149,7 +149,7 @@ This makes it easy to work with project files regardless of the current working 
 The `ProjectContext` provides a rich set of information about a project's structure:
 
 ```python
-from quackcore.paths import resolver
+from quack_core.paths import resolver
 
 # Detect project context
 context = resolver._detect_project_context()
@@ -183,10 +183,10 @@ This context awareness makes it easy to build tools that operate on different pa
 
 ### Content Context Detection
 
-For content creation projects (like tutorials, documentation sites, etc.), `quackcore.paths` provides additional context detection:
+For content creation projects (like tutorials, documentation sites, etc.), `quack_core.paths` provides additional context detection:
 
 ```python
-from quackcore.paths import resolver
+from quack_core.paths import resolver
 
 # Detect content context
 content_context = resolver._detect_content_context()
@@ -212,7 +212,7 @@ Content context is particularly useful for tools that generate or process specif
 The module automatically identifies common directory types within projects:
 
 ```python
-from quackcore.paths import resolver
+from quack_core.paths import resolver
 
 context = resolver._detect_project_context()
 
@@ -246,7 +246,7 @@ This feature lets you identify the purpose of directories without relying on nam
 The module can infer Python module names from file paths:
 
 ```python
-from quackcore.paths import infer_module_from_path
+from quack_core.paths import infer_module_from_path
 
 # Infer module name from file path
 file_path = "/path/to/project/src/quack-core/paths/api.py"
@@ -258,13 +258,13 @@ This is especially useful for tooling that needs to import or reference modules 
 
 ## Integration with QuackCore
 
-### Using with quackcore.fs
+### Using with quack_core.fs
 
-The `quackcore.paths` module works seamlessly with `quackcore.fs` for advanced file operations:
+The `quack_core.paths` module works seamlessly with `quack_core.fs` for advanced file operations:
 
 ```python
-from quackcore.paths import resolver
-from quackcore.fs import service as fs
+from quack_core.paths import resolver
+from quack_core.fs import service as fs
 
 # Find project and resolve path
 project_context = resolver._detect_project_context()
@@ -297,11 +297,11 @@ else:
 
 ### Plugin System
 
-The `quackcore.paths` module provides a plugin interface for integration with the QuackCore ecosystem:
+The `quack_core.paths` module provides a plugin interface for integration with the QuackCore ecosystem:
 
 ```python
-from quackcore.paths.plugin import create_plugin
-from quackcore.plugin_manager import PluginManager
+from quack_core.paths.plugin import create_plugin
+from quack_core.plugin_manager import PluginManager
 
 # Create paths plugin
 paths_plugin = create_plugin()
@@ -324,7 +324,7 @@ project_root = plugin._find_project_root()
 config_path = Path("config/settings.yaml")
 
 # Better: Use project context
-from quackcore.paths import resolver
+from quack_core.paths import resolver
 
 project_context = resolver._detect_project_context()
 config_dir = project_context._get_config_dir() or project_context.root_dir / "config"
@@ -350,8 +350,8 @@ def process_files(file_paths):
 ### 3. Handle Project Detection Failures Gracefully
 
 ```python
-from quackcore.errors import QuackFileNotFoundError
-from quackcore.paths import resolver
+from quack_core.errors import QuackFileNotFoundError
+from quack_core.paths import resolver
 
 try:
   project_context = resolver._detect_project_context()
@@ -368,8 +368,8 @@ except QuackFileNotFoundError:
 ### 4. Combine with fs Module for Complete Path Management
 
 ```python
-from quackcore.paths import resolver
-from quackcore.fs import service as fs
+from quack_core.paths import resolver
+from quack_core.fs import service as fs
 
 # Find source directory
 project_context = resolver._detect_project_context()
@@ -386,7 +386,7 @@ if src_dir:
 ### 5. Use Content Context for Content-Specific Tools
 
 ```python
-from quackcore.paths import resolver
+from quack_core.paths import resolver
 
 # Detect if we're in a content directory
 content_context = resolver._detect_content_context()
@@ -408,8 +408,8 @@ else:
 ### Finding Configuration Files
 
 ```python
-from quackcore.paths import resolver
-from quackcore.fs import service as fs
+from quack_core.paths import resolver
+from quack_core.fs import service as fs
 from pathlib import Path
 import os
 
@@ -473,8 +473,8 @@ def find_config_file(config_name="config", file_types=None):
 ### Creating Project Structure
 
 ```python
-from quackcore.paths import resolver
-from quackcore.fs import service as fs
+from quack_core.paths import resolver
+from quack_core.fs import service as fs
 from pathlib import Path
 
 
@@ -529,8 +529,8 @@ def initialize_project(name, template="basic"):
 ### Working with Linked Projects
 
 ```python
-from quackcore.paths import resolver
-from quackcore.fs import service as fs
+from quack_core.paths import resolver
+from quack_core.fs import service as fs
 from pathlib import Path
 
 
@@ -723,8 +723,8 @@ resolver: PathResolver
 
 ## Conclusion
 
-The `quackcore.paths` module provides a robust foundation for working with project structures in the QuackVerse ecosystem. By understanding the semantic meaning of directories and providing context-aware path resolution, it simplifies many common tasks in project-based tools.
+The `quack_core.paths` module provides a robust foundation for working with project structures in the QuackVerse ecosystem. By understanding the semantic meaning of directories and providing context-aware path resolution, it simplifies many common tasks in project-based tools.
 
-When combined with `quackcore.fs` for file operations, you have a complete solution for all path and filesystem needs in your QuackTools. The module's ability to detect project structure automatically makes it particularly valuable for creating tools that "just work" without complex configuration.
+When combined with `quack_core.fs` for file operations, you have a complete solution for all path and filesystem needs in your QuackTools. The module's ability to detect project structure automatically makes it particularly valuable for creating tools that "just work" without complex configuration.
 
 By following the patterns and best practices outlined in this documentation, you'll be able to build QuackTools that seamlessly integrate with projects of all types and structures.

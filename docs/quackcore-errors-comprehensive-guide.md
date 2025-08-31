@@ -1,6 +1,6 @@
 # QuackCore Errors Documentation
 
-This guide provides comprehensive documentation for the `quackcore.errors` module, which offers robust error handling capabilities for QuackTools and plugins in the QuackVerse ecosystem.
+This guide provides comprehensive documentation for the `quack_core.errors` module, which offers robust error handling capabilities for QuackTools and plugins in the QuackVerse ecosystem.
 
 ## Table of Contents
 
@@ -16,7 +16,7 @@ This guide provides comprehensive documentation for the `quackcore.errors` modul
 
 ## Introduction
 
-The `quackcore.errors` module provides consistent, informative error handling across the QuackVerse. It allows you to:
+The `quack_core.errors` module provides consistent, informative error handling across the QuackVerse. It allows you to:
 
 - Create descriptive, context-rich errors
 - Properly handle and display errors to users
@@ -53,10 +53,10 @@ This hierarchy allows you to catch errors at different levels of specificity, de
 
 ### Importing Error Classes
 
-You can import all error classes directly from the top-level `quackcore.errors` module:
+You can import all error classes directly from the top-level `quack_core.errors` module:
 
 ```python
-from quackcore.errors import (
+from quack_core.errors import (
     QuackError,
     QuackIOError,
     QuackFileNotFoundError,
@@ -69,7 +69,7 @@ from quackcore.errors import (
 Here's how to raise a basic `QuackError`:
 
 ```python
-from quackcore.errors import QuackError
+from quack_core.errors import QuackError
 
 def my_function():
     if something_went_wrong:
@@ -81,7 +81,7 @@ def my_function():
 One of the key benefits of QuackCore errors is the ability to attach context:
 
 ```python
-from quackcore.errors import QuackError
+from quack_core.errors import QuackError
 
 def process_data(data_id, user_id):
     if data_not_found:
@@ -96,7 +96,7 @@ def process_data(data_id, user_id):
 You can wrap original exceptions to provide more context while preserving the original error:
 
 ```python
-from quackcore.errors import QuackError
+from quack_core.errors import QuackError
 
 def safe_process():
     try:
@@ -113,7 +113,7 @@ def safe_process():
 For file-related operations:
 
 ```python
-from quackcore.errors import QuackFileNotFoundError, QuackPermissionError
+from quack_core.errors import QuackFileNotFoundError, QuackPermissionError
 
 def read_config(path):
     if not path.exists():
@@ -130,7 +130,7 @@ def read_config(path):
 For data validation failures:
 
 ```python
-from quackcore.errors import QuackValidationError
+from quack_core.errors import QuackValidationError
 
 def validate_user_data(data):
     errors = {}
@@ -153,7 +153,7 @@ def validate_user_data(data):
 For configuration issues:
 
 ```python
-from quackcore.errors import QuackConfigurationError
+from quack_core.errors import QuackConfigurationError
 
 def load_settings(config_path):
     try:
@@ -178,7 +178,7 @@ def load_settings(config_path):
 For external API and service interactions:
 
 ```python
-from quackcore.errors import QuackApiError, QuackAuthenticationError
+from quack_core.errors import QuackApiError, QuackAuthenticationError
 
 def call_external_api(service_name, endpoint):
     try:
@@ -215,7 +215,7 @@ The `ErrorHandler` class provides utilities for formatting and displaying errors
 ### Creating an Error Handler
 
 ```python
-from quackcore.errors.handlers import ErrorHandler
+from quack_core.errors.handlers import ErrorHandler
 from rich.console import Console
 
 # Create with default settings (outputs to stderr)
@@ -229,8 +229,8 @@ custom_handler = ErrorHandler(console=my_console)
 ### Formatting Errors
 
 ```python
-from quackcore.errors import QuackError
-from quackcore.errors.handlers import ErrorHandler
+from quack_core.errors import QuackError
+from quack_core.errors.handlers import ErrorHandler
 
 try:
     # Some code that might raise an error
@@ -246,7 +246,7 @@ except Exception as e:
 ### Printing Errors
 
 ```python
-from quackcore.errors.handlers import ErrorHandler
+from quack_core.errors.handlers import ErrorHandler
 
 def my_function():
     handler = ErrorHandler()
@@ -266,7 +266,7 @@ def my_function():
 ### Handling Errors (Print and Optionally Exit)
 
 ```python
-from quackcore.errors.handlers import ErrorHandler
+from quack_core.errors.handlers import ErrorHandler
 
 def critical_operation():
     handler = ErrorHandler()
@@ -290,7 +290,7 @@ def critical_operation():
 For convenience, a global error handler instance is provided:
 
 ```python
-from quackcore.errors.handlers import global_error_handler
+from quack_core.errors.handlers import global_error_handler
 
 try:
     # Some operation
@@ -306,7 +306,7 @@ except Exception as e:
 The module provides a handy decorator for consistent error handling:
 
 ```python
-from quackcore.errors.handlers import handle_errors
+from quack_core.errors.handlers import handle_errors
 
 # Basic usage - catches all exceptions
 @handle_errors()
@@ -336,7 +336,7 @@ def critical_function():
 This decorator specifically wraps standard IO exceptions with QuackCore equivalents:
 
 ```python
-from quackcore.errors.base import wrap_io_errors
+from quack_core.errors.base import wrap_io_errors
 
 @wrap_io_errors
 def read_file(path):
@@ -411,7 +411,7 @@ except Exception as e:
 The `ErrorHandler` can retrieve information about the calling function:
 
 ```python
-from quackcore.errors.handlers import ErrorHandler
+from quack_core.errors.handlers import ErrorHandler
 
 def troubleshoot_function():
     handler = ErrorHandler()
@@ -424,7 +424,7 @@ def troubleshoot_function():
 You can extend the `ErrorHandler` class to customize error formatting:
 
 ```python
-from quackcore.errors.handlers import ErrorHandler
+from quack_core.errors.handlers import ErrorHandler
 
 class MyErrorHandler(ErrorHandler):
     def format_error(self, error):
@@ -443,7 +443,7 @@ class MyErrorHandler(ErrorHandler):
 For your plugin-specific errors, inherit from the appropriate QuackError base class:
 
 ```python
-from quackcore.errors import QuackPluginError
+from quack_core.errors import QuackPluginError
 
 class MyPluginConfigError(QuackPluginError):
     def __init__(
@@ -471,8 +471,8 @@ class MyPluginConfigError(QuackPluginError):
 
 ```python
 from pathlib import Path
-from quackcore.errors import QuackFileNotFoundError, QuackFormatError
-from quackcore.errors.handlers import handle_errors
+from quack_core.errors import QuackFileNotFoundError, QuackFormatError
+from quack_core.errors.handlers import handle_errors
 
 @handle_errors(show_traceback=True)
 def process_json_file(file_path):
@@ -502,12 +502,12 @@ def process_json_file(file_path):
 
 ```python
 import requests
-from quackcore.errors import (
+from quack_core.errors import (
     QuackAuthenticationError,
     QuackApiError,
     QuackQuotaExceededError
 )
-from quackcore.errors.handlers import ErrorHandler
+from quack_core.errors.handlers import ErrorHandler
 
 class ApiClient:
     def __init__(self, api_key, service_name):
@@ -573,13 +573,13 @@ class ApiClient:
 ```python
 import yaml
 from pathlib import Path
-from quackcore.errors import (
+from quack_core.errors import (
     QuackConfigurationError,
     QuackFileNotFoundError,
     QuackFormatError,
     QuackValidationError
 )
-from quackcore.errors.base import wrap_io_errors
+from quack_core.errors.base import wrap_io_errors
 
 class ConfigManager:
     @wrap_io_errors

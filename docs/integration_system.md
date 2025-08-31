@@ -18,7 +18,7 @@ The integration system in QuackCore allows tools to seamlessly connect with exte
 This is the foundation for all integration services. Every service that interacts with an external API should inherit from this base class.
 
 ```python
-from quackcore.integrations.core.base import BaseIntegrationService
+from quack_core.integrations.core.base import BaseIntegrationService
 
 class MyCustomService(BaseIntegrationService):
     @property
@@ -33,7 +33,7 @@ class MyCustomService(BaseIntegrationService):
 The registry keeps track of all available integration services. It's initialized automatically when the application starts.
 
 ```python
-from quackcore.integrations.core import registry
+from quack_core.integrations.core import registry
 
 # Get all registered integrations
 integration_names = registry.list_integrations()
@@ -44,8 +44,8 @@ integration_names = registry.list_integrations()
 This function retrieves a specific type of integration service from the registry:
 
 ```python
-from quackcore.integrations.core import get_integration_service
-from quackcore.integrations.google.drive import GoogleDriveService
+from quack_core.integrations.core import get_integration_service
+from quack_core.integrations.google.drive import GoogleDriveService
 
 # Get a Google Drive service instance
 drive_service = get_integration_service(GoogleDriveService)
@@ -58,8 +58,8 @@ drive_service = get_integration_service(GoogleDriveService)
 The easiest way to use integrations in your tools is with the `IntegrationEnabledMixin`:
 
 ```python
-from quackcore.toolkit import BaseQuackToolPlugin, IntegrationEnabledMixin
-from quackcore.integrations.google.drive import GoogleDriveService
+from quack_core.toolkit import BaseQuackToolPlugin, IntegrationEnabledMixin
+from quack_core.integrations.google.drive import GoogleDriveService
 
 class MyTool(IntegrationEnabledMixin[GoogleDriveService], BaseQuackToolPlugin):
     def initialize_plugin(self):
@@ -85,10 +85,10 @@ class MyTool(IntegrationEnabledMixin[GoogleDriveService], BaseQuackToolPlugin):
 You can use multiple integrations in a single tool by resolving each one separately:
 
 ```python
-from quackcore.toolkit import BaseQuackToolPlugin
-from quackcore.integrations.google.drive import GoogleDriveService
-from quackcore.integrations.github import GitHubService
-from quackcore.integrations.core import get_integration_service
+from quack_core.toolkit import BaseQuackToolPlugin
+from quack_core.integrations.google.drive import GoogleDriveService
+from quack_core.integrations.github import GitHubService
+from quack_core.integrations.core import get_integration_service
 
 class MultiIntegrationTool(BaseQuackToolPlugin):
     def initialize_plugin(self):
@@ -117,8 +117,8 @@ To create a new integration service:
 Example:
 
 ```python
-from quackcore.integrations.core.base import BaseIntegrationService
-from quackcore.integrations.core import IntegrationResult, registry
+from quack_core.integrations.core.base import BaseIntegrationService
+from quack_core.integrations.core import IntegrationResult, registry
 
 class MyNewService(BaseIntegrationService):
     @property
@@ -149,9 +149,9 @@ registry.register(MyNewService())
 Here's a complete example of a tool that uploads files to Google Drive:
 
 ```python
-from quackcore.toolkit import BaseQuackToolPlugin, IntegrationEnabledMixin
-from quackcore.integrations.google.drive import GoogleDriveService
-from quackcore.integrations.core import IntegrationResult
+from quack_core.toolkit import BaseQuackToolPlugin, IntegrationEnabledMixin
+from quack_core.integrations.google.drive import GoogleDriveService
+from quack_core.integrations.core import IntegrationResult
 
 class DriveUploader(IntegrationEnabledMixin[GoogleDriveService], BaseQuackToolPlugin):
     def __init__(self):

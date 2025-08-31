@@ -525,7 +525,7 @@ RUN pip install -e .[http]
 
 EXPOSE 8080
 
-CMD ["uvicorn", "quackcore.adapters.http.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "quack_core.adapters.http.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8080"]
 ```
 
 ### Environment Configuration

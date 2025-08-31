@@ -29,10 +29,10 @@ src/quackcloud/
 
 ## 🔌 Plugin Registration
 
-QuackCloud integrates with the `quackcore.integrations.core` plugin system:
+QuackCloud integrates with the `quack_core.integrations.core` plugin system:
 
 ```python
-from quackcore.integrations.core import register_plugin
+from quack_core.integrations.core import register_plugin
 
 @register_plugin("google_drive")
 def register_drive():
