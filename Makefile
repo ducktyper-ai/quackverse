@@ -370,6 +370,8 @@ add-paths: ## Add file paths as first-line comments to all Python files
 	@echo 'import sys' >> add_paths.py
 	@echo 'import traceback' >> add_paths.py
 	@echo '' >> add_paths.py
+	@echo 'EXTENSIONS = (".py", ".yaml", ".yml", ".toml", ".env", ".example")' >> add_paths.py
+	@echo '' >> add_paths.py
 	@echo 'def update_file(filepath):' >> add_paths.py
 	@echo '    try:' >> add_paths.py
 	@echo '        relpath = os.path.relpath(filepath)' >> add_paths.py
@@ -412,12 +414,12 @@ add-paths: ## Add file paths as first-line comments to all Python files
 	@echo '                continue' >> add_paths.py
 	@echo '' >> add_paths.py
 	@echo '            for file in files:' >> add_paths.py
-	@echo '                if file.endswith(".py"):' >> add_paths.py
+	@echo '                if file.endswith(EXTENSIONS):' >> add_paths.py
 	@echo '                    filepath = os.path.join(root, file)' >> add_paths.py
 	@echo '                    update_file(filepath)' >> add_paths.py
 	@echo '                    count += 1' >> add_paths.py
 	@echo '' >> add_paths.py
-	@echo '        print(f"Processed {count} Python files")' >> add_paths.py
+	@echo '        print(f"Processed {count} files (extensions: {EXTENSIONS})")' >> add_paths.py
 	@echo '    except Exception as e:' >> add_paths.py
 	@echo '        print(f"Fatal error: {str(e)}")' >> add_paths.py
 	@echo '        traceback.print_exc()' >> add_paths.py
@@ -428,7 +430,72 @@ add-paths: ## Add file paths as first-line comments to all Python files
 	@chmod +x add_paths.py
 	@$(PYTHON) add_paths.py
 	@rm add_paths.py
-	@echo "${GREEN}✓ File paths added to all Python files${RESET}"
+	@echo "${GREEN}✓ File paths added to all files${RESET}"
+
+	.PHONY: flatten
+flatten: ## Concatenate project files into flat.txt
+	@echo "${BLUE}Flattening project files into flat.txt...${RESET}"
+	@echo 'import os' > flatten_files.py
+	@echo 'import sys' >> flatten_files.py
+	@echo 'import traceback' >> flatten_files.py
+	@echo '' >> flatten_files.py
+	@echo 'EXTENSIONS = (".py", ".yaml", ".yml", ".toml", ".env", ".example")' >> flatten_files.py
+	@echo 'SKIP_DIR_PARTS = (".git", ".venv", "__pycache__", ".mypy_cache", ".pytest_cache", ".ruff_cache", "build", "dist", ".egg-info")' >> flatten_files.py
+	@echo '' >> flatten_files.py
+	@echo 'def iter_files(root_dir="."):' >> flatten_files.py
+	@echo '    for root, dirs, files in os.walk(root_dir):' >> flatten_files.py
+	@echo '        # Prune unwanted dirs in-place for efficiency' >> flatten_files.py
+	@echo '        dirs[:] = [' >> flatten_files.py
+	@echo '            d for d in dirs' >> flatten_files.py
+	@echo '            if not any(skip in os.path.join(root, d) for skip in SKIP_DIR_PARTS)' >> flatten_files.py
+	@echo '        ]' >> flatten_files.py
+	@echo '' >> flatten_files.py
+	@echo '        for file in files:' >> flatten_files.py
+	@echo '            if not file.endswith(EXTENSIONS):' >> flatten_files.py
+	@echo '                continue' >> flatten_files.py
+	@echo '            filepath = os.path.join(root, file)' >> flatten_files.py
+	@echo '            # Avoid including the output file itself or this script' >> flatten_files.py
+	@echo '            if os.path.basename(filepath) in {"flat.txt", "flatten_files.py"}:' >> flatten_files.py
+	@echo '                continue' >> flatten_files.py
+	@echo '            yield filepath' >> flatten_files.py
+	@echo '' >> flatten_files.py
+	@echo 'def main():' >> flatten_files.py
+	@echo '    out_path = os.path.join(os.path.dirname(__file__), "flat.txt")' >> flatten_files.py
+	@echo '    print(f"Writing flattened output to {out_path!r}")' >> flatten_files.py
+	@echo '    try:' >> flatten_files.py
+	@echo '        files = sorted(iter_files("."))' >> flatten_files.py
+	@echo '        if not files:' >> flatten_files.py
+	@echo '            print("No matching files found. Nothing to do.")' >> flatten_files.py
+	@echo '            return' >> flatten_files.py
+	@echo '' >> flatten_files.py
+	@echo '        with open(out_path, "w", encoding="utf-8") as out:' >> flatten_files.py
+	@echo '            for idx, filepath in enumerate(files, start=1):' >> flatten_files.py
+	@echo '                relpath = os.path.relpath(filepath)' >> flatten_files.py
+	@echo '                print(f"[{idx}/{len(files)}] Adding {relpath}...")' >> flatten_files.py
+	@echo '                out.write("=" * 80 + "\\n")' >> flatten_files.py
+	@echo '                out.write(f"FILE: {relpath}\\n")' >> flatten_files.py
+	@echo '                out.write("=" * 80 + "\\n\\n")' >> flatten_files.py
+	@echo '                try:' >> flatten_files.py
+	@echo '                    with open(filepath, "r", encoding="utf-8", errors="replace") as f:' >> flatten_files.py
+	@echo '                        out.write(f.read())' >> flatten_files.py
+	@echo '                except Exception as e:' >> flatten_files.py
+	@echo '                    msg = f"[WARN] Could not read {relpath}: {e}"' >> flatten_files.py
+	@echo '                    print(msg)' >> flatten_files.py
+	@echo '                    out.write(f"\\n{msg}\\n")' >> flatten_files.py
+	@echo '                out.write("\\n\\n")' >> flatten_files.py
+	@echo '' >> flatten_files.py
+	@echo '        print(f"Done. Flattened {len(files)} files into {out_path}")' >> flatten_files.py
+	@echo '    except Exception as e:' >> flatten_files.py
+	@echo '        print(f"Fatal error: {e}")' >> flatten_files.py
+	@echo '        traceback.print_exc()' >> flatten_files.py
+	@echo '        sys.exit(1)' >> flatten_files.py
+	@echo '' >> flatten_files.py
+	@echo 'if __name__ == "__main__":' >> flatten_files.py
+	@echo '    main()' >> flatten_files.py
+	@chmod +x flatten_files.py
+	@$(PYTHON) flatten_files.py
+	@rm flatten_files.py
+	@echo "${GREEN}✓ Created flat.txt with concatenated project files${RESET}"
 
 .PHONY: api-run
 api-run: ## Run HTTP adapter server

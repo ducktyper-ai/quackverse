@@ -1,4 +1,4 @@
-# quackverse/pyproject.toml (root project)
+# pyproject.toml
 [build-system]
 requires = ["hatchling>=1.18.0"]
 build-backend = "hatchling.build"

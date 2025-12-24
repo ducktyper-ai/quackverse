@@ -1,4 +1,4 @@
-# tests/integration/test_ducktyper_quack_core.py
+# tests/integration/test_ducktyper_quackcore.py
 import pytest
 from quack_core.plugins.registry import list_plugins, get_plugin
 from ducktyper.commands.list_cmd import list_tools

@@ -1,1 +1,1 @@
-# quack-cloud/src/quack-cloud/__init__.py
+# quack-cloud/src/quack_cloud/__init__.py
