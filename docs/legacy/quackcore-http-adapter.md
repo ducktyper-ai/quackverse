@@ -62,7 +62,7 @@ make api-run
 Or directly with uvicorn:
 
 ```bash
-uvicorn quack-core.adapters.http.app:create_app --factory --host 0.0.0.0 --port 8080
+uvicorn quack_core.adapters.http.app:create_app --factory --host 0.0.0.0 --port 8080
 ```
 
 ### 3. Basic Usage
@@ -360,8 +360,8 @@ quackcore/src/quackcore/adapters/http/
 
 ```python
 OP_TABLE = {
-    "quack-media.slice_video": ("quack-core.quack-media", "slice_video"),
-    "your_module.new_operation": ("quack-core.your_module", "new_operation"),
+    "quack-media.slice_video": ("quack_core.quack-media", "slice_video"),
+    "your_module.new_operation": ("quack_core.your_module", "new_operation"),
 }
 ```
 
@@ -602,7 +602,7 @@ Enable debug logging:
 
 ```python
 import logging
-logging.getLogger("quack-core.adapters.http").setLevel(logging.DEBUG)
+logging.getLogger("quack_core.adapters.http").setLevel(logging.DEBUG)
 ```
 
 Check job status programmatically:

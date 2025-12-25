@@ -13,7 +13,7 @@ def fix_imports(file_path):
     with open(file_path, 'r') as f:
         content = f.read()
 
-    # Replace 'from tests.quack-core.' with 'from tests.'
+    # Replace 'from tests.quack_core.' with 'from tests.'
     content = content.replace('from ducktyper.src.ducktyper.', 'from ducktyper.')
     content = content.replace('import src.ducktyper.', 'import ducktyper.')
 

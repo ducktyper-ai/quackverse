@@ -240,7 +240,7 @@ Key features of the logging system:
 
 ```python
 from quack_core.cli import setup_logging
-from quack_core.cli.options import LogLevel
+from quack_core.interfaces.cli.utils.options import LogLevel
 
 # Set up logging with explicit parameters
 root_logger, get_logger = setup_logging(
