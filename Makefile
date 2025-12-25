@@ -44,7 +44,7 @@ help: ## Show this help message
 	@echo '               ${GREEN}make aggregate${RESET}             - Aggregate files from current directory'
 	@echo ''
 	@echo '${YELLOW}Available Targets:${RESET}'
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  ${YELLOW}%-15s${GREEN}%s${RESET}\n", $1, $2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z0-9_.-]+:.*## / {printf "  ${YELLOW}%-15s${GREEN}%s${RESET}\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ''
 
 # Development environment targets

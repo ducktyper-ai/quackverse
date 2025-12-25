@@ -1,30 +1,32 @@
 # QuackCore v2 Conventions & Standards
 
-**Status:** Draft v1
+**Status:** Approved v2
 **Scope:** All Capability Development
 
 ## 1. Capability Status Semantics
-We use three statuses. Do not invent new ones.
+We use three statuses.
 
 | Status | Meaning | Action for n8n | Example |
 | :--- | :--- | :--- | :--- |
-| **`success`** | The specific task completed successfully. | Continue flow | `video_sliced.mp4` created. |
-| **`skipped`** | The task ran but decided *not* to act based on valid logic. **This is NOT an error.** | Branch to "Log/Ignore" | Video was already short enough; no slicing needed. |
-| **`error`** | The task failed due to an exception, invalid state, or infrastructure failure. | Branch to "Retry/Alert" | FFmpeg binary missing; S3 upload timeout. |
+| **`success`** | The task completed successfully. | Continue flow | `video_sliced.mp4` created. |
+| **`skipped`** | The task decided *not* to act based on valid logic. **Not an error.** | Branch to "Log/Ignore" | Video < 5s; no slicing needed. |
+| **`error`** | The task failed (exception, invalid state, infra failure). | Branch to "Retry/Alert" | FFmpeg missing; API timeout. |
 
-## 2. Error Code Format (`machine_message`)
-Error codes are strings used by n8n to route logic (e.g., "If `QC_AUTH_*`, alert admin").
-Format: `QC_{CATEGORY}_{SPECIFIC_ERROR}`
+## 2. Error Codes (`machine_message`)
+The `machine_message` field **MUST** be a `QC_*` code. Never free text.
+Free text explanations belong in `human_message`.
 
-* **`QC_SYS_*`**: System/Python level errors (e.g., `QC_SYS_IMPORT_ERROR`, `QC_SYS_TIMEOUT`)
-* **`QC_VAL_*`**: Input validation errors (e.g., `QC_VAL_FILE_MISSING`, `QC_VAL_INVALID_DURATION`)
-* **`QC_EXT_*`**: External service errors (e.g., `QC_EXT_OPENAI_RATE_LIMIT`, `QC_EXT_DRIVE_AUTH_FAIL`)
-* **`QC_POL_*`**: Policy violations that force a hard stop (e.g., `QC_POL_CONTENT_FILTERED`)
+* **`QC_SYS_*`**: System/Python level errors (e.g., `QC_SYS_IMPORT_ERROR`)
+* **`QC_VAL_*`**: Input validation errors (e.g., `QC_VAL_FILE_MISSING`)
+* **`QC_EXT_*`**: External service errors (e.g., `QC_EXT_OPENAI_RATE_LIMIT`)
+* **`QC_POL_*`**: Policy violations (e.g., `QC_POL_CONTENT_FILTERED`)
+* **`QC_CFG_*`**: Config/Preset resolution errors (e.g., `QC_CFG_PRESET_NOT_FOUND`)
 
-## 3. Configuration & Defaults
-* **Precedence:** Runtime Input > Preset > Policy File > Code Defaults.
-* **The "None" Rule:** `None` in an input argument means **"Unset / Use Default."**
-* **Disabling:** If you want to turn a feature off, use an explicit boolean flag (e.g., `enable_transcription=False`), never `transcription_model=None`.
+## 3. Configuration Rules
+1. **No Defaults in Code:** Capability functions never have default arguments like `model="gpt-4"`.
+2. **Precedence:** Request > Preset > Policy File > Model Defaults.
+3. **Deep Merge:** Configs are merged recursively. Setting one field in a preset does not wipe its siblings.
+4. **Explicit Disable:** Use flags (e.g., `enable_feature=False`), never `None` implies disable.
 
 ## 4. Architectural Boundaries
 When building a new capability, check this table:
