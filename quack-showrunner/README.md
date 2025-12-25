@@ -1,12 +1,8 @@
-Here is the `README.md` for your public repository. It serves as a North Star document—clearly stating what the project *is becoming*, acknowledging the current refactoring state, and strictly aligning with the **AI-First Media Operating Doctrine**.
-
----
-
 # 🎬 Quackshowrunner
 
 **The Sovereign Operating System for the AI-First Media Company.**
 
-> *"The future of media is not bigger teams. It is better systems."* — [The AI-First Media Operating Doctrine (v1)](https://www.google.com/search?q=./MANIFESTO.md)
+> *"The future of media is not bigger teams. It is better systems."* — [The AI-First Media Operating Doctrine (v1)](../docs/doctrine.md)
 
 ## 🧠 The Vision
 
