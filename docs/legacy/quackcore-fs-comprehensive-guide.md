@@ -64,14 +64,14 @@
 
 ## Introduction
 
-The `quack_core.fs` module offers a robust, consistent, and developer‑friendly filesystem abstraction for the QuackVerse ecosystem. It standardizes all operations through result objects, improves error handling, and adds advanced features like atomic writes, structured data support, checksums, and more—making it a superior alternative to Python’s built‑in `pathlib`, `os`, and `shutil`.
+The `quack_core.lib.fs` module offers a robust, consistent, and developer‑friendly filesystem abstraction for the QuackVerse ecosystem. It standardizes all operations through result objects, improves error handling, and adds advanced features like atomic writes, structured data support, checksums, and more—making it a superior alternative to Python’s built‑in `pathlib`, `os`, and `shutil`.
 
 ---
 
 ## Getting Started
 
 ```python
-from quack_core.fs import service as fs
+from quack_core.lib.fs import service as fs
 
 # Read text
 result = fs.read_text("config.txt")
@@ -404,7 +404,8 @@ print(f"Total: {fs.get_file_size_str(usage['total']).data}")
 ### Directory Synchronization
 
 ```python
-from quack_core.fs import service as fs
+from quack_core.lib.fs import service as fs
+
 
 class DirectorySynchronizer:
     def __init__(self, source_dir: str, target_dir: str):
@@ -430,9 +431,9 @@ class DirectorySynchronizer:
                 to_update.add(rel)
         return {"create": sorted(to_create), "update": sorted(to_update), "delete": sorted(to_delete)}
 
-    def synchronize(self, delete: bool=False) -> dict:
+    def synchronize(self, delete: bool = False) -> dict:
         diff = self.analyze()
-        stats = {"created":0,"updated":0,"deleted":0,"errors":0}
+        stats = {"created": 0, "updated": 0, "deleted": 0, "errors": 0}
         # Create, update, delete logic (see full code above)
         return stats
 
@@ -452,9 +453,10 @@ class DirectorySynchronizer:
 ### File Locking Utility
 
 ```python
-from quack_core.fs import service as fs
+from quack_core.lib.fs import service as fs
 import os, time, random
 from datetime import datetime, timedelta
+
 
 class FileLock:
     def __init__(self, path, timeout=60, retry_delay=0.1):
@@ -462,7 +464,7 @@ class FileLock:
         self.lock_path = f"{path}.lock"
         self.timeout = timeout
         self.retry = retry_delay
-        self.owner = f"{os.getpid()}-{random.randint(1000,9999)}"
+        self.owner = f"{os.getpid()}-{random.randint(1000, 9999)}"
         self.locked = False
 
     def acquire(self):
@@ -483,12 +485,12 @@ class FileLock:
     def release(self):
         if not self.locked: return
         info = self._read_info()
-        if info and info.get("owner")==self.owner:
+        if info and info.get("owner") == self.owner:
             fs.delete(self.lock_path)
         self.locked = False
 
     def _create_lock(self):
-        data = {"owner":self.owner, "created":datetime.now().isoformat(), "pid":os.getpid()}
+        data = {"owner": self.owner, "created": datetime.now().isoformat(), "pid": os.getpid()}
         res = fs.write_json(self.lock_path, data, atomic=True)
         return res.success
 
@@ -651,37 +653,40 @@ class FileSystemRepository(Generic[T]):
 ### Factory Pattern
 
 ```python
-from quack_core.fs import service as fs
+from quack_core.lib.fs import service as fs
+
 
 class FileHandlerFactory:
     def __init__(self):
-        self.handlers={}
+        self.handlers = {}
 
     def register(self, ext, reader, writer):
-        self.handlers[ext.lower()]={'r':reader,'w':writer}
+        self.handlers[ext.lower()] = {'r': reader, 'w': writer}
 
-    def get_reader(self,path):
-        ext=fs.get_extension(path).data.lower()
+    def get_reader(self, path):
+        ext = fs.get_extension(path).data.lower()
         return self.handlers[ext]['r']
 
-    def get_writer(self,path):
-        ext=fs.get_extension(path).data.lower()
+    def get_writer(self, path):
+        ext = fs.get_extension(path).data.lower()
         return self.handlers[ext]['w']
 
-    def read(self,path): return self.get_reader(path)(path)
-    def write(self,path,data): return self.get_writer(path)(path,data)
+    def read(self, path): return self.get_reader(path)(path)
+
+    def write(self, path, data): return self.get_writer(path)(path, data)
+
 
 # Register
 fac = FileHandlerFactory()
 fac.register('json',
-    reader=lambda p: fs.read_json(p).data,
-    writer=lambda p,d: fs.write_json(p,d).success)
+             reader=lambda p: fs.read_json(p).data,
+             writer=lambda p, d: fs.write_json(p, d).success)
 fac.register('yaml',
-    reader=lambda p: fs.read_yaml(p).data,
-    writer=lambda p,d: fs.write_yaml(p,d).success)
+             reader=lambda p: fs.read_yaml(p).data,
+             writer=lambda p, d: fs.write_yaml(p, d).success)
 fac.register('txt',
-    reader=lambda p: fs.read_text(p).content,
-    writer=lambda p,d: fs.write_text(p,d).success)
+             reader=lambda p: fs.read_text(p).content,
+             writer=lambda p, d: fs.write_text(p, d).success)
 ```
 
 ### Observer Pattern
@@ -743,26 +748,28 @@ class FileObserver:
 
 ```python
 import logging
-from quack_core.fs import service as fs
+from quack_core.lib.fs import service as fs
+
 logger = logging.getLogger(__name__)
 
+
 def safe_read_config(path, default=None):
-    if default is None: default={}
-    info=fs.get_file_info(path)
+    if default is None: default = {}
+    info = fs.get_file_info(path)
     if not info.success:
         logger.error(f"Info error: {info.error}")
         return default
     if not info.exists:
         logger.warning(f"Missing config: {path}")
         return default
-    ext=fs.get_extension(path)
+    ext = fs.get_extension(path)
     if not ext.success:
         logger.error(f"Ext error: {ext.error}")
         return default
-    if ext.data=='json':
-        rd=fs.read_json(path)
-    elif ext.data in ('yml','yaml'):
-        rd=fs.read_yaml(path)
+    if ext.data == 'json':
+        rd = fs.read_json(path)
+    elif ext.data in ('yml', 'yaml'):
+        rd = fs.read_yaml(path)
     else:
         logger.error(f"Unsupported: {ext.data}")
         return default
@@ -774,9 +781,9 @@ def safe_read_config(path, default=None):
 
 ---
 
-## Transitioning from `pathlib` to `quack_core.fs`
+## Transitioning from `pathlib` to `quack_core.lib.fs`
 
-| Task                   | `pathlib`                          | `quack_core.fs`                                            |
+| Task                   | `pathlib`                          | `quack_core.lib.fs`                                            |
 |------------------------|------------------------------------|------------------------------------------------------------|
 | Create a path         | `Path("a/b")`                      | `fs.join_path("a","b").data`                              |
 | Check exists           | `path.exists()`                    | `fs.path_exists(path).data`                               |
@@ -795,9 +802,11 @@ def safe_read_config(path, default=None):
 ### Example 1: Config File Management
 
 ```python
-from quack_core.fs import service as fs
+from quack_core.lib.fs import service as fs
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 class ConfigManager:
     def __init__(self, config_dir="config"):
@@ -805,151 +814,169 @@ class ConfigManager:
         if not rd.success:
             logger.error(f"Create dir error: {rd.error}")
             raise RuntimeError(rd.error)
-        self.dir=rd.path; self.settings={}
+        self.dir = rd.path;
+        self.settings = {}
 
-    def load(self,name):
-        jp=fs.join_path(self.dir,f"{name}.yaml")
+    def load(self, name):
+        jp = fs.join_path(self.dir, f"{name}.yaml")
         if not jp.success:
-            logger.error(jp.error); return None
-        pi=fs.get_file_info(jp.data)
+            logger.error(jp.error);
+            return None
+        pi = fs.get_file_info(jp.data)
         if not pi.success or not pi.exists:
-            logger.warning("Missing, creating default"); return self._default(name)
-        rd=fs.read_yaml(jp.data)
+            logger.warning("Missing, creating default");
+            return self._default(name)
+        rd = fs.read_yaml(jp.data)
         if not rd.success:
-            logger.error(rd.error); return None
-        self.settings[name]=rd.data; return rd.data
+            logger.error(rd.error);
+            return None
+        self.settings[name] = rd.data;
+        return rd.data
 
-    def save(self,name,data):
-        jp=fs.join_path(self.dir,f"{name}.yaml")
+    def save(self, name, data):
+        jp = fs.join_path(self.dir, f"{name}.yaml")
         if not jp.success: logger.error(jp.error); return False
-        wr=fs.write_yaml(jp.data,data,atomic=True)
+        wr = fs.write_yaml(jp.data, data, atomic=True)
         if not wr.success: logger.error(wr.error); return False
-        logger.info("Saved"); return True
+        logger.info("Saved");
+        return True
 
-    def _default(self,name):
-        cfg={"app":"QuackTool","version":"1.0","settings":{"debug":False}}
-        self.save(name,cfg)
+    def _default(self, name):
+        cfg = {"app": "QuackTool", "version": "1.0", "settings": {"debug": False}}
+        self.save(name, cfg)
         return cfg
 ```
 
 ### Example 2: Log Rotation Tool
 
 ```python
-from quack_core.fs import service as fs
+from quack_core.lib.fs import service as fs
 from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 class LogRotator:
     def __init__(self, log_dir="logs", max_mb=10, max_logs=5):
         rd = fs.create_directory(log_dir, exist_ok=True)
         if not rd.success: raise RuntimeError(rd.error)
-        self.dir=rd.path; self.max=max_mb*1024*1024; self.limit=max_logs
-        self.current=None; self._init()
+        self.dir = rd.path;
+        self.max = max_mb * 1024 * 1024;
+        self.limit = max_logs
+        self.current = None;
+        self._init()
 
     def _init(self):
-        lst=fs.list_directory(self.dir,pattern="*.log")
-        files=lst.files if lst.success else []
+        lst = fs.list_directory(self.dir, pattern="*.log")
+        files = lst.files if lst.success else []
         if not files: return self._new()
-        latest=max(files, key=lambda f: fs.get_file_timestamp(f).data)
-        info=fs.get_file_info(latest)
-        if info.success and info.size<self.max:
-            self.current=latest; logger.info(f"Using {latest}")
+        latest = max(files, key=lambda f: fs.get_file_timestamp(f).data)
+        info = fs.get_file_info(latest)
+        if info.success and info.size < self.max:
+            self.current = latest;
+            logger.info(f"Using {latest}")
         else:
             self._new()
 
     def _new(self):
-        ts=datetime.now().strftime("%Y%m%d_%H%M%S")
-        jp=fs.join_path(self.dir,f"app_{ts}.log")
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        jp = fs.join_path(self.dir, f"app_{ts}.log")
         if not jp.success: raise RuntimeError(jp.error)
-        fs.write_text(jp.data,"")
-        self.current=jp.data; logger.info(f"Created {jp.data}")
+        fs.write_text(jp.data, "")
+        self.current = jp.data;
+        logger.info(f"Created {jp.data}")
         self._cleanup()
 
     def _cleanup(self):
-        lst=fs.list_directory(self.dir,pattern="*.log")
-        files=sorted(lst.files, key=lambda f: fs.get_file_timestamp(f).data)
+        lst = fs.list_directory(self.dir, pattern="*.log")
+        files = sorted(lst.files, key=lambda f: fs.get_file_timestamp(f).data)
         for old in files[:-self.limit]:
-            dr=fs.delete(old)
+            dr = fs.delete(old)
             if dr.success: logger.info(f"Deleted {old}")
 
-    def write(self,msg):
+    def write(self, msg):
         if not self.current: self._init()
-        entry=f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {msg}\n"
+        entry = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {msg}\n"
         cont = fs.read_text(self.current).content if fs.read_text(self.current).success else ""
-        fs.write_text(self.current, cont+entry)
-        if fs.get_file_info(self.current).data+len(entry)>self.max:
-            logger.info("Rotate"); self._new()
+        fs.write_text(self.current, cont + entry)
+        if fs.get_file_info(self.current).data + len(entry) > self.max:
+            logger.info("Rotate");
+            self._new()
 ```
 
 ### Example 3: File Backup Tool
 
 ```python
-from quack_core.fs import service as fs
+from quack_core.lib.fs import service as fs
 from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
 
+
 class BackupTool:
     def __init__(self, src, dst, patterns=None):
         self.src, self.dst = src, dst
-        self.patterns=patterns or ["*"]
-        rd=fs.create_directory(dst, exist_ok=True)
+        self.patterns = patterns or ["*"]
+        rd = fs.create_directory(dst, exist_ok=True)
         if not rd.success: raise RuntimeError(rd.error)
 
     def create_backup(self, checksum=True):
-        ts=datetime.now().strftime("%Y%m%d_%H%M%S")
-        name=f"backup_{ts}"
-        jp=fs.join_path(self.dst,name)
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        name = f"backup_{ts}"
+        jp = fs.join_path(self.dst, name)
         if not jp.success: logger.error(jp.error); return None
         fs.create_directory(jp.data)
-        manifest={"date":ts,"source":str(self.src),"files":[]}
-        total=0; count=0
+        manifest = {"date": ts, "source": str(self.src), "files": []}
+        total = 0;
+        count = 0
         for pat in self.patterns:
-            fr=fs.find_files(self.src,pat,recursive=True)
+            fr = fs.find_files(self.src, pat, recursive=True)
             for f in fr.files:
-                rel=str(f)[len(str(self.src)):].lstrip("/\\")
+                rel = str(f)[len(str(self.src)):].lstrip("/\\")
                 # Create dirs
-                comps=rel.split("/")
-                if len(comps)>1:
-                    pd=fs.join_path(jp.data,*comps[:-1]).data
+                comps = rel.split("/")
+                if len(comps) > 1:
+                    pd = fs.join_path(jp.data, *comps[:-1]).data
                     fs.create_directory(pd, exist_ok=True)
-                dest=fs.join_path(jp.data,rel).data
-                cr=fs.copy(f,dest)
+                dest = fs.join_path(jp.data, rel).data
+                cr = fs.copy(f, dest)
                 if cr.success:
-                    fi=fs.get_file_info(f); size=fi.size
-                    entry={"path":rel,"size":size}
+                    fi = fs.get_file_info(f);
+                    size = fi.size
+                    entry = {"path": rel, "size": size}
                     if checksum:
-                        ck=fs.compute_checksum(f)
-                        if ck.success: entry["checksum"]=ck.data
+                        ck = fs.compute_checksum(f)
+                        if ck.success: entry["checksum"] = ck.data
                     manifest["files"].append(entry)
-                    total+=size; count+=1
-        manifest["total_files"]=count; manifest["total_size"]=total
+                    total += size;
+                    count += 1
+        manifest["total_files"] = count;
+        manifest["total_size"] = total
         if fs.get_file_size_str(total).success:
-            manifest["human_size"]=fs.get_file_size_str(total).data
-        mp=fs.join_path(jp.data,"manifest.json").data
-        fs.write_json(mp,manifest,indent=2)
+            manifest["human_size"] = fs.get_file_size_str(total).data
+        mp = fs.join_path(jp.data, "manifest.json").data
+        fs.write_json(mp, manifest, indent=2)
         logger.info(f"Backup done: {count} files, {manifest.get('human_size')}")
         return jp.data
 
     def verify_backup(self, path):
-        mp=fs.join_path(path,"manifest.json").data
-        mr=fs.read_json(mp)
+        mp = fs.join_path(path, "manifest.json").data
+        mr = fs.read_json(mp)
         if not mr.success: return False
-        files=mr.data.get("files",[])
-        ok=0
+        files = mr.data.get("files", [])
+        ok = 0
         for fe in files:
-            dest=fs.join_path(path,fe["path"]).data
+            dest = fs.join_path(path, fe["path"]).data
             if not fs.get_file_info(dest).data: continue
             if "checksum" in fe:
-                ck=fs.compute_checksum(dest)
-                if ck.success and ck.data==fe["checksum"]:
-                    ok+=1
-        integrity = ok/len(files) if files else 0
+                ck = fs.compute_checksum(dest)
+                if ck.success and ck.data == fe["checksum"]:
+                    ok += 1
+        integrity = ok / len(files) if files else 0
         logger.info(f"Integrity: {integrity:.1%}")
-        return integrity>=0.99
+        return integrity >= 0.99
 ```
 
 ---
@@ -972,9 +999,9 @@ class BackupTool:
 
 ### Debugging Tips
 
-- **Verbose logging**:  
+- **Verbose logging**:
   ```python
-  from quack_core.logging import get_logger, LogLevel
+  from quack_core.lib.logging import get_logger, LogLevel
   logger = get_logger(__name__); logger.setLevel(LogLevel.DEBUG)
   ```
 - **Inspect full result**:  
@@ -996,72 +1023,89 @@ class BackupTool:
 
 ```python
 from unittest.mock import patch, MagicMock
-from quack_core.fs import service as fs
-from quack_core.fs.results import DataResult
+from quack_core.lib.fs import service as fs
+from quack_core.lib.fs import DataResult
+
 
 def read_config(p):
-    r=fs.read_yaml(p)
+    r = fs.read_yaml(p)
     return r.data if r.success else {}
 
-with patch('quack_core.fs.service.read_yaml') as mock_ry:
-    mr=MagicMock(spec=DataResult); mr.success=True; mr.data={"a":1}
-    mock_ry.return_value=mr
-    cfg=read_config("c.yaml")
-    assert cfg["a"]==1
+
+with patch('quack_core.lib.fs.service.read_yaml') as mock_ry:
+    mr = MagicMock(spec=DataResult);
+    mr.success = True;
+    mr.data = {"a": 1}
+    mock_ry.return_value = mr
+    cfg = read_config("c.yaml")
+    assert cfg["a"] == 1
 ```
 
 ### Using a Fake FileSystemService
 
 ```python
-from quack_core.fs.results import ReadResult, WriteResult, FileInfoResult, DataResult
+from quack_core.lib.fs import ReadResult, WriteResult, FileInfoResult, DataResult
 from pathlib import Path
 
+
 class FakeFS:
-    def __init__(self): self.files={}
-    def read_text(self,p,enc='utf-8'):
-        p=str(p)
+    def __init__(self): self.files = {}
+
+    def read_text(self, p, enc='utf-8'):
+        p = str(p)
         if p in self.files:
-            return ReadResult(True,Path(p),self.files[p],enc)
-        return ReadResult(False,Path(p),"",error="Not found")
-    def write_text(self,p,c,enc='utf-8',atomic=False):
-        p=str(p); self.files[p]=c
-        return WriteResult(True,Path(p),len(c.encode(enc)))
-    def get_file_info(self,p):
-        p=str(p)
+            return ReadResult(True, Path(p), self.files[p], enc)
+        return ReadResult(False, Path(p), "", error="Not found")
+
+    def write_text(self, p, c, enc='utf-8', atomic=False):
+        p = str(p);
+        self.files[p] = c
+        return WriteResult(True, Path(p), len(c.encode(enc)))
+
+    def get_file_info(self, p):
+        p = str(p)
         exists = p in self.files
-        return FileInfoResult(True,Path(p),exists,exists,False,(len(self.files[p]) if exists else 0),0)
-    def read_yaml(self,p):
+        return FileInfoResult(True, Path(p), exists, exists, False, (len(self.files[p]) if exists else 0), 0)
+
+    def read_yaml(self, p):
         # similar to earlier examples
         ...
 
+
 # In tests:
-fake=FakeFS()
-fake.write_text("t.txt","Hello")
-def rl(fs,path):
-    r=fs.read_text(path)
+fake = FakeFS()
+fake.write_text("t.txt", "Hello")
+
+
+def rl(fs, path):
+    r = fs.read_text(path)
     return r.content.split("\n")[0] if r.success else None
-assert rl(fake,"t.txt")=="Hello"
+
+
+assert rl(fake, "t.txt") == "Hello"
 ```
 
 ### Creating a Test Fixture
 
 ```python
 import pytest
-from quack_core.fs import service as fs
+from quack_core.lib.fs import service as fs
+
 
 @pytest.fixture
 def temp_dir():
-    tr=fs.create_temp_directory()
+    tr = fs.create_temp_directory()
     if not tr.success: raise RuntimeError("Temp dir error")
     yield tr.data
     fs.delete(tr.data)
 
+
 def test_file_ops(temp_dir):
-    jp=fs.join_path(temp_dir,"file.txt")
-    assert fs.write_text(jp.data,"Test").success
-    info=fs.get_file_info(jp.data)
+    jp = fs.join_path(temp_dir, "file.txt")
+    assert fs.write_text(jp.data, "Test").success
+    info = fs.get_file_info(jp.data)
     assert info.exists and info.is_file
-    assert fs.read_text(jp.data).content=="Test"
+    assert fs.read_text(jp.data).content == "Test"
     assert fs.delete(jp.data).success
 ```
 
@@ -1069,14 +1113,14 @@ def test_file_ops(temp_dir):
 
 ## Integration with QuackCore
 
-- **Custom Service**:  
+- **Custom Service**:
   ```python
-  from quack_core.fs import create_service
+  from quack_core.lib.fs import create_service
   fs_service = create_service(base_dir="/app/data")
   ```
-- **Plugin**:  
+- **Plugin**:
   ```python
-  from quack_core.fs.plugin import create_plugin
+  from quack_core.lib.fs import create_plugin
   fs_plugin = create_plugin()
   ```
 
@@ -1084,7 +1128,7 @@ def test_file_ops(temp_dir):
 
 ## Comparison with Standard Library
 
-| Operation              | `pathlib`                                 | `quack_core.fs`                                         |
+| Operation              | `pathlib`                                 | `quack_core.lib.fs`                                         |
 |------------------------|-------------------------------------------|---------------------------------------------------------|
 | Read text              | `Path("f.txt").read_text()`               | `fs.read_text("f.txt").content`                        |
 | Write text             | `Path("f.txt").write_text("c")`           | `fs.write_text("f.txt","c")`                           |
@@ -1106,7 +1150,7 @@ def test_file_ops(temp_dir):
 - **Ensure parent directories** exist before writing.  
 - **Use atomic writes** for critical data.  
 - **Handle errors gracefully** via result objects, not only exceptions.  
-- **Avoid mixing** direct `os`/`pathlib` calls with `quack_core.fs`.  
+- **Avoid mixing** direct `os`/`pathlib` calls with `quack_core.lib.fs`.  
 
 ---
 
@@ -1155,11 +1199,11 @@ def test_file_ops(temp_dir):
 
 ## Conclusion
 
-`quack_core.fs` streamlines and enhances filesystem interactions with:
+`quack_core.lib.fs` streamlines and enhances filesystem interactions with:
 
 - **Consistent result objects** for all operations  
 - **Advanced features**: atomic writes, structured data, checksums, disk usage  
 - **Clear error handling** and logging integration  
 - **Powerful patterns** for real‑world tasks  
 
-Adopting `quack_core.fs` ensures safer, more maintainable, and feature‑rich filesystem code in your QuackTools. Happy coding in the QuackVerse!
+Adopting `quack_core.lib.fs` ensures safer, more maintainable, and feature‑rich filesystem code in your QuackTools. Happy coding in the QuackVerse!

@@ -476,7 +476,8 @@ QuackCore CLI provides utilities for handling and formatting errors in CLI appli
 
 ```python
 from quack_core.cli import handle_errors, get_cli_info, format_cli_error
-from quack_core.errors import QuackError
+from quack_core.lib.errors import QuackError
+
 
 # Use the handle_errors decorator to catch exceptions
 @handle_errors(error_types=QuackError, title="Database Error", exit_code=1)
@@ -485,6 +486,7 @@ def connect_to_database(url):
     if "invalid" in url:
         raise QuackError("Failed to connect to the database")
     return True
+
 
 # Try to connect
 connect_to_database("invalid-url")  # Will catch the error and exit
@@ -565,49 +567,51 @@ hello_quack.py - A simple QuackTool example
 
 import sys
 from quack_core.cli import (
-    init_cli_env, 
-    print_success, 
-    print_error, 
-    confirm, 
+    init_cli_env,
+    print_success,
+    print_error,
+    confirm,
     ask,
     handle_errors
 )
-from quack_core.errors import QuackError
+from quack_core.lib.errors import QuackError
+
 
 @handle_errors(error_types=Exception, title="Hello Quack Error", exit_code=1)
 def main():
     # Initialize the CLI environment
     ctx = init_cli_env(app_name="hello-quack")
-    
+
     # Log that we're starting
     ctx.logger.info("Hello Quack starting up")
-    
+
     # Check if we're in debug mode
     if ctx.debug:
         ctx.logger.debug("Running in debug mode")
-    
+
     # Get user input
     name = ask("What's your name", default="Anonymous Quacker")
-    
+
     # Print a greeting
     print_success(f"Hello, {name}! Welcome to the QuackVerse!")
-    
+
     # Confirm if user wants to continue
     if not confirm("Do you want to see the configuration?", default=True):
         print("Goodbye!")
         return
-    
+
     # Show configuration info
     log_level = ctx.config.logging.level or "INFO"
     print(f"Current log level: {log_level}")
     print(f"Running in environment: {ctx.environment}")
     print(f"Base directory: {ctx.base_dir}")
-    
+
     # Demonstrate an error
     if confirm("Do you want to see an error?", default=False):
         raise QuackError("This is a test error")
-    
+
     print_success("Operation completed successfully!")
+
 
 if __name__ == "__main__":
     main()
@@ -945,9 +949,11 @@ def connect():
 ```
 
 ✅ **Best Practice:**
+
 ```python
 from quack_core.cli import handle_errors
-from quack_core.errors import QuackError
+from quack_core.lib.errors import QuackError
+
 
 # Do this instead
 @handle_errors(error_types=Exception, title="Connection Error", exit_code=1)

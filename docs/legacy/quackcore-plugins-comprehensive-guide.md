@@ -517,7 +517,7 @@ result = registry.execute_workflow("process-data", data=[{"foo": "bar"}])
 Use `QuackPluginError` for plugin-related errors and provide meaningful error messages:
 
 ```python
-from quack_core.errors import QuackPluginError
+from quack_core.lib.errors import QuackPluginError
 
 try:
     plugin = loader.load_plugin("non_existent_module")
