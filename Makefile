@@ -44,7 +44,7 @@ help: ## Show this help message
 	@echo '               ${GREEN}make aggregate${RESET}             - Aggregate files from current directory'
 	@echo ''
 	@echo '${YELLOW}Available Targets:${RESET}'
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  ${YELLOW}%-15s${GREEN}%s${RESET}\n", $1, $2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z0-9_.-]+:.*## / {printf "  ${YELLOW}%-15s${GREEN}%s${RESET}\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ''
 
 # Development environment targets
@@ -432,7 +432,7 @@ add-paths: ## Add file paths as first-line comments to all Python files
 	@rm add_paths.py
 	@echo "${GREEN}✓ File paths added to all files${RESET}"
 
-	.PHONY: flatten
+.PHONY: flatten
 flatten: ## Concatenate project files into flat.txt
 	@echo "${BLUE}Flattening project files into flat.txt...${RESET}"
 	@echo 'import os' > flatten_files.py

@@ -7,7 +7,7 @@ integration, handling settings for document conversion between various formats.
 
 In this refactored version, all file paths are handled exclusively as strings.
 Any interaction with file paths (normalization, validation, etc.) is delegated
-to the quack-core.fs layer.
+to the quack_core.fs layer.
 """
 
 import json
@@ -26,7 +26,7 @@ logger = get_logger(__name__)
 try:
     from quack_core.fs.service import standalone as fs
 except ImportError:
-    logger.error("Could not import quack-core.fs.service")
+    logger.error("Could not import quack_core.fs.service")
     from types import SimpleNamespace
     # Create a minimal fs stub if the module isn't available (for tests)
     fs = SimpleNamespace(
@@ -134,7 +134,7 @@ class PandocConfig(BaseModel):
         """
         Validate that the output directory has a valid format.
 
-        Delegates to quack-core.fs to validate the path format.
+        Delegates to quack_core.fs to validate the path format.
         If fs service is not available, accepts any path.
         """
         try:
@@ -145,6 +145,8 @@ class PandocConfig(BaseModel):
             return v
         except Exception as e:
             # Log the error but don't fail validation - this helps tests pass
+            if isinstance(e, ValueError):
+                raise
             get_logger(__name__).warning(f"Path validation error: {str(e)}")
             return v
 
@@ -205,22 +207,21 @@ class PandocConfigProvider(BaseConfigProvider):
         """
         try:
             # Attempt to create a PandocConfig instance to validate data.
-            PandocConfig(**config)
+            PandocConfig.model_validate(config)
 
             # Check output_dir path validity if provided
             if "output_dir" in config:
                 path = config["output_dir"]
-                # Basic validation - don't rely on fs.is_valid_path
+                # Basic validation
                 if not isinstance(path, str) or path.strip() == "":
                     self.logger.warning(f"Output directory path is invalid: {path}")
                     return False
 
-                # Additional validation if fs service is available
-                if hasattr(fs, 'is_valid_path'):
-                    if not fs.is_valid_path(path):
-                        self.logger.warning(
-                            f"Output directory path is not valid: {path}")
-                        return False
+                # Check for invalid characters
+                if any(char in path for char in ['?', '*', '<', '>', '|']):
+                    self.logger.warning(f"Output directory path contains invalid characters: {path}")
+                    return False
+
             return True
         except Exception as e:
             self.logger.error(f"Configuration validation failed: {e}")
@@ -267,9 +268,13 @@ class PandocConfigProvider(BaseConfigProvider):
                     if config_key == "output_dir" or config_key.endswith("_path"):
                         # Use os.path functions directly to avoid DataResult issues
                         try:
-                            if hasattr(fs, 'expand_user_vars'):
-                                expanded_path = fs.expand_user_vars(value)
-                                config[config_key] = os.path.abspath(expanded_path)
+                            # Safe check for mock objects vs real objects
+                            if hasattr(fs, 'expand_user_vars') and callable(fs.expand_user_vars):
+                                try:
+                                    expanded_path = fs.expand_user_vars(value)
+                                    config[config_key] = os.path.abspath(expanded_path)
+                                except Exception:
+                                     config[config_key] = os.path.abspath(os.path.expanduser(value))
                             else:
                                 config[config_key] = os.path.abspath(
                                     os.path.expanduser(value))

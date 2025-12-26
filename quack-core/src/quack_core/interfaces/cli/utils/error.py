@@ -1,4 +1,4 @@
-# quack-core/src/quack_core/cli/error.py
+# quack-core/src/quack_core/interfaces/cli/utils/error.py
 """
 Error handling utilities for CLI applications.
 
@@ -51,7 +51,7 @@ def format_cli_error(error: Exception) -> str:
 
 # Import the print_error function from our CLI formatting module.
 # (This import is left as-is because it is not related to file paths.)
-from quack_core.cli.formatting import print_error as _print_error
+from quack_core.interfaces.cli.utils.formatting import print_error as _print_error
 
 
 def handle_errors(
@@ -157,7 +157,7 @@ def get_cli_info() -> dict[str, Any]:
     """
     import platform
 
-    from quack_core.cli.terminal import get_terminal_size
+    from quack_core.interfaces.cli.utils.terminal import get_terminal_size
     from quack_core.config.utils import get_env
 
     info = {

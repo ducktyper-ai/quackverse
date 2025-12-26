@@ -383,7 +383,7 @@ setuptools.setup(
     name="my-quacktool",
     # ...
     entry_points={
-        "quack-core.plugins": [
+        "quack_core.plugins": [
             "my-plugin=my_quacktool.plugin:create_plugin",
         ],
     },

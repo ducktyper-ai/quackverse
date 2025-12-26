@@ -251,7 +251,7 @@ from quack_core.paths import infer_module_from_path
 # Infer module name from file path
 file_path = "/path/to/project/src/quack-core/paths/api.py"
 module_name = infer_module_from_path(file_path)
-print(f"Module name: {module_name}")  # Output: quack-core.paths.api
+print(f"Module name: {module_name}")  # Output: quack_core.paths.api
 ```
 
 This is especially useful for tooling that needs to import or reference modules dynamically.

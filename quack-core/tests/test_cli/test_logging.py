@@ -6,12 +6,10 @@ Tests for the CLI logging module.
 import logging
 from unittest.mock import MagicMock, patch
 
-from quack_core.cli.logging import (
-    _add_file_handler,
-    _determine_effective_level,
-    setup_logging,
-)
+
 from quack_core.config.models import QuackConfig
+from quack_core.interfaces.cli.utils.logging import _determine_effective_level, \
+    _add_file_handler, setup_logging
 
 
 class TestDetermineEffectiveLevel:
@@ -85,7 +83,7 @@ class TestAddFileHandler:
         config = QuackConfig(logging={"file": "/path/to/logfile.log"})
 
         # Mock the fs service by patching the import where it's used
-        with patch("quack-core.fs.service.create_directory") as mock_create_dir:
+        with patch("quack_core.fs.service.create_directory") as mock_create_dir:
             # Set up the success attribute on the result object
             result = MagicMock()
             result.success = True
@@ -117,7 +115,7 @@ class TestAddFileHandler:
         config = QuackConfig(logging={"file": "/path/to/logfile.log"})
 
         # Mock directory creation failure
-        with patch("quack-core.fs.service.create_directory") as mock_create_dir:
+        with patch("quack_core.fs.service.create_directory") as mock_create_dir:
             # Set up a failed result
             result = MagicMock()
             result.success = False
@@ -147,7 +145,7 @@ class TestAddFileHandler:
         root_logger = logging.getLogger("test_file_handler_exception")
         config = QuackConfig(logging={"file": "/path/to/logfile.log"})
 
-        with patch("quack-core.fs.service.create_directory") as mock_create_dir:
+        with patch("quack_core.fs.service.create_directory") as mock_create_dir:
             # Set up a successful result
             result = MagicMock()
             result.success = True
@@ -197,7 +195,7 @@ class TestSetupLogging:
             logging={"level": "CRITICAL", "file": "/path/to/logfile.log"}
         )
 
-        with patch("quack-core.cli.logging._add_file_handler") as mock_add_file:
+        with patch("quack_core.interfaces.cli.utils.logging._add_file_handler") as mock_add_file:
             logger, _ = setup_logging(config=config)
 
             assert logger.level == logging.CRITICAL

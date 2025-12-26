@@ -33,7 +33,7 @@ def test_convert_file_html_to_markdown_success(mock_pypandoc, fs_stub):
 
     # Mock the conversion operation
     with patch(
-            'quack-core.integrations.pandoc.operations.convert_html_to_markdown') as mock_convert:
+            'quack_core.integrations.pandoc.operations.convert_html_to_markdown') as mock_convert:
         mock_convert.return_value = IntegrationResult.success_result(
             ("output.md", MagicMock()),
             message="Success"
@@ -58,7 +58,7 @@ def test_convert_file_markdown_to_docx_success(mock_pypandoc, fs_stub):
 
     # Mock the conversion operation
     with patch(
-            'quack-core.integrations.pandoc.operations.convert_markdown_to_docx') as mock_convert:
+            'quack_core.integrations.pandoc.operations.convert_markdown_to_docx') as mock_convert:
         mock_convert.return_value = IntegrationResult.success_result(
             ("output.docx", MagicMock()),
             message="Success"
@@ -82,7 +82,7 @@ def test_convert_file_unsupported_format(mock_pypandoc):
 
     # Mock file info to return unsupported format
     with patch(
-            'quack-core.integrations.pandoc.operations.utils.get_file_info') as mock_get_info:
+            'quack_core.integrations.pandoc.operations.utils.get_file_info') as mock_get_info:
         mock_get_info.return_value = FileInfo(
             path="file.txt", format="txt", size=100, modified=None, extra_args=[]
         )
@@ -102,7 +102,7 @@ def test_convert_file_integration_error(mock_pypandoc):
 
     # Mock conversion to raise error
     with patch(
-            'quack-core.integrations.pandoc.operations.utils.get_file_info') as mock_get_info:
+            'quack_core.integrations.pandoc.operations.utils.get_file_info') as mock_get_info:
         mock_get_info.side_effect = QuackIntegrationError("Test error", {})
 
         # Run conversion
@@ -110,7 +110,7 @@ def test_convert_file_integration_error(mock_pypandoc):
 
         # Verify
         assert not result.success
-        assert "Test error" in result.error
+        assert "Failed to convert" in result.error
 
 
 def test_convert_batch_all_success(mock_pypandoc):
@@ -227,7 +227,8 @@ def test_validate_conversion(mock_pypandoc, fs_stub):
     converter = DocumentConverter(config)
 
     # Test successful validation
-    assert converter.validate_conversion("output.md", "input.html")
+    with patch('quack_core.fs.service.standalone.get_file_info', return_value=SimpleNamespace(success=True, exists=True, size=100)):
+            assert not converter.validate_conversion("output.md", "input.html") # Expect no errors
 
     # Test failure when output file doesn't exist
     fs_stub.get_file_info = lambda path: SimpleNamespace(

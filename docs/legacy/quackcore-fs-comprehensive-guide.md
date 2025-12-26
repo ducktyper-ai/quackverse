@@ -1003,7 +1003,7 @@ def read_config(p):
     r=fs.read_yaml(p)
     return r.data if r.success else {}
 
-with patch('quack-core.fs.service.read_yaml') as mock_ry:
+with patch('quack_core.fs.service.read_yaml') as mock_ry:
     mr=MagicMock(spec=DataResult); mr.success=True; mr.data={"a":1}
     mock_ry.return_value=mr
     cfg=read_config("c.yaml")
