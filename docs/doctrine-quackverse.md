@@ -321,18 +321,28 @@ QuackVerse is built to serve that belief.
 QuackVerse is structured into three concentric rings:
 
 ┌──────────────────────────────────────────┐
-│        EXPERIENCES / ORCHESTRATION       │
-│   DuckTyper · n8n · Agents · CI · Chat   │
-├──────────────────────────────────────────┤
-│              TOOLS (QuackTools)          │
-│   Video · Image · Tutorial · Machinima   │
-│   Distro · Newsletter · GTM · Research   │
-├──────────────────────────────────────────┤
-│              CORE (QuackCore)            │
-│   Contracts · Capabilities · Registries  │
-│   Config · IO · Teaching · Adapters      │
-└──────────────────────────────────────────┘
 
+│        EXPERIENCES / ORCHESTRATION       │
+
+│  DuckTyper · n8n · Agents · CI · Chat    │
+
+├──────────────────────────────────────────┤
+
+│             TOOLS (QuackTools)           │
+
+│  Video · Image · Tutorial · Machinima    │
+
+│  Distro · Newsletter · GTM · Research    │
+
+├──────────────────────────────────────────┤
+
+│           CORE (QuackCore)               │
+
+│  Contracts · Capabilities · Registries   │
+
+│  Config · IO · Teaching · Adapters       │
+
+└──────────────────────────────────────────┘
 
 **Ring A — Core (QuackCore)**
 
