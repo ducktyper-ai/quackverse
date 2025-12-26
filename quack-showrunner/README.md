@@ -2,7 +2,8 @@
 
 **The Sovereign Operating System for the AI-First Media Company.**
 
-> **Quackshowrunner is opinionated infrastructure.** It is built to replace roles, not tasks.
+> **Quackshowrunner is opinionated infrastructure.** It is built to replace roles, not tasks. If you want flexibility, use SaaS. If you want sovereignty and leverage, use this.
+
 > *"The future of media is not bigger teams. It is better systems."* — [The AI-First Media Operating Doctrine (v1)](https://www.google.com/search?q=./MANIFESTO.md)
 
 ---
@@ -20,11 +21,13 @@ It is a production-grade, self-hosted infrastructure stack designed to act as a 
 3. **The "Agent Arena":** We are agnostic about *cognition*. We provide a standard interface so you can swap "Brains" (Rasa, Agno, LangGraph) to learn the trade-offs of each.
 4. **Pedagogical Mandate:** Infrastructure is curriculum. This codebase teaches you *how* to build sovereign AI.
 
+> **Architectural Guardrail:** Quackshowrunner contains infrastructure and orchestration only. All reusable logic, contracts, and standards belong in **QuackCore**.
+
 ---
 
 ## 🏟 The Agent Arena (Pluggable Cognition)
 
-Unlike other stacks that lock you into one framework, Quackshowrunner uses a **Standard Agent Contract** to plug different AI backends into the same OS.
+Unlike other stacks that lock you into one framework, Quackshowrunner uses a **Standard Agent Contract** (provided by QuackCore) to plug different AI backends into the same OS.
 
 We include three reference implementations to teach the "Spectrum of Autonomy":
 
@@ -51,14 +54,14 @@ docker compose --profile langgraph up
 
 ## 🏗 Architecture (v2 Vision)
 
-The stack is the central nervous system connecting the Writer (Ducktyper) to the World.
+The stack is the central nervous system connecting **human intent (Ducktyper)** to **execution in the world**.
 
 ```mermaid
 graph TD
     User[Ducktyper / Interface] -->|Webhooks| N8N
     
     subgraph Quackshowrunner [The Sovereign OS]
-        N8N[n8n: The Brain]
+        N8N[n8n: The Manager]
         
         subgraph NervousSystem [Nervous System]
             Telegraf --> TimescaleDB
@@ -82,8 +85,12 @@ graph TD
             MCP[MCP Gateway]
         end
         
+        QC[QuackCore: Contracts + Adapters + Policies]
+        QC -.->|Dependency| AgentArena
+        QC -.->|Dependency| MCP
+        
         N8N -->|Orchestrates| MCP
-        N8N -->|Delegates Cognition| AgentArena
+        N8N -->|Requests Decisions| AgentArena
         N8N -->|Reads/Writes| Memory
         
         AgentArena -->|Uses Tools| MCP
@@ -99,17 +106,64 @@ graph TD
 ### 2. The Hands (MCP Gateway)
 
 * **Service:** **Supergateway** (exposing Postgres/Tools via SSE)
-* **The Contract:** n8n and Agents never touch the database directly; they ask the MCP Gateway to do it. This standardizes tool access across all frameworks.
+* **The Rule:** **The MCP Gateway is the only place where side effects are allowed.**
+* **The Contract:** n8n and Agents never touch the database directly; they ask the MCP Gateway to do it.
 
-### 3. The Memory (Context)
+### 3. The Capability Layer (QuackCore)
+
+**QuackCore** is the shared logic and standards library that makes the OS consistent. It runs *inside* the agents and gateways—it is not a separate control plane.
+
+* **Note:** QuackCore is versioned and released independently; Quackshowrunner depends on it but does not vendor it.
+
+It provides:
+
+* **Standard Agent Contract v1** (Schemas, tool calling conventions, decision payloads).
+* **MCP Tool Adapters** (Typed tool registry, side-effect boundaries, auth propagation).
+* **Policies & Guardrails** (What agents are allowed to do).
+* **Telemetry Semantics** ("Content Throughput", "Agent Token ROI" definitions).
+* **Teaching Scaffolding** (How workflows become lessons and PRs).
+
+### 4. The Memory (Context)
 
 * **Relational Memory (Twenty CRM):** The "State" of the company (Deals, Guests).
 * **Semantic Memory (pgvector):** The "Voice" of the company (Style guides, Past content).
 * **Object Memory (MinIO):** The "Vault" (Raw video assets).
 
-### 4. The Curriculum (Docusaurus)
+### 5. The Curriculum (Docusaurus)
 
 * **The Feedback Loop:** When an agent learns a new trick, it opens a PR to this repo's documentation. The infrastructure writes its own manual.
+
+---
+
+## 🧪 A Canonical Flow (Example)
+
+**Goal:** Turn a raw podcast recording into published clips and documentation.
+
+1. **Ducktyper** triggers a webhook: *“New episode ready.”*
+2. **n8n** loads the episode context from **Twenty CRM**.
+3. n8n delegates:
+* **Agno** (using **QuackCore** contracts) → extracts highlights & key claims.
+* **LangGraph** → drafts show notes and titles.
+
+
+4. Agents retrieve:
+* Style memory from **pgvector**.
+* Raw media from **MinIO**.
+
+
+5. **MCP Gateway** executes:
+* Transcription queries.
+* Asset storage.
+
+
+6. **Superset** updates:
+* Content throughput.
+* Agent token ROI.
+
+
+7. **LangGraph** opens a PR to **Docusaurus** with updated SOPs.
+
+**No human coordination. Only human taste at the end.**
 
 ---
 
@@ -124,6 +178,7 @@ We are currently transitioning from **v1 (POC)** to **v2 (The Vision)**.
 
 
 * [ ] **The "Brain" Upgrade (The Arena):**
+* [ ] 🚨 **Blocking:** **QuackCore — Standard Agent Contract v1** (schemas + examples + tests).
 * [x] Deploy MCP Gateway (Supergateway).
 * [ ] **Reference Implementation 1:** Agno (The Researcher).
 * [ ] **Reference Implementation 2:** LangGraph (The Editor).
@@ -150,16 +205,17 @@ We are currently transitioning from **v1 (POC)** to **v2 (The Vision)**.
 quackshowrunner/
 ├── apps/
 │   ├── n8n/              # The Manager
-│   ├── mcp-gateway/      # The Interface (Tools)
+│   ├── mcp-gateway/      # The Hands (Importing QuackCore)
 │   ├── twenty/           # The Memory (CRM)
 │   ├── minio/            # The Storage (Video)
 │   ├── docusaurus/       # The Curriculum
 │   ├── superset/         # The Eyes
 │   │
-│   # The Agent Arena (Pluggable Brains)
-│   ├── agent-agno/       # Pythonic/Fast Agent
-│   ├── agent-langgraph/  # Stateful/Graph Agent
-│   └── agent-rasa/       # NLU/Deterministic Agent
+│   # The Agent Arena (Pluggable Brains - Importing QuackCore)
+│   ├── agents/
+│   │   ├── agent-agno/       # Pythonic/Fast Agent
+│   │   ├── agent-langgraph/  # Stateful/Graph Agent
+│   │   └── agent-rasa/       # NLU/Deterministic Agent
 │
 ├── conf/                 # Infrastructure as Code
 │   ├── nginx/            # Zero-Trust Gatekeeper
@@ -174,12 +230,11 @@ quackshowrunner/
 
 ---
 
-## 🔌 Integrations
+## 🔌 Ecosystem
 
-Quackshowrunner is the "Backend" of the operation.
-
-* **Ducktyper:** The writing interface. Connects via secured webhooks.
-* **QuackCore:** The shared logic library.
+* **Ducktyper:** The human interface and trigger surface.
+* **Quackshowrunner:** The self-hosted OS (orchestration + infrastructure).
+* **QuackCore:** The capability layer. Contracts, adapters, policies, and telemetry semantics shared across all agents and gateways.
 
 ---
 
