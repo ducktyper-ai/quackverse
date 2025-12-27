@@ -43,7 +43,7 @@ def find_and_fix_test_files(directory):
 
 if __name__ == "__main__":
     # Get the quack-core tests directory
-    quackcore_tests_dir = Path("quack-chat/src/quack_chat")
+    quackcore_tests_dir = Path("../quack-chat/src/quack_chat")
 
     if not quackcore_tests_dir.exists():
         print(f"Error: {quackcore_tests_dir} does not exist.")

@@ -72,18 +72,19 @@ def _fix_lines(file_path):
 docstring_pattern = r'    \\?"""Test\n    mock_paths_service\.expand_user_vars = lambda x: x (.*?)\."""'
 docstring_repl = r'    """Test \1."""\n    mock_paths_service.expand_user_vars = lambda x: x'
 
-fix_file_content('quack-core/tests/test_integrations/pandoc/test_pandoc_integration.py',
-                 [
+fix_file_content(
+    '../quack-core/tests/test_integrations/pandoc/test_pandoc_integration.py',
+    [
                      (docstring_pattern, docstring_repl)
                  ])
-fix_file_content('quack-core/tests/test_integrations/pandoc/test_service.py', [
+fix_file_content('../quack-core/tests/test_integrations/pandoc/test_service.py', [
     (docstring_pattern, docstring_repl)
 ])
 
 # 2. Fix Indentation in test_resolvers.py
 # The regex replacement previously added too many spaces.
 # We look for the literal broken line from the traceback.
-resolvers_file = 'quack-core/tests/test_paths/test_resolvers.py'
+resolvers_file = '../quack-core/tests/test_paths/test_resolvers.py'
 if os.path.exists(resolvers_file):
     with open(resolvers_file, 'r') as f:
         content = f.read()
@@ -106,7 +107,7 @@ if os.path.exists(resolvers_file):
 # 3. Fix Indentation in test_config.py
 # The `PandocConfig` call was unindented to 4 spaces, but if it was inside a function, it needs 4.
 # If the previous line `# with pytest.raises...` is at 4 spaces, the next line must be at 4 spaces.
-config_file = 'quack-core/tests/test_integrations/pandoc/test_config.py'
+config_file = '../quack-core/tests/test_integrations/pandoc/test_config.py'
 if os.path.exists(config_file):
     # Ensure consistent indentation for the modified block
     fix_file_content(config_file, [
@@ -116,7 +117,7 @@ if os.path.exists(config_file):
 
 # 4. Fix test_pandoc_integration_edge_cases.py NameError
 # Ensure 'integration' is defined before use
-edge_cases_file = 'quack-core/tests/test_integrations/pandoc/test_pandoc_integration_edge_cases.py'
+edge_cases_file = '../quack-core/tests/test_integrations/pandoc/test_pandoc_integration_edge_cases.py'
 fix_file_content(edge_cases_file, [
     (r'# "/path/to/config.yaml"\)\n\s+integration.initialize\(\)',
      r'# "/path/to/config.yaml")\n            integration = PandocIntegration(config_path="/path/to/config.yaml")\n            integration.initialize()')

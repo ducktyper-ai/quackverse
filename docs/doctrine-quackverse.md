@@ -1,27 +1,6 @@
-Below is a **clean, consolidated, fully updated doctrine document** that:
-
-* **Incorporates Temporal explicitly** (without breaking your original principles)
-* **Clarifies n8n’s role vs Temporal’s role**
-* **Keeps QuackRunner, QuackTools, QuackCore intact**
-* **Is readable by junior devs**
-* **Is stable enough to live for years**
-* **Is teachable (AIPE / AAC / DevRel–safe)**
-
-This is written as a **canonical document** you can drop into:
-
-```
-quackverse/
-└── doctrine/
-    └── DOCTRINE.md
-```
-
-No speculative tech, no unnecessary DSLs, no overengineering.
-
----
-
 # **The QuackVerse Doctrine (v3)**
 
-**The Operating System for AI-First Media, Education, and Digital Work**
+**The AI Operating System for Knowledge Work**
 
 ---
 
@@ -45,8 +24,8 @@ It *is*:
 
 * a system for building AI-first organizations
 * a teaching vehicle for agent engineering
-* an execution engine for AI-first media and education
-* a leverage multiplier for solo creators and small teams
+* an execution engine for AI operators
+* a leverage multiplier for individual builders and small teams
 
 This doctrine defines **what lives where**, **who owns what**, and **how the system compounds instead of collapsing**.
 
