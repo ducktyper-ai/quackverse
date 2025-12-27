@@ -2588,7 +2588,7 @@ Enable debug logging to see detailed information:
 
 ```python
 import logging
-from quack_core.logging import LogLevel, LOG_LEVELS
+from quack_core.lib.logging import LogLevel, LOG_LEVELS
 from quack_core.integrations.core import registry
 
 # Enable debug logging

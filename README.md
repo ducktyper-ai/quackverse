@@ -33,14 +33,14 @@ QuackVerse is inspired by:
 The main entrypoint for the ecosystem is:
 
 ```bash
-pip install ducktyper
+pip install quack-chat
 ```
 
 Once installed, try:
 
 ```bash
-ducktyper list
-ducktyper run quacktool-name
+quack-chat list
+quack-chat run quacktool-name
 ```
 
 Each tool has its own README with usage examples and learning paths.

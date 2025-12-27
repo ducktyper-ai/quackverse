@@ -1,6 +1,6 @@
 # QuackCore Errors Documentation
 
-This guide provides comprehensive documentation for the `quack_core.errors` module, which offers robust error handling capabilities for QuackTools and plugins in the QuackVerse ecosystem.
+This guide provides comprehensive documentation for the `quack_core.lib.errors` module, which offers robust error handling capabilities for QuackTools and plugins in the QuackVerse ecosystem.
 
 ## Table of Contents
 
@@ -16,7 +16,7 @@ This guide provides comprehensive documentation for the `quack_core.errors` modu
 
 ## Introduction
 
-The `quack_core.errors` module provides consistent, informative error handling across the QuackVerse. It allows you to:
+The `quack_core.lib.errors` module provides consistent, informative error handling across the QuackVerse. It allows you to:
 
 - Create descriptive, context-rich errors
 - Properly handle and display errors to users
@@ -53,10 +53,10 @@ This hierarchy allows you to catch errors at different levels of specificity, de
 
 ### Importing Error Classes
 
-You can import all error classes directly from the top-level `quack_core.errors` module:
+You can import all error classes directly from the top-level `quack_core.lib.errors` module:
 
 ```python
-from quack_core.errors import (
+from quack_core.lib.errors import (
     QuackError,
     QuackIOError,
     QuackFileNotFoundError,
@@ -69,7 +69,8 @@ from quack_core.errors import (
 Here's how to raise a basic `QuackError`:
 
 ```python
-from quack_core.errors import QuackError
+from quack_core.lib.errors import QuackError
+
 
 def my_function():
     if something_went_wrong:
@@ -81,7 +82,8 @@ def my_function():
 One of the key benefits of QuackCore errors is the ability to attach context:
 
 ```python
-from quack_core.errors import QuackError
+from quack_core.lib.errors import QuackError
+
 
 def process_data(data_id, user_id):
     if data_not_found:
@@ -96,7 +98,8 @@ def process_data(data_id, user_id):
 You can wrap original exceptions to provide more context while preserving the original error:
 
 ```python
-from quack_core.errors import QuackError
+from quack_core.lib.errors import QuackError
+
 
 def safe_process():
     try:
@@ -113,15 +116,16 @@ def safe_process():
 For file-related operations:
 
 ```python
-from quack_core.errors import QuackFileNotFoundError, QuackPermissionError
+from quack_core.lib.errors import QuackFileNotFoundError, QuackPermissionError
+
 
 def read_config(path):
     if not path.exists():
         raise QuackFileNotFoundError(path)
-    
+
     if not os.access(path, os.R_OK):
         raise QuackPermissionError(path, "read")
-    
+
     # Read the file...
 ```
 
@@ -130,17 +134,18 @@ def read_config(path):
 For data validation failures:
 
 ```python
-from quack_core.errors import QuackValidationError
+from quack_core.lib.errors import QuackValidationError
+
 
 def validate_user_data(data):
     errors = {}
-    
+
     if "username" not in data:
         errors.setdefault("username", []).append("Username is required")
-    
+
     if "email" in data and "@" not in data["email"]:
         errors.setdefault("email", []).append("Invalid email format")
-    
+
     if errors:
         raise QuackValidationError(
             "Validation failed for user data",
@@ -153,18 +158,19 @@ def validate_user_data(data):
 For configuration issues:
 
 ```python
-from quack_core.errors import QuackConfigurationError
+from quack_core.lib.errors import QuackConfigurationError
+
 
 def load_settings(config_path):
     try:
-        # Load config...
+    # Load config...
     except YAMLError as e:
         raise QuackConfigurationError(
             "Invalid YAML in configuration file",
             config_path=config_path,
             original_error=e
         )
-    
+
     if "required_setting" not in config:
         raise QuackConfigurationError(
             "Missing required configuration",
@@ -178,7 +184,8 @@ def load_settings(config_path):
 For external API and service interactions:
 
 ```python
-from quack_core.errors import QuackApiError, QuackAuthenticationError
+from quack_core.lib.errors import QuackApiError, QuackAuthenticationError
+
 
 def call_external_api(service_name, endpoint):
     try:
@@ -215,7 +222,7 @@ The `ErrorHandler` class provides utilities for formatting and displaying errors
 ### Creating an Error Handler
 
 ```python
-from quack_core.errors.handlers import ErrorHandler
+from quack_core.lib.errors.handlers import ErrorHandler
 from rich.console import Console
 
 # Create with default settings (outputs to stderr)
@@ -229,15 +236,15 @@ custom_handler = ErrorHandler(console=my_console)
 ### Formatting Errors
 
 ```python
-from quack_core.errors import QuackError
-from quack_core.errors.handlers import ErrorHandler
+from quack_core.lib.errors import QuackError
+from quack_core.lib.errors.handlers import ErrorHandler
 
 try:
     # Some code that might raise an error
     raise QuackError("Something went wrong", context={"important_value": 42})
 except Exception as e:
     handler = ErrorHandler()
-    
+
     # Get formatted error string
     formatted = handler.format_error(e)
     print(formatted)
@@ -246,19 +253,20 @@ except Exception as e:
 ### Printing Errors
 
 ```python
-from quack_core.errors.handlers import ErrorHandler
+from quack_core.lib.errors.handlers import ErrorHandler
+
 
 def my_function():
     handler = ErrorHandler()
-    
+
     try:
         # Code that might fail
         risky_operation()
     except Exception as e:
         # Print error with a custom title and traceback
         handler.print_error(
-            e, 
-            title="Error in my_function", 
+            e,
+            title="Error in my_function",
             show_traceback=True
         )
 ```
@@ -266,11 +274,12 @@ def my_function():
 ### Handling Errors (Print and Optionally Exit)
 
 ```python
-from quack_core.errors.handlers import ErrorHandler
+from quack_core.lib.errors.handlers import ErrorHandler
+
 
 def critical_operation():
     handler = ErrorHandler()
-    
+
     try:
         # Important code that should not fail
         result = risky_but_important_operation()
@@ -290,7 +299,7 @@ def critical_operation():
 For convenience, a global error handler instance is provided:
 
 ```python
-from quack_core.errors.handlers import global_error_handler
+from quack_core.lib.errors.handlers import global_error_handler
 
 try:
     # Some operation
@@ -306,13 +315,15 @@ except Exception as e:
 The module provides a handy decorator for consistent error handling:
 
 ```python
-from quack_core.errors.handlers import handle_errors
+from quack_core.lib.errors.handlers import handle_errors
+
 
 # Basic usage - catches all exceptions
 @handle_errors()
 def simple_function():
     # Code that might fail...
     return result
+
 
 # Catch specific errors, with custom title and traceback
 @handle_errors(
@@ -323,6 +334,7 @@ def simple_function():
 def process_input(data):
     # Process the data...
     return processed_data
+
 
 # Critical function that exits on error
 @handle_errors(exit_code=1)
@@ -336,7 +348,8 @@ def critical_function():
 This decorator specifically wraps standard IO exceptions with QuackCore equivalents:
 
 ```python
-from quack_core.errors.base import wrap_io_errors
+from quack_core.lib.errors.base import wrap_io_errors
+
 
 @wrap_io_errors
 def read_file(path):
@@ -411,7 +424,8 @@ except Exception as e:
 The `ErrorHandler` can retrieve information about the calling function:
 
 ```python
-from quack_core.errors.handlers import ErrorHandler
+from quack_core.lib.errors.handlers import ErrorHandler
+
 
 def troubleshoot_function():
     handler = ErrorHandler()
@@ -424,17 +438,18 @@ def troubleshoot_function():
 You can extend the `ErrorHandler` class to customize error formatting:
 
 ```python
-from quack_core.errors.handlers import ErrorHandler
+from quack_core.lib.errors.handlers import ErrorHandler
+
 
 class MyErrorHandler(ErrorHandler):
     def format_error(self, error):
         # Get the standard formatting
         formatted = super().format_error(error)
-        
+
         # Add custom formatting
         if hasattr(error, 'custom_attribute'):
             formatted += f"\nCustom info: {error.custom_attribute}"
-        
+
         return formatted
 ```
 
@@ -443,19 +458,20 @@ class MyErrorHandler(ErrorHandler):
 For your plugin-specific errors, inherit from the appropriate QuackError base class:
 
 ```python
-from quack_core.errors import QuackPluginError
+from quack_core.lib.errors import QuackPluginError
+
 
 class MyPluginConfigError(QuackPluginError):
     def __init__(
-        self,
-        message,
-        config_option=None,
-        original_error=None
+            self,
+            message,
+            config_option=None,
+            original_error=None
     ):
         context = {}
         if config_option:
             context["config_option"] = config_option
-            
+
         super().__init__(
             message,
             plugin_name="my_plugin",
@@ -471,17 +487,18 @@ class MyPluginConfigError(QuackPluginError):
 
 ```python
 from pathlib import Path
-from quack_core.errors import QuackFileNotFoundError, QuackFormatError
-from quack_core.errors.handlers import handle_errors
+from quack_core.lib.errors import QuackFileNotFoundError, QuackFormatError
+from quack_core.lib.errors.handlers import handle_errors
+
 
 @handle_errors(show_traceback=True)
 def process_json_file(file_path):
     path = Path(file_path)
-    
+
     # Check if file exists
     if not path.exists():
         raise QuackFileNotFoundError(path)
-    
+
     # Try to parse JSON
     try:
         with open(path, 'r') as f:
@@ -493,7 +510,7 @@ def process_json_file(file_path):
             message="Invalid JSON format",
             original_error=e
         )
-    
+
     # Process the data
     return transform_data(data)
 ```
@@ -502,19 +519,20 @@ def process_json_file(file_path):
 
 ```python
 import requests
-from quack_core.errors import (
+from quack_core.lib.errors import (
     QuackAuthenticationError,
     QuackApiError,
     QuackQuotaExceededError
 )
-from quack_core.errors.handlers import ErrorHandler
+from quack_core.lib.errors.handlers import ErrorHandler
+
 
 class ApiClient:
     def __init__(self, api_key, service_name):
         self.api_key = api_key
         self.service_name = service_name
         self.error_handler = ErrorHandler()
-    
+
     def get_data(self, endpoint, params=None):
         try:
             response = requests.get(
@@ -526,7 +544,7 @@ class ApiClient:
             return response.json()
         except requests.exceptions.HTTPError as e:
             status_code = e.response.status_code
-            
+
             if status_code == 401:
                 raise QuackAuthenticationError(
                     "Authentication failed - check API key",
@@ -555,7 +573,7 @@ class ApiClient:
                 api_method=endpoint,
                 original_error=e
             )
-    
+
     def process_with_error_handling(self, endpoint, params=None):
         try:
             return self.get_data(endpoint, params)
@@ -573,22 +591,23 @@ class ApiClient:
 ```python
 import yaml
 from pathlib import Path
-from quack_core.errors import (
+from quack_core.lib.errors import (
     QuackConfigurationError,
     QuackFileNotFoundError,
     QuackFormatError,
     QuackValidationError
 )
-from quack_core.errors.base import wrap_io_errors
+from quack_core.lib.errors.base import wrap_io_errors
+
 
 class ConfigManager:
     @wrap_io_errors
     def load_config(self, config_path):
         path = Path(config_path)
-        
+
         if not path.exists():
             raise QuackFileNotFoundError(path)
-        
+
         try:
             with open(path, 'r') as f:
                 config = yaml.safe_load(f)
@@ -599,39 +618,39 @@ class ConfigManager:
                 message="Invalid YAML format in configuration file",
                 original_error=e
             )
-        
+
         return config
-    
+
     def validate_config(self, config, config_path):
         errors = {}
-        
+
         # Check required sections
         if "api" not in config:
             errors.setdefault("api", []).append("Missing API section")
         elif "key" not in config["api"]:
             errors.setdefault("api.key", []).append("Missing API key")
-        
+
         if "settings" not in config:
             errors.setdefault("settings", []).append("Missing settings section")
-        
+
         # Validate specific settings
         if "settings" in config:
             settings = config["settings"]
-            
+
             if "max_retries" in settings and not isinstance(settings["max_retries"], int):
                 errors.setdefault("settings.max_retries", []).append(
                     "max_retries must be an integer"
                 )
-        
+
         if errors:
             raise QuackValidationError(
                 "Configuration validation failed",
                 path=config_path,
                 errors=errors
             )
-        
+
         return True
-    
+
     def get_validated_config(self, config_path):
         try:
             config = self.load_config(config_path)

@@ -11,6 +11,13 @@ VENV_NAME := .venv
 PROJECT_NAME := quack-core
 REPO_ROOT := $(shell pwd)
 PYTHON := $(REPO_ROOT)/$(VENV_NAME)/bin/python
+# Prefer venv python if present, otherwise fall back to system python3/python, otherwise blank
+PYTHON_BIN := $(shell \
+  if [ -x "$(PYTHON)" ]; then echo "$(PYTHON)"; \
+  elif command -v python3 >/dev/null 2>&1; then echo python3; \
+  elif command -v python >/dev/null 2>&1; then echo python; \
+  else echo ""; fi)
+
 
 # Test settings
 TEST_PATH := tests/
@@ -334,19 +341,72 @@ pre-commit: format lint test ## Run all checks before committing
 	@echo "${GREEN}✓ All checks passed${RESET}"
 
 .PHONY: structure
-structure: ## Show project structure
+structure: ## Show project structure (filtered + summary)
+	@echo "${YELLOW}Project Summary:${RESET}"
+	@echo "  Python: $$( [ -n "$(PYTHON_BIN)" ] && $(PYTHON_BIN) -V 2>/dev/null || echo 'n/a')"
+	@echo "  Git branch: $$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'n/a')"
+	@echo "  Files: $$(find . -type f -not -path './.git/*' -not -path './.venv/*' -not -path './_transient-files/*' -not -path './.idea/*' -not -path './.hypothesis/*' | wc -l | tr -d ' ')"
+	@echo "  Dirs:  $$(find . -type d -not -path './.git/*' -not -path './.venv/*' -not -path './_transient-files/*' -not -path './.idea/*' -not -path './.hypothesis/*' | wc -l | tr -d ' ')"
+	@echo ""
+	@$(MAKE) --no-print-directory structure-insights
+	@echo ""
+	@$(MAKE) --no-print-directory structure-tree
+
+.PHONY: structure-tree
+structure-tree:
 	@echo "${YELLOW}Current Project Structure:${RESET}"
 	@echo "${BLUE}"
-	@if command -v tree > /dev/null; then \
-		tree -a -I '.git|.venv|__pycache__|*.pyc|*.pyo|*.pyd|.pytest_cache|.ruff_cache|.coverage|htmlcov'; \
+	@IGNORE='\.git|\.venv|__pycache__|\.DS_Store|_transient-files|\.idea|\.hypothesis|\.pytest_cache|\.ruff_cache|\.mypy_cache|\.coverage|htmlcov|build|dist|.*\.egg-info'; \
+	if command -v tree > /dev/null; then \
+		tree -a -I "$$IGNORE"; \
 	else \
-		find . -not -path '*/\.*' -not -path '*.pyc' -not -path '*/__pycache__/*' \
-			-not -path './.venv/*' -not -path './build/*' -not -path './dist/*' \
+		find . \
+			-not -path './.git/*' \
+			-not -path './.venv/*' \
+			-not -path './__pycache__/*' \
+			-not -path './_transient-files/*' \
+			-not -path './.idea/*' \
+			-not -path './.hypothesis/*' \
+			-not -name '.DS_Store' \
+			-not -path './.pytest_cache/*' \
+			-not -path './.ruff_cache/*' \
+			-not -path './.mypy_cache/*' \
+			-not -path './htmlcov/*' \
+			-not -path './build/*' \
+			-not -path './dist/*' \
 			-not -path './*.egg-info/*' \
-			| sort | \
-			sed -e "s/[^-][^\/]*\// │   /g" -e "s/├── /│── /" -e "s/└── /└── /"; \
+			| sort; \
 	fi
 	@echo "${RESET}"
+
+.PHONY: structure-brief
+structure-brief: ## High-signal structure view (2 levels)
+	@echo "${YELLOW}High-signal Structure (2 levels):${RESET}"
+	@echo "${BLUE}"
+	@IGNORE='\.git|\.venv|__pycache__|\.DS_Store|_transient-files|\.idea|\.hypothesis|\.pytest_cache|\.ruff_cache|\.mypy_cache|\.coverage|htmlcov|build|dist|.*\.egg-info'; \
+	tree -a -L 3 -I "$$IGNORE" .
+	@echo "${RESET}"
+
+.PHONY: structure-insights
+structure-insights: ## Repo hotspots (largest dirs / file counts)
+	@echo "${YELLOW}Hotspots (by file count):${RESET}"
+	@find . -type f \
+		-not -path './.git/*' -not -path './.venv/*' \
+		-not -path './_transient-files/*' -not -path './.idea/*' -not -path './.hypothesis/*' \
+		| sed 's|^\./||' \
+		| awk -F/ '{print $$1}' \
+		| sort | uniq -c | sort -nr | head -n 12 \
+		| awk '{printf "  %-6s %s\n", $$1, $$2}'
+	@echo ""
+	@echo "${YELLOW}Largest subtrees (depth 2):${RESET}"
+	@find . -type f \
+		-not -path './.git/*' -not -path './.venv/*' \
+		-not -path './_transient-files/*' -not -path './.idea/*' -not -path './.hypothesis/*' \
+		| sed 's|^\./||' \
+		| awk -F/ 'NF>=2 {print $$1"/"$$2}' \
+		| sort | uniq -c | sort -nr | head -n 12 \
+		| awk '{printf "  %-6s %s\n", $$1, $$2}'
+
 
 # Additional targets remain unchanged
 .PHONY: prune-branches
@@ -432,70 +492,64 @@ add-paths: ## Add file paths as first-line comments to all Python files
 	@rm add_paths.py
 	@echo "${GREEN}✓ File paths added to all files${RESET}"
 
+# --- Flatten defaults (override on CLI) ---
+FLATTEN_OUT ?= _transient-files/flatten
+FLATTEN_EXT ?= .py,.yaml,.yml,.toml,.env,.example,.md
+FLATTEN_SKIP ?= .git,.venv,__pycache__,.mypy_cache,.pytest_cache,.ruff_cache,build,dist,.egg-info,node_modules
+
+# Default to repo root; override with: make flatten SCOPE=quack-core/src/quack_core/lib/fs
+FLATTEN_SCOPE ?= .
+
+# Cap output to keep it shareable; override with: make flatten MAX_BYTES=8000000
+MAX_BYTES ?= 4000000
+MAX_FILES ?=
+
+.PHONY: flatten-scope
+flatten-scope: ## Flatten a specific directory: make flatten-scope SCOPE=quack-core/src/quack_core/lib/fs
+	@test -n "$(SCOPE)" || (echo "Usage: make flatten-scope SCOPE=path/to/dir" && exit 1)
+	@$(PYTHON) scripts/flatten.py \
+		--mode scope \
+		--scope "$(SCOPE)" \
+		--out-dir "$(FLATTEN_OUT)" \
+		--extensions "$(FLATTEN_EXT)" \
+		--skip-dirs "$(FLATTEN_SKIP)" \
+		--exclude "flat.txt" \
+		--exclude "_transient-files/**" \
+		--max-bytes 4000000
+
+.PHONY: flatten-tree
+flatten-tree: ## Flatten one file per subdir: make flatten-tree SCOPE=quack-core/src/quack_core/lib/fs
+	@test -n "$(SCOPE)" || (echo "Usage: make flatten-tree SCOPE=path/to/dir" && exit 1)
+	@$(PYTHON) scripts/flatten.py \
+		--mode tree \
+		--scope "$(SCOPE)" \
+		--out-dir "$(FLATTEN_OUT)" \
+		--extensions "$(FLATTEN_EXT)" \
+		--skip-dirs "$(FLATTEN_SKIP)" \
+		--exclude "flat.txt" \
+		--exclude "_transient-files/**" \
+		--max-bytes 2500000
+
+.PHONY: flatten-clean
+flatten-clean: ## Remove transient flatten outputs
+	@rm -rf "$(FLATTEN_OUT)"
+
 .PHONY: flatten
-flatten: ## Concatenate project files into flat.txt
-	@echo "${BLUE}Flattening project files into flat.txt...${RESET}"
-	@echo 'import os' > flatten_files.py
-	@echo 'import sys' >> flatten_files.py
-	@echo 'import traceback' >> flatten_files.py
-	@echo '' >> flatten_files.py
-	@echo 'EXTENSIONS = (".py", ".yaml", ".yml", ".toml", ".env", ".example")' >> flatten_files.py
-	@echo 'SKIP_DIR_PARTS = (".git", ".venv", "__pycache__", ".mypy_cache", ".pytest_cache", ".ruff_cache", "build", "dist", ".egg-info")' >> flatten_files.py
-	@echo '' >> flatten_files.py
-	@echo 'def iter_files(root_dir="."):' >> flatten_files.py
-	@echo '    for root, dirs, files in os.walk(root_dir):' >> flatten_files.py
-	@echo '        # Prune unwanted dirs in-place for efficiency' >> flatten_files.py
-	@echo '        dirs[:] = [' >> flatten_files.py
-	@echo '            d for d in dirs' >> flatten_files.py
-	@echo '            if not any(skip in os.path.join(root, d) for skip in SKIP_DIR_PARTS)' >> flatten_files.py
-	@echo '        ]' >> flatten_files.py
-	@echo '' >> flatten_files.py
-	@echo '        for file in files:' >> flatten_files.py
-	@echo '            if not file.endswith(EXTENSIONS):' >> flatten_files.py
-	@echo '                continue' >> flatten_files.py
-	@echo '            filepath = os.path.join(root, file)' >> flatten_files.py
-	@echo '            # Avoid including the output file itself or this script' >> flatten_files.py
-	@echo '            if os.path.basename(filepath) in {"flat.txt", "flatten_files.py"}:' >> flatten_files.py
-	@echo '                continue' >> flatten_files.py
-	@echo '            yield filepath' >> flatten_files.py
-	@echo '' >> flatten_files.py
-	@echo 'def main():' >> flatten_files.py
-	@echo '    out_path = os.path.join(os.path.dirname(__file__), "flat.txt")' >> flatten_files.py
-	@echo '    print(f"Writing flattened output to {out_path!r}")' >> flatten_files.py
-	@echo '    try:' >> flatten_files.py
-	@echo '        files = sorted(iter_files("."))' >> flatten_files.py
-	@echo '        if not files:' >> flatten_files.py
-	@echo '            print("No matching files found. Nothing to do.")' >> flatten_files.py
-	@echo '            return' >> flatten_files.py
-	@echo '' >> flatten_files.py
-	@echo '        with open(out_path, "w", encoding="utf-8") as out:' >> flatten_files.py
-	@echo '            for idx, filepath in enumerate(files, start=1):' >> flatten_files.py
-	@echo '                relpath = os.path.relpath(filepath)' >> flatten_files.py
-	@echo '                print(f"[{idx}/{len(files)}] Adding {relpath}...")' >> flatten_files.py
-	@echo '                out.write("=" * 80 + "\\n")' >> flatten_files.py
-	@echo '                out.write(f"FILE: {relpath}\\n")' >> flatten_files.py
-	@echo '                out.write("=" * 80 + "\\n\\n")' >> flatten_files.py
-	@echo '                try:' >> flatten_files.py
-	@echo '                    with open(filepath, "r", encoding="utf-8", errors="replace") as f:' >> flatten_files.py
-	@echo '                        out.write(f.read())' >> flatten_files.py
-	@echo '                except Exception as e:' >> flatten_files.py
-	@echo '                    msg = f"[WARN] Could not read {relpath}: {e}"' >> flatten_files.py
-	@echo '                    print(msg)' >> flatten_files.py
-	@echo '                    out.write(f"\\n{msg}\\n")' >> flatten_files.py
-	@echo '                out.write("\\n\\n")' >> flatten_files.py
-	@echo '' >> flatten_files.py
-	@echo '        print(f"Done. Flattened {len(files)} files into {out_path}")' >> flatten_files.py
-	@echo '    except Exception as e:' >> flatten_files.py
-	@echo '        print(f"Fatal error: {e}")' >> flatten_files.py
-	@echo '        traceback.print_exc()' >> flatten_files.py
-	@echo '        sys.exit(1)' >> flatten_files.py
-	@echo '' >> flatten_files.py
-	@echo 'if __name__ == "__main__":' >> flatten_files.py
-	@echo '    main()' >> flatten_files.py
-	@chmod +x flatten_files.py
-	@$(PYTHON) flatten_files.py
-	@rm flatten_files.py
-	@echo "${GREEN}✓ Created flat.txt with concatenated project files${RESET}"
+flatten: ## Flatten files using scripts/flatten.py (defaults to repo root). Override: make flatten SCOPE=path
+	@echo "${BLUE}Flattening '$(FLATTEN_SCOPE)' into $(FLATTEN_OUT) (max $(MAX_BYTES) bytes)...${RESET}"
+	@mkdir -p "$(FLATTEN_OUT)"
+	@$(PYTHON) scripts/flatten.py \
+		--mode scope \
+		--scope "$(FLATTEN_SCOPE)" \
+		--out-dir "$(FLATTEN_OUT)" \
+		--extensions "$(FLATTEN_EXT)" \
+		--skip-dirs "$(FLATTEN_SKIP)" \
+		--exclude "flat.txt" \
+		--exclude "_transient-files/**" \
+		$(if $(MAX_FILES),--max-files $(MAX_FILES),) \
+		$(if $(MAX_BYTES),--max-bytes $(MAX_BYTES),)
+	@echo "${GREEN}✓ Done. See: $(FLATTEN_OUT)/manifest.md${RESET}"
+
 
 .PHONY: api-run
 api-run: ## Run HTTP adapter server

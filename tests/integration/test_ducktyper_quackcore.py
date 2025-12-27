@@ -1,7 +1,7 @@
 # tests/integration/test_ducktyper_quackcore.py
 import pytest
 from quack_core.plugins.registry import list_plugins, get_plugin
-from ducktyper.commands.list_cmd import list_tools
+from quack_chat.commands.list_cmd import list_tools
 
 
 def test_ducktyper_can_list_quackcore_plugins():

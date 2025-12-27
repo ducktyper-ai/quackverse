@@ -503,13 +503,14 @@ def process_large_files(self, folder_id):
 Use QuackCore's logging system for consistent logs:
 
 ```python
-from quack_core.logging import get_logger
+from quack_core.lib.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 def my_function(self):
     logger.debug("Starting operation")
-    
+
     try:
         # Operation
         logger.info("Operation completed successfully")

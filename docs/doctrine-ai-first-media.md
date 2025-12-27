@@ -10,13 +10,13 @@
 
 ## 1. Purpose
 
-This doctrine defines how an **AI-first media company** operates.
+This doctrine defines how an **AI-first knowledge-work company** operates.
 
 Not as a collection of tools.
 
 Not as a solo creator “hacking” productivity.
 
-But as a **media organization where AI replaces roles, not creativity**.
+But as an ** organization where AI replaces roles, not creativity**.
 
 The goal is to produce high-quality, repeatable, defensible media output with **minimal human overhead**, while maximizing learning, leverage, and long-term IP.
 

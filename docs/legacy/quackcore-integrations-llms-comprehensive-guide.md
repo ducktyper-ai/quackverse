@@ -116,7 +116,7 @@ You can initialize the service with default settings or customize it:
 
 ```python
 from quack_core.integrations.llms import LLMIntegration
-from quack_core.logging import LogLevel
+from quack_core.lib.logging import LogLevel
 
 # Default initialization
 llm_service = LLMIntegration()
@@ -124,12 +124,12 @@ llm_service.initialize()
 
 # Customized initialization
 custom_service = LLMIntegration(
-    provider="anthropic",               # Specify preferred provider
-    model="claude-3-opus-20240229",     # Specify model
-    api_key="your-api-key",             # Provide API key directly
-    config_path="./my_config.yaml",     # Custom config path
-    log_level=LogLevel.DEBUG,           # Set logging level
-    enable_fallback=True                # Enable fallback to other providers
+    provider="anthropic",  # Specify preferred provider
+    model="claude-3-opus-20240229",  # Specify model
+    api_key="your-api-key",  # Provide API key directly
+    config_path="./my_config.yaml",  # Custom config path
+    log_level=LogLevel.DEBUG,  # Set logging level
+    enable_fallback=True  # Enable fallback to other providers
 )
 custom_service.initialize()
 ```
@@ -610,7 +610,7 @@ The module provides consistent error handling with specialized error types:
 
 ```python
 from quack_core.integrations.llms import LLMIntegration, ChatMessage, RoleType
-from quack_core.errors import QuackApiError, QuackIntegrationError
+from quack_core.lib.errors import QuackApiError, QuackIntegrationError
 
 # Initialize the service
 llm_service = LLMIntegration()
@@ -618,39 +618,39 @@ llm_service.initialize()
 
 # Create messages
 messages = [
-    ChatMessage(role=RoleType.USER, content="Tell me a joke")
+   ChatMessage(role=RoleType.USER, content="Tell me a joke")
 ]
 
 try:
-    # Try to get a response
-    result = llm_service.chat(messages)
-    
-    if result.success:
-        print(f"AI response: {result.content}")
-    else:
-        print(f"Error in result: {result.error}")
-        
-        # Check for specific error cases
-        if "rate limit" in result.error.lower():
-            print("Hit rate limits, try again later")
-        elif "api key" in result.error.lower():
-            print("API key issue, check your configuration")
-        
+   # Try to get a response
+   result = llm_service.chat(messages)
+
+   if result.success:
+      print(f"AI response: {result.content}")
+   else:
+      print(f"Error in result: {result.error}")
+
+      # Check for specific error cases
+      if "rate limit" in result.error.lower():
+         print("Hit rate limits, try again later")
+      elif "api key" in result.error.lower():
+         print("API key issue, check your configuration")
+
 except QuackApiError as e:
-    # Handle API-specific errors (rate limits, authentication, etc.)
-    print(f"API Error: {e}")
-    print(f"Service: {e.service}")
-    print(f"Method: {e.api_method}")
-    
+   # Handle API-specific errors (rate limits, authentication, etc.)
+   print(f"API Error: {e}")
+   print(f"Service: {e.service}")
+   print(f"Method: {e.api_method}")
+
 except QuackIntegrationError as e:
-    # Handle integration-specific errors (configuration, setup, etc.)
-    print(f"Integration Error: {e}")
-    if hasattr(e, 'context') and e.context:
-        print(f"Context: {e.context}")
-        
+   # Handle integration-specific errors (configuration, setup, etc.)
+   print(f"Integration Error: {e}")
+   if hasattr(e, 'context') and e.context:
+      print(f"Context: {e.context}")
+
 except Exception as e:
-    # Handle other unexpected errors
-    print(f"Unexpected error: {e}")
+   # Handle other unexpected errors
+   print(f"Unexpected error: {e}")
 ```
 
 ## Best Practices
