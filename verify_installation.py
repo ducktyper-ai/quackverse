@@ -42,7 +42,7 @@ def main():
         print(f"  - {path}")
 
     print("\nChecking packages...")
-    packages = ["quack-core", "ducktyper", "quackster"]
+    packages = ["quack-core", "quack-chat", "quackster"]
     all_ok = True
 
     for package in packages:

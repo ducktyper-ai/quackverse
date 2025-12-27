@@ -14,8 +14,8 @@ def fix_imports(file_path):
         content = f.read()
 
     # Replace 'from tests.quack_core.' with 'from tests.'
-    content = content.replace('from ducktyper.src.ducktyper.', 'from ducktyper.')
-    content = content.replace('import src.ducktyper.', 'import ducktyper.')
+    content = content.replace('from quack-chat.src.quack-chat.', 'from quack-chat.')
+    content = content.replace('import src.quack-chat.', 'import quack-chat.')
 
     # Write the fixed content back to the file
     with open(file_path, 'w') as f:
@@ -34,7 +34,7 @@ def find_and_fix_test_files(directory):
                 with open(file_path, 'r') as f:
                     content = f.read()
 
-                if 'from src.ducktyper.' in content or 'import src.ducktyper.' in content:
+                if 'from src.quack-chat.' in content or 'import src.quack-chat.' in content:
                     fix_imports(file_path)
                     count += 1
 
@@ -43,7 +43,7 @@ def find_and_fix_test_files(directory):
 
 if __name__ == "__main__":
     # Get the quack-core tests directory
-    quackcore_tests_dir = Path("ducktyper/src/ducktyper")
+    quackcore_tests_dir = Path("quack-chat/src/quack_chat")
 
     if not quackcore_tests_dir.exists():
         print(f"Error: {quackcore_tests_dir} does not exist.")

@@ -12,7 +12,7 @@ import pytest
 REPO_ROOT = Path(__file__).parent.parent.parent
 
 # Add all src directories to Python path
-PACKAGES = ["quack-core", "ducktyper", "quackster"]
+PACKAGES = ["quack-core", "quack-chat", "quackster"]
 for package in PACKAGES:
     package_src = REPO_ROOT / package / "src"
     if package_src.exists() and str(package_src.parent) not in sys.path:

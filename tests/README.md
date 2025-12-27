@@ -51,7 +51,7 @@ This will run all tests in all packages with coverage reporting.
 
 ```bash
 make test-quack-core
-make test-ducktyper
+make test-quack-chat
 make test-quackster
 ```
 

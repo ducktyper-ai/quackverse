@@ -11,6 +11,13 @@ VENV_NAME := .venv
 PROJECT_NAME := quack-core
 REPO_ROOT := $(shell pwd)
 PYTHON := $(REPO_ROOT)/$(VENV_NAME)/bin/python
+# Prefer venv python if present, otherwise fall back to system python3/python, otherwise blank
+PYTHON_BIN := $(shell \
+  if [ -x "$(PYTHON)" ]; then echo "$(PYTHON)"; \
+  elif command -v python3 >/dev/null 2>&1; then echo python3; \
+  elif command -v python >/dev/null 2>&1; then echo python; \
+  else echo ""; fi)
+
 
 # Test settings
 TEST_PATH := tests/
@@ -334,19 +341,72 @@ pre-commit: format lint test ## Run all checks before committing
 	@echo "${GREEN}✓ All checks passed${RESET}"
 
 .PHONY: structure
-structure: ## Show project structure
+structure: ## Show project structure (filtered + summary)
+	@echo "${YELLOW}Project Summary:${RESET}"
+	@echo "  Python: $$( [ -n "$(PYTHON_BIN)" ] && $(PYTHON_BIN) -V 2>/dev/null || echo 'n/a')"
+	@echo "  Git branch: $$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'n/a')"
+	@echo "  Files: $$(find . -type f -not -path './.git/*' -not -path './.venv/*' -not -path './_transient-files/*' -not -path './.idea/*' -not -path './.hypothesis/*' | wc -l | tr -d ' ')"
+	@echo "  Dirs:  $$(find . -type d -not -path './.git/*' -not -path './.venv/*' -not -path './_transient-files/*' -not -path './.idea/*' -not -path './.hypothesis/*' | wc -l | tr -d ' ')"
+	@echo ""
+	@$(MAKE) --no-print-directory structure-insights
+	@echo ""
+	@$(MAKE) --no-print-directory structure-tree
+
+.PHONY: structure-tree
+structure-tree:
 	@echo "${YELLOW}Current Project Structure:${RESET}"
 	@echo "${BLUE}"
-	@if command -v tree > /dev/null; then \
-		tree -a -I '.git|.venv|__pycache__|*.pyc|*.pyo|*.pyd|.pytest_cache|.ruff_cache|.coverage|htmlcov'; \
+	@IGNORE='\.git|\.venv|__pycache__|\.DS_Store|_transient-files|\.idea|\.hypothesis|\.pytest_cache|\.ruff_cache|\.mypy_cache|\.coverage|htmlcov|build|dist|.*\.egg-info'; \
+	if command -v tree > /dev/null; then \
+		tree -a -I "$$IGNORE"; \
 	else \
-		find . -not -path '*/\.*' -not -path '*.pyc' -not -path '*/__pycache__/*' \
-			-not -path './.venv/*' -not -path './build/*' -not -path './dist/*' \
+		find . \
+			-not -path './.git/*' \
+			-not -path './.venv/*' \
+			-not -path './__pycache__/*' \
+			-not -path './_transient-files/*' \
+			-not -path './.idea/*' \
+			-not -path './.hypothesis/*' \
+			-not -name '.DS_Store' \
+			-not -path './.pytest_cache/*' \
+			-not -path './.ruff_cache/*' \
+			-not -path './.mypy_cache/*' \
+			-not -path './htmlcov/*' \
+			-not -path './build/*' \
+			-not -path './dist/*' \
 			-not -path './*.egg-info/*' \
-			| sort | \
-			sed -e "s/[^-][^\/]*\// │   /g" -e "s/├── /│── /" -e "s/└── /└── /"; \
+			| sort; \
 	fi
 	@echo "${RESET}"
+
+.PHONY: structure-brief
+structure-brief: ## High-signal structure view (2 levels)
+	@echo "${YELLOW}High-signal Structure (2 levels):${RESET}"
+	@echo "${BLUE}"
+	@IGNORE='\.git|\.venv|__pycache__|\.DS_Store|_transient-files|\.idea|\.hypothesis|\.pytest_cache|\.ruff_cache|\.mypy_cache|\.coverage|htmlcov|build|dist|.*\.egg-info'; \
+	tree -a -L 3 -I "$$IGNORE" .
+	@echo "${RESET}"
+
+.PHONY: structure-insights
+structure-insights: ## Repo hotspots (largest dirs / file counts)
+	@echo "${YELLOW}Hotspots (by file count):${RESET}"
+	@find . -type f \
+		-not -path './.git/*' -not -path './.venv/*' \
+		-not -path './_transient-files/*' -not -path './.idea/*' -not -path './.hypothesis/*' \
+		| sed 's|^\./||' \
+		| awk -F/ '{print $$1}' \
+		| sort | uniq -c | sort -nr | head -n 12 \
+		| awk '{printf "  %-6s %s\n", $$1, $$2}'
+	@echo ""
+	@echo "${YELLOW}Largest subtrees (depth 2):${RESET}"
+	@find . -type f \
+		-not -path './.git/*' -not -path './.venv/*' \
+		-not -path './_transient-files/*' -not -path './.idea/*' -not -path './.hypothesis/*' \
+		| sed 's|^\./||' \
+		| awk -F/ 'NF>=2 {print $$1"/"$$2}' \
+		| sort | uniq -c | sort -nr | head -n 12 \
+		| awk '{printf "  %-6s %s\n", $$1, $$2}'
+
 
 # Additional targets remain unchanged
 .PHONY: prune-branches
