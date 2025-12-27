@@ -1,3 +1,12 @@
+# === QV-LLM:BEGIN ===
+# path: scripts/verify_installation.py
+# role: module
+# neighbors: annotate_headers.py, fix_imports.py, fix_remaining_tests.py, flatten.py
+# exports: check_package, main
+# git_branch: refactor/newHeaders
+# git_commit: 0600815
+# === QV-LLM:END ===
+
 # verify_installation.py
 """Verify that all packages are correctly installed."""
 

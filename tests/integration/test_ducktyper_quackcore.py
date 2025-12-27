@@ -1,4 +1,12 @@
-# tests/integration/test_ducktyper_quackcore.py
+# === QV-LLM:BEGIN ===
+# path: tests/integration/test_ducktyper_quackcore.py
+# role: module
+# neighbors: __init__.py, conftest.py
+# exports: test_ducktyper_can_list_quackcore_plugins
+# git_branch: refactor/newHeaders
+# git_commit: 0600815
+# === QV-LLM:END ===
+
 import pytest
 from quack_core.plugins.registry import list_plugins, get_plugin
 from quack_chat.commands.list_cmd import list_tools

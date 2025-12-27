@@ -1,3 +1,12 @@
+# === QV-LLM:BEGIN ===
+# path: scripts/fix_remaining_tests.py
+# role: module
+# neighbors: annotate_headers.py, fix_imports.py, flatten.py, verify_installation.py
+# exports: fix_file_content
+# git_branch: refactor/newHeaders
+# git_commit: 0600815
+# === QV-LLM:END ===
+
 # fix_remaining_tests.py
 import os
 import re
