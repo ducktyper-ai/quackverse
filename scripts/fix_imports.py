@@ -4,7 +4,7 @@
 # neighbors: annotate_headers.py, fix_remaining_tests.py, flatten.py, verify_installation.py
 # exports: fix_imports, find_and_fix_test_files
 # git_branch: refactor/newHeaders
-# git_commit: 175956c
+# git_commit: 7d82586
 # === QV-LLM:END ===
 
 # fix_imports.py
