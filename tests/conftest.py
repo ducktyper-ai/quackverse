@@ -1,4 +1,11 @@
-# tests/conftest.py
+# === QV-LLM:BEGIN ===
+# path: tests/conftest.py
+# role: module
+# neighbors: __init__.py
+# git_branch: refactor/newHeaders
+# git_commit: 72778e2
+# === QV-LLM:END ===
+
 """
 Root level test configuration for QuackVerse monorepo.
 This sets up the Python path for tests across the entire monorepo.

@@ -1,23 +1,14 @@
-# quack-core/src/quack_core/prompt/strategies/__init__.py
+# === QV-LLM:BEGIN ===
+# path: quack-core/src/quack_core/prompt/strategies/__init__.py
+# module: quack_core.prompt.strategies.__init__
+# role: module
+# neighbors: core.py
+# git_branch: refactor/newHeaders
+# git_commit: 72778e2
+# === QV-LLM:END ===
+
 """
-Prompt strategies package for the PromptBooster.
+Prompt strategies package for the PromptService.
 
 This package contains various prompt enhancement strategies.
 """
-
-# Import all strategies to register them
-from . import (
-    multi_shot_structured,
-    react_agentic,
-    single_shot_structured,
-    task_decomposition,
-    zero_shot_cot,
-)
-
-__all__ = [
-    "multi_shot_structured",
-    "single_shot_structured",
-    "react_agentic",
-    "zero_shot_cot",
-    "task_decomposition",
-]

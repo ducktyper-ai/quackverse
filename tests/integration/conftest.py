@@ -1,4 +1,11 @@
-# tests/integration/conftest.py
+# === QV-LLM:BEGIN ===
+# path: tests/integration/conftest.py
+# role: module
+# neighbors: __init__.py, test_ducktyper_quackcore.py
+# git_branch: refactor/newHeaders
+# git_commit: 72778e2
+# === QV-LLM:END ===
+
 """
 Shared fixtures for integration tests across all packages.
 """

@@ -464,3 +464,16 @@ Quackchat is the human interaction interface.
 f-squared.ai owns the stories.
 
 The system compounds — even when people change.
+
+
+Doctrine rule: implement native integrations when they increase sovereign leverage
+Build an integration in quack_core when it:
+Reduces dependency on brittle glue (manual steps / SaaS UI clicking / tribal knowledge)
+Enables repeatable, automatable, auditable workflows (runs the same way every time)
+Improves portability across rollups (a capability that multiple businesses can reuse)
+Fits your system boundaries (config, credentials, logging, error model, results, CLI UX)
+And prefer n8n (or external endpoints) when:
+it’s mostly ad-hoc orchestration glue with lots of one-off branching per business
+it changes weekly and you don’t want it in core code
+it’s better represented as an operational playbook than a reusable capability
+This is about leverage + sovereignty, not pedagogy.

@@ -1,4 +1,13 @@
-# quack-core/src/quack_core/adapters/http/service.py
+# === QV-LLM:BEGIN ===
+# path: quack-core/src/quack_core/adapters/http/service.py
+# module: quack_core.adapters.http.service
+# role: service
+# neighbors: __init__.py, app.py, models.py, config.py, auth.py, dependencies.py (+1 more)
+# exports: run
+# git_branch: refactor/newHeaders
+# git_commit: 72778e2
+# === QV-LLM:END ===
+
 """
 Service utilities for running the HTTP adapter.
 """

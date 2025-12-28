@@ -1,4 +1,11 @@
-# quack-core/src/quack_core/integrations/__init__.py
+# === QV-LLM:BEGIN ===
+# path: quack-core/src/quack_core/integrations/__init__.py
+# module: quack_core.integrations.__init__
+# role: module
+# git_branch: refactor/newHeaders
+# git_commit: 72778e2
+# === QV-LLM:END ===
+
 """
 Integrations package for quack_core.
 

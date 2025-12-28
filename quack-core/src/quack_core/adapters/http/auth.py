@@ -1,6 +1,15 @@
-# quack-core/src/quack_core/adapters/http/auth.py
+# === QV-LLM:BEGIN ===
+# path: quack-core/src/quack_core/adapters/http/auth.py
+# module: quack_core.adapters.http.auth
+# role: adapters
+# neighbors: __init__.py, app.py, service.py, models.py, config.py, dependencies.py (+1 more)
+# exports: require_bearer, sign_payload
+# git_branch: refactor/newHeaders
+# git_commit: 72778e2
+# === QV-LLM:END ===
 
-# File: quack-core/src/quack-core/adapters/http/auth.py
+
+
 """
 Authentication utilities for the HTTP adapter.
 """
@@ -12,7 +21,7 @@ from typing import Optional
 
 from fastapi import HTTPException, Request
 
-from .config import HttpAdapterConfig
+from quack_core.adapters.http.config import HttpAdapterConfig
 
 
 def require_bearer(request: Request, cfg: HttpAdapterConfig) -> None:

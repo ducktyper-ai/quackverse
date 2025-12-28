@@ -1,4 +1,13 @@
-# quack-core/src/quack_core/adapters/http/routes/health.py
+# === QV-LLM:BEGIN ===
+# path: quack-core/src/quack_core/adapters/http/routes/health.py
+# module: quack_core.adapters.http.routes.health
+# role: adapters
+# neighbors: __init__.py, operations.py, jobs.py
+# exports: health_live, health_ready
+# git_branch: refactor/newHeaders
+# git_commit: 72778e2
+# === QV-LLM:END ===
+
 """
 Health check routes.
 """

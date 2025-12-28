@@ -1,4 +1,11 @@
-# quack-core/tests/test_prompt/__init__.py
+# === QV-LLM:BEGIN ===
+# path: quack-core/tests/test_prompt/__init__.py
+# role: tests
+# neighbors: conftest.py, test_booster.py, test_enhancer.py, test_integration.py, test_plugin.py, test_registry.py (+2 more)
+# git_branch: refactor/newHeaders
+# git_commit: 72778e2
+# === QV-LLM:END ===
+
 """
 Tests for the quack_core.prompt module.
 
