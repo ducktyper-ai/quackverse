@@ -1,15 +1,15 @@
 # === QV-LLM:BEGIN ===
-# path: quack-core/src/quack_core/workflow/mixins/save_output_mixin.py
-# module: quack_core.workflow.mixins.save_output_mixin
+# path: quack-runner/src/quack_runner/workflow/mixins/save_output_mixin.py
+# module: quack_runner.workflow.mixins.save_output_mixin
 # role: module
 # neighbors: __init__.py, integration_enabled.py, output_writer.py
 # exports: SaveOutputMixin
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 66ff061
+# git_commit: 0f9247b
 # === QV-LLM:END ===
 
 """
-Mixin providing output saving capability_models.
+Mixin providing output saving capabilities.
 
 This mixin leverages QuackCore's output writers and filesystem
 services to save workflow outputs in various formats.

@@ -1,10 +1,10 @@
 # === QV-LLM:BEGIN ===
-# path: quack-core/tests/test_workflow/runners/test_file_runner.py
+# path: quack-runner/tests/test_workflow/runners/test_file_runner.py
 # role: tests
 # neighbors: __init__.py
 # exports: TestFileWorkflowRunner, dummy_processor
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 66ff061
+# git_commit: 0f9247b
 # === QV-LLM:END ===
 
 """

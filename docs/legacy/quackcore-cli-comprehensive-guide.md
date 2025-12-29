@@ -624,7 +624,7 @@ This example demonstrates more advanced configuration usage:
 ```python
 #!/usr/bin/env python3
 """
-config_example.py - Demonstrates configuration capability_models
+config_example.py - Demonstrates configuration capabilities
 """
 
 import argparse

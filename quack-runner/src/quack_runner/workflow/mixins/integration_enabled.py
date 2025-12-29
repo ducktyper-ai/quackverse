@@ -1,11 +1,11 @@
 # === QV-LLM:BEGIN ===
-# path: quack-core/src/quack_core/workflow/mixins/integration_enabled.py
-# module: quack_core.workflow.mixins.integration_enabled
+# path: quack-runner/src/quack_runner/workflow/mixins/integration_enabled.py
+# module: quack_runner.workflow.mixins.integration_enabled
 # role: module
 # neighbors: __init__.py, output_writer.py, save_output_mixin.py
 # exports: IntegrationEnabledMixin
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 66ff061
+# git_commit: 0f9247b
 # === QV-LLM:END ===
 
 from __future__ import annotations

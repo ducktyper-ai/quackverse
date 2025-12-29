@@ -1,11 +1,11 @@
 # === QV-LLM:BEGIN ===
-# path: quack-core/src/quack_core/workflow/__init__.py
-# module: quack_core.workflow.__init__
+# path: quack-runner/src/quack_runner/workflow/__init__.py
+# module: quack_runner.workflow.__init__
 # role: module
 # neighbors: results.py
 # exports: FileWorkflowRunner, IntegrationEnabledMixin, DefaultOutputWriter, RemoteFileHandler, InputResult, OutputResult, FinalResult
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 66ff061
+# git_commit: 0f9247b
 # === QV-LLM:END ===
 
 """
@@ -36,7 +36,7 @@ __all__ = [
 from quack_core.workflow.mixins.integration_enabled import IntegrationEnabledMixin
 from quack_core.integrations.google.drive import GoogleDriveService
 from quack_core.workflow.runners.file_runner import FileWorkflowRunner
-from quack_core.capabilities.base import BaseQuackToolPlugin, IntegrationResult
+from quack_core.tools.base import BaseQuackToolPlugin, IntegrationResult
 from typing import Any
 
 class QuackMetadataTool(

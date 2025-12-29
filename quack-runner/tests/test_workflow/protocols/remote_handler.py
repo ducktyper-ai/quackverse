@@ -1,10 +1,10 @@
 # === QV-LLM:BEGIN ===
-# path: quack-core/tests/test_workflow/protocols/remote_handler.py
+# path: quack-runner/tests/test_workflow/protocols/remote_handler.py
 # role: protocols
 # neighbors: __init__.py
 # exports: Good, Bad, test_protocol_runtime_checkable
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 66ff061
+# git_commit: 0f9247b
 # === QV-LLM:END ===
 
 from pathlib import Path

@@ -1,11 +1,11 @@
 # === QV-LLM:BEGIN ===
-# path: quack-core/src/quack_core/workflow/output/base.py
-# module: quack_core.workflow.output.base
+# path: quack-runner/src/quack_runner/workflow/output/base.py
+# module: quack_runner.workflow.output.base
 # role: module
 # neighbors: __init__.py, writers.py
 # exports: OutputWriter
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 66ff061
+# git_commit: 0f9247b
 # === QV-LLM:END ===
 
 """

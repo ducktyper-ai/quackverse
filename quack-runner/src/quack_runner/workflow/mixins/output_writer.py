@@ -1,11 +1,11 @@
 # === QV-LLM:BEGIN ===
-# path: quack-core/src/quack_core/workflow/mixins/output_writer.py
-# module: quack_core.workflow.mixins.output_writer
+# path: quack-runner/src/quack_runner/workflow/mixins/output_writer.py
+# module: quack_runner.workflow.mixins.output_writer
 # role: module
 # neighbors: __init__.py, integration_enabled.py, save_output_mixin.py
 # exports: DefaultOutputWriter
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 66ff061
+# git_commit: 0f9247b
 # === QV-LLM:END ===
 
 from __future__ import annotations

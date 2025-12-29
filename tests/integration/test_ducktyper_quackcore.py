@@ -4,7 +4,7 @@
 # neighbors: __init__.py, conftest.py
 # exports: test_ducktyper_can_list_quackcore_plugins
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 66ff061
+# git_commit: 0f9247b
 # === QV-LLM:END ===
 
 import pytest
