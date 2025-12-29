@@ -4,7 +4,7 @@
 # neighbors: config_tooling_test.py, explicit_plugin_loading_example.py, http_adapter_usage.py
 # exports: ExampleTool, main
 # git_branch: refactor/toolkitWorkflow
-# git_commit: e4fa88d
+# git_commit: 21647d6
 # === QV-LLM:END ===
 
 """
@@ -18,6 +18,7 @@ import json
 from typing import Any
 
 from quack_core.integrations.core import IntegrationResult
+
 # Import the specific Google Drive service
 # Note: This is just for the example, in a real implementation you'd
 # use the actual import path for GoogleDriveService

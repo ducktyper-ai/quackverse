@@ -4,7 +4,7 @@
 # neighbors: minimal_runner.py, run_echo_on_file.py
 # exports: EchoRequest, EchoTool
 # git_branch: refactor/toolkitWorkflow
-# git_commit: e4fa88d
+# git_commit: 21647d6
 # === QV-LLM:END ===
 
 
@@ -21,11 +21,11 @@ Demonstrates:
 
 from pydantic import BaseModel
 
-# ✅ CORRECT: Import from quack_core.tools (canonical path)
-from quack_core.tools import BaseQuackTool, ToolContext
-
 # ✅ CORRECT: Import contracts
 from quack_core.contracts import CapabilityResult
+
+# ✅ CORRECT: Import from quack_core.tools (canonical path)
+from quack_core.tools import BaseQuackTool, ToolContext
 
 
 # Request model (in contracts in production)

@@ -4,7 +4,7 @@
 # neighbors: echo_tool.py, minimal_runner.py
 # exports: main
 # git_branch: refactor/toolkitWorkflow
-# git_commit: e4fa88d
+# git_commit: 21647d6
 # === QV-LLM:END ===
 
 
@@ -29,10 +29,9 @@ from pathlib import Path
 # Add parent to path for imports (example only - not needed in real code)
 sys.path.insert(0, str(Path(__file__).parent))
 
-from quack_core.contracts import EchoRequest, CapabilityStatus
-
 # Import the example tool
 from echo_tool import EchoTool
+from quack_core.contracts import CapabilityStatus, EchoRequest
 
 
 def main():
@@ -64,9 +63,9 @@ def main():
     # Import ToolRunner (this would normally be in quack_runner)
     # For this example, we'll create a simplified version inline
 
-    from quack_core.tools import ToolContext
+    from quack_core.contracts import RunManifest, ToolInfo, generate_run_id, utcnow
     from quack_core.lib.fs.service import standalone as fs
-    from quack_core.contracts import generate_run_id, RunManifest, ToolInfo, utcnow
+    from quack_core.tools import ToolContext
 
     # Initialize tool
     tool = EchoTool()
@@ -84,7 +83,7 @@ def main():
         metadata={"example": "file_based_execution"}
     )
 
-    print(f"🎯 Built ToolContext:")
+    print("🎯 Built ToolContext:")
     print(f"   run_id: {ctx.run_id}")
     print(f"   work_dir: {ctx.work_dir}")
     print(f"   output_dir: {ctx.output_dir}")
@@ -108,7 +107,7 @@ def main():
         preset="professional"
     )
 
-    print(f"📋 Built request:")
+    print("📋 Built request:")
     print(request.model_dump_json(indent=2))
     print()
 
@@ -117,13 +116,13 @@ def main():
     result = tool.run(request, ctx)
     finished_at = utcnow()
 
-    print(f"⚙️  Tool execution completed:")
+    print("⚙️  Tool execution completed:")
     print(f"   Status: {result.status}")
     print(f"   Message: {result.human_message}")
     print()
 
     if result.status == CapabilityStatus.success:
-        print(f"✅ Result data:")
+        print("✅ Result data:")
         print(f"   {result.data}")
         print()
 
@@ -139,11 +138,11 @@ def main():
 
         # Build manifest (runner responsibility)
         from quack_core.contracts import (
-            ManifestInput,
-            ArtifactRef,
             ArtifactKind,
+            ArtifactRef,
+            ManifestInput,
             StorageRef,
-            StorageScheme
+            StorageScheme,
         )
 
         input_artifact = ArtifactRef(
@@ -216,7 +215,7 @@ def main():
         print("This separation keeps tools pure and runners responsible for I/O!")
 
     else:
-        print(f"❌ Tool execution failed or was skipped:")
+        print("❌ Tool execution failed or was skipped:")
         print(f"   Status: {result.status}")
         print(f"   Message: {result.human_message}")
         if result.error:

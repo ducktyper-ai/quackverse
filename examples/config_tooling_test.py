@@ -4,7 +4,7 @@
 # neighbors: explicit_plugin_loading_example.py, http_adapter_usage.py, toolkit_usage.py
 # exports: MyConfig, main
 # git_branch: refactor/toolkitWorkflow
-# git_commit: e4fa88d
+# git_commit: 21647d6
 # === QV-LLM:END ===
 
 """
@@ -17,11 +17,12 @@ It is not intended to be included in the quack-core package.
 from pydantic import Field
 from quack_core.config.tooling import (
     QuackToolConfigModel,
-    load_tool_config,
-    update_tool_config,
-    setup_tool_logging,
     get_logger,
+    load_tool_config,
+    setup_tool_logging,
+    update_tool_config,
 )
+
 
 class MyConfig(QuackToolConfigModel):
     """Example tool-specific config model."""

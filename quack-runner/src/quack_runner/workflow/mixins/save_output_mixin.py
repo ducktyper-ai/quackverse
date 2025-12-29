@@ -5,30 +5,46 @@
 # neighbors: __init__.py, integration_enabled.py, output_writer.py
 # exports: SaveOutputMixin
 # git_branch: refactor/toolkitWorkflow
-# git_commit: e4fa88d
+# git_commit: 21647d6
 # === QV-LLM:END ===
 
 
 
 """
+⚠️ LEGACY - DEPRECATED - DO NOT USE ⚠️
+
 LEGACY: Output saving mixin.
 
 This mixin is for legacy FileWorkflowRunner only.
 ToolRunner (v2.0+) handles output writing internally.
 
 Deprecated: Will be removed in v4.0
+
+For new code, use:
+    from quack_runner.workflow import ToolRunner
+
+DO NOT import from here - use quack_runner.workflow.legacy if needed.
 """
 
-from __future__ import annotations
+import warnings
 
-import csv
+# Issue loud deprecation warning (fix blocker #1)
+warnings.warn(
+    "quack_runner.workflow.mixins.save_output_mixin is LEGACY and deprecated. "
+    "Use ToolRunner for new code. Import from quack_runner.workflow.legacy if you must use legacy. "
+    "This module will be removed in v4.0.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
 from collections.abc import Callable
 from datetime import UTC, datetime
 from io import StringIO
 from pathlib import Path
 from typing import Any, ClassVar
+import csv
 
-# Use new names (fix blocker #3)
+# Use new names
 from quack_runner.workflow.output import (
     JsonOutputWriter,
     OutputWriter,
@@ -40,35 +56,26 @@ class SaveOutputMixin:
     """
     LEGACY: Mixin providing methods to save output in different formats.
 
-    Deprecated: Use ToolRunner which handles output writing internally.
+    ⚠️ DEPRECATED - DO NOT USE IN NEW CODE ⚠️
+
     This is maintained for backward compatibility only.
+    Performs I/O directly (doctrine violation - acceptable only because legacy).
     """
 
     _writers_cache: ClassVar[dict[str, OutputWriter]] = {}
 
     @property
     def _output_writers(self) -> dict[str, OutputWriter]:
-        """
-        Registry of available output writers.
-
-        Returns:
-            Mapping of format names to OutputWriter instances.
-        """
+        """Registry of available output writers."""
         if not hasattr(type(self), '_writers_cache'):
             type(self)._writers_cache = {
                 "json": JsonOutputWriter(indent=2),
                 "yaml": YamlOutputWriter(),
             }
-
         return type(self)._writers_cache
 
     def _get_csv_writer(self) -> Callable[[Any, Path], Path]:
-        """
-        Get a function that can write CSV output.
-
-        Returns:
-            Function that writes data to a CSV file.
-        """
+        """Get a function that can write CSV output."""
 
         def write_csv(data: Any, path: Path) -> Path:
             from quack_core.lib.fs.service import standalone
@@ -92,12 +99,7 @@ class SaveOutputMixin:
         return write_csv
 
     def _get_text_writer(self) -> Callable[[Any, Path], Path]:
-        """
-        Get a function that can write text output.
-
-        Returns:
-            Function that writes data to a text file.
-        """
+        """Get a function that can write text output."""
 
         def write_text(data: Any, path: Path) -> Path:
             from quack_core.lib.fs.service import standalone
@@ -114,12 +116,7 @@ class SaveOutputMixin:
 
     @property
     def _format_handlers(self) -> dict[str, Callable[[Any, Path], Path]]:
-        """
-        Registry of all format handlers.
-
-        Returns:
-            Mapping of format names to handler functions.
-        """
+        """Registry of all format handlers."""
         handlers: dict[str, Callable[[Any, Path], Path]] = {}
 
         for format_name, writer in self._output_writers.items():
@@ -139,17 +136,7 @@ class SaveOutputMixin:
             output_path: str | Path,
             format: str | None = None
     ) -> Path:
-        """
-        Save the given output to a file.
-
-        Args:
-            output: The data to save
-            output_path: Path where to save the output
-            format: Output format (json, yaml, csv, txt)
-
-        Returns:
-            Path to the saved file
-        """
+        """Save the given output to a file."""
         output_path = Path(output_path)
 
         if format is None:

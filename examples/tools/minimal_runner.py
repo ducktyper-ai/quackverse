@@ -4,7 +4,7 @@
 # neighbors: echo_tool.py, run_echo_on_file.py
 # exports: run_tool_locally, main
 # git_branch: refactor/toolkitWorkflow
-# git_commit: e4fa88d
+# git_commit: 21647d6
 # === QV-LLM:END ===
 
 
@@ -22,14 +22,12 @@ This is NOT production code - it's a teaching example.
 Production code should use ToolRunner from quack_runner.workflow.
 """
 
+# Import the example tool
+from echo_tool import EchoTool
 from quack_core.contracts import (
-    CapabilityResult,
     EchoRequest,
 )
 from quack_core.tools import ToolContext
-
-# Import the example tool
-from echo_tool import EchoTool
 
 
 def run_tool_locally(tool_class, request):
@@ -117,12 +115,12 @@ def main():
     print()
     print("1. Write output artifact:")
     print(f"   - Data: {result.data}")
-    print(f"   - Format: determined by runner config")
+    print("   - Format: determined by runner config")
     print()
     print("2. Build RunManifest:")
     print(f"   - run_id: {result.run_id}")
     print(f"   - status: {result.status}")
-    print(f"   - outputs: [ArtifactRef(...)]")
+    print("   - outputs: [ArtifactRef(...)]")
     print()
     print("3. Persist manifest:")
     print("   - Write to manifest.json")

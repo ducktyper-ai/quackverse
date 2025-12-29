@@ -4,7 +4,7 @@
 # neighbors: config_tooling_test.py, http_adapter_usage.py, toolkit_usage.py
 # exports: example_1_discovery, example_2_explicit_loading, example_3_error_handling, example_4_configuration_driven, example_5_plugin_metadata, example_6_lifecycle_management, example_7_testing_pattern, main
 # git_branch: refactor/toolkitWorkflow
-# git_commit: e4fa88d
+# git_commit: 21647d6
 # === QV-LLM:END ===
 
 
@@ -24,9 +24,6 @@ Key concepts demonstrated:
 """
 
 import logging
-import sys
-from pathlib import Path
-from typing import Any
 
 # Configure logging to see what's happening
 logging.basicConfig(
