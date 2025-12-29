@@ -1,13 +1,3 @@
-# === QV-LLM:BEGIN ===
-# path: quack-runner/src/quack_runner/workflow/tool_runner.py
-# module: quack_runner.workflow.tool_runner
-# role: module
-# neighbors: __init__.py, results.py, legacy.py
-# exports: ToolRunner, serialize_output
-# git_branch: refactor/toolkitWorkflow
-# git_commit: 07a259e
-# === QV-LLM:END ===
-
 
 
 """
@@ -18,11 +8,12 @@ CapabilityResult) and file-based workflows (reading inputs, writing outputs).
 
 Responsibilities:
 - Build ToolContext with ALL required services
-- Load input files
+- Load input files (via fs for consistency)
+- Invoke lifecycle hooks (validate, pre_run, post_run, cleanup)
 - Call tool.run(request, ctx)
 - Translate CapabilityResult → RunManifest
 - Write output artifacts (with proper serialization)
-- Handle errors
+- Handle errors (with context preservation)
 
 The runner owns all I/O operations. Tools remain pure.
 """
@@ -32,7 +23,6 @@ from typing import Any, TYPE_CHECKING
 from datetime import datetime
 from dataclasses import is_dataclass, asdict
 import tempfile
-import os
 
 from quack_core.contracts import (
     CapabilityResult,
@@ -56,12 +46,13 @@ if TYPE_CHECKING:
     from quack_core.tools import BaseQuackTool
 
 
-def serialize_output(data: Any) -> Any:
+def serialize_output(data: Any, logger: Any | None = None) -> Any:
     """
     Serialize data to JSON-compatible format.
 
     Args:
         data: Data to serialize
+        logger: Optional logger for warnings
 
     Returns:
         JSON-serializable data
@@ -81,11 +72,16 @@ def serialize_output(data: Any) -> Any:
     if isinstance(data, (str, int, float, bool, type(None))):
         return data
     if isinstance(data, (list, tuple)):
-        return [serialize_output(item) for item in data]
+        return [serialize_output(item, logger) for item in data]
     if isinstance(data, dict):
-        return {k: serialize_output(v) for k, v in data.items()}
+        return {k: serialize_output(v, logger) for k, v in data.items()}
 
-    # Fallback: try to convert to string
+    # Fallback: try to convert to string (with warning - fix #6)
+    if logger:
+        logger.warning(
+            f"Serializing complex object of type {type(data).__name__} to string. "
+            f"This may lose structure. Consider using Pydantic model or dataclass."
+        )
     try:
         return str(data)
     except Exception as e:
@@ -101,12 +97,15 @@ class ToolRunner:
     This runner handles the complete lifecycle:
     1. Build ToolContext (with ALL services - no optionals)
     2. Initialize tool
-    3. Load input file(s)
-    4. Build request model
-    5. Call tool.run(request, ctx)
-    6. Translate CapabilityResult → RunManifest
-    7. Write outputs (if success, with proper serialization)
-    8. Return manifest
+    3. Invoke lifecycle hooks (validate, pre_run if available)
+    4. Load input file(s) via fs (consistent handling)
+    5. Build request model
+    6. Call tool.run(request, ctx)
+    7. Invoke post_run hook (if available)
+    8. Translate CapabilityResult → RunManifest
+    9. Write outputs (if success, with proper serialization)
+    10. Invoke cleanup hook (always, even on error)
+    11. Return manifest (with context preserved in errors)
 
     Example:
         >>> from quack_core.tools import BaseQuackTool
@@ -140,22 +139,35 @@ class ToolRunner:
         self.tool = tool
         self.logger = logger or get_logger(f"runner.{tool.name}")
 
+        # Check each lifecycle hook individually (fix #1 - safe detection)
+        self._has_validate = hasattr(tool, 'validate') and callable(
+            getattr(tool, 'validate'))
+        self._has_pre_run = hasattr(tool, 'pre_run') and callable(
+            getattr(tool, 'pre_run'))
+        self._has_post_run = hasattr(tool, 'post_run') and callable(
+            getattr(tool, 'post_run'))
+        self._has_cleanup = hasattr(tool, 'cleanup') and callable(
+            getattr(tool, 'cleanup'))
+
     def build_context(
             self,
             run_id: str,
             work_dir: str,
             output_dir: str,
+            services: dict[str, Any] | None = None,
             metadata: dict[str, Any] | None = None
     ) -> ToolContext:
         """
         Build a ToolContext for tool execution.
 
-        All services are required and provided by runner.
+        All core services are required and provided by runner.
+        Optional: services and metadata may be empty dicts.
 
         Args:
             run_id: Run ID (runner-generated)
             work_dir: Working directory (runner-created)
             output_dir: Output directory (runner-created)
+            services: Optional services dict (keyed by name)
             metadata: Optional metadata dict
 
         Returns:
@@ -169,6 +181,7 @@ class ToolRunner:
             fs=fs,
             work_dir=work_dir,
             output_dir=output_dir,
+            services=services or {},
             metadata=metadata or {}
         )
 
@@ -178,6 +191,7 @@ class ToolRunner:
             request_builder: Any,  # Callable[[str], BaseModel]
             output_dir: str | Path | None = None,
             work_dir: str | Path | None = None,
+            services: dict[str, Any] | None = None,
             metadata: dict[str, Any] | None = None
     ) -> RunManifest:
         """
@@ -190,6 +204,7 @@ class ToolRunner:
             request_builder: Function that builds request model from file content
             output_dir: Optional output directory (default: ./output)
             work_dir: Optional working directory (default: temp)
+            services: Optional services to provide to tool
             metadata: Optional metadata
 
         Returns:
@@ -211,9 +226,10 @@ class ToolRunner:
             output_dir = Path(output_dir)
         fs.create_directory(str(output_dir), exist_ok=True)
 
-        # Create work directory
+        # Create work directory (fix #6 - normalize tool name for temp dir)
+        safe_tool_name = self.tool.name.replace('.', '_').replace('/', '_')
         if work_dir is None:
-            work_dir = Path(tempfile.mkdtemp(prefix=f"quack_{self.tool.name}_"))
+            work_dir = Path(tempfile.mkdtemp(prefix=f"quack_{safe_tool_name}_"))
         else:
             work_dir = Path(work_dir)
             fs.create_directory(str(work_dir), exist_ok=True)
@@ -226,6 +242,7 @@ class ToolRunner:
             run_id=run_id,
             work_dir=str(work_dir),
             output_dir=str(output_dir),
+            services=services,
             metadata=metadata
         )
 
@@ -238,23 +255,43 @@ class ToolRunner:
             if init_result.status != CapabilityStatus.success:
                 return self._build_error_manifest(
                     ctx=ctx,
+                    input_path=input_path,
                     started_at=started_at,
                     error_msg=init_result.human_message,
                     error_code=init_result.machine_message or "QC_TOOL_INIT_ERROR"
                 )
 
-            # Load input file
+            # Check file exists (correct fs API)
             file_info = fs.get_file_info(str(input_path))
+            if not file_info.success:
+                return self._build_error_manifest(
+                    ctx=ctx,
+                    input_path=input_path,
+                    started_at=started_at,
+                    error_msg=f"Failed to check file: {file_info.error}",
+                    error_code="QC_IO_CHECK_ERROR"
+                )
+
             if not file_info.exists:
                 return self._build_error_manifest(
                     ctx=ctx,
+                    input_path=input_path,
                     started_at=started_at,
                     error_msg=f"Input file not found: {input_path}",
                     error_code="QC_IO_NOT_FOUND"
                 )
 
-            # Read content
-            content = Path(input_path).read_text(encoding="utf-8")
+            # Read content via fs (consistent handling)
+            read_result = fs.read_text(str(input_path))
+            if not read_result.success:
+                return self._build_error_manifest(
+                    ctx=ctx,
+                    input_path=input_path,
+                    started_at=started_at,
+                    error_msg=f"Failed to read file: {read_result.error}",
+                    error_code="QC_IO_READ_ERROR"
+                )
+            content = read_result.content
 
             # Build request model
             try:
@@ -262,12 +299,13 @@ class ToolRunner:
             except Exception as e:
                 return self._build_error_manifest(
                     ctx=ctx,
+                    input_path=input_path,
                     started_at=started_at,
                     error_msg=f"Failed to build request: {e}",
                     error_code="QC_VAL_INVALID"
                 )
 
-            # Create input artifact reference (use real path, not URI)
+            # Create input artifact reference
             input_artifact = ArtifactRef(
                 role=f"{self.tool.name}.input",
                 kind=ArtifactKind.intermediate,
@@ -278,8 +316,36 @@ class ToolRunner:
                 )
             )
 
+            # Lifecycle hook: validate (if available) (safe check - fix #1)
+            if self._has_validate:
+                validate_result = self.tool.validate(request, ctx)  # type: ignore
+                if validate_result.status != CapabilityStatus.success:
+                    return self._build_error_manifest(
+                        ctx=ctx,
+                        input_path=input_path,
+                        started_at=started_at,
+                        error_msg=validate_result.human_message or "Validation failed",
+                        error_code=validate_result.machine_message or "QC_VAL_FAILED"
+                    )
+
+            # Lifecycle hook: pre_run (if available) (safe check - fix #1)
+            if self._has_pre_run:
+                pre_result = self.tool.pre_run(request, ctx)  # type: ignore
+                if pre_result.status != CapabilityStatus.success:
+                    return self._build_error_manifest(
+                        ctx=ctx,
+                        input_path=input_path,
+                        started_at=started_at,
+                        error_msg=pre_result.human_message or "Pre-run failed",
+                        error_code=pre_result.machine_message or "QC_PRE_RUN_FAILED"
+                    )
+
             # Run tool
             result = self.tool.run(request, ctx)
+
+            # Lifecycle hook: post_run (if available) (safe check - fix #1)
+            if self._has_post_run:
+                result = self.tool.post_run(request, result, ctx)  # type: ignore
 
             # Track timing
             finished_at = utcnow()
@@ -289,7 +355,7 @@ class ToolRunner:
             return self._build_manifest_from_result(
                 result=result,
                 ctx=ctx,
-                input_path=input_path,  # Pass real path, not artifact
+                input_path=input_path,
                 input_artifact=input_artifact,
                 started_at=started_at,
                 finished_at=finished_at,
@@ -301,16 +367,25 @@ class ToolRunner:
             self.logger.exception(f"Tool execution failed: {e}")
             return self._build_error_manifest(
                 ctx=ctx,
+                input_path=input_path,
                 started_at=started_at,
                 error_msg=f"Unexpected error: {e}",
                 error_code="QC_EXEC_ERROR"
             )
 
+        finally:
+            # Lifecycle hook: cleanup (always, even on error) (safe check - fix #1)
+            if self._has_cleanup:
+                try:
+                    self.tool.cleanup(ctx)  # type: ignore
+                except Exception as e:
+                    self.logger.warning(f"Cleanup failed: {e}")
+
     def _build_manifest_from_result(
             self,
             result: CapabilityResult,
             ctx: ToolContext,
-            input_path: Path,  # Real filesystem path
+            input_path: Path,
             input_artifact: ArtifactRef,
             started_at: datetime,
             finished_at: datetime,
@@ -343,12 +418,12 @@ class ToolRunner:
 
         # Only write outputs on SUCCESS (invariant)
         if result.status == CapabilityStatus.success and result.data is not None:
-            # Use input_path.stem for output naming (not URI)
+            # Use input_path.stem for output naming
             output_path = output_dir / f"{input_path.stem}.{ctx.run_id}.json"
 
-            # Serialize output with proper error handling
+            # Serialize output with proper error handling (with warnings - fix #6)
             try:
-                serialized = serialize_output(result.data)
+                serialized = serialize_output(result.data, self.logger)
             except ValueError as e:
                 # Serialization failed - treat as error
                 return RunManifest(
@@ -366,7 +441,7 @@ class ToolRunner:
                         code="QC_OUT_SERIALIZE_ERROR",
                         message=str(e)
                     ),
-                    metadata=result.metadata
+                    metadata=dict(ctx.metadata, **result.metadata)
                 )
 
             write_result = fs.write_json(
@@ -388,6 +463,9 @@ class ToolRunner:
                 outputs.append(output_artifact)
 
         # Build manifest (enforces invariants: skip/error → empty outputs)
+        # Merge runner context into manifest metadata
+        manifest_metadata = dict(ctx.metadata, **result.metadata)
+
         return RunManifest(
             run_id=ctx.run_id,
             tool=tool_info,
@@ -400,19 +478,43 @@ class ToolRunner:
             intermediates=[],
             logs=result.logs,
             error=result.error,
-            metadata=result.metadata
+            metadata=manifest_metadata
         )
 
     def _build_error_manifest(
             self,
             ctx: ToolContext,
+            input_path: Path | None,
             started_at: datetime,
             error_msg: str,
             error_code: str
     ) -> RunManifest:
-        """Build error manifest."""
+        """
+        Build error manifest (with context preserved).
+        """
         finished_at = utcnow()
         duration_sec = (finished_at - started_at).total_seconds()
+
+        # Include input artifact even on error if path exists (fix #2 - use fs)
+        inputs: list[ManifestInput] = []
+        if input_path:
+            file_info = fs.get_file_info(str(input_path))
+            if file_info.success and file_info.exists:
+                input_artifact = ArtifactRef(
+                    role=f"{self.tool.name}.input",
+                    kind=ArtifactKind.intermediate,
+                    content_type="text/plain",
+                    storage=StorageRef(
+                        scheme=StorageScheme.local,
+                        uri=f"file://{input_path.absolute()}"
+                    )
+                )
+                inputs.append(ManifestInput(
+                    name="source",
+                    artifact=input_artifact,
+                    required=True,
+                    description="Input file"
+                ))
 
         return RunManifest(
             run_id=ctx.run_id,
@@ -424,7 +526,7 @@ class ToolRunner:
             finished_at=finished_at,
             duration_sec=duration_sec,
             status=CapabilityStatus.error,
-            inputs=[],
+            inputs=inputs,  # Include input if available
             outputs=[],  # Empty (error invariant)
             intermediates=[],
             logs=[],
@@ -432,5 +534,5 @@ class ToolRunner:
                 code=error_code,
                 message=error_msg
             ),
-            metadata={}
+            metadata=ctx.metadata  # Preserve runner context
         )

@@ -3,11 +3,21 @@
 # module: quack_runner.workflow.mixins.output_writer
 # role: module
 # neighbors: __init__.py, integration_enabled.py, save_output_mixin.py
-# exports: WorkflowError, DefaultOutputWriter
+# exports: WorkflowError, LegacyWorkflowOutputWriter
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 07a259e
+# git_commit: 234aec0
 # === QV-LLM:END ===
 
+
+
+"""
+LEGACY: Output writer for FileWorkflowRunner.
+
+Renamed from DefaultOutputWriter to avoid collision with output/writers.py.
+
+This is for legacy FileWorkflowRunner only.
+ToolRunner (v2.0+) handles output writing internally.
+"""
 
 from __future__ import annotations
 
@@ -21,10 +31,15 @@ class WorkflowError(Exception):
     """Custom exception for workflow-related errors."""
 
 
-class DefaultOutputWriter:
+class LegacyWorkflowOutputWriter:
     """
-    Default implementation for writing workflow outputs.
-    Provides common output writing functionality with support for different data types.
+    LEGACY: Output writer for FileWorkflowRunner.
+
+    Renamed from "DefaultOutputWriter" in v2.0 to avoid naming collision
+    with output/writers.JsonOutputWriter.
+
+    This class writes OutputResult → FinalResult for legacy workflows.
+    ToolRunner doesn't use this.
     """
 
     def write(self, result: OutputResult, input_path: Path,
@@ -84,3 +99,7 @@ class DefaultOutputWriter:
                 "output_size": len(str(data))
             }
         )
+
+
+# Backward compatibility alias (will be removed in v4.0)
+DefaultOutputWriter = LegacyWorkflowOutputWriter

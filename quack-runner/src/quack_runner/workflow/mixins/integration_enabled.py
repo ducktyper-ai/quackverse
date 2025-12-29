@@ -5,7 +5,7 @@
 # neighbors: __init__.py, output_writer.py, save_output_mixin.py
 # exports: IntegrationEnabledMixin
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 07a259e
+# git_commit: 234aec0
 # === QV-LLM:END ===
 
 from __future__ import annotations
