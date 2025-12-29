@@ -3,6 +3,6 @@
 # role: module
 # neighbors: conftest.py, test_ducktyper_quackcore.py
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 234aec0
+# git_commit: de0fa70
 # === QV-LLM:END ===
 

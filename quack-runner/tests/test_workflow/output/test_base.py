@@ -4,7 +4,7 @@
 # neighbors: __init__.py, test_writers.py
 # exports: test_base_is_abstract
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 234aec0
+# git_commit: de0fa70
 # === QV-LLM:END ===
 
 import pytest

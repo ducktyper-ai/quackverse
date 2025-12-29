@@ -4,7 +4,7 @@
 # neighbors: minimal_runner.py, run_echo_on_file.py
 # exports: EchoRequest, EchoTool
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 234aec0
+# git_commit: de0fa70
 # === QV-LLM:END ===
 
 
