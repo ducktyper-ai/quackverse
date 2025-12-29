@@ -5,13 +5,14 @@
 # neighbors: __init__.py, writers.py
 # exports: OutputWriter
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 21a4e25
+# git_commit: 82e6d2b
 # === QV-LLM:END ===
+
 
 """
 Abstract base class for output writers.
 
-This module defines the common interface for all output writers in quack_core.
+This module defines the common interface for all output writers in quack_runner.
 Output writers are responsible for serializing and persisting data to files in
 various formats.
 """

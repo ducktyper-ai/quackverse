@@ -5,13 +5,15 @@
 # neighbors: __init__.py, integration_enabled.py, output_writer.py
 # exports: SaveOutputMixin
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 21a4e25
+# git_commit: 82e6d2b
 # === QV-LLM:END ===
+
+
 
 """
 Mixin providing output saving capabilities.
 
-This mixin leverages QuackCore's output writers and filesystem
+This mixin leverages QuackRunner's output writers and filesystem
 services to save workflow outputs in various formats.
 """
 
@@ -24,7 +26,7 @@ from io import StringIO
 from pathlib import Path
 from typing import Any, ClassVar
 
-from quack_core.workflow.output import (
+from quack_runner.workflow.output import (
     DefaultOutputWriter,
     OutputWriter,
     YAMLOutputWriter,
@@ -35,7 +37,7 @@ class SaveOutputMixin:
     """
     Mixin providing methods to save output in different formats.
 
-    This mixin leverages QuackCore's filesystem services and output
+    This mixin leverages QuackRunner's filesystem services and output
     writers to provide a consistent interface for saving data in
     different formats.
     """

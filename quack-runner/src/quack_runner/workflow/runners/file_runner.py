@@ -5,9 +5,27 @@
 # neighbors: __init__.py
 # exports: WorkflowError, FileWorkflowRunner
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 21a4e25
+# git_commit: 82e6d2b
 # === QV-LLM:END ===
 
+
+"""
+LEGACY: File workflow runner for backward compatibility.
+
+This runner is maintained for backward compatibility with tools that use
+the old pattern (process_content instead of run).
+
+For NEW tools (using BaseQuackTool with run()), use ToolRunner instead:
+    from quack_runner.workflow import ToolRunner
+
+Migration path:
+1. v2.0-2.x: Both FileWorkflowRunner and ToolRunner work
+2. v3.0: FileWorkflowRunner deprecated
+3. v4.0: FileWorkflowRunner removed
+
+This file is kept UNCHANGED from the original implementation to maintain
+backward compatibility during migration.
+"""
 
 from __future__ import annotations
 
@@ -18,8 +36,8 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 from quack_core.lib.logging import get_logger
-from quack_core.workflow.protocols.remote_handler import RemoteFileHandler
-from quack_core.workflow.results import FinalResult, InputResult, OutputResult
+from quack_runner.workflow.protocols.remote_handler import RemoteFileHandler
+from quack_runner.workflow.results import FinalResult, InputResult, OutputResult
 
 
 class WorkflowError(Exception):
@@ -31,18 +49,28 @@ T = TypeVar('T')  # Type for processor content
 
 class FileWorkflowRunner:
     """
-    Runner for file-based workflows.
+    LEGACY: Runner for file-based workflows using process_content pattern.
 
-    Manages the entire file processing lifecycle: input resolution, content loading,
-    processing, and output writing. Supports both local and remote files.
+    ⚠️  DEPRECATED: Use ToolRunner for new tools that implement run() method.
+
+    This runner manages the entire file processing lifecycle for LEGACY tools:
+    - Input resolution (local/remote files)
+    - Content loading
+    - Processing via process_content callback
+    - Output writing
+
+    For NEW tools (BaseQuackTool with run()), use ToolRunner instead.
+
+    Maintained for backward compatibility with existing tools during migration.
     """
 
     def __init__(
-        self,
-        processor: Callable[[Any, dict[str, Any]], tuple[bool, dict[str, Any], str | None] | OutputResult | dict | Any],
-        remote_handler: RemoteFileHandler | None = None,
-        output_writer: Any | None = None,
-        logger: Any | None = None,
+            self,
+            processor: Callable[[Any, dict[str, Any]], tuple[bool, dict[
+                str, Any], str | None] | OutputResult | dict | Any],
+            remote_handler: RemoteFileHandler | None = None,
+            output_writer: Any | None = None,
+            logger: Any | None = None,
     ) -> None:
         """
         Initialize the workflow runner.
@@ -99,7 +127,8 @@ class FileWorkflowRunner:
         # 1) Existence check via FS stub
         info = fs.get_file_info(path_str)
         if not info.success or not info.exists:
-            raise WorkflowError(f"Failed to read file content: file does not exist: {path_str}")
+            raise WorkflowError(
+                f"Failed to read file content: file does not exist: {path_str}")
 
         # 2) Detect extension
         ext_res = fs.get_extension(path_str)
@@ -146,7 +175,7 @@ class FileWorkflowRunner:
             return OutputResult(success=False, content=None, raw_text=str(e))
 
     def write_output(
-        self, result: OutputResult, input_path: Path, options: dict[str, Any]
+            self, result: OutputResult, input_path: Path, options: dict[str, Any]
     ) -> FinalResult:
         """
         Write the processing result to output.

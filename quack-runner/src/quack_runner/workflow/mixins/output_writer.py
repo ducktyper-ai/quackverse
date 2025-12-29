@@ -3,18 +3,22 @@
 # module: quack_runner.workflow.mixins.output_writer
 # role: module
 # neighbors: __init__.py, integration_enabled.py, save_output_mixin.py
-# exports: DefaultOutputWriter
+# exports: WorkflowError, DefaultOutputWriter
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 21a4e25
+# git_commit: 82e6d2b
 # === QV-LLM:END ===
+
 
 from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
 
-from quack_core.workflow.results import FinalResult, OutputResult
-from quack_core.workflow.runners.file_runner import WorkflowError
+from quack_runner.workflow.results import FinalResult, OutputResult
+
+
+class WorkflowError(Exception):
+    """Custom exception for workflow-related errors."""
 
 
 class DefaultOutputWriter:

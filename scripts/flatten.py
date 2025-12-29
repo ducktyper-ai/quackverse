@@ -5,7 +5,7 @@
 # neighbors: annotate_headers.py, fix_imports.py, fix_remaining_tests.py, verify_installation.py
 # exports: FileStat, should_skip_dir, iter_files, safe_slug, read_text_file, count_lines, flatten_to_file, write_manifest (+1 more)
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 21a4e25
+# git_commit: 82e6d2b
 # === QV-LLM:END ===
 
 from __future__ import annotations

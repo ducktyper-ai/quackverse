@@ -1,3 +1,13 @@
+# === QV-LLM:BEGIN ===
+# path: quack-runner/src/quack_runner/workflow/tool_runner.py
+# module: quack_runner.workflow.tool_runner
+# role: module
+# neighbors: __init__.py, results.py
+# exports: ToolRunner
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 82e6d2b
+# === QV-LLM:END ===
+
 
 
 """

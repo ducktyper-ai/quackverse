@@ -5,8 +5,10 @@
 # neighbors: __init__.py, base.py
 # exports: DefaultOutputWriter, YAMLOutputWriter
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 21a4e25
+# git_commit: 82e6d2b
 # === QV-LLM:END ===
+
+
 
 """
 Implementation of OutputWriter classes for various file formats.
@@ -22,7 +24,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from quack_core.workflow.output.base import OutputWriter
+from quack_runner.workflow.output.base import OutputWriter
 
 # Try importing yaml, set to None if not available
 try:

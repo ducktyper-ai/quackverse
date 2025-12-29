@@ -5,11 +5,13 @@
 # neighbors: base.py, writers.py
 # exports: OutputWriter, DefaultOutputWriter, YAMLOutputWriter
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 21a4e25
+# git_commit: 82e6d2b
 # === QV-LLM:END ===
 
+
+
 """
-Output writing functionality for QuackCore workflows.
+Output writing functionality for QuackRunner workflows.
 
 This module provides a flexible system for writing workflow outputs in various formats.
 It defines a common interface (OutputWriter) and provides concrete implementations
@@ -24,8 +26,8 @@ Future extensions:
 - BinaryWriter family: PDF, Excel, PNG, JPEG
 """
 
-from quack_core.workflow.output.base import OutputWriter
-from quack_core.workflow.output.writers import DefaultOutputWriter, YAMLOutputWriter
+from quack_runner.workflow.output.base import OutputWriter
+from quack_runner.workflow.output.writers import DefaultOutputWriter, YAMLOutputWriter
 
 __all__ = [
     "OutputWriter",
