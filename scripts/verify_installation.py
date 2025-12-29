@@ -24,7 +24,7 @@ def check_package(package_name):
 
         # Check expected submodules
         if package_name == 'quack-core':
-            submodules = ["config", "fs", "plugins"]
+            submodules = ["config", "fs", "modules"]
             for submodule in submodules:
                 try:
                     full_name = f"{package_name}.{submodule}"
