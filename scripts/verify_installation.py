@@ -4,7 +4,7 @@
 # neighbors: annotate_headers.py, fix_imports.py, fix_remaining_tests.py, flatten.py
 # exports: check_package, main
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 82e6d2b
+# git_commit: 07a259e
 # === QV-LLM:END ===
 
 # verify_installation.py

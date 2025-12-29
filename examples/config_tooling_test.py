@@ -1,10 +1,10 @@
 # === QV-LLM:BEGIN ===
-# path: quack-core/examples/config_tooling_test.py
+# path: examples/config_tooling_test.py
 # role: module
 # neighbors: explicit_plugin_loading_example.py, http_adapter_usage.py, toolkit_usage.py
 # exports: MyConfig, main
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 82e6d2b
+# git_commit: 07a259e
 # === QV-LLM:END ===
 
 """

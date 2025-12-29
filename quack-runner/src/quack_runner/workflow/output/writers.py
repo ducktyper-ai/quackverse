@@ -3,18 +3,24 @@
 # module: quack_runner.workflow.output.writers
 # role: module
 # neighbors: __init__.py, base.py
-# exports: DefaultOutputWriter, YAMLOutputWriter
+# exports: JsonOutputWriter, YamlOutputWriter
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 82e6d2b
+# git_commit: 07a259e
 # === QV-LLM:END ===
 
 
-
 """
-Implementation of OutputWriter classes for various file formats.
+Output writer implementations (v2.0 - renamed for clarity).
 
-This module provides concrete implementations of the OutputWriter abstract
-base class for writing data to different file formats, such as JSON and YAML.
+LEGACY NOTE: These were previously called "DefaultOutputWriter" and
+"YAMLOutputWriter", which conflicted with mixins/output_writer.py.
+
+New names (v2.0+):
+- JsonOutputWriter (was DefaultOutputWriter)
+- YamlOutputWriter (was YAMLOutputWriter)
+
+These are for legacy FileWorkflowRunner only.
+ToolRunner handles output writing internally.
 """
 
 from __future__ import annotations
@@ -33,17 +39,16 @@ except ImportError:
     yaml = None
 
 
-class DefaultOutputWriter(OutputWriter):
+class JsonOutputWriter(OutputWriter):
     """
-    Default output writer that saves data as JSON.
+    Output writer that saves data as JSON.
 
-    This writer serializes data to JSON format and ensures the output
-    file has the correct extension.
+    Renamed from DefaultOutputWriter in v2.0 for clarity.
     """
 
     def __init__(self, indent: int = 2) -> None:
         """
-        Initialize a DefaultOutputWriter instance.
+        Initialize a JsonOutputWriter instance.
 
         Args:
             indent: Number of spaces for JSON indentation (default: 2)
@@ -74,7 +79,7 @@ class DefaultOutputWriter(OutputWriter):
             ValueError: If the data cannot be serialized to JSON
         """
         if not isinstance(data, (dict, list)):
-            raise ValueError("DefaultOutputWriter expects dict or list data types")
+            raise ValueError("JsonOutputWriter expects dict or list data types")
 
         # Try to serialize to ensure it's JSON-compatible
         try:
@@ -99,7 +104,6 @@ class DefaultOutputWriter(OutputWriter):
             ValueError: If the data is not valid for JSON serialization
             RuntimeError: If the write operation fails
         """
-
         from quack_core.lib.fs.service import standalone
         # Validate the data first
         self.validate_data(data)
@@ -164,17 +168,16 @@ class DefaultOutputWriter(OutputWriter):
             }
 
 
-class YAMLOutputWriter(OutputWriter):
+class YamlOutputWriter(OutputWriter):
     """
     Output writer that saves data as YAML.
 
-    This writer serializes data to YAML format and ensures the output
-    file has the correct extension.
+    Renamed from YAMLOutputWriter in v2.0 for consistency.
     """
 
     def __init__(self, default_flow_style: bool = False) -> None:
         """
-        Initialize a YAMLOutputWriter instance.
+        Initialize a YamlOutputWriter instance.
 
         Args:
             default_flow_style: Use flow style for collections if True (default: False)
@@ -209,10 +212,10 @@ class YAMLOutputWriter(OutputWriter):
             ImportError: If PyYAML is not available
         """
         if yaml is None:
-            raise ImportError("PyYAML is required for YAMLOutputWriter")
+            raise ImportError("PyYAML is required for YamlOutputWriter")
 
         if not isinstance(data, (dict, list)):
-            raise ValueError("YAMLOutputWriter expects dict or list data types")
+            raise ValueError("YamlOutputWriter expects dict or list data types")
 
         # Try to serialize to ensure it's YAML-compatible
         try:
@@ -303,3 +306,8 @@ class YAMLOutputWriter(OutputWriter):
                 "success": False,
                 "error": str(e)
             }
+
+
+# Backward compatibility aliases (will be removed in v4.0)
+DefaultOutputWriter = JsonOutputWriter
+YAMLOutputWriter = YamlOutputWriter
