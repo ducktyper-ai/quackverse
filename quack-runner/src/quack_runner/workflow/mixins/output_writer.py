@@ -5,7 +5,7 @@
 # neighbors: __init__.py, integration_enabled.py, save_output_mixin.py
 # exports: WorkflowError, LegacyWorkflowOutputWriter
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 21647d6
+# git_commit: 7e3e554
 # === QV-LLM:END ===
 
 

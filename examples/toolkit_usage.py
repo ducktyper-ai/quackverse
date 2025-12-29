@@ -4,7 +4,7 @@
 # neighbors: config_tooling_test.py, explicit_plugin_loading_example.py, http_adapter_usage.py
 # exports: ExampleTool, main
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 21647d6
+# git_commit: 7e3e554
 # === QV-LLM:END ===
 
 """
