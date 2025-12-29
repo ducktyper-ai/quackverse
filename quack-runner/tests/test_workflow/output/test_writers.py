@@ -4,7 +4,7 @@
 # neighbors: __init__.py, test_base.py
 # exports: StubFS, patch_fs_service, test_default_writer_basics, test_default_writer_write_wrapper, test_yaml_writer
 # git_branch: refactor/toolkitWorkflow
-# git_commit: de0fa70
+# git_commit: e4fa88d
 # === QV-LLM:END ===
 
 from pathlib import Path
