@@ -2,10 +2,10 @@
 # path: quack-runner/src/quack_runner/workflow/mixins/output_writer.py
 # module: quack_runner.workflow.mixins.output_writer
 # role: module
-# neighbors: __init__.py, integration_enabled.py, save_output_mixin.py
+# neighbors: __init__.py, save_output_mixin.py
 # exports: WorkflowError, LegacyWorkflowOutputWriter
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 7e3e554
+# git_commit: 223dfb0
 # === QV-LLM:END ===
 
 

@@ -5,9 +5,8 @@
 # neighbors: __init__.py, results.py, legacy.py
 # exports: ToolRunner, serialize_output, get_content_type_from_extension
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 7e3e554
+# git_commit: 223dfb0
 # === QV-LLM:END ===
-
 
 
 """
@@ -39,7 +38,7 @@ from quack_core.contracts import (
     utcnow,
     CapabilityError,
 )
-from quack_core.tools.context import ToolContext
+from quack_core.tools import ToolContext  # Fix #3: canonical import
 from quack_core.lib.logging import get_logger
 from quack_core.lib.fs.service import standalone as fs
 
@@ -52,24 +51,53 @@ def serialize_output(
         logger: Any | None = None,
         allow_string_fallback: bool = False
 ) -> Any:
-    """Serialize data to JSON with strict constraints."""
-    if hasattr(data, 'model_dump'):
+    """
+    Serialize data to JSON with strict constraints.
+
+    Supports safe common types (fix #5):
+    - Path → str
+    - datetime → ISO format
+    - Enum → value
+    """
+    # Import here to avoid circular deps
+    from datetime import datetime
+    from enum import Enum
+    from pathlib import Path as PathType
+    from pydantic import BaseModel as PydanticBaseModel
+
+    # Pydantic model (fix #5 - isinstance check, not hasattr)
+    if isinstance(data, PydanticBaseModel):
         return data.model_dump()
 
+    # Dataclass
     if is_dataclass(data):
         return asdict(data)
 
+    # Primitives
     if isinstance(data, (str, int, float, bool, type(None))):
         return data
 
+    # Common safe types (fix #5)
+    if isinstance(data, PathType):
+        return str(data)
+
+    if isinstance(data, datetime):
+        return data.isoformat()
+
+    if isinstance(data, Enum):
+        return data.value
+
+    # Set → list
     if isinstance(data, set):
         if logger:
             logger.debug("Converting set to list for JSON serialization")
         return [serialize_output(item, logger, allow_string_fallback) for item in data]
 
+    # List/tuple
     if isinstance(data, (list, tuple)):
         return [serialize_output(item, logger, allow_string_fallback) for item in data]
 
+    # Dict (enforce string keys)
     if isinstance(data, dict):
         result = {}
         for k, v in data.items():
@@ -83,13 +111,16 @@ def serialize_output(
             result[k] = serialize_output(v, logger, allow_string_fallback)
         return result
 
+    # Unknown type: reject by default
     if not allow_string_fallback:
         raise ValueError(
             f"Cannot serialize object of type {type(data).__name__} to JSON. "
             f"Use Pydantic model, dataclass, or JSON-compatible types. "
+            f"Supported extras: Path, datetime, Enum. "
             f"Object: {data!r}"
         )
 
+    # Fallback: stringify (only if explicitly allowed)
     if logger:
         logger.warning(
             f"Serializing complex object of type {type(data).__name__} to string. "
@@ -170,13 +201,18 @@ class ToolRunner:
     def run_on_file(
             self,
             input_path: str | Path,
-            request_builder: Callable[[str | bytes], BaseModel],
+            request_builder: Callable[[str | bytes], Any],  # Fix #4: Any, not BaseModel
             output_dir: str | Path | None = None,
             work_dir: str | Path | None = None,
             services: dict[str, Any] | None = None,
             metadata: dict[str, Any] | None = None
     ) -> RunManifest:
-        """Run tool on a file input."""
+        """
+        Run tool on a file input.
+
+        Args:
+            request_builder: Builds request from file content (fix #4: returns Any, tool validates)
+        """
         input_path = Path(input_path)
 
         created_temp_dir = False
@@ -259,11 +295,26 @@ class ToolRunner:
                     error_code="QC_IO_NOT_FOUND"
                 )
 
+            # Detect if binary file (fix #1 + #6 - SVG is text, not binary)
             ext_result = fs.get_extension(str(input_path))
             extension = (ext_result.data or "").lower().lstrip(".")
 
-            binary_extensions = {"bin", "pdf", "png", "jpg", "jpeg", "gif", "zip",
-                                 "tar", "gz"}
+            # Binary extensions (non-UTF8-safe files)
+            # Note: SVG is text/XML, not binary (fix #6)
+            binary_extensions = {
+                # Archives
+                "bin", "zip", "tar", "gz", "bz2", "xz", "7z", "rar",
+                # Documents
+                "pdf", "docx", "xlsx", "pptx",
+                # Images (raster/binary)
+                "png", "jpg", "jpeg", "gif", "webp", "bmp", "tiff", "ico",
+                # Audio/Video
+                "mp3", "wav", "ogg", "flac", "mp4", "avi", "mkv", "webm", "mov",
+                # Data formats
+                "parquet", "feather", "arrow", "avro",
+                # Other
+                "exe", "dll", "so", "dylib", "wasm"
+            }
             is_binary = extension in binary_extensions
 
             content: str | bytes
@@ -539,6 +590,11 @@ class ToolRunner:
 
         metadata = ctx.metadata if ctx else {}
 
+        # Always include error in metadata for easier grepping (fix #4)
+        error_metadata = dict(metadata)
+        error_metadata["error_code"] = error_code
+        error_metadata["error_message"] = error_msg
+
         return RunManifest(
             run_id=ctx.run_id if ctx else generate_run_id(),
             tool=ToolInfo(
@@ -557,5 +613,5 @@ class ToolRunner:
                 code=error_code,
                 message=error_msg
             ),
-            metadata=metadata
+            metadata=error_metadata  # Includes error details
         )

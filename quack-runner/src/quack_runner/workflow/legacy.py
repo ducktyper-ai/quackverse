@@ -5,10 +5,8 @@
 # neighbors: __init__.py, results.py, tool_runner.py
 # exports: FileWorkflowRunner, LegacyWorkflowOutputWriter, DefaultOutputWriter, RemoteFileHandler, InputResult, OutputResult, FinalResult
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 7e3e554
+# git_commit: 223dfb0
 # === QV-LLM:END ===
-
-
 
 """
 LEGACY API for backward compatibility.
@@ -72,18 +70,22 @@ __all__ = [
     'FinalResult',
 ]
 
-# IMPORTANT NOTE on removed exports (fix #4):
+# CRITICAL: NO LEGACY INTEGRATION MIXIN (blocker #2 resolution)
 #
-# IntegrationEnabledMixin from quack_runner was a doctrine violation.
-# It used global service registry and automatic initialization.
+# quack_runner/workflow/mixins/integration_enabled.py DOES NOT EXIST.
+# It was removed entirely - no warning version, no legacy version.
 #
-# The doctrine-compliant version is in quack_core.tools and works differently:
+# Why removed completely:
+# - Used global service registry (get_integration_service)
+# - Did lazy initialization and auto-init
+# - Violated doctrine even as "legacy"
+# - Too easy to import accidentally
+#
+# The ONLY integration mixin is quack_core.tools.IntegrationEnabledMixin:
 # - Services from ctx.services (runner-provided)
 # - No global registry
 # - No auto-initialization
+# - Type-safe with optional validation
 #
-# If you need the old behavior, it was removed in v2.0.
-# You must migrate to the new pattern or extract from git history.
-#
-# DO NOT create a new legacy integration mixin - it violates doctrine
-# even in "legacy" context. Tools should migrate to new pattern.
+# DO NOT re-create a runner version. It will not be accepted.
+# Tools must use the doctrine-compliant version in quack_core.tools.

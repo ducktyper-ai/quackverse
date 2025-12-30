@@ -2,10 +2,10 @@
 # path: quack-runner/src/quack_runner/workflow/mixins/save_output_mixin.py
 # module: quack_runner.workflow.mixins.save_output_mixin
 # role: module
-# neighbors: __init__.py, integration_enabled.py, output_writer.py
+# neighbors: __init__.py, output_writer.py
 # exports: SaveOutputMixin
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 7e3e554
+# git_commit: 223dfb0
 # === QV-LLM:END ===
 
 

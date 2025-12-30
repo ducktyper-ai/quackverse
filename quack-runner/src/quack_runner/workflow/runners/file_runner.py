@@ -5,12 +5,15 @@
 # neighbors: __init__.py
 # exports: WorkflowError, FileWorkflowRunner
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 7e3e554
+# git_commit: 223dfb0
 # === QV-LLM:END ===
+
 
 
 """
 LEGACY: File workflow runner for backward compatibility.
+
+⚠️ DEPRECATED - Use ToolRunner for new code ⚠️
 
 This runner is maintained for backward compatibility with tools that use
 the old pattern (process_content instead of run).
@@ -20,11 +23,13 @@ For NEW tools (using BaseQuackTool with run()), use ToolRunner instead:
 
 Migration path:
 1. v2.0-2.x: Both FileWorkflowRunner and ToolRunner work
-2. v3.0: FileWorkflowRunner deprecated
+2. v3.0: FileWorkflowRunner deprecated (with warnings)
 3. v4.0: FileWorkflowRunner removed
 
-This file is kept UNCHANGED from the original implementation to maintain
-backward compatibility during migration.
+IMPORTANT: This file has been UPDATED to use the correct FS contract:
+- Uses result.data.exists pattern (not flat info.exists)
+- This maintains consistency with new ToolRunner
+- Original behavior preserved, just contract-correct
 """
 
 from __future__ import annotations
@@ -124,11 +129,14 @@ class FileWorkflowRunner:
 
         path_str = str(input_result.path)
 
-        # 1) Existence check via FS stub
-        info = fs.get_file_info(path_str)
-        if not info.success or not info.exists:
-            raise WorkflowError(
-                f"Failed to read file content: file does not exist: {path_str}")
+        # 1) Existence check via FS (FIX: use correct contract - blocker #3)
+        info_result = fs.get_file_info(path_str)
+        if not info_result.success:
+            raise WorkflowError(f"Failed to check file: {info_result.error}")
+
+        info = info_result.data
+        if not info or not info.exists:
+            raise WorkflowError(f"File does not exist: {path_str}")
 
         # 2) Detect extension
         ext_res = fs.get_extension(path_str)
