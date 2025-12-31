@@ -5,14 +5,15 @@
 # neighbors: __init__.py, results.py, legacy.py
 # exports: ToolRunner
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 5d876e8
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 
 """
 Tool runner for executing QuackTools with file I/O.
 
-Recommendation B: Normalizes result.metadata for JSON-safe manifests.
+IMPORTANT (Must-fix C): Tools must be fully initialized before use.
+ToolRunner requires tool.name to be set (non-None).
 """
 
 from pathlib import Path
@@ -46,7 +47,16 @@ if TYPE_CHECKING:
 
 
 class ToolRunner:
-    """Runner for executing tools with file I/O and manifest generation."""
+    """
+    Runner for executing tools with file I/O and manifest generation.
+
+    REQUIREMENTS (Must-fix C):
+    - Tool MUST be fully initialized (tool.name and tool.version set)
+    - Tool MUST have non-None name attribute
+    - Tool SHOULD inherit from BaseQuackTool (but duck-typed tools work if compliant)
+
+    The runner will raise TypeError if tool.name is None.
+    """
 
     def __init__(
             self,
@@ -54,9 +64,28 @@ class ToolRunner:
             logger: Any | None = None,
             cleanup_work_dir: bool = True
     ):
-        """Initialize the tool runner."""
+        """
+        Initialize the tool runner.
+
+        Args:
+            tool: Fully initialized tool instance (name must be non-None)
+            logger: Optional logger
+            cleanup_work_dir: Whether to cleanup temporary work directories
+
+        Raises:
+            TypeError: If tool.name is None or not set
+        """
+        # Must-fix #1: Validate tool.name early
+        tool_name = getattr(tool, "name", None)
+        if not tool_name:
+            raise TypeError(
+                f"ToolRunner requires tool.name to be set (non-None). "
+                f"Got tool of type {type(tool).__name__} with name={tool_name!r}. "
+                f"Ensure tool is fully initialized before passing to ToolRunner."
+            )
+
         self.tool = tool
-        self.logger = logger or get_logger(f"runner.{tool.name}")
+        self.logger = logger or get_logger(f"runner.{tool.name}")  # Now safe
         self.cleanup_work_dir = cleanup_work_dir
 
         self._has_validate = hasattr(tool, 'validate') and callable(
@@ -79,7 +108,7 @@ class ToolRunner:
         """Build a ToolContext for tool execution."""
         return ToolContext(
             run_id=run_id,
-            tool_name=self.tool.name,
+            tool_name=self.tool.name,  # Safe - validated in __init__
             tool_version=self.tool.version,
             logger=self.logger,
             fs=fs,
@@ -120,6 +149,7 @@ class ToolRunner:
                 error_code="QC_IO_MKDIR_ERROR"
             )
 
+        # Safe - tool.name validated in __init__
         safe_tool_name = self.tool.name.replace('.', '_').replace('/', '_')
         if work_dir is None:
             temp_dir_path = Path(tempfile.mkdtemp(prefix=f"quack_{safe_tool_name}_"))
@@ -316,7 +346,7 @@ class ToolRunner:
     ) -> RunManifest:
         """Build RunManifest from CapabilityResult."""
 
-        # Recommendation B: Normalize result.metadata for JSON-safe manifests
+        # Normalize result.metadata for JSON-safe manifests
         try:
             safe_result_metadata = normalize_for_json(
                 result.metadata,
@@ -335,7 +365,7 @@ class ToolRunner:
         tool_info = ToolInfo(
             name=self.tool.name,
             version=self.tool.version,
-            metadata=safe_result_metadata  # Recommendation B: Use normalized version
+            metadata=safe_result_metadata
         )
 
         manifest_input = ManifestInput(
@@ -346,8 +376,6 @@ class ToolRunner:
         )
 
         outputs: list[ArtifactRef] = []
-
-        # Recommendation B: Merge normalized metadata
         manifest_metadata = dict(ctx.metadata, **safe_result_metadata)
 
         if result.status == CapabilityStatus.success and result.data is None:
