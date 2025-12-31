@@ -3,27 +3,24 @@
 # module: quack_runner.workflow.tool_runner
 # role: module
 # neighbors: __init__.py, results.py, legacy.py
-# exports: ToolRunner, serialize_output, get_content_type_from_extension
+# exports: ToolRunner
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 7e3e554
+# git_commit: 223dfb0
 # === QV-LLM:END ===
-
 
 
 """
 Tool runner for executing QuackTools with file I/O.
 
-FIXED: Uses correct FS contract (result.data.exists pattern) everywhere.
+Fix #2: Uses shared serialization logic (no drift with ToolContext).
+Fix #4: Uses centralized binary detection (no duplication).
 """
 
 from pathlib import Path
 from typing import Any, TYPE_CHECKING, Callable
 from datetime import datetime
-from dataclasses import is_dataclass, asdict
 import tempfile
 import shutil
-
-from pydantic import BaseModel
 
 from quack_core.contracts import (
     CapabilityResult,
@@ -39,88 +36,18 @@ from quack_core.contracts import (
     utcnow,
     CapabilityError,
 )
-from quack_core.tools.context import ToolContext
+from quack_core.tools import ToolContext
 from quack_core.lib.logging import get_logger
 from quack_core.lib.fs.service import standalone as fs
 
+# Fix #2: Import shared serialization (prevents drift with ToolContext)
+from quack_core.lib.serialization import normalize_for_json
+
+# Fix #4: Import centralized MIME utilities
+from quack_core.lib.mime import is_binary_extension, get_content_type
+
 if TYPE_CHECKING:
     from quack_core.tools import BaseQuackTool
-
-
-def serialize_output(
-        data: Any,
-        logger: Any | None = None,
-        allow_string_fallback: bool = False
-) -> Any:
-    """Serialize data to JSON with strict constraints."""
-    if hasattr(data, 'model_dump'):
-        return data.model_dump()
-
-    if is_dataclass(data):
-        return asdict(data)
-
-    if isinstance(data, (str, int, float, bool, type(None))):
-        return data
-
-    if isinstance(data, set):
-        if logger:
-            logger.debug("Converting set to list for JSON serialization")
-        return [serialize_output(item, logger, allow_string_fallback) for item in data]
-
-    if isinstance(data, (list, tuple)):
-        return [serialize_output(item, logger, allow_string_fallback) for item in data]
-
-    if isinstance(data, dict):
-        result = {}
-        for k, v in data.items():
-            if not isinstance(k, str):
-                if logger:
-                    logger.warning(
-                        f"Dict key {k!r} (type {type(k).__name__}) is not a string. "
-                        f"Converting to string for JSON serialization."
-                    )
-                k = str(k)
-            result[k] = serialize_output(v, logger, allow_string_fallback)
-        return result
-
-    if not allow_string_fallback:
-        raise ValueError(
-            f"Cannot serialize object of type {type(data).__name__} to JSON. "
-            f"Use Pydantic model, dataclass, or JSON-compatible types. "
-            f"Object: {data!r}"
-        )
-
-    if logger:
-        logger.warning(
-            f"Serializing complex object of type {type(data).__name__} to string. "
-            f"This may lose structure."
-        )
-    try:
-        return str(data)
-    except Exception as e:
-        raise ValueError(
-            f"Cannot serialize output of type {type(data).__name__} to JSON: {e}."
-        )
-
-
-def get_content_type_from_extension(extension: str) -> str:
-    """Get MIME type from file extension."""
-    type_map = {
-        'txt': 'text/plain',
-        'json': 'application/json',
-        'xml': 'application/xml',
-        'html': 'text/html',
-        'pdf': 'application/pdf',
-        'png': 'image/png',
-        'jpg': 'image/jpeg',
-        'jpeg': 'image/jpeg',
-        'gif': 'image/gif',
-        'zip': 'application/zip',
-        'tar': 'application/x-tar',
-        'gz': 'application/gzip',
-        'bin': 'application/octet-stream',
-    }
-    return type_map.get(extension.lower(), 'application/octet-stream')
 
 
 class ToolRunner:
@@ -170,7 +97,7 @@ class ToolRunner:
     def run_on_file(
             self,
             input_path: str | Path,
-            request_builder: Callable[[str | bytes], BaseModel],
+            request_builder: Callable[[str | bytes], Any],
             output_dir: str | Path | None = None,
             work_dir: str | Path | None = None,
             services: dict[str, Any] | None = None,
@@ -238,7 +165,7 @@ class ToolRunner:
                     error_code=init_result.machine_message or "QC_TOOL_INIT_ERROR"
                 )
 
-            # FIX: Use correct FS contract (result.data.exists pattern)
+            # Check file exists
             file_info_result = fs.get_file_info(str(input_path))
             if not file_info_result.success:
                 return self._build_error_manifest(
@@ -259,12 +186,12 @@ class ToolRunner:
                     error_code="QC_IO_NOT_FOUND"
                 )
 
+            # Detect if binary file (Fix #4 - use centralized logic)
             ext_result = fs.get_extension(str(input_path))
             extension = (ext_result.data or "").lower().lstrip(".")
 
-            binary_extensions = {"bin", "pdf", "png", "jpg", "jpeg", "gif", "zip",
-                                 "tar", "gz"}
-            is_binary = extension in binary_extensions
+            # Fix #4: Use centralized binary detection
+            is_binary = is_binary_extension(extension)
 
             content: str | bytes
             content_type: str
@@ -280,7 +207,7 @@ class ToolRunner:
                         error_code="QC_IO_READ_ERROR"
                     )
                 content = read_result.content
-                content_type = get_content_type_from_extension(extension)
+                content_type = get_content_type(extension)  # Fix #4: centralized
             else:
                 read_result = fs.read_text(str(input_path))
                 if not read_result.success:
@@ -292,7 +219,7 @@ class ToolRunner:
                         error_code="QC_IO_READ_ERROR"
                     )
                 content = read_result.content
-                content_type = get_content_type_from_extension(
+                content_type = get_content_type(
                     extension) if extension else "text/plain"
 
             try:
@@ -421,9 +348,15 @@ class ToolRunner:
             output_path = output_dir / f"{input_path.stem}.{ctx.run_id}.json"
 
             try:
-                serialized = serialize_output(result.data, self.logger,
-                                              allow_string_fallback=False)
-            except ValueError as e:
+                # Fix #2: Use shared serialization (same logic as ToolContext)
+                serialized = normalize_for_json(
+                    result.data,
+                    path="output",
+                    allow_pydantic=True,
+                    allow_string_fallback=False,  # Strict by default
+                    logger=self.logger
+                )
+            except TypeError as e:
                 return RunManifest(
                     run_id=ctx.run_id,
                     tool=tool_info,
@@ -511,14 +444,15 @@ class ToolRunner:
                 description="Input file"
             ))
         elif input_path:
-            # FIX: Use correct FS contract (result.data.exists pattern)
             file_info_result = fs.get_file_info(str(input_path))
             if file_info_result.success and file_info_result.data:
                 file_info = file_info_result.data
                 if file_info.exists:
                     ext_result = fs.get_extension(str(input_path))
                     extension = (ext_result.data or "").lower().lstrip(".")
-                    content_type = get_content_type_from_extension(
+
+                    # Fix #4: Use centralized content type detection
+                    content_type = get_content_type(
                         extension) if extension else "application/octet-stream"
 
                     input_artifact = ArtifactRef(
@@ -537,7 +471,11 @@ class ToolRunner:
                         description="Input file"
                     ))
 
-        metadata = ctx.metadata if ctx else {}
+        metadata = dict(ctx.metadata) if ctx else {}
+
+        # Always include error in metadata for easier grepping
+        metadata["error_code"] = error_code
+        metadata["error_message"] = error_msg
 
         return RunManifest(
             run_id=ctx.run_id if ctx else generate_run_id(),
