@@ -5,15 +5,14 @@
 # neighbors: __init__.py, results.py, legacy.py
 # exports: ToolRunner
 # git_branch: refactor/toolkitWorkflow
-# git_commit: 223dfb0
+# git_commit: 5d876e8
 # === QV-LLM:END ===
 
 
 """
 Tool runner for executing QuackTools with file I/O.
 
-Fix #2: Uses shared serialization logic (no drift with ToolContext).
-Fix #4: Uses centralized binary detection (no duplication).
+Recommendation B: Normalizes result.metadata for JSON-safe manifests.
 """
 
 from pathlib import Path
@@ -39,11 +38,7 @@ from quack_core.contracts import (
 from quack_core.tools import ToolContext
 from quack_core.lib.logging import get_logger
 from quack_core.lib.fs.service import standalone as fs
-
-# Fix #2: Import shared serialization (prevents drift with ToolContext)
 from quack_core.lib.serialization import normalize_for_json
-
-# Fix #4: Import centralized MIME utilities
 from quack_core.lib.mime import is_binary_extension, get_content_type
 
 if TYPE_CHECKING:
@@ -165,7 +160,6 @@ class ToolRunner:
                     error_code=init_result.machine_message or "QC_TOOL_INIT_ERROR"
                 )
 
-            # Check file exists
             file_info_result = fs.get_file_info(str(input_path))
             if not file_info_result.success:
                 return self._build_error_manifest(
@@ -186,11 +180,9 @@ class ToolRunner:
                     error_code="QC_IO_NOT_FOUND"
                 )
 
-            # Detect if binary file (Fix #4 - use centralized logic)
             ext_result = fs.get_extension(str(input_path))
             extension = (ext_result.data or "").lower().lstrip(".")
 
-            # Fix #4: Use centralized binary detection
             is_binary = is_binary_extension(extension)
 
             content: str | bytes
@@ -207,7 +199,7 @@ class ToolRunner:
                         error_code="QC_IO_READ_ERROR"
                     )
                 content = read_result.content
-                content_type = get_content_type(extension)  # Fix #4: centralized
+                content_type = get_content_type(extension)
             else:
                 read_result = fs.read_text(str(input_path))
                 if not read_result.success:
@@ -323,10 +315,27 @@ class ToolRunner:
             output_dir: Path
     ) -> RunManifest:
         """Build RunManifest from CapabilityResult."""
+
+        # Recommendation B: Normalize result.metadata for JSON-safe manifests
+        try:
+            safe_result_metadata = normalize_for_json(
+                result.metadata,
+                path="result.metadata",
+                allow_pydantic=True,
+                allow_string_fallback=False,
+                logger=self.logger
+            )
+        except TypeError as e:
+            self.logger.warning(
+                f"Tool {self.tool.name} returned non-JSON-safe metadata: {e}. "
+                f"Using empty metadata."
+            )
+            safe_result_metadata = {}
+
         tool_info = ToolInfo(
             name=self.tool.name,
             version=self.tool.version,
-            metadata=result.metadata
+            metadata=safe_result_metadata  # Recommendation B: Use normalized version
         )
 
         manifest_input = ManifestInput(
@@ -337,7 +346,9 @@ class ToolRunner:
         )
 
         outputs: list[ArtifactRef] = []
-        manifest_metadata = dict(ctx.metadata, **result.metadata)
+
+        # Recommendation B: Merge normalized metadata
+        manifest_metadata = dict(ctx.metadata, **safe_result_metadata)
 
         if result.status == CapabilityStatus.success and result.data is None:
             manifest_metadata["no_output"] = True
@@ -348,12 +359,11 @@ class ToolRunner:
             output_path = output_dir / f"{input_path.stem}.{ctx.run_id}.json"
 
             try:
-                # Fix #2: Use shared serialization (same logic as ToolContext)
                 serialized = normalize_for_json(
                     result.data,
                     path="output",
                     allow_pydantic=True,
-                    allow_string_fallback=False,  # Strict by default
+                    allow_string_fallback=False,
                     logger=self.logger
                 )
             except TypeError as e:
@@ -450,8 +460,6 @@ class ToolRunner:
                 if file_info.exists:
                     ext_result = fs.get_extension(str(input_path))
                     extension = (ext_result.data or "").lower().lstrip(".")
-
-                    # Fix #4: Use centralized content type detection
                     content_type = get_content_type(
                         extension) if extension else "application/octet-stream"
 
@@ -472,8 +480,6 @@ class ToolRunner:
                     ))
 
         metadata = dict(ctx.metadata) if ctx else {}
-
-        # Always include error in metadata for easier grepping
         metadata["error_code"] = error_code
         metadata["error_message"] = error_msg
 
