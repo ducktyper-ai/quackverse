@@ -4,8 +4,8 @@
 # role: operations
 # neighbors: __init__.py, issues.py, pull_requests.py, repositories.py
 # exports: get_user
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """GitHub user _operations."""
@@ -13,7 +13,6 @@
 from typing import Any
 
 import requests
-
 from quack_core.integrations.github.models import GitHubUser
 from quack_core.integrations.github.utils.api import make_request
 

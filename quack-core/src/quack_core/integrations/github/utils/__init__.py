@@ -4,8 +4,8 @@
 # role: utils
 # neighbors: api.py
 # exports: make_request
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """Utility functions for GitHub integration."""

@@ -3,8 +3,8 @@
 # role: tests
 # neighbors: __init__.py
 # exports: EchoRequest, EchoResponse, TestAppBootstrap, TestAuthentication, TestOperationsRegistry, TestJobExecution, TestIdempotency, TestDirectOperationInvocation (+6 more)
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 
@@ -20,7 +20,6 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import BaseModel
-
 from quack_core.adapters.http.app import create_app
 from quack_core.adapters.http.config import HttpAdapterConfig
 from quack_core.lib.registry import get_registry, reset_registry
@@ -418,6 +417,7 @@ class TestCallbackSigning:
     def test_post_callback(self, mock_client):
         """Should post callback with signature header."""
         import asyncio
+
         from quack_core.adapters.http.util import post_callback
 
         # Setup mock

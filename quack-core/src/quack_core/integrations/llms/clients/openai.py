@@ -4,8 +4,8 @@
 # role: module
 # neighbors: __init__.py, anthropic.py, base.py, mock.py, ollama.py
 # exports: OpenAIClient
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -20,10 +20,10 @@ import os
 from collections.abc import Callable
 from typing import Any
 
-from quack_core.lib.errors import QuackApiError, QuackIntegrationError
 from quack_core.integrations.core.results import IntegrationResult
 from quack_core.integrations.llms.clients.base import LLMClient
 from quack_core.integrations.llms.models import ChatMessage, LLMOptions
+from quack_core.lib.errors import QuackApiError, QuackIntegrationError
 
 
 class OpenAIClient(LLMClient):

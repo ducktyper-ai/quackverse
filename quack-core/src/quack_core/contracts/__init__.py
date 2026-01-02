@@ -3,15 +3,15 @@
 # module: quack_core.contracts.__init__
 # role: module
 # exports: CapabilityStatus, LogLevel, ArtifactKind, StorageScheme, ChecksumAlgorithm, generate_run_id, generate_artifact_id, is_valid_uuid (+25 more)
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
 QuackCore Contracts - Canonical Data Contracts (Ring A / Kernel)
 
 This module defines the stable, versionable contracts for the QuackCore system.
-See README.md for architecture details and contribution guidelines.
+See GET-STARTED.md for architecture details and contribution guidelines.
 
 Quick Start:
     >>> from quack_core.contracts import (
@@ -40,58 +40,57 @@ Quick Start:
 """
 
 # Common utilities
-from quack_core.contracts.common import (
-    # Enums
-    CapabilityStatus,
-    LogLevel,
-    ArtifactKind,
-    StorageScheme,
-    ChecksumAlgorithm,
-    # IDs
-    generate_run_id,
-    generate_artifact_id,
-    is_valid_uuid,
-    # Time
-    utcnow,
-    utcnow_iso,
-    # Versions
-    CONTRACTS_VERSION,
-    MANIFEST_VERSION,
-    ARTIFACT_SCHEMA_VERSION,
-    ENVELOPE_VERSION,
-)
-
-# Envelopes (results, errors, logs)
-from quack_core.contracts.envelopes import (
-    CapabilityResult,
-    CapabilityError,
-    CapabilityLogEvent,
-)
-
 # Artifacts (refs, manifests)
 from quack_core.contracts.artifacts import (
-    StorageRef,
-    Checksum,
     ArtifactRef,
-    ToolInfo,
-    Provenance,
+    Checksum,
     ManifestInput,
+    Provenance,
     RunManifest,
+    StorageRef,
+    ToolInfo,
 )
 
 # Capability models
 from quack_core.contracts.capabilities import (
-    # Media
-    TimeRange,
-    SliceVideoRequest,
-    SlicedClipData,
-    SliceVideoResponse,
-    TranscribeRequest,
-    TranscriptionSegment,
-    TranscribeResponse,
     # Demo (models only)
     EchoRequest,
+    SlicedClipData,
+    SliceVideoRequest,
+    SliceVideoResponse,
+    # Media
+    TimeRange,
+    TranscribeRequest,
+    TranscribeResponse,
+    TranscriptionSegment,
     VideoRefRequest,
+)
+from quack_core.contracts.common import (
+    ARTIFACT_SCHEMA_VERSION,
+    # Versions
+    CONTRACTS_VERSION,
+    ENVELOPE_VERSION,
+    MANIFEST_VERSION,
+    ArtifactKind,
+    # Enums
+    CapabilityStatus,
+    ChecksumAlgorithm,
+    LogLevel,
+    StorageScheme,
+    generate_artifact_id,
+    # IDs
+    generate_run_id,
+    is_valid_uuid,
+    # Time
+    utcnow,
+    utcnow_iso,
+)
+
+# Envelopes (results, errors, logs)
+from quack_core.contracts.envelopes import (
+    CapabilityError,
+    CapabilityLogEvent,
+    CapabilityResult,
 )
 
 __version__ = CONTRACTS_VERSION

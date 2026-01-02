@@ -4,8 +4,8 @@
 # role: module
 # neighbors: __init__.py, service.py, models.py, protocols.py, converter.py
 # exports: PandocOptions, ValidationConfig, RetryConfig, MetricsConfig, PandocConfig, PandocConfigProvider
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -24,7 +24,6 @@ import os
 from typing import Any, ClassVar
 
 from pydantic import BaseModel, Field, field_validator
-
 from quack_core.config.models import LoggingConfig
 from quack_core.integrations.core.base import BaseConfigProvider
 from quack_core.lib.logging import LOG_LEVELS, LogLevel, get_logger

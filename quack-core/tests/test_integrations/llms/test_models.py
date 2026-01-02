@@ -3,8 +3,8 @@
 # role: tests
 # neighbors: __init__.py, test_config.py, test_config_provider.py, test_fallback.py, test_integration.py, test_llms.py (+3 more)
 # exports: TestLLMModels
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -16,7 +16,6 @@ validation, conversion, and default values.
 
 import pytest
 from pydantic import ValidationError
-
 from quack_core.integrations.llms.models import (
     ChatMessage,
     FunctionCall,

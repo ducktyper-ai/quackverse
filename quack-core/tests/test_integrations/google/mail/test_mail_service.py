@@ -3,8 +3,8 @@
 # role: tests
 # neighbors: __init__.py, mocks.py, test_mail.py
 # exports: TestGoogleMailService
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -17,10 +17,10 @@ ensuring proper initialization and operation.
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-from quack_core.lib.errors import QuackIntegrationError
 from quack_core.integrations.core.results import IntegrationResult
 from quack_core.integrations.google.mail.service import GoogleMailService
+from quack_core.lib.errors import QuackIntegrationError
+
 from tests.test_integrations.google.mail.mocks import (
     create_error_gmail_service,
     create_mock_gmail_service,

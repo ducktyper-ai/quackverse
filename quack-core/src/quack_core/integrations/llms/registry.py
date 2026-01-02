@@ -4,8 +4,8 @@
 # role: module
 # neighbors: __init__.py, models.py, protocols.py, config.py, fallback.py
 # exports: register_llm_client, get_llm_client
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -16,12 +16,12 @@ dynamic loading and access to different LLM implementations.
 """
 
 
-from quack_core.lib.errors import QuackIntegrationError
 from quack_core.integrations.llms.clients.anthropic import AnthropicClient
 from quack_core.integrations.llms.clients.base import LLMClient
 from quack_core.integrations.llms.clients.mock import MockLLMClient
 from quack_core.integrations.llms.clients.ollama import OllamaClient
 from quack_core.integrations.llms.clients.openai import OpenAIClient
+from quack_core.lib.errors import QuackIntegrationError
 from quack_core.lib.logging import get_logger
 
 # Global registry of LLM clients

@@ -4,8 +4,8 @@
 # role: service
 # neighbors: operations.py, dependencies.py, initialization.py, integration.py
 # exports: LLMIntegration, check_llm_dependencies
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -18,13 +18,13 @@ handling configuration, client initialization, and conversation management.
 import importlib.util
 from collections.abc import Callable, Sequence
 
-from quack_core.lib.errors import QuackIntegrationError
 from quack_core.integrations.core.base import BaseIntegrationService
 from quack_core.integrations.core.results import IntegrationResult
 from quack_core.integrations.llms.clients import LLMClient, MockLLMClient
 from quack_core.integrations.llms.config import LLMConfig, LLMConfigProvider
 from quack_core.integrations.llms.fallback import FallbackConfig
 from quack_core.integrations.llms.models import ChatMessage, LLMOptions
+from quack_core.lib.errors import QuackIntegrationError
 from quack_core.lib.logging import LOG_LEVELS, LogLevel
 
 

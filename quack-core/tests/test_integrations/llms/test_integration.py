@@ -3,8 +3,8 @@
 # role: tests
 # neighbors: __init__.py, test_config.py, test_config_provider.py, test_fallback.py, test_llms.py, test_models.py (+3 more)
 # exports: TestLLMIntegration
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -17,7 +17,6 @@ ensuring they work together properly in real-world scenarios.
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from quack_core.integrations.llms import (
     ChatMessage,
     LLMOptions,

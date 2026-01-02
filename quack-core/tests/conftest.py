@@ -3,8 +3,8 @@
 # role: tests
 # neighbors: __init__.py, test_helper.py
 # exports: MockPlugin, mock_fs_standalone, patch_filesystem_operations, temp_dir, test_file, test_binary_file, sample_config, mock_env_vars (+4 more)
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -28,7 +28,7 @@ try:
     from quack_core.config.models import QuackConfig
     from quack_core.lib.fs import DataResult, OperationResult
     from quack_core.lib.fs.service import standalone as fs_standalone
-    from quack_core.plugins.protocols import QuackPluginProtocol
+    from quack_core.modules.protocols import QuackPluginProtocol
 except ImportError as e:
     print(f"Error importing quack-core modules: {e}")
     # Emergency fallbacks if needed
@@ -38,7 +38,7 @@ except ImportError as e:
     from quack_core.config.models import QuackConfig
     from quack_core.lib.fs import DataResult, OperationResult
     from quack_core.lib.fs.service import standalone as fs_standalone
-    from quack_core.plugins.protocols import QuackPluginProtocol
+    from quack_core.modules.protocols import QuackPluginProtocol
 
 
 @pytest.fixture(autouse=True)

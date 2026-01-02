@@ -4,8 +4,8 @@
 # role: module
 # neighbors: __init__.py, models.py, protocols.py, registry.py, fallback.py
 # exports: OpenAIConfig, AnthropicConfig, OllamaConfig, LLMConfig, LLMConfigProvider
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -20,7 +20,6 @@ import os
 from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
-
 from quack_core.config.models import LoggingConfig
 from quack_core.integrations.core import ConfigResult
 from quack_core.integrations.core.base import BaseConfigProvider

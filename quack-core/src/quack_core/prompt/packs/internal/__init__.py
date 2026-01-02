@@ -3,8 +3,8 @@
 # module: quack_core.prompt.packs.internal.__init__
 # role: module
 # exports: load
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """

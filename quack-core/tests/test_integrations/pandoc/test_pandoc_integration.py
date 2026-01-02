@@ -3,8 +3,8 @@
 # role: tests
 # neighbors: __init__.py, conftest.py, mocks.py, test-pandoc-integration-full.py, test_config.py, test_converter.py (+4 more)
 # exports: setup_integration_mocks, test_pandoc_integration_initialization, test_pandoc_integration_initialize_success, test_pandoc_integration_initialize_failure, test_pandoc_integration_html_to_markdown, test_pandoc_integration_markdown_to_docx, test_pandoc_integration_convert_directory, test_pandoc_integration_not_initialized (+5 more)
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -18,13 +18,11 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-from quack_core.lib.errors import QuackIntegrationError
 from quack_core.integrations.core.protocols import IntegrationProtocol
 from quack_core.integrations.core.results import IntegrationResult
 from quack_core.integrations.pandoc import create_integration
 from quack_core.integrations.pandoc.service import PandocIntegration
-
+from quack_core.lib.errors import QuackIntegrationError
 
 # --- Shared Test Fixtures ---
 

@@ -3,8 +3,8 @@
 # role: service
 # neighbors: __init__.py, test_dependencies.py, test_initialization.py, test_operations.py
 # exports: TestLLMIntegrationComprehensive
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -17,12 +17,11 @@ which contains the main LLMIntegration class implementation.
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-from quack_core.lib.errors import QuackIntegrationError
 from quack_core.integrations.core.results import ConfigResult, IntegrationResult
 from quack_core.integrations.llms.config import LLMConfigProvider
 from quack_core.integrations.llms.fallback import FallbackConfig
 from quack_core.integrations.llms.service.integration import LLMIntegration
+from quack_core.lib.errors import QuackIntegrationError
 
 
 class TestLLMIntegrationComprehensive:

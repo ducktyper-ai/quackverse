@@ -3,8 +3,8 @@
 # role: tests
 # neighbors: __init__.py, test_base.py
 # exports: TestErrorHandler, TestHandleErrorsDecorator, TestGlobalErrorHandler
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -16,9 +16,12 @@ import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from quack_core.lib.errors import QuackError, QuackFileNotFoundError
-from quack_core.lib.errors.handlers import ErrorHandler, global_error_handler, handle_errors
+from quack_core.lib.errors.handlers import (
+    ErrorHandler,
+    global_error_handler,
+    handle_errors,
+)
 
 
 class TestErrorHandler:

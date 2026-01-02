@@ -21,14 +21,16 @@ QuackTools are plugins that extend QuackCore's functionality. To create a QuackT
 ### Basic QuackTool Implementation
 
 ```python
-from quack_core.plugins.protocols import QuackPluginProtocol
+from quack_core.modules.protocols import QuackPluginProtocol
+
 
 class MyQuackTool(QuackPluginProtocol):
     @property
     def name(self) -> str:
         return "my-quack-tool"
-    
+
     # Add your tool's functionality here
+
 
 def create_plugin() -> QuackPluginProtocol:
     """This factory function is discovered by quack_core."""
@@ -45,7 +47,8 @@ QuackCore discovers plugins through:
 
 ```python
 # Manual registration example
-from quack_core.plugins import registry
+from quack_core.modules import registry
+
 registry.register(MyQuackTool())
 ```
 

@@ -4,8 +4,8 @@
 # role: module
 # neighbors: __init__.py, manifest.py
 # exports: StorageRef, Checksum, ArtifactRef
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -18,14 +18,18 @@ These models define HOW to reference artifacts without implementing
 the actual storage operations.
 """
 
-from typing import Optional, Dict, Any
 from datetime import datetime
-from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
+from typing import Any
 
-from quack_core.contracts.common.enums import StorageScheme, ArtifactKind, \
-    ChecksumAlgorithm
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from quack_core.contracts.common.enums import (
+    ArtifactKind,
+    ChecksumAlgorithm,
+    StorageScheme,
+)
 from quack_core.contracts.common.ids import generate_artifact_id, is_valid_uuid
 from quack_core.contracts.common.time import utcnow
+from quack_core.contracts.common.typing import ArtifactRole
 
 
 class StorageRef(BaseModel):
@@ -67,52 +71,8 @@ class StorageRef(BaseModel):
         ... )
     """
 
-    scheme: StorageScheme = Field(
-        ...,
-        description="Storage backend type"
-    )
-
-    scheme_custom: Optional[str] = Field(
-        None,
-        description="Custom scheme name when scheme=custom (e.g., 'minio', 'ceph')"
-    )
-
-    uri: str = Field(
-        ...,
-        description="Full URI to the artifact",
-        examples=[
-            "file:///data/output.txt",
-            "s3://bucket/key.mp4",
-            "gs://bucket/object.json",
-            "https://example.com/file.pdf"
-        ]
-    )
-
-    bucket: Optional[str] = Field(
-        None,
-        description="Bucket name (for object storage schemes like s3, gcs, azure)"
-    )
-
-    key: Optional[str] = Field(
-        None,
-        description="Object key/path within bucket"
-    )
-
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict,
-        description="Storage-specific metadata (region, credentials ref, etc.)"
-    )
-
-    @model_validator(mode='after')
-    def validate_custom_scheme(self) -> 'StorageRef':
-        """Ensure scheme_custom is provided when scheme is custom."""
-        if self.scheme == StorageScheme.custom and not self.scheme_custom:
-            raise ValueError(
-                "scheme_custom must be specified when scheme=custom"
-            )
-        return self
-
     model_config = ConfigDict(
+        extra="forbid",
         json_schema_extra={
             "examples": [
                 {
@@ -137,6 +97,75 @@ class StorageRef(BaseModel):
         }
     )
 
+    scheme: StorageScheme = Field(
+        ...,
+        description="Storage backend type"
+    )
+
+    scheme_custom: str | None = Field(
+        None,
+        description="Custom scheme name when scheme=custom (e.g., 'minio', 'ceph')"
+    )
+
+    uri: str = Field(
+        ...,
+        description="Full URI to the artifact",
+        examples=[
+            "file:///data/output.txt",
+            "s3://bucket/key.mp4",
+            "gs://bucket/object.json",
+            "https://example.com/file.pdf"
+        ]
+    )
+
+    bucket: str | None = Field(
+        None,
+        description="Bucket name (for object storage schemes like s3, gcs, azure)"
+    )
+
+    key: str | None = Field(
+        None,
+        description="Object key/path within bucket"
+    )
+
+    metadata: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Storage-specific metadata (region, credentials ref, etc.)"
+    )
+
+    @model_validator(mode='after')
+    def validate_custom_scheme(self) -> 'StorageRef':
+        """Ensure scheme_custom is provided when scheme is custom."""
+        if self.scheme == StorageScheme.custom and not self.scheme_custom:
+            raise ValueError(
+                "scheme_custom must be specified when scheme=custom"
+            )
+        return self
+
+    @model_validator(mode='after')
+    def validate_uri_matches_scheme(self) -> 'StorageRef':
+        """Basic validation that URI prefix matches declared scheme."""
+        scheme_prefixes = {
+            StorageScheme.local: ("file://",),
+            StorageScheme.s3: ("s3://",),
+            StorageScheme.gcs: ("gs://",),
+            StorageScheme.azure: ("https://", "azure://"),
+            StorageScheme.http: ("http://",),
+            StorageScheme.https: ("https://",),
+            StorageScheme.drive: ("drive://",),
+            StorageScheme.ftp: ("ftp://",),
+        }
+
+        if self.scheme in scheme_prefixes:
+            expected = scheme_prefixes[self.scheme]
+            if not any(self.uri.startswith(prefix) for prefix in expected):
+                raise ValueError(
+                    f"URI '{self.uri}' does not match scheme '{self.scheme.value}'. "
+                    f"Expected URI to start with one of: {expected}"
+                )
+
+        return self
+
 
 class Checksum(BaseModel):
     """
@@ -150,12 +179,14 @@ class Checksum(BaseModel):
     compute checksums, it only validates and stores them.
     """
 
+    model_config = ConfigDict(extra="forbid")
+
     algorithm: ChecksumAlgorithm = Field(
         default=ChecksumAlgorithm.sha256,
         description="Hashing algorithm used (sha256 is blessed)"
     )
 
-    algorithm_custom: Optional[str] = Field(
+    algorithm_custom: str | None = Field(
         None,
         description="Custom algorithm name when algorithm=custom (e.g., 'blake2b', 'md5')"
     )
@@ -210,18 +241,20 @@ class ArtifactRef(BaseModel):
         - content_type: MIME type for format detection
         - tags: Additional routing hints
 
-    Common Roles:
-        - video_source: Original input video
-        - video_slice_{n}: Nth extracted clip
-        - transcript_txt: Plain text transcription
-        - transcript_srt: SRT subtitle file
-        - thumbnail_jpg: Preview thumbnail
-        - analysis_json: Analysis report
-        - debug_log: Debug output
+    Common Role Naming Convention:
+        Use namespaced roles to avoid collisions across capability domains:
+        - media.video_source: Original input video
+        - media.video_slice_{n}: Nth extracted clip
+        - media.transcript_txt: Plain text transcription
+        - media.transcript_srt: SRT subtitle file
+        - media.thumbnail_jpg: Preview thumbnail
+        - text.summary_md: Markdown summary
+        - text.entities_json: Extracted entities
+        - crm.contacts_csv: Contact export
 
     Example:
         >>> artifact = ArtifactRef(
-        ...     role="transcript_txt",
+        ...     role="media.transcript_txt",
         ...     kind=ArtifactKind.final,
         ...     content_type="text/plain",
         ...     storage=StorageRef(
@@ -233,15 +266,41 @@ class ArtifactRef(BaseModel):
         ... )
     """
 
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={
+            "examples": [
+                {
+                    "artifact_id": "550e8400-e29b-41d4-a716-446655440000",
+                    "role": "media.transcript_txt",
+                    "kind": "final",
+                    "content_type": "text/plain",
+                    "storage": {
+                        "scheme": "local",
+                        "uri": "file:///data/transcript.txt"
+                    },
+                    "size_bytes": 2048,
+                    "checksum": {
+                        "algorithm": "sha256",
+                        "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                    },
+                    "created_at": "2025-01-15T10:30:00Z",
+                    "tags": {"language": "en"},
+                    "metadata": {"word_count": 150}
+                }
+            ]
+        }
+    )
+
     artifact_id: str = Field(
         default_factory=generate_artifact_id,
         description="Unique identifier for this artifact"
     )
 
-    role: str = Field(
+    role: ArtifactRole = Field(
         ...,
-        description="Semantic role in workflow (e.g., transcript_txt, video_slice_1)",
-        examples=["video_source", "transcript_txt", "video_slice_1", "thumbnail_jpg"]
+        description="Semantic role in workflow (e.g., media.transcript_txt, text.summary_md)",
+        examples=["media.video_source", "media.transcript_txt", "text.summary_md", "crm.contacts_csv"]
     )
 
     kind: ArtifactKind = Field(
@@ -260,13 +319,13 @@ class ArtifactRef(BaseModel):
         description="Where the artifact is stored"
     )
 
-    size_bytes: Optional[int] = Field(
+    size_bytes: int | None = Field(
         None,
         ge=0,
         description="Size of the artifact in bytes"
     )
 
-    checksum: Optional[Checksum] = Field(
+    checksum: Checksum | None = Field(
         None,
         description="Checksum for integrity verification"
     )
@@ -276,13 +335,13 @@ class ArtifactRef(BaseModel):
         description="UTC timestamp when artifact was created"
     )
 
-    tags: Dict[str, str] = Field(
+    tags: dict[str, str] = Field(
         default_factory=dict,
         description="Additional routing/filtering metadata",
         examples=[{"language": "en"}, {"speaker": "Alice"}, {"quality": "high"}]
     )
 
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict,
         description="Free-form metadata (duration, resolution, etc.)"
     )
@@ -302,28 +361,3 @@ class ArtifactRef(BaseModel):
         if not v or not v.strip():
             raise ValueError("role must not be empty")
         return v.strip()
-
-    model_config = ConfigDict(
-        json_schema_extra={
-            "examples": [
-                {
-                    "artifact_id": "550e8400-e29b-41d4-a716-446655440000",
-                    "role": "transcript_txt",
-                    "kind": "final",
-                    "content_type": "text/plain",
-                    "storage": {
-                        "scheme": "local",
-                        "uri": "file:///data/transcript.txt"
-                    },
-                    "size_bytes": 2048,
-                    "checksum": {
-                        "algorithm": "sha256",
-                        "value": "a1b2c3d4e5f6..."
-                    },
-                    "created_at": "2025-01-15T10:30:00Z",
-                    "tags": {"language": "en"},
-                    "metadata": {"word_count": 150}
-                }
-            ]
-        }
-    )

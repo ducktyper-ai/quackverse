@@ -3,8 +3,8 @@
 # role: utils
 # neighbors: __init__.py
 # exports: TestGmailApiUtils
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -19,13 +19,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from googleapiclient.errors import HttpError
-
-from quack_core.lib.errors import QuackApiError
 from quack_core.integrations.google.mail.protocols import GmailRequest
 from quack_core.integrations.google.mail.utils.api import (
     execute_api_request,
     with_exponential_backoff,
 )
+from quack_core.lib.errors import QuackApiError
 
 R = TypeVar("R")  # Generic type for return values
 

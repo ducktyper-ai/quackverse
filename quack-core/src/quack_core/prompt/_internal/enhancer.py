@@ -4,8 +4,8 @@
 # role: module
 # neighbors: __init__.py, registry.py, selector.py
 # exports: enhance_with_llm_safe
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 from quack_core.lib.logging import get_logger
@@ -24,9 +24,12 @@ def enhance_with_llm_safe(
     Returns original prompt if LLM is unavailable or fails.
     """
     try:
+        from quack_core.integrations.llms.models import (
+            ChatMessage,
+            LLMOptions,
+            RoleType,
+        )
         from quack_core.integrations.llms.service import LLMIntegration
-        from quack_core.integrations.llms.models import ChatMessage, RoleType, \
-            LLMOptions
 
         # Initialize service
         llm_service = LLMIntegration(provider=provider, model=model,

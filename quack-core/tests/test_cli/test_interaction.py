@@ -3,8 +3,8 @@
 # role: tests
 # neighbors: __init__.py, mocks.py, test_bootstrap.py, test_config.py, test_context.py, test_error.py (+5 more)
 # exports: TestConfirm, TestAsk, TestAskChoice, TestWithSpinner
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -14,8 +14,12 @@ Tests for the CLI interaction module.
 import time
 from unittest.mock import patch
 
-from quack_core.interfaces.cli.utils.interaction import confirm, ask, ask_choice, \
-    with_spinner
+from quack_core.interfaces.cli.utils.interaction import (
+    ask,
+    ask_choice,
+    confirm,
+    with_spinner,
+)
 
 
 class TestConfirm:

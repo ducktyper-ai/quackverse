@@ -4,8 +4,8 @@
 # role: module
 # neighbors: __init__.py, config.py, auth.py
 # exports: serialize_credentials
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 

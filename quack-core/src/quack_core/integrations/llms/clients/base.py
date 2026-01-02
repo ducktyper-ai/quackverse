@@ -4,8 +4,8 @@
 # role: module
 # neighbors: __init__.py, anthropic.py, mock.py, ollama.py, openai.py
 # exports: LLMClient
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -21,10 +21,10 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
 from typing import Any
 
-from quack_core.lib.errors import QuackApiError, QuackIntegrationError
 from quack_core.integrations.core.results import IntegrationResult
 from quack_core.integrations.llms.models import ChatMessage, LLMOptions
 from quack_core.integrations.llms.protocols import LLMProviderProtocol
+from quack_core.lib.errors import QuackApiError, QuackIntegrationError
 
 
 class LLMClient(ABC, LLMProviderProtocol):

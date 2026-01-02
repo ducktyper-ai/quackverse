@@ -4,8 +4,8 @@
 # role: module
 # neighbors: models.py, protocols.py, config.py, registry.py, fallback.py
 # exports: LLMClient, OpenAIClient, AnthropicClient, OllamaClient, MockLLMClient, FallbackLLMClient, LLMConfig, LLMConfigProvider (+11 more)
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -38,9 +38,6 @@ from quack_core.integrations.llms.registry import (
     get_llm_client,
     register_llm_client,
 )
-
-# Register the FallbackLLMClient after importing both modules
-register_llm_client("fallback", FallbackLLMClient)
 
 __all__ = [
     # Main client classes

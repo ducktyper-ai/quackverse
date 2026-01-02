@@ -3,8 +3,8 @@
 # role: tests
 # neighbors: __init__.py, test_anthropic.py, test_base.py, test_clients.py, test_mock.py, test_openai.py
 # exports: TestOllamaClient
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -18,11 +18,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
-
-from quack_core.lib.errors import QuackIntegrationError
 from quack_core.integrations.core.results import IntegrationResult
 from quack_core.integrations.llms.clients.ollama import OllamaClient
 from quack_core.integrations.llms.models import ChatMessage, LLMOptions, RoleType
+from quack_core.lib.errors import QuackIntegrationError
 
 
 class TestOllamaClient:

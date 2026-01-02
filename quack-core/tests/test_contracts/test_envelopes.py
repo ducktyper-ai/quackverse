@@ -1,10 +1,10 @@
 # === QV-LLM:BEGIN ===
 # path: quack-core/tests/test_contracts/test_envelopes.py
 # role: tests
-# neighbors: __init__.py, test_artifacts.py, test_capabilities.py, test_dependency_boundaries.py
+# neighbors: __init__.py, test_artifacts.py, test_capabilities.py, test_dependency_boundaries.py, test_schema_examples.py
 # exports: TestCapabilityError, TestCapabilityLogEvent, TestCapabilityResult
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -13,14 +13,14 @@ Tests for envelope models (CapabilityResult, CapabilityError, CapabilityLogEvent
 Validates invariants, convenience methods, and JSON serialization.
 """
 
-import pytest
 from datetime import datetime, timezone
-from pydantic import ValidationError
 
+import pytest
+from pydantic import ValidationError
 from quack_core.contracts import (
-    CapabilityResult,
     CapabilityError,
     CapabilityLogEvent,
+    CapabilityResult,
     CapabilityStatus,
     LogLevel,
 )

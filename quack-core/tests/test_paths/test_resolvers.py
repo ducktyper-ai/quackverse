@@ -3,8 +3,8 @@
 # role: tests
 # neighbors: __init__.py, conftest.py, test_context.py, test_service.py, test_utils.py
 # exports: TestPathResolver
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -14,10 +14,9 @@ Tests for the PathResolver class.
 import tempfile
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
-
 from quack_core.lib.errors import QuackFileNotFoundError
 from quack_core.lib.paths import PathResolver
 

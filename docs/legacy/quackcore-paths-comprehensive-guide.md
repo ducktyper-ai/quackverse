@@ -521,7 +521,7 @@ def initialize_project(name, template="basic"):
 
   # Create a README
   readme = f"# {name}\n\nA new QuackTool project."
-  fs._write_text(project_dir / "README.md", readme)
+  fs._write_text(project_dir / "GET-STARTED.md", readme)
 
   return context
 ```

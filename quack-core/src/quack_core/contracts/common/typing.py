@@ -3,8 +3,8 @@
 # module: quack_core.contracts.common.typing
 # role: module
 # neighbors: __init__.py, enums.py, ids.py, time.py, versions.py
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -13,10 +13,10 @@ Type aliases and typing utilities for contracts.
 Provides semantic type hints without runtime overhead.
 """
 
-from typing import Dict, Any, NewType
+from typing import Any, NewType
 
 # Metadata dictionaries (free-form key-value pairs)
-Metadata = Dict[str, Any]
+Metadata = dict[str, Any]
 
 # Error code type (should follow QC_* convention)
 ErrorCode = NewType("ErrorCode", str)

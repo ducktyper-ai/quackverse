@@ -4,32 +4,31 @@
 # role: module
 # neighbors: contract.py
 # exports: TimeRange, SliceVideoRequest, SlicedClipData, SliceVideoResponse, TranscribeRequest, TranscriptionSegment, TranscribeResponse, EchoRequest (+1 more)
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
 Capability request/response contracts.
 
 This module defines the API schemas for all QuackCore capabilities.
-Implementations live in Ring B (quack_core.toolkit), not here.
+Implementations live in Ring B (quack_core.tools), not here.
 """
 
 # Media capabilities
-from quack_core.contracts.capabilities.media import (
-    TimeRange,
-    SliceVideoRequest,
-    SlicedClipData,
-    SliceVideoResponse,
-    TranscribeRequest,
-    TranscriptionSegment,
-    TranscribeResponse,
-)
-
 # Demo capabilities (models only - implementations are examples, not exported)
 from quack_core.contracts.capabilities.demo.models import (
     EchoRequest,
     VideoRefRequest,
+)
+from quack_core.contracts.capabilities.media import (
+    SlicedClipData,
+    SliceVideoRequest,
+    SliceVideoResponse,
+    TimeRange,
+    TranscribeRequest,
+    TranscribeResponse,
+    TranscriptionSegment,
 )
 
 __all__ = [

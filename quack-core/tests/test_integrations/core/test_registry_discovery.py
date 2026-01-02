@@ -3,8 +3,8 @@
 # role: tests
 # neighbors: __init__.py, test_get_service.py, test_protocol_inheritance.py, test_protocols.py, test_registry.py, test_results.py
 # exports: MockIntegration, MockPluginLoader, MockEntryPoint, TestIntegrationRegistryDiscovery
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -19,12 +19,11 @@ from importlib.metadata import EntryPoint
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-from quack_core.lib.errors import QuackError
 from quack_core.integrations.core.registry import (
     IntegrationRegistry,
     PluginLoaderProtocol,
 )
+from quack_core.lib.errors import QuackError
 
 
 class MockIntegration:
@@ -216,7 +215,7 @@ class TestIntegrationRegistryDiscovery:
         mock_discovery.loader = mock_loader
 
         # Patch sys.modules to include our mock
-        with patch.dict(sys.modules, {"quack_core.plugins.discovery": mock_discovery}):
+        with patch.dict(sys.modules, {"quack_core.modules.discovery": mock_discovery}):
             loader = registry._get_plugin_loader()
             assert loader is mock_loader
 

@@ -3,8 +3,8 @@
 # role: tests
 # neighbors: __init__.py, auth_provider_impl.py, config_provider_impl.py, integration_service_impl.py, test_base.py, test_config_provider.py (+3 more)
 # exports: TestBaseAuthProvider
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -15,7 +15,6 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from quack_core.integrations.core.base import BaseAuthProvider
 
 from .auth_provider_impl import (

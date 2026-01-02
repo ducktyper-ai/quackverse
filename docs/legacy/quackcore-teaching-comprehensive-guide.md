@@ -849,7 +849,7 @@ def grade_submission(repo, pr_number):
         "passing_threshold": 0.7,
         "required_files": {
             "points": 50,
-            "files": ["README.md", "main.py", "test_main.py"]
+            "files": ["GET-STARTED.md", "main.py", "test_main.py"]
         },
         "required_changes": {
             "points": 30,

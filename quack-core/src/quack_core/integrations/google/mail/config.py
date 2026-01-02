@@ -4,8 +4,8 @@
 # role: module
 # neighbors: __init__.py, service.py, protocols.py
 # exports: GmailServiceConfig
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -16,7 +16,6 @@ settings specific to the Gmail service.
 """
 
 from pydantic import Field
-
 from quack_core.integrations.google.config import GoogleMailConfig
 
 

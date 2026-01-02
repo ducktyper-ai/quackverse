@@ -4,8 +4,8 @@
 # role: module
 # neighbors: __init__.py
 # exports: CapabilityStatus, LogLevel, CapabilityLogEvent, CapabilityError, CapabilityResult
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -22,14 +22,14 @@ Instead of:
 """
 
 # Re-export from new canonical locations
-from quack_core.contracts.envelopes import (
-    CapabilityResult,
-    CapabilityError,
-    CapabilityLogEvent,
-)
 from quack_core.contracts.common import (
     CapabilityStatus,
     LogLevel,
+)
+from quack_core.contracts.envelopes import (
+    CapabilityError,
+    CapabilityLogEvent,
+    CapabilityResult,
 )
 
 __all__ = [

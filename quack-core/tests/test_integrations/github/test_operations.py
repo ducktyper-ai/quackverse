@@ -3,8 +3,8 @@
 # role: tests
 # neighbors: __init__.py, conftest.py, test_api.py, test_auth.py, test_client.py, test_config.py (+5 more)
 # exports: TestUserOperations, TestRepositoryOperations, TestPullRequestOperations, TestIssueOperations, mock_session, mock_response
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """Tests for GitHub API _operations."""
@@ -14,8 +14,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
-
-from quack_core.lib.errors import QuackApiError
 from quack_core.integrations.github.models import (
     GitHubRepo,
     GitHubUser,
@@ -41,6 +39,7 @@ from quack_core.integrations.github.operations import (
     unstar_repo,
     update_repository_file,
 )
+from quack_core.lib.errors import QuackApiError
 
 
 @pytest.fixture
@@ -453,7 +452,7 @@ class TestRepositoryOperations:
             content, sha = get_repository_file_content(
                 session=mock_session,
                 repo="test_owner/test-repo",
-                path="README.md",
+                path="GET-STARTED.md",
                 api_url="https://api.github.com",
                 ref="main",
             )
@@ -466,7 +465,7 @@ class TestRepositoryOperations:
             mock_make_request.assert_called_once_with(
                 session=mock_session,
                 method="GET",
-                url="/repos/test_owner/test-repo/contents/README.md",
+                url="/repos/test_owner/test-repo/contents/GET-STARTED.md",
                 api_url="https://api.github.com",
                 params={"ref": "main"},
             )
@@ -483,7 +482,7 @@ class TestRepositoryOperations:
             result = update_repository_file(
                 session=mock_session,
                 repo="test_owner/test-repo",
-                path="README.md",
+                path="GET-STARTED.md",
                 content="Updated content",
                 message="Update README",
                 sha="abc123",
@@ -500,7 +499,7 @@ class TestRepositoryOperations:
 
             assert call_args[1]["method"] == "PUT"
             assert (
-                call_args[1]["url"] == "/repos/test_owner/test-repo/contents/README.md"
+                call_args[1]["url"] == "/repos/test_owner/test-repo/contents/GET-STARTED.md"
             )
 
             # Check JSON body contains encoded content
@@ -731,7 +730,7 @@ class TestPullRequestOperations:
         # Mock API response
         files_data = [
             {
-                "filename": "README.md",
+                "filename": "GET-STARTED.md",
                 "status": "modified",
                 "additions": 10,
                 "deletions": 2,
@@ -764,7 +763,7 @@ class TestPullRequestOperations:
             # Verify result
             assert isinstance(result, list)
             assert len(result) == 2
-            assert result[0]["filename"] == "README.md"
+            assert result[0]["filename"] == "GET-STARTED.md"
             assert result[0]["status"] == "modified"
             assert result[1]["filename"] == "src/main.py"
             assert result[1]["status"] == "added"

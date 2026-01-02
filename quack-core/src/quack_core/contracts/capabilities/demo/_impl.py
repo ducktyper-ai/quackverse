@@ -4,8 +4,8 @@
 # role: module
 # neighbors: __init__.py, models.py
 # exports: echo_text, validate_video_ref
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -17,14 +17,14 @@ These implementations are kept in Ring A only as minimal reference examples
 to demonstrate contract usage patterns. They have no external dependencies
 beyond contracts themselves.
 
-In a real system, capability implementations belong in Ring B (quack_core.toolkit).
+In a real system, capability implementations belong in Ring B (quack_core.tools).
 
 The underscore prefix (_impl.py) marks this module as internal/private.
 Do not import these functions in production code.
 """
 
-from quack_core.contracts.envelopes import CapabilityResult
 from quack_core.contracts.capabilities.demo.models import EchoRequest, VideoRefRequest
+from quack_core.contracts.envelopes import CapabilityResult
 
 
 def echo_text(req: EchoRequest) -> CapabilityResult[str]:

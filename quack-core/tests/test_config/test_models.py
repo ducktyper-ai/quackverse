@@ -3,8 +3,8 @@
 # role: tests
 # neighbors: __init__.py, test_loader.py, test_utils.py
 # exports: TestConfigModels
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -16,14 +16,14 @@ from unittest.mock import MagicMock, patch
 
 from quack_core.config.models import (
     GeneralConfig,
-    GoogleConfig,
-    IntegrationsConfig,
     LoggingConfig,
-    NotionConfig,
     PathsConfig,
     PluginsConfig,
     QuackConfig,
 )
+from quack_core.integrations.config import IntegrationsConfig
+from quack_core.integrations.google.config import GoogleConfig
+from quack_core.integrations.notion.config import NotionConfig
 
 
 class TestConfigModels:
@@ -224,7 +224,7 @@ class TestConfigModels:
         assert config.paths == []
 
         # Test with custom values
-        plugins_path = "/test/plugins"
+        plugins_path = "/test/modules"
         more_plugins_path = "/test/more_plugins"
         config = PluginsConfig(
             enabled=["plugin1", "plugin2"],
@@ -284,7 +284,7 @@ class TestConfigModels:
         assert "paths" in config_dict
         assert "logging" in config_dict
         assert "integrations" in config_dict
-        assert "plugins" in config_dict
+        assert "modules" in config_dict
         assert "custom" in config_dict
 
         # Test get_plugin_enabled method

@@ -4,8 +4,8 @@
 # role: module
 # neighbors: __init__.py, service.py, models.py, protocols.py, config.py, client.py
 # exports: GitHubAuthProvider
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """Authentication provider for GitHub integration."""
@@ -15,9 +15,8 @@ import time
 from typing import Any
 
 import requests
-
-from quack_core.lib.fs import service as fs
 from quack_core.integrations.core import AuthResult, BaseAuthProvider
+from quack_core.lib.fs import service as fs
 from quack_core.lib.logging import get_logger
 
 logger = get_logger(__name__)

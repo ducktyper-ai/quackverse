@@ -3,8 +3,8 @@
 # role: operations
 # neighbors: __init__.py, test_attachments.py, test_auth.py
 # exports: TestGmailEmailOperations
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -20,7 +20,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from googleapiclient.errors import HttpError
-
 from quack_core.integrations.google.mail.operations import email
 from quack_core.integrations.google.mail.protocols import (
     GmailAttachmentsResource,

@@ -3,8 +3,8 @@
 # role: tests
 # neighbors: __init__.py, conftest.py, test_api.py, test_auth.py, test_config.py, test_github_init.py (+5 more)
 # exports: TestGitHubClient, github_client
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """Tests for GitHub client."""
@@ -12,7 +12,6 @@
 from unittest.mock import patch
 
 import pytest
-
 from quack_core.integrations.github.client import GitHubClient
 from quack_core.integrations.github.models import GitHubRepo, GitHubUser, PullRequest
 
@@ -420,7 +419,7 @@ class TestGitHubClient:
 
             # Call the method
             content, sha = github_client.get_repository_file_content(
-                repo="test_owner/test-repo", path="README.md", ref="main"
+                repo="test_owner/test-repo", path="GET-STARTED.md", ref="main"
             )
 
             # Verify result
@@ -429,7 +428,7 @@ class TestGitHubClient:
             mock_get_content.assert_called_once_with(
                 session=github_client.session,
                 repo="test_owner/test-repo",
-                path="README.md",
+                path="GET-STARTED.md",
                 api_url="https://api.github.com",
                 ref="main",
                 timeout=30,
@@ -448,7 +447,7 @@ class TestGitHubClient:
             # Call the method
             result = github_client.update_repository_file(
                 repo="test_owner/test-repo",
-                path="README.md",
+                path="GET-STARTED.md",
                 content="Updated content",
                 message="Update README",
                 sha="abc123",
@@ -460,7 +459,7 @@ class TestGitHubClient:
             mock_update.assert_called_once_with(
                 session=github_client.session,
                 repo="test_owner/test-repo",
-                path="README.md",
+                path="GET-STARTED.md",
                 content="Updated content",
                 message="Update README",
                 sha="abc123",
@@ -593,7 +592,7 @@ class TestGitHubClient:
         ) as mock_get:
             mock_get.return_value = [
                 {
-                    "filename": "README.md",
+                    "filename": "GET-STARTED.md",
                     "status": "modified",
                     "additions": 10,
                     "deletions": 2,
@@ -613,7 +612,7 @@ class TestGitHubClient:
 
             # Verify result
             assert len(result) == 2
-            assert result[0]["filename"] == "README.md"
+            assert result[0]["filename"] == "GET-STARTED.md"
             assert result[1]["filename"] == "src/main.py"
             mock_get.assert_called_once_with(
                 session=github_client.session,

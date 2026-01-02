@@ -1,0 +1,44 @@
+# === QV-LLM:BEGIN ===
+# path: quack-runner/src/quack_runner/workflow/protocols/remote_handler.py
+# module: quack_runner.workflow.protocols.remote_handler
+# role: protocols
+# neighbors: __init__.py
+# exports: RemoteFileHandler
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
+# === QV-LLM:END ===
+
+from __future__ import annotations
+
+from typing import Protocol, runtime_checkable
+
+from quack_runner.workflow.results import InputResult
+
+
+@runtime_checkable
+class RemoteFileHandler(Protocol):
+    """Protocol defining the interface for remote file handlers."""
+
+    def is_remote(self, source: str) -> bool:
+        """
+        Determine if the given source is a remote file.
+
+        Args:
+            source: The source path or URL.
+
+        Returns:
+            True if the source is remote, False otherwise.
+        """
+        ...
+
+    def download(self, source: str) -> InputResult:
+        """
+        Download a remote file and return an InputResult.
+
+        Args:
+            source: The remote source path or URL.
+
+        Returns:
+            InputResult containing the path to the downloaded file.
+        """
+        ...

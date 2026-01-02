@@ -58,25 +58,26 @@ drive_service = get_integration_service(GoogleDriveService)
 The easiest way to use integrations in your tools is with the `IntegrationEnabledMixin`:
 
 ```python
-from quack_core.toolkit import BaseQuackToolPlugin, IntegrationEnabledMixin
+from quack_core.tools import BaseQuackToolPlugin, IntegrationEnabledMixin
 from quack_core.integrations.google.drive import GoogleDriveService
+
 
 class MyTool(IntegrationEnabledMixin[GoogleDriveService], BaseQuackToolPlugin):
     def initialize_plugin(self):
         # Resolve the integration service
         self._drive = self.resolve_integration(GoogleDriveService)
-        
+
         if self._drive:
             self.logger.info("Google Drive integration is available")
         else:
             self.logger.info("Google Drive integration is not available")
-    
+
     def process_content(self, content, options):
         # Use the integration service if available
         if self._drive:
             # Do something with Drive
             pass
-        
+
         return {"result": "processed"}
 ```
 
@@ -85,10 +86,11 @@ class MyTool(IntegrationEnabledMixin[GoogleDriveService], BaseQuackToolPlugin):
 You can use multiple integrations in a single tool by resolving each one separately:
 
 ```python
-from quack_core.toolkit import BaseQuackToolPlugin
+from quack_core.tools import BaseQuackToolPlugin
 from quack_core.integrations.google.drive import GoogleDriveService
 from quack_core.integrations.github import GitHubService
 from quack_core.integrations.core import get_integration_service
+
 
 class MultiIntegrationTool(BaseQuackToolPlugin):
     def initialize_plugin(self):
@@ -149,29 +151,30 @@ registry.register(MyNewService())
 Here's a complete example of a tool that uploads files to Google Drive:
 
 ```python
-from quack_core.toolkit import BaseQuackToolPlugin, IntegrationEnabledMixin
+from quack_core.tools import BaseQuackToolPlugin, IntegrationEnabledMixin
 from quack_core.integrations.google.drive import GoogleDriveService
 from quack_core.integrations.core import IntegrationResult
+
 
 class DriveUploader(IntegrationEnabledMixin[GoogleDriveService], BaseQuackToolPlugin):
     def __init__(self):
         super().__init__("drive_uploader", "1.0.0")
-    
+
     def initialize_plugin(self):
         self._drive = self.resolve_integration(GoogleDriveService)
-        
+
         if not self._drive:
             self.logger.warning("Google Drive integration not available")
-    
+
     def process_content(self, content, options):
         return {"message": "Use upload method to upload files"}
-    
+
     def upload(self, file_path, destination=None):
         if not self._drive:
             return IntegrationResult.error_result(
                 error="Google Drive integration not available"
             )
-        
+
         try:
             self.logger.info(f"Uploading {file_path} to Google Drive")
             result = self._drive.upload_file(file_path, destination)

@@ -4,8 +4,8 @@
 # role: module
 # neighbors: error.py, log.py, result.py
 # exports: CapabilityResult, CapabilityError, CapabilityLogEvent
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -15,9 +15,9 @@ These models define the standard wrapper structure that ALL capabilities
 use to return results. This enables machine branching and audit trails.
 """
 
-from quack_core.contracts.envelopes.result import CapabilityResult
 from quack_core.contracts.envelopes.error import CapabilityError
 from quack_core.contracts.envelopes.log import CapabilityLogEvent
+from quack_core.contracts.envelopes.result import CapabilityResult
 
 __all__ = [
     "CapabilityResult",

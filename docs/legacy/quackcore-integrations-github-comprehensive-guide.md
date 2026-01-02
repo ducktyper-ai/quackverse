@@ -275,7 +275,7 @@ if fork_result.success:
 # Get file content
 content_result = github.client.get_repository_file_content(
     repo="username/repo",
-    path="README.md"
+    path="GET-STARTED.md"
 )
 
 if isinstance(content_result, tuple) and len(content_result) == 2:
@@ -286,7 +286,7 @@ if isinstance(content_result, tuple) and len(content_result) == 2:
     # Update the file
     update_result = github.client.update_repository_file(
         repo="username/repo",
-        path="README.md",
+        path="GET-STARTED.md",
         content=content + "\n\nUpdated by QuackCore!",
         message="Update README",
         sha=sha
@@ -514,7 +514,7 @@ grading_criteria = {
     "passing_threshold": 0.7,  # 70% to pass
     "required_files": {
         "points": 50,
-        "files": ["README.md", "solution.py", "test_solution.py"]
+        "files": ["GET-STARTED.md", "solution.py", "test_solution.py"]
     },
     "required_changes": {
         "points": 30,
@@ -599,13 +599,13 @@ if repo_result.success:
     # Download README from GitHub
     readme_content, _ = github.client.get_repository_file_content(
         repo=repo.full_name,
-        path="README.md"
+        path="GET-STARTED.md"
     )
     
     # Upload to Google Drive
     drive.upload_file_content(
         content=readme_content,
-        filename="GitHub-README.md",
+        filename="GitHub-GET-STARTED.md",
         mime_type="text/markdown"
     )
 ```

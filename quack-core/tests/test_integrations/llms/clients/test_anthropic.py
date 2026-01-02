@@ -3,8 +3,8 @@
 # role: tests
 # neighbors: __init__.py, test_base.py, test_clients.py, test_mock.py, test_ollama.py, test_openai.py
 # exports: TestAnthropicClient
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -18,10 +18,10 @@ import os
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-from quack_core.lib.errors import QuackApiError, QuackIntegrationError
 from quack_core.integrations.llms.clients.anthropic import AnthropicClient
 from quack_core.integrations.llms.models import ChatMessage, LLMOptions, RoleType
+from quack_core.lib.errors import QuackApiError, QuackIntegrationError
+
 from tests.test_integrations.llms.mocks.anthropic import (
     MockAnthropicClient,
     MockAnthropicErrorResponse,

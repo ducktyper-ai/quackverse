@@ -3,8 +3,8 @@
 # role: operations
 # neighbors: __init__.py, test_attachments.py, test_email.py
 # exports: TestGmailAuthOperations
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -17,10 +17,9 @@ including initializing the Gmail service.
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-from quack_core.lib.errors import QuackApiError
 from quack_core.integrations.google.mail.operations import auth
 from quack_core.integrations.google.mail.protocols import GoogleCredentials
+from quack_core.lib.errors import QuackApiError
 
 
 class TestGmailAuthOperations:

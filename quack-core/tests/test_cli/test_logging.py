@@ -3,8 +3,8 @@
 # role: tests
 # neighbors: __init__.py, mocks.py, test_bootstrap.py, test_config.py, test_context.py, test_error.py (+5 more)
 # exports: TestDetermineEffectiveLevel, TestAddFileHandler, TestSetupLogging, TestLoggerFactory
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -14,10 +14,12 @@ Tests for the CLI logging module.
 import logging
 from unittest.mock import MagicMock, patch
 
-
 from quack_core.config.models import QuackConfig
-from quack_core.interfaces.cli.utils.logging import _determine_effective_level, \
-    _add_file_handler, setup_logging
+from quack_core.interfaces.cli.utils.logging import (
+    _add_file_handler,
+    _determine_effective_level,
+    setup_logging,
+)
 
 
 class TestDetermineEffectiveLevel:

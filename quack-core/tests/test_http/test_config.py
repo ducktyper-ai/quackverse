@@ -3,8 +3,8 @@
 # role: tests
 # neighbors: __init__.py, conftest.py, test_auth.py, test_integration.py, test_jobs.py, test_routes_jobs.py (+2 more)
 # exports: test_default_config, test_custom_config, test_invalid_url, test_config_serialization
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -13,7 +13,6 @@ Tests for HTTP adapter configuration.
 
 import pytest
 from pydantic import ValidationError
-
 from quack_core.adapters.http.config import HttpAdapterConfig
 
 

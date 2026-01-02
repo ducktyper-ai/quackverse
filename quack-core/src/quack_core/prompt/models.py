@@ -4,11 +4,12 @@
 # role: models
 # neighbors: __init__.py, service.py, plugin.py
 # exports: PromptStrategy, StrategyInfo
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
-from typing import Callable
+from collections.abc import Callable
+
 from pydantic import BaseModel, ConfigDict, Field
 
 

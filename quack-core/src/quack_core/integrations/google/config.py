@@ -3,9 +3,9 @@
 # module: quack_core.integrations.google.config
 # role: module
 # neighbors: __init__.py, auth.py, serialization.py
-# exports: GoogleBaseConfig, GoogleDriveConfig, GoogleMailConfig, GoogleConfigProvider
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# exports: GoogleBaseConfig, GoogleDriveConfig, GoogleMailConfig, GoogleConfigProvider, GoogleConfig
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -20,7 +20,7 @@ import logging
 from typing import Any
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
-
+from quack_core.config.models import _normalize_path
 from quack_core.integrations.core.base import BaseConfigProvider
 
 
@@ -308,3 +308,30 @@ class GoogleConfigProvider(BaseConfigProvider):
                     self.logger.warning(f"Could not resolve path for {key}: {e}")
 
         return resolved_config
+
+
+class GoogleConfig(BaseModel):
+    """Configuration for Google integrations."""
+
+    client_secrets_file: str | None = Field(
+        default=None, description="Path to client secrets file for OAuth"
+    )
+    credentials_file: str | None = Field(
+        default=None, description="Path to credentials file for OAuth"
+    )
+    shared_folder_id: str | None = Field(
+        default=None, description="Google Drive shared folder ID"
+    )
+    gmail_labels: list[str] = Field(
+        default_factory=list, description="Gmail labels to filter"
+    )
+    gmail_days_back: int = Field(
+        default=1, description="Number of days back for Gmail queries"
+    )
+
+    @field_validator("client_secrets_file", "credentials_file", mode="before")
+    @classmethod
+    def normalize_google_paths(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        return _normalize_path(v)

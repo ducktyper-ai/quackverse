@@ -1,10 +1,10 @@
 # === QV-LLM:BEGIN ===
 # path: quack-core/tests/test_contracts/test_artifacts.py
 # role: tests
-# neighbors: __init__.py, test_capabilities.py, test_dependency_boundaries.py, test_envelopes.py
+# neighbors: __init__.py, test_capabilities.py, test_dependency_boundaries.py, test_envelopes.py, test_schema_examples.py
 # exports: TestStorageRef, TestChecksum, TestArtifactRef, TestRunManifest, TestManifestFixtures
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -13,27 +13,25 @@ Tests for artifact models (ArtifactRef, StorageRef, RunManifest).
 Validates invariants, time ordering, and JSON fixtures.
 """
 
-import pytest
 import json
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from datetime import datetime, timezone, timedelta
-from pydantic import ValidationError
 
+import pytest
+from pydantic import ValidationError
 from quack_core.contracts import (
-    StorageRef,
-    Checksum,
-    ArtifactRef,
-    ToolInfo,
-    Provenance,
-    ManifestInput,
-    RunManifest,
-    StorageScheme,
     ArtifactKind,
-    ChecksumAlgorithm,
-    CapabilityStatus,
+    ArtifactRef,
     CapabilityError,
-    CapabilityLogEvent,
-    LogLevel,
+    CapabilityStatus,
+    Checksum,
+    ChecksumAlgorithm,
+    ManifestInput,
+    Provenance,
+    RunManifest,
+    StorageRef,
+    StorageScheme,
+    ToolInfo,
 )
 
 
@@ -416,3 +414,50 @@ class TestManifestFixtures:
         assert artifact.storage.scheme == StorageScheme.s3
         assert artifact.storage.bucket == "quack-artifacts-prod"
         assert artifact.tags["quality"] == "1080p"
+
+    def test_manifest_error_forbids_intermediates(self):
+        """Test that error status cannot have intermediates."""
+        intermediate_artifact = ArtifactRef(
+            role="debug.temp_file",
+            kind=ArtifactKind.intermediate,
+            content_type="text/plain",
+            storage=StorageRef(scheme=StorageScheme.local, uri="file:///data/temp.txt")
+        )
+
+        with pytest.raises(ValidationError) as exc_info:
+            RunManifest(
+                tool=ToolInfo(name="test.tool", version="1.0.0"),
+                status=CapabilityStatus.error,
+                error=CapabilityError(code="QC_IO_ERROR", message="Failed"),
+                intermediates=[intermediate_artifact]  # Not allowed
+            )
+
+        errors = exc_info.value.errors()
+        assert any(
+            "intermediates" in str(err.get("loc", [])) or
+            "intermediates" in err.get("msg", "").lower()
+            for err in errors
+        )
+
+    def test_manifest_skipped_forbids_intermediates(self):
+        """Test that skipped status cannot have intermediates."""
+        intermediate_artifact = ArtifactRef(
+            role="debug.temp_file",
+            kind=ArtifactKind.intermediate,
+            content_type="text/plain",
+            storage=StorageRef(scheme=StorageScheme.local, uri="file:///data/temp.txt")
+        )
+
+        with pytest.raises(ValidationError) as exc_info:
+            RunManifest(
+                tool=ToolInfo(name="test.tool", version="1.0.0"),
+                status=CapabilityStatus.skipped,
+                intermediates=[intermediate_artifact]  # Not allowed
+            )
+
+        errors = exc_info.value.errors()
+        assert any(
+            "intermediates" in str(err.get("loc", [])) or
+            "intermediates" in err.get("msg", "").lower()
+            for err in errors
+        )

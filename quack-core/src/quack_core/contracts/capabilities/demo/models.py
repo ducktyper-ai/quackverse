@@ -4,8 +4,8 @@
 # role: models
 # neighbors: __init__.py, _impl.py
 # exports: EchoRequest, VideoRefRequest
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -15,9 +15,8 @@ These demonstrate the contract patterns without requiring heavy dependencies.
 Implementation is optional and only for demonstration purposes.
 """
 
-from typing import Optional
-from pydantic import BaseModel
 
+from pydantic import BaseModel
 
 # --- Request/Response Models ---
 
@@ -30,8 +29,8 @@ class EchoRequest(BaseModel):
     """
 
     text: str
-    preset: Optional[str] = None
-    override_greeting: Optional[str] = None
+    preset: str | None = None
+    override_greeting: str | None = None
 
 
 class VideoRefRequest(BaseModel):
@@ -44,5 +43,5 @@ class VideoRefRequest(BaseModel):
     url: str
 
 # NOTE: Actual implementations (echo_text, validate_video_ref functions)
-# are OPTIONAL in contracts. They belong in Ring B (toolkit) if needed.
+# are OPTIONAL in contracts. They belong in Ring B (tools) if needed.
 # We keep them here only as minimal demos.

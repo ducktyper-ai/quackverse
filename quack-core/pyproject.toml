@@ -1,8 +1,8 @@
 # === QV-LLM:BEGIN ===
 # path: quack-core/pyproject.toml
 # role: module
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 # quack-core/pyproject.toml
@@ -114,7 +114,7 @@ path = "src/quack_core/__init__.py"
 [tool.hatch.build.targets.wheel]
 packages = ["src/quack_core"]
 
-[project.entry-points."quack_core.plugins"]
+[project.entry-points."quack_core.modules"]
 paths = "quack_core.lib.paths.plugin:create_plugin"
 fs = "quack_core.lib.fs.plugin:create_plugin"
 config = "quack_core.config.plugin:create_plugin"

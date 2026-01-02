@@ -4,11 +4,12 @@
 # role: module
 # neighbors: __init__.py, enhancer.py, selector.py
 # exports: StrategyRegistry
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
-from typing import Sequence
+from collections.abc import Sequence
+
 from quack_core.prompt.models import PromptStrategy
 
 

@@ -3,8 +3,8 @@
 # role: tests
 # neighbors: __init__.py, mocks.py, test_bootstrap.py, test_config.py, test_context.py, test_error.py (+5 more)
 # exports: TestColor, TestColorize, TestPrintFunctions, TestTable, TestDictToTable
-# git_branch: refactor/newHeaders
-# git_commit: 72778e2
+# git_branch: refactor/toolkitWorkflow
+# git_commit: 9e6703a
 # === QV-LLM:END ===
 
 """
@@ -14,8 +14,17 @@ Tests for the CLI formatting module.
 import sys
 from unittest.mock import patch
 
-from quack_core.interfaces.cli.utils.formatting import Color, colorize, print_error, \
-    print_warning, print_success, print_info, print_debug, table, dict_to_table
+from quack_core.interfaces.cli.utils.formatting import (
+    Color,
+    colorize,
+    dict_to_table,
+    print_debug,
+    print_error,
+    print_info,
+    print_success,
+    print_warning,
+    table,
+)
 
 
 class TestColor:
