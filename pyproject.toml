@@ -12,9 +12,9 @@ build-backend = "hatchling.build"
 
 # This is a meta-package for development only, not published to PyPI
 [project]
-name = "quackverse"
+name = "ducktyper"
 version = "0.1.0"
-description = "Development environment for the QuackVerse ecosystem"
+description = "Development environment for DuckTyper (QuackVerse architecture)"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "AGPL-3.0" }
@@ -35,8 +35,8 @@ dev = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/ducktyper-ai/quackverse"
-"Bug Tracker" = "https://github.com/ducktyper-ai/quackverse/issues"
+"Homepage" = "https://github.com/ducktyper-ai/ducktyper"
+"Bug Tracker" = "https://github.com/ducktyper-ai/ducktyper/issues"
 
 # This is the key part for monorepo support
 [tool.hatch.build]

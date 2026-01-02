@@ -1,9 +1,3 @@
-Below is a **doctrine-final, drop-in `README.md` for `quackverse/quack-tools/quack-machinima`**.
-
-This positions **QuackMachinima** correctly as a **deterministic rendering worker**, keeps PixiJS in the *right place*, and cleanly separates it from Everduck IP, agents, and orchestration.
-
----
-
 # 🎥 **QuackMachinima**
 
 **Deterministic Scene & Animation Renderer for the QuackVerse**
