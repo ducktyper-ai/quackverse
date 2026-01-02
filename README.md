@@ -1,222 +1,353 @@
-# 🦆 QuackVerse
+# 🦆 DuckTyper
 
-Welcome to **QuackVerse**, the ecosystem of modular, developer-first tools for building, learning, and teaching with AI.
+**The AI Operating System for Knowledge Work**
 
-Whether you're automating metadata extraction, building AI agents, exploring tokenizers, or crafting CLI-based learning experiences — QuackVerse gives you open, structured tools that feel great to use and easy to extend.
+> **Open-source the engine.  
+> Standardize the contracts once.  
+> Orchestrate durably.  
+> Integrate externally.  
+> Keep stories and courses proprietary.**
+ 
+DuckTyper is built on **QuackVerse** — an internal architectural doctrine
+that defines how AI-first organizations are structured, governed, and run.
 
----
 
-## 🌐 What's Inside?
+DuckTyper enables building **AI-first organizations** that are:
 
-| Tool | Description |
-|------|-------------|
-| [`quackcore`](https://github.com/ducktyper-ai/quackverse/tree/main/quackcore) | The shared foundation for all QuackTools — infrastructure, integrations, protocols |
-| [`quacktools/*`](https://github.com/ducktyper-ai) | Modular tools for AI workflows — metadata, prompt engineering, token inspection, and more |
-| `quackdata` | Data manipulation tools (coming soon) |
-| `quackcloud` | Cloud infrastructure (coming soon) |
-| `quackdocs/` | Canonical docs, specs, and implementation guides (coming soon) |
+- **auditable** (artifacts + manifests are the system of record)
+- **durable** (workflow state is owned by Temporal)
+- **sovereign** (portable infrastructure, minimal SaaS lock-in)
+- **teachable** (white-box by default)
 
----
-
-## 💡 Philosophy
-
-QuackVerse is inspired by:
-- 🧠 **Fast.ai-style teaching**: code-first, hands-on learning
-- 🛠️ **Unix-style tools**: each tool does one thing well
-- 🧪 **Solo-friendly engineering**: every repo is small, self-contained, and shippable
-- 🧑‍🏫 **Gamified learning**: XP, quests, and teaching UX baked into the CLI
+This is **not** a chatbot framework.  
+DuckTyper is **organizational infrastructure**.
 
 ---
 
-## 📦 Install & Use
+## ✨ One Sentence
 
-The main entrypoint for the ecosystem is:
+**DuckTyper turns AI from demos into operating reality by separating kernel contracts, deterministic workers, 
+and durable orchestration — and wiring them together safely.**
 
-```bash
-pip install quack-chat
+---
+
+## 🧭 System Model (QuackVerse): Three Rings + One Runtime Layer
+
+DuckTyper is implemented using **three strict architectural rings**, plus a **runtime wiring layer**.
+
 ```
 
-Once installed, try:
+┌────────────────────────────────────────────┐
+│        RING C — EXPERIENCES / CONTROL      │
+│  Quackchat · Temporal · n8n · Agents · CI  │
+├────────────────────────────────────────────┤
+│        RING B — TOOLS (WORKERS)             │
+│  QuackVideo · QuackImage · QuackQuote · …  │
+├────────────────────────────────────────────┤
+│        RING A — CORE (KERNEL)               │
+│  Contracts · Capabilities · IO · Config    │
+│  Registries · Results · Adapters            │
+└────────────────────────────────────────────┘
+
+══════════════════════════════════════════════
+RUNTIME / OPERATIONS (Outside the Rings)
+Quackshowrunner — Infrastructure-as-Code
+══════════════════════════════════════════════
+
+````
+
+### Key principle
+
+- **Rings define behavior and responsibility**
+- **Quackshowrunner defines what is running and how it is wired**
+- Repo location ≠ architectural role
+
+---
+
+## 🧠 What Lives in This Monorepo
+
+The DuckTyper monorepo contains **both the engine and its canonical runtime wiring**.
+
+### 🟦 Ring A — Core (Kernel)
+
+#### `quackcore/`
+
+The **constitutional layer** of the DuckTyper.
+
+Defines:
+- schemas and contracts
+- capability interfaces
+- registries and discovery
+- config and logging semantics
+- filesystem and path primitives
+- result and error envelopes
+- adapter libraries (HTTP, MCP)
+
+> **QuackCore answers:**  
+> *“What shapes and rules are valid in this system?”*
+
+It never:
+- executes tools
+- orchestrates workflows
+- renders UI
+- embeds prompts or policies
+
+---
+
+### 🟨 Ring B — Tools (Workers)
+
+#### `quacktools/`
+
+**Atomic, deterministic workers**.
+
+Each tool:
+- performs one bounded job
+- consumes structured inputs
+- emits artifacts + a manifest
+- is stateless across runs
+- imports **QuackCore only**
+
+> **QuackTools answer:**  
+> *“Given these inputs, produce these outputs.”*
+
+Tools never:
+- plan workflows
+- call other tools
+- talk to SaaS systems directly
+- store canonical state
+
+---
+
+### 🟩 Ring C — Experiences (Control Planes)
+
+#### `quackrunner/`
+**The execution gateway**  
+Runs tools safely, isolates execution, captures logs, indexes artifacts.
+
+> *Executes exactly what it is told — once.*
+
+---
+
+#### `quackchat/`
+**The human & agent cockpit**
+
+- intent entry
+- approvals / rejections
+- workflow visibility
+- explanations and steering
+
+> *Where intent enters the system.*
+
+---
+
+#### `quackagents/`
+**Judgment-bearing services**
+
+Agents:
+- read artifacts and manifests
+- apply policy and heuristics
+- propose decisions
+- signal Temporal
+
+They never execute tools directly.
+
+> *Agents decide. Tools produce.*
+
+---
+
+### 🧩 Shared Capabilities
+
+#### `quackintegrations/`
+
+Reusable **native integration capabilities** that increase sovereign leverage.
+
+Used when an integration:
+- removes brittle glue
+- enables repeatable, auditable workflows
+- is reusable across businesses
+- fits QuackCore’s config / error / result model
+
+n8n is preferred for:
+- fast-changing glue
+- one-off business logic
+- operational playbooks
+
+---
+
+## 🏗 Runtime / Operations Layer (In-Repo, Outside the Rings)
+
+### 🎬 `quackshowrunner/`
+
+**Infrastructure-as-Code for the DuckTyper runtime**
+
+Quackshowrunner **lives in this monorepo**, but it is **not part of the three rings**.
+
+It is the **deployment and operations layer**.
+
+Quackshowrunner:
+
+- provisions and wires:
+  - Temporal
+  - n8n
+  - QuackRunner
+  - agent services
+  - shared business systems (CRM, knowledge base)
+  - storage and observability
+- manages:
+  - networking
+  - credentials injection
+  - backups and recovery
+  - upgrades and migrations
+
+It never:
+- contains business logic
+- defines workflows
+- embeds prompts
+- executes tools
+- renders UI
+
+> **In short:**  
+> **DuckTyper defines the system.**  
+> **Quackshowrunner runs the system.**
+
+---
+
+## 🔌 Communication Doctrine
+
+Only **three communication paths** are allowed:
+
+1. **Artifact Interface (default)**  
+   Files + manifests, immutable, auditable
+
+2. **Service Interface (shared concerns)**  
+   Config, registries, schema validation
+
+3. **Adapter Interface (external)**  
+   HTTP / MCP at gateways only
+
+**Tools never talk to tools.**
+
+If a tool didn’t emit a manifest — **it didn’t happen**.
+
+---
+
+## 🧰 Canonical Tool Surface
+
+There is exactly **one** CLI:
 
 ```bash
-quack-chat list
-quack-chat run quacktool-name
+quack <tool> <verb> [options]
+````
+
+Every tool must implement:
+
+* `run`
+* `validate`
+* `doctor`
+* `explain`
+
+No exceptions.
+
+---
+
+## 🏃 Execution Model (Production)
+
+```
+Quackchat
+   ↓ intent / approvals
+Temporal
+   ↓ activity
+QuackRunner
+   ↓ isolated execution
+QuackTool
+   ↓
+Artifacts + Manifest
 ```
 
-Each tool has its own README with usage examples and learning paths.
+* **Temporal** owns workflow state, retries, history
+* **QuackRunner** owns execution and logs
+* **n8n** owns side-effects only
+* **Agents** propose decisions
+* **Quackchat** enables human steering
 
-### Development Setup
+---
 
-#### Prerequisites
+## 📦 Monorepo Layout (Indicative)
 
-- Python 3.10 or newer
-- [uv](https://github.com/astral-sh/uv) - Fast Python package installer and resolver
-
-#### Quick Start
-
-The fastest way to get started is to use the setup script:
-
-```bash
-# Clone the repository
-git clone https://github.com/ducktyper-ai/quackverse
-cd quackverse
-
-# Run the setup script (creates venv and installs dependencies)
-make setup
-source setup.sh
-```
-
-#### Manual Setup
-
-If you prefer to set up manually:
-
-```bash
-# Create a virtual environment
-make env
-source .venv/bin/activate
-
-# Install all packages with dependencies
-make install-all
-
-# Install development tools
-make install-dev
+```text
+quackverse/
+├── quackcore/              # Ring A: kernel
+├── quacktools/             # Ring B: workers
+├── quackrunner/            # Ring C: execution
+├── quackchat/              # Ring C: cockpit
+├── quackagents/            # Ring C: judgment
+├── quackintegrations/      # Shared capabilities
+├── quackshowrunner/        # Runtime / IaC (outside rings)
+└── README.md
 ```
 
 ---
 
-## 🧑‍💻 Development Workflow
+## 🧪 The North Star Test
 
-### Testing
+A canonical workflow must exist and run end-to-end:
 
-Run the full test suite:
+* collect AI news
+* cluster and rank
+* draft agenda
+* generate content
+* produce assets
+* publish with approval
 
-```bash
-make test
-```
+It must run:
 
-Run tests for specific packages:
+* locally
+* automated
+* agent-assisted
 
-```bash
-make test-quack-core
-```
-
-### Code Quality
-
-Format your code and run linters:
-
-```bash
-make format  # Format code with Ruff and isort
-make lint    # Run linters (Ruff, MyPy)
-```
-
-Before committing, run all checks:
-
-```bash
-make pre-commit
-```
-
-### Building and Publishing
-
-To build distribution packages:
-
-```bash
-make build
-```
-
-To publish to PyPI:
-
-```bash
-make publish
-```
-
-### Project Structure
-
-To view the current project structure:
-
-```bash
-make structure
-```
+This is the **Monday Morning Briefing Test**.
 
 ---
 
-## 🛠️ Modern Python Packaging
+## 🧭 Governance Rules (Non-Negotiable)
 
-QuackVerse follows modern Python packaging best practices:
-- **Monorepo Structure**: Multiple related packages in a single repository
-- **uv for Dependency Management**: Fast, modern Python package installer
-- **hatchling for Building**: Modern, extensible build backend
-- **Ruff for Linting**: Fast, comprehensive Python linter
-- **MyPy for Type Checking**: Static type analysis
-- **pytest for Testing**: Comprehensive testing framework
+1. Core defines rules, not pipelines
+2. Tools never orchestrate
+3. UI never contains core logic
+4. Tools never import tools
+5. Capabilities are contracts
+6. Runtimes are replaceable
+7. Everything emits artifacts
+8. One canonical CLI (`quack`)
+9. One execution gateway (QuackRunner)
+10. MCP lives at the adapter layer
+11. Temporal owns workflow state
+12. n8n owns integrations
+13. Engine public, content private
+14. Teaching is first-class
 
----
-
-## 🔐 Licensing Overview
-
-| Layer | License |
-|-------|---------|
-| `quackcore`, `ducktyper` | [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.en.html) |
-| `quacktools/*` | [BUSL-1.1](https://mariadb.com/bsl11/) (source-available, converts to Apache 2.0 in 3 years) |
-| Branding & Mascot | [CC BY-NC-ND](https://creativecommons.org/licenses/by-nc-nd/4.0/) |
-
-See [`LICENSE_POLICY.md`](./LICENSE_POLICY.md) for more details.
-
----
-
-## 🛠 Contributing
-
-We welcome contributions from educators, hackers, and AI enthusiasts.
-
-- Open issues to request a new QuackTool or learning module
-- Use pull requests for bugfixes or enhancements
-- Follow us at [aiproduct.engineer](https://aiproduct.engineer)
-
----
-
-# 🦆 QuackVerse Licensing Overview
-
-QuackVerse is a modular ecosystem with mixed licensing to balance community contribution and project protection.
-
-### 🔓 Open Source (with strong copyleft)
-- **Repositories**: `quackcore`, `ducktyper`
-- **License**: [GNU Affero General Public License v3.0 (AGPL-3.0)](https://www.gnu.org/licenses/agpl-3.0.en.html)
-- **Why?** This license ensures that any public use of these tools — including SaaS or hosted services — must release the source code and improvements back to the community.
-
-### 🔐 Source-Available (with delayed open-source)
-- **Repositories**: All `quacktools/*`
-- **License**: [Business Source License 1.1 (BUSL-1.1)](https://mariadb.com/bsl11/)
-- **What does this mean?**
-  - You can **view, fork, and modify** the code.
-  - **Production or commercial use is not allowed** unless you obtain a commercial license from us.
-  - The license **automatically converts to Apache 2.0 after 3 years**, ensuring long-term openness.
-- A short human summary is provided in each tool's README.
-
-### 🎨 Brand and Creative Assets
-- **Assets**: Logos, Mascot (Quackster), design elements
-- **License**: [Creative Commons Attribution-NonCommercial-NoDerivs 4.0 (CC BY-NC-ND 4.0)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
-- **You may not** redistribute, remix, or use our branding for commercial purposes.
-
----
-
-### 🧠 Why this setup?
-
-We love open-source and education. However, to continue building high-quality learning tools, we need to protect our work from being commercialized or rebranded by others without contributing back. Our structure enables:
-- A healthy developer community.
-- Opportunities for contributors to shape the future.
-- Commercial protection for sustainability.
-
-We welcome pull requests, issues, and feedback. If you're interested in **commercial use**, please reach out via [rod@aip.engineer](mailto:rod@aip.engineer).
+**Naming note:**  
+QuackVerse refers to the internal architectural doctrine and vocabulary.
+DuckTyper is the product and public-facing system built on it.
 
 
 ---
 
-## 💬 Questions?
+## 🧠 Closing Statement
 
-Tweet at [@aipengineer](https://twitter.com/aipengineer) or file an issue on GitHub!
+DuckTyper is built to replace **roles**, not tasks.
 
----
+* **QuackCore** is the constitution
+* **QuackTools** are the hands
+* **QuackRunner** is the muscle
+* **Temporal** is the process OS
+* **n8n** is connective tissue
+* **Agents** provide judgment
+* **Quackchat** is the cockpit
+* **Quackshowrunner** keeps it all running
 
-## 🐤 Brought to you by
+People can change.
+Tools can be swapped.
+Agents can evolve.
 
-**Rod & the DuckTyper Collective at AI Product Engineer**  
-Independent creators building tools for the next generation of AI developers.
+**The organization still runs.**
