@@ -838,7 +838,7 @@ For detailed logging information:
 
 ```python
 import logging
-from quack_core.lib.logging import get_logger
+from quack_core.core.logging import get_logger
 
 # Set logging level to DEBUG for the GitHub integration
 logger = get_logger("quack_core.integrations.github")

@@ -476,7 +476,7 @@ QuackCore CLI provides utilities for handling and formatting errors in CLI appli
 
 ```python
 from quack_core.cli import handle_errors, get_cli_info, format_cli_error
-from quack_core.lib.errors import QuackError
+from quack_core.core.errors import QuackError
 
 
 # Use the handle_errors decorator to catch exceptions
@@ -574,7 +574,7 @@ from quack_core.cli import (
     ask,
     handle_errors
 )
-from quack_core.lib.errors import QuackError
+from quack_core.core.errors import QuackError
 
 
 @handle_errors(error_types=Exception, title="Hello Quack Error", exit_code=1)
@@ -952,7 +952,7 @@ def connect():
 
 ```python
 from quack_core.cli import handle_errors
-from quack_core.lib.errors import QuackError
+from quack_core.core.errors import QuackError
 
 
 # Do this instead

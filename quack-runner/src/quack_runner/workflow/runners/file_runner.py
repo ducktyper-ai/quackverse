@@ -5,7 +5,7 @@
 # neighbors: __init__.py
 # exports: WorkflowError, FileWorkflowRunner
 # git_branch: feat/9-make-setup-work
-# git_commit: 41712bc9
+# git_commit: 26dbe353
 # === QV-LLM:END ===
 
 
@@ -40,7 +40,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, TypeVar
 
-from quack_core.lib.logging import get_logger
+from quack_core.core.logging import get_logger
 from quack_runner.workflow.protocols.remote_handler import RemoteFileHandler
 from quack_runner.workflow.results import FinalResult, InputResult, OutputResult
 

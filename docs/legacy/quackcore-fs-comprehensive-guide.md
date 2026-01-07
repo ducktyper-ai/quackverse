@@ -1001,7 +1001,7 @@ class BackupTool:
 
 - **Verbose logging**:
   ```python
-  from quack_core.lib.logging import get_logger, LogLevel
+  from quack_core.core.logging import get_logger, LogLevel
   logger = get_logger(__name__); logger.setLevel(LogLevel.DEBUG)
   ```
 - **Inspect full result**:  

@@ -116,7 +116,7 @@ You can initialize the service with default settings or customize it:
 
 ```python
 from quack_core.integrations.llms import LLMIntegration
-from quack_core.lib.logging import LogLevel
+from quack_core.core.logging import LogLevel
 
 # Default initialization
 llm_service = LLMIntegration()
@@ -610,7 +610,7 @@ The module provides consistent error handling with specialized error types:
 
 ```python
 from quack_core.integrations.llms import LLMIntegration, ChatMessage, RoleType
-from quack_core.lib.errors import QuackApiError, QuackIntegrationError
+from quack_core.core.errors import QuackApiError, QuackIntegrationError
 
 # Initialize the service
 llm_service = LLMIntegration()
