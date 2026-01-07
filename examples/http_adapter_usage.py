@@ -3,7 +3,7 @@
 # role: module
 # neighbors: config_tooling_test.py, explicit_plugin_loading_example.py, toolkit_usage.py
 # git_branch: feat/9-make-setup-work
-# git_commit: c28ab838
+# git_commit: 19533b6c
 # === QV-LLM:END ===
 
 """
