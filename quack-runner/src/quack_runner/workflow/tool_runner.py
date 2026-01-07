@@ -38,7 +38,7 @@ from quack_core.contracts import (
 )
 from quack_core.tools import ToolContext
 from quack_core.lib.logging import get_logger
-from quack_core.lib.fs.service import standalone as fs
+from quack_core.core.fs.service import standalone as fs
 from quack_core.lib.serialization import normalize_for_json
 from quack_core.lib.mime import is_binary_extension, get_content_type
 

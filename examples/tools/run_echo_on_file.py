@@ -64,7 +64,7 @@ def main():
     # For this example, we'll create a simplified version inline
 
     from quack_core.contracts import RunManifest, ToolInfo, generate_run_id, utcnow
-    from quack_core.lib.fs.service import standalone as fs
+    from quack_core.core.fs.service import standalone as fs
     from quack_core.tools import ToolContext
 
     # Initialize tool

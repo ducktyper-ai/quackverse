@@ -58,7 +58,7 @@ class JsonOutputWriter(OutputWriter):
 
     def write_output(self, data: Any, output_path: str | Path) -> str:
         """Write data as JSON."""
-        from quack_core.lib.fs.service import standalone
+        from quack_core.core.fs.service import standalone
         output_path = Path(output_path)
 
         # Ensure directory exists
@@ -84,7 +84,7 @@ class YamlOutputWriter(OutputWriter):
 
     def write_output(self, data: Any, output_path: str | Path) -> str:
         """Write data as YAML."""
-        from quack_core.lib.fs.service import standalone
+        from quack_core.core.fs.service import standalone
         output_path = Path(output_path)
 
         # Ensure directory exists

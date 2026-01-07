@@ -62,7 +62,7 @@ class LegacyWorkflowOutputWriter:
     def write(self, result: OutputResult, input_path: Path,
               options: dict[str, Any]) -> FinalResult:
         """Write the output result to a file."""
-        from quack_core.lib.fs.service import standalone
+        from quack_core.core.fs.service import standalone
         fs = standalone
         out_dir = options.get("output_dir", "./output")
         fs.create_directory(out_dir, exist_ok=True)

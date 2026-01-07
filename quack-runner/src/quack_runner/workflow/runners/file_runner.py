@@ -125,7 +125,7 @@ class FileWorkflowRunner:
         Raises:
             WorkflowError: If file doesn't exist or can't be read
         """
-        from quack_core.lib.fs.service import standalone as fs
+        from quack_core.core.fs.service import standalone as fs
 
         path_str = str(input_result.path)
 
@@ -227,7 +227,7 @@ class FileWorkflowRunner:
                     raise WorkflowError(f"Output writer failed: {e}")
 
             # ==== Default JSON-writer branch ====
-            from quack_core.lib.fs.service import standalone as fs
+            from quack_core.core.fs.service import standalone as fs
 
             # 1) Figure out output directory
             if options.get("use_temp_dir"):

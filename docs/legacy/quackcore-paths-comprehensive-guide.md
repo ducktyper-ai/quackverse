@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The `quack_core.lib.paths` module provides sophisticated project structure detection and path resolution utilities for QuackCore projects. While `quack_core.lib.fs` focuses on file operations, `quack_core.lib.paths` understands the semantic meaning of paths within a project context, making it easier to work with project files regardless of where your code is running from.
+The `quack_core.lib.paths` module provides sophisticated project structure detection and path resolution utilities for QuackCore projects. While `quack_core.core.fs` focuses on file operations, `quack_core.lib.paths` understands the semantic meaning of paths within a project context, making it easier to work with project files regardless of where your code is running from.
 
 This documentation will guide you through the concepts, features, and best practices for effectively leveraging the power of `quack_core.lib.paths` in your QuackTools.
 
@@ -22,7 +22,7 @@ This documentation will guide you through the concepts, features, and best pract
   - [Directory Type Detection](#directory-type-detection)
   - [Module Inference](#module-inference)
 - [Integration with QuackCore](#integration-with-quackcore)
-  - [Using with quack_core.lib.fs](#using-with-quackcore-fs)
+  - [Using with quack_core.core.fs](#using-with-quackcore-fs)
   - [Plugin System](#plugin-system)
 - [Best Practices](#best-practices)
 - [Common Patterns](#common-patterns)
@@ -258,13 +258,13 @@ This is especially useful for tooling that needs to import or reference modules 
 
 ## Integration with QuackCore
 
-### Using with quack_core.lib.fs
+### Using with quack_core.core.fs
 
-The `quack_core.lib.paths` module works seamlessly with `quack_core.lib.fs` for advanced file operations:
+The `quack_core.lib.paths` module works seamlessly with `quack_core.core.fs` for advanced file operations:
 
 ```python
 from quack_core.lib.paths import resolver
-from quack_core.lib.fs import service as fs
+from quack_core.core.fs import service as fs
 
 # Find project and resolve path
 project_context = resolver._detect_project_context()
@@ -369,7 +369,7 @@ except QuackFileNotFoundError:
 
 ```python
 from quack_core.lib.paths import resolver
-from quack_core.lib.fs import service as fs
+from quack_core.core.fs import service as fs
 
 # Find source directory
 project_context = resolver._detect_project_context()
@@ -409,7 +409,7 @@ else:
 
 ```python
 from quack_core.lib.paths import resolver
-from quack_core.lib.fs import service as fs
+from quack_core.core.fs import service as fs
 from pathlib import Path
 import os
 
@@ -474,7 +474,7 @@ def find_config_file(config_name="config", file_types=None):
 
 ```python
 from quack_core.lib.paths import resolver
-from quack_core.lib.fs import service as fs
+from quack_core.core.fs import service as fs
 from pathlib import Path
 
 
@@ -530,7 +530,7 @@ def initialize_project(name, template="basic"):
 
 ```python
 from quack_core.lib.paths import resolver
-from quack_core.lib.fs import service as fs
+from quack_core.core.fs import service as fs
 from pathlib import Path
 
 
@@ -725,6 +725,6 @@ resolver: PathResolver
 
 The `quack_core.lib.paths` module provides a robust foundation for working with project structures in the QuackVerse ecosystem. By understanding the semantic meaning of directories and providing context-aware path resolution, it simplifies many common tasks in project-based tools.
 
-When combined with `quack_core.lib.fs` for file operations, you have a complete solution for all path and filesystem needs in your QuackTools. The module's ability to detect project structure automatically makes it particularly valuable for creating tools that "just work" without complex configuration.
+When combined with `quack_core.core.fs` for file operations, you have a complete solution for all path and filesystem needs in your QuackTools. The module's ability to detect project structure automatically makes it particularly valuable for creating tools that "just work" without complex configuration.
 
 By following the patterns and best practices outlined in this documentation, you'll be able to build QuackTools that seamlessly integrate with projects of all types and structures.

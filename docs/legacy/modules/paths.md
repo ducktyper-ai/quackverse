@@ -1,6 +1,6 @@
 # QuackCore Paths Module
 
-The `quack_core.lib.paths` module provides utilities for path resolution, project structure detection, and context inference in QuackCore projects. It builds upon the lower-level file system operations in `quack_core.lib.fs` to provide project-aware path operations.
+The `quack_core.lib.paths` module provides utilities for path resolution, project structure detection, and context inference in QuackCore projects. It builds upon the lower-level file system operations in `quack_core.core.fs` to provide project-aware path operations.
 
 ## Overview
 
@@ -12,7 +12,7 @@ The paths module provides a high-level API for:
 - Converting between file paths and module names
 - Working with content-specific directories
 
-Unlike the `quack_core.lib.fs` module, which provides low-level file system operations, the `paths` module understands QuackCore project structures and conventions.
+Unlike the `quack_core.core.fs` module, which provides low-level file system operations, the `paths` module understands QuackCore project structures and conventions.
 
 ## PathService
 
@@ -242,7 +242,7 @@ def generate_content(content_name, content_type="tutorials"):
 
 2. **Handle missing directories gracefully**: Use the `create=True` parameter for methods like `find_output_directory` to create directories if they don't exist.
 
-3. **Use the path service for semantic operations**: Use the path service for operations that require project context, and use `quack_core.lib.fs` for low-level file operations.
+3. **Use the path service for semantic operations**: Use the path service for operations that require project context, and use `quack_core.core.fs` for low-level file operations.
 
 4. **Cache project context**: For performance-critical code, consider caching the project context instead of detecting it repeatedly.
 
