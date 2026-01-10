@@ -3,7 +3,7 @@
 # role: module
 # neighbors: __init__.py, test_ducktyper_quackcore.py
 # git_branch: feat/9-make-setup-work
-# git_commit: 3a380e47
+# git_commit: ccfbaeea
 # === QV-LLM:END ===
 
 """
