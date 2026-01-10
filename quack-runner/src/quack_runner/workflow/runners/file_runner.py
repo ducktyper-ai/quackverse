@@ -40,7 +40,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, TypeVar
 
-from quack_core.lib.logging import get_logger
+from quack_core.core.logging import get_logger
 from quack_runner.workflow.protocols.remote_handler import RemoteFileHandler
 from quack_runner.workflow.results import FinalResult, InputResult, OutputResult
 
