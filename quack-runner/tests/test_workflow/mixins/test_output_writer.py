@@ -53,7 +53,7 @@ def patch_fs_service(monkeypatch):
     original_write = DefaultOutputWriter.write
 
     def patched_write(self, result, input_path, options):
-        # Use our stub for filesystem operations
+        # Use our stub for filesystem _ops
         fs = stub_fs
         out_dir = options.get("output_dir", "./output")
         fs.create_directory(out_dir, exist_ok=True)

@@ -118,7 +118,7 @@ from quack_core.core.logging import LOG_LEVELS, LogLevel
 # Check current log level against a threshold
 current_level = LOG_LEVELS[LogLevel.DEBUG]
 if logger.level <= current_level:
-    # Perform verbose logging operations
+    # Perform verbose logging _ops
     pass
 ```
 

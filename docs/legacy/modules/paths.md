@@ -254,7 +254,7 @@ context_result = paths.detect_project_context()
 if context_result.success:
     context = context_result.context
 
-    # Use the cached context for multiple operations
+    # Use the cached context for multiple _ops
     src_dir = context._get_source_dir()
     data_dir = context._get_data_dir()
     config_dir = context._get_config_dir()

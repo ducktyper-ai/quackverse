@@ -793,13 +793,13 @@ class Service2:
    # Bad: Complex initialization
    class MyPlugin:
        def __init__(self):
-           # Expensive operations during initialization
+           # Expensive _ops during initialization
            self.data = self._load_large_dataset()
    
    # Good: Lazy initialization
    class MyPlugin:
        def __init__(self):
-           # Defer expensive operations
+           # Defer expensive _ops
            self._data = None
        
        @property
@@ -1327,7 +1327,7 @@ from typing import Any, Callable, List, Dict
 
 
 class QuackETL:
-    """A plugin for Extract, Transform, Load operations on data."""
+    """A plugin for Extract, Transform, Load _ops on data."""
 
     @property
     def name(self) -> str:

@@ -53,7 +53,7 @@ class TestFileWorkflowRunner:
 
         # Mock the load_content method to avoid real fs calls
         with patch.object(FileWorkflowRunner, 'load_content', return_value="mock content"):
-            # Mock the write_output method to avoid filesystem operations
+            # Mock the write_output method to avoid filesystem _ops
             with patch.object(FileWorkflowRunner, 'write_output') as mock_write:
                 mock_write.return_value = FinalResult(
                     success=True,
@@ -173,7 +173,7 @@ class TestFileWorkflowRunner:
             # Mock tempfile.mkdtemp to return a controlled path
             temp_dir = str(tmp_path / "temp_dir")
             with patch('tempfile.mkdtemp', return_value=temp_dir):
-                # Mock lower-level fs functions to avoid actual filesystem operations
+                # Mock lower-level fs functions to avoid actual filesystem _ops
                 with patch('quack_core.core.fs.service.standalone.write_json') as mock_write_json:
                     mock_write_json.return_value = SimpleNamespace(success=True, path=str(f.with_suffix(".json")))
 
@@ -231,7 +231,7 @@ class TestFileWorkflowRunner:
         with patch('quack_core.core.fs.service.standalone.get_extension', return_value=extension_result):
             with patch('quack_core.core.fs.service.standalone.get_file_info', return_value=file_info_result):
                 with patch('quack_core.core.fs.service.standalone.read_binary', return_value=binary_read_result):
-                    # Also patch the write_output to avoid filesystem operations
+                    # Also patch the write_output to avoid filesystem _ops
                     with patch.object(FileWorkflowRunner, 'write_output') as mock_write:
                         mock_write.return_value = FinalResult(
                             success=True,
