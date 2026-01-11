@@ -4,7 +4,7 @@
 # neighbors: explicit_plugin_loading_example.py, http_adapter_usage.py, toolkit_usage.py
 # exports: MyConfig, main
 # git_branch: feat/9-make-setup-work
-# git_commit: ccfbaeea
+# git_commit: de7513d4
 # === QV-LLM:END ===
 
 """
