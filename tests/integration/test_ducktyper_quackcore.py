@@ -4,7 +4,7 @@
 # neighbors: __init__.py, conftest.py
 # exports: test_ducktyper_can_list_quackcore_plugins
 # git_branch: feat/9-make-setup-work
-# git_commit: 227c3fdd
+# git_commit: e6c6b5b8
 # === QV-LLM:END ===
 
 import pytest
